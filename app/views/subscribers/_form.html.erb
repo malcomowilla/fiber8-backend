@@ -1,0 +1,57 @@
+<%= form_with(model: subscriber) do |form| %>
+  <% if subscriber.errors.any? %>
+    <div style="color: red">
+      <h2><%= pluralize(subscriber.errors.count, "error") %> prohibited this subscriber from being saved:</h2>
+
+      <ul>
+        <% subscriber.errors.each do |error| %>
+          <li><%= error.full_message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div>
+    <%= form.label :name, style: "display: block" %>
+    <%= form.text_field :name %>
+  </div>
+
+  <div>
+    <%= form.label :phone_number, style: "display: block" %>
+    <%= form.number_field :phone_number %>
+  </div>
+
+  <div>
+    <%= form.label :ppoe_username, style: "display: block" %>
+    <%= form.text_field :ppoe_username %>
+  </div>
+
+  <div>
+    <%= form.label :ppoe_password, style: "display: block" %>
+    <%= form.text_field :ppoe_password %>
+  </div>
+
+  <div>
+    <%= form.label :email, style: "display: block" %>
+    <%= form.text_field :email %>
+  </div>
+
+  <div>
+    <%= form.label :ppoe_package, style: "display: block" %>
+    <%= form.text_field :ppoe_package %>
+  </div>
+
+  <div>
+    <%= form.label :date_registered, style: "display: block" %>
+    <%= form.date_field :date_registered %>
+  </div>
+
+  <div>
+    <%= form.label :ref_no, style: "display: block" %>
+    <%= form.number_field :ref_no %>
+  </div>
+
+  <div>
+    <%= form.submit %>
+  </div>
+<% end %>

@@ -1,6 +1,7 @@
 class User < ApplicationRecord
     has_secure_password
     acts_as_tenant(:account)
+    has_many :nas_routers
      
 # validates :password, presence: true 
 validates :password_confirmation, confirmation: { case_sensitive: true}
@@ -20,6 +21,10 @@ end
 # validates :password, presence: true, uniqueness: true
 # validates :password, uniqueness: true, presence: true
 # validate :validate_complex_password
+
+   
+
+
 
 def validate_complex_password
     if password.present? and !password.match(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{12,}$/) 

@@ -1,4 +1,9 @@
 Rails.application.routes.draw do
+  post '/router', to: "nas_router#create"
+  
+mount ActionCable.server => '/cable'
+get '/packages' , to: "p_poe_packages#index"
+  get '/mikrotik_live', to: "mikrotik_live#mikrotik"
   # resources :accounts
   get '/pages/root'
   
@@ -15,6 +20,9 @@ get "/password/reset", to: "password_resets#new"
 post "/password/reset", to: "password_resets#create"
 
 
+post '/create_package', to: 'p_poe_packages#create'
+get '/get_package', to: 'p_poe_packages#index'
+get '/create_package/:id', to: 'p_poe_packages#show'
 
 
 get '/auth/auth0/callback', to: 'auth0#callback'
@@ -22,6 +30,7 @@ get '/auth/failure', to: 'auth0#failure'
 
 
 
+delete '/package/:id',  to: 'p_poe_packages#delete'
 
 get "/password/reset/edit", to: "password_resets#edit"
 patch "password/reset/edit", to: "password_resets#update"

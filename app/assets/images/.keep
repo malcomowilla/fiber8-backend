@@ -1,0 +1,258 @@
+
+  require 'net/http'
+  require 'uri'
+  require 'json'
+  # GET /p_poe_packages or /p_poe_packages.json
+
+  # def index
+  #   @packages = PPoePackage.all # Convert ActiveRecord objects to hashes
+
+    
+
+
+  #     # packages = @packages.map { |package| package.as_json }
+  
+  #     # # Broadcast the packages to the PpoePackagesChannel
+  #     # ActionCable.server.broadcast 'PpoePackagesChannel', packages
+      
+  # end
+
+
+
+  def show
+    poe = PPoePackage.find_by(id: params[:id])
+    render json: poe
+  end
+
+  # GET /p_poe_packages/1 or /p_poe_packages/1.json
+  def index
+
+    @p_poe_package = PPoePackage.all
+ 
+    render json: @p_poe_package
+  end
+
+  # POST /p_poe_packages or /p_poe_packages.json
+  def create
+
+    # ActsAsTenant.with_tenant(current_user.account) do
+      ppoe_package_creation
+    if  ppoe_package_creation.save
+      
+      render json: ppoe_package_creation, status: :created
+    # ActionCable.server.broadcast("ppoe_packages_channel", message: 'Package Sucessfully Created' )
+  else
+  
+    render json: {error: 'Unprocessable Entity'}, status: :unprocessable_entity
+    # ActionCable.server.broadcast("ppoe_packages_channel", error: 'Unprocessable Entity' )
+
+  end
+
+
+      # end
+      
+ 
+    
+#   user1 = 'user1'
+#   password = ''
+#   name = p_poe_package_params[:name]
+#     download_limit = p_poe_package_params[:download_limit]
+#     upload_limit = p_poe_package_params[:upload_limit]
+#     validity = p_poe_package_params[:validity]
+
+
+#   request_body1={
+#     name: name,
+#   validity: validity
+#   }
+# uri = URI('http://192.168.88.1/rest/user-manager/profile/add')
+# request = Net::HTTP::Post.new(uri)
+# request.basic_auth user1, password
+# request.body = request_body1.to_json
+
+# request['Content-Type'] = 'application/json'
+
+#   response = Net::HTTP.start(uri.hostname, uri.port) do |http|
+#     http.request(request)
+#   end
+
+#   if response.is_a?(Net::HTTPSuccess)
+#     data = JSON.parse(response.body)
+#     puts data
+#   else
+#     puts "Failed to post name and validty: #{response.code} - #{response.message}"
+#   end
+
+
+#   request_body2 = {
+    
+#     "download-limit" => download_limit,
+#     "upload-limit" => upload_limit,
+# "name" => name
+
+#   }
+
+
+# uri = URI('http://192.168.88.1/rest/user-manager/limitation/add')
+# request = Net::HTTP::Post.new(uri)
+# request.basic_auth user1, password
+# request.body = request_body2.to_json
+
+# request['Content-Type'] = 'application/json'
+
+# response = Net::HTTP.start(uri.hostname, uri.port) do |http|
+#   http.request(request)
+# end
+
+# if response.is_a?(Net::HTTPSuccess)
+#   data = JSON.parse(response.body)
+#   puts data
+# else
+#   puts "Failed to post upload and download limit : #{response.code} - #{response.message}"
+# end
+    
+
+
+
+
+
+
+  end
+
+  private
+    # Use callbacks to share common setup or constraints between actions.
+  
+
+    # Only allow a list of trusted parameters through.
+    def p_poe_package_params
+      params.require(:p_poe_package).permit(:name, :download_limit, :upload_limit, :price, :validity,
+       )
+    end
+def ppoe_package_creation
+  @p_poe_package = PPoePackage.create(p_poe_package_params)
+
+end
+
+
+# const createPackage = async (e) => {
+#   e.preventDefault();
+#   try {
+#     setofflineerror(true);
+#     setloading(true);
+#     const response = await fetch('/api/create_package', {
+#       method: 'POST',
+#       headers: {
+#         'Content-Type': 'application/json',
+#         'Authorization': 'Basic ' + btoa(`${username}:${password}`) // Include username and password
+#       },
+#       body: JSON.stringify(formData),
+#     });
+
+#     setofflineerror(false);
+#     let newData = await response.json();
+
+#     if (response.ok) {
+#       setloading(false);
+#       setShowNotification(true);
+#       setofflineerror(false);
+#       setTableData((tableData) => [...tableData, newData]);
+#       setFormData(newData);
+#     } else {
+#       setloading(false);
+#     }
+#   } catch (error) {
+#     console.log(error.name === 'AbortError');
+#     setloading(false);
+#     setofflineerror(false);
+#   }
+# };
+
+
+
+
+
+
+
+
+# def create
+#   @p_poe_package = PPoePackage.create(p_poe_package_params)
+
+#   if @p_poe_package
+#     # Extract username and password from request headers
+#     username, password = extract_username_password_from_headers(request.headers)
+
+#     # Now you can use these credentials to communicate with the router
+#     # For example, you can make HTTP requests to the router with Net::HTTP
+
+#     render json: @p_poe_package, status: :created
+#   else
+#     render json: { error: 'Unprocessable Entity' }, status: :unprocessable_entity
+#   end
+# end
+
+# private
+
+# def p_poe_package_params
+#   params.require(:p_poe_package).permit(:name, :download_limit, :upload_limit, :price, :validity, :upload_burst_limit,
+#                                          :download_burst_limit, :tx_rate_limit, :rx_rate_limit, :validity_period_units)
+# end
+
+# def extract_username_password_from_headers(headers)
+#   authorization_header = headers['Authorization']
+#   if authorization_header && authorization_header.start_with?('Basic ')
+#     decoded_credentials = Base64.decode64(authorization_header.split(' ')[1])
+#     username, password = decoded_credentials.split(':')
+#     return username, password
+#   end
+
+#   # Return default credentials or handle error cases
+#   return nil, nil
+# end
+
+
+
+# const handleSubmit = (e) => {
+#   e.preventDefault();
+#   const username = document.getElementById('username').value;
+#   const password = document.getElementById('password').value;
+#   const ipAddress = document.getElementById('ipAddress').value;
+#   createPackage(e, username, password, ipAddress);
+# };
+
+
+
+
+
+# const createPackage = async (e, username, password, ipAddress) => {
+#   e.preventDefault();
+#   try {
+#     setofflineerror(true);
+#     setloading(true);
+#     const response = await fetch('/api/create_package', {
+#       method: 'POST',
+#       headers: {
+#         'Content-Type': 'application/json',
+#         'Authorization': 'Basic ' + btoa(`${username}:${password}`),
+#         'X-Router-IP': ipAddress // Include the router's IP address
+#       },
+#       body: JSON.stringify(formData),
+#     });
+
+#     setofflineerror(false);
+#     let newData = await response.json();
+
+#     if (response.ok) {
+#       setloading(false);
+#       setShowNotification(true);
+#       setofflineerror(false);
+#       setTableData((tableData) => [...tableData, newData]);
+#       setFormData(newData);
+#     } else {
+#       setloading(false);
+#     }
+#   } catch (error) {
+#     console.log(error.name === 'AbortError');
+#     setloading(false);
+#     setofflineerror(false);
+#   }
+# };

@@ -1,0 +1,17 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  name: MyString
+  phone: MyString
+  package: MyString
+  status: MyString
+  last_subscribed: 2024-05-04 12:27:39
+  expiry: 2024-05-04 12:27:39
+
+two:
+  name: MyString
+  phone: MyString
+  package: MyString
+  status: MyString
+  last_subscribed: 2024-05-04 12:27:39
+  expiry: 2024-05-04 12:27:39

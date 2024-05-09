@@ -1,0 +1,21 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  name: MyString
+  phone_number: 1
+  ppoe_username: MyString
+  ppoe_password: MyString
+  email: MyString
+  ppoe_package: MyString
+  date_registered: 2024-04-29
+  ref_no: 1
+
+two:
+  name: MyString
+  phone_number: 1
+  ppoe_username: MyString
+  ppoe_password: MyString
+  email: MyString
+  ppoe_package: MyString
+  date_registered: 2024-04-29
+  ref_no: 1

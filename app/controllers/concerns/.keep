@@ -1,0 +1,20 @@
+# before_create :generate_reference_number
+
+#   private
+
+#   def generate_reference_number
+#     last_client = PppoeClient.last
+#     if last_client.nil?
+#       # If there are no existing clients, start with 1
+#       self.ref_number = 'FK0001'
+#     else
+#       # Extract the last number from the last client's ref_number
+#       last_number = last_client.ref_number.scan(/\d+$/).first.to_i
+#       # Increment the last number
+#       new_number = last_number + 1
+#       # Format the new number with leading zeros
+#       self.ref_number = "FK#{new_number.to_s.rjust(4, '0')}"
+#     end
+#   end
+
+

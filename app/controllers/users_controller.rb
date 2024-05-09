@@ -1,5 +1,4 @@
   class UsersController < ApplicationController
-    # before_action :set_current_tenant, only: [:create_users]
 
     rescue_from ActiveRecord::RecordInvalid, with: :creation_error 
 
@@ -20,13 +19,14 @@
     #   end
     # end
     
-
+    def auto_timeout
+      2.minutes
+    end
     
     def profile
       # render json: { user: UserSerializer.new(current_user) }, status: :accepted
-      user = User.find_by(id:session[:user_id])
-          if user
-             render json: user, serializer: UserSerializer, status: :ok
+          if current_user
+             render json: current_user, serializer: UserSerializer, status: :ok
                      else
                       render json: { error: "Please Login" }, status: :unauthorized
 
@@ -44,38 +44,23 @@
 
 
 
-# def create_users
-
-#   @user = User.create(user_params)
-#   if @user.valid?
-#     session[:user_id] = @user.id
-#     # @token = encode_token({user_id: @user.id})
-#     # render json: { user: UserSerializer.new(@user), jwt: @token }, status: :created
-#     render json: {user:UserSerializer.new(@user)}, status: :created
-#   else
-#     render json: { errors: @user.errors }, status: :unprocessable_entity
-#   end
-# end
 def create_users
-  @account = Account.create(name: "Default Account", domain:request.domain, subdomain: request.subdomain)
-
    # You can modify this to create the account with the appropriate details
-  ActsAsTenant.with_tenant(@account) do
+   
     @user = User.create(user_params)
     
   if @user.valid?
-    session[:user_id] = @user.id
+    # session[:account_id] =  @account.id
     render json: { user: UserSerializer.new(@user) }, status: :created
   else
     render json: { errors: @user.errors }, status: :unprocessable_entity
   end
 end
-end
       private
 
 
         def user_params
-          params.permit(:email, :password, :password_confirmation, :username, :account_id)
+          params.permit(:email, :password, :password_confirmation, :username)
         end
     
         def creation_error(e) 

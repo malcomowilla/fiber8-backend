@@ -1,0 +1,10 @@
+<p style="color: green"><%= notice %></p>
+
+<%= render @nas_router %>
+
+<div>
+  <%= link_to "Edit this nas router", edit_nas_router_path(@nas_router) %> |
+  <%= link_to "Back to nas routers", nas_routers_path %>
+
+  <%= button_to "Destroy this nas router", @nas_router, method: :delete %>
+</div>

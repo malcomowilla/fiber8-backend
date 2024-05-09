@@ -1,4 +1,7 @@
 class SessionsController < ApplicationController
+
+   before_action :set_tenant 
+#    before_action :check_expiry
     # skip_before_action :authorized, only: [:create]
 
 
@@ -18,7 +21,17 @@ class SessionsController < ApplicationController
     #     end
     # end
     
+# def check_expiry
+#     if Time.current - session[:activity] > 1.minutes
 
+#       session.clear
+#       render json: {error: 'u have reached ur limit'}, status: :unauthorized
+#     else
+
+#         session[:activity] = Time.current
+
+#     end
+# end
 
     # def show
     #     user = User.find_by(id:session[:user_id])
@@ -54,19 +67,21 @@ class SessionsController < ApplicationController
     #     end
 
     def create
+
         @user = User.find_by(email: params[:email])
-        
+
         if @user&.authenticate(params[:password])
-          # Set the current tenant based on the user's account
-          ActsAsTenant.with_tenant(@user.account) do
+            set_current_tenant(@user.account)
             session[:user_id] = @user.id
+                
+                
             render json: { user: @user }, status: :accepted
-          end
+          
         else
           render json: { message: 'Invalid username or password' }, status: :unauthorized
         end
       end
-  
+    
     private
 
         # def user_params
@@ -74,7 +89,7 @@ class SessionsController < ApplicationController
         # end
         def user_login_params
             # params { user: {username: 'Chandler Bing', password: 'hi' } }
-            params.permit(:email, :password)
+            params.require(:user).permit(:email, :password)
             end
 
         

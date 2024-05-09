@@ -1,0 +1,14 @@
+<p style="color: green"><%= notice %></p>
+
+<h1>Nas routers</h1>
+
+<div id="nas_routers">
+  <% @nas_routers.each do |nas_router| %>
+    <%= render nas_router %>
+    <p>
+      <%= link_to "Show this nas router", nas_router %>
+    </p>
+  <% end %>
+</div>
+
+<%= link_to "New nas router", new_nas_router_path %>

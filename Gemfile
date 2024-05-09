@@ -74,3 +74,14 @@ gem "omniauth-auth0", "~> 3.1"
 # gem "omniauth-rails_csrf_protection", "~> 1.0"
 
 gem "acts_as_tenant", "~> 1.0"
+
+gem "net-ssh", "~> 7.2"
+gem "websocket-client-simple", "~> 0.8.0"
+
+gem "mtik", "~> 4.1.2"
+
+gem "sidekiq", "~> 7.2"
+
+gem "sidekiq-scheduler", "~> 5.0"
+
+gem "rest-client", "~> 2.1"
