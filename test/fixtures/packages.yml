@@ -2,7 +2,7 @@
 
 one:
   name: MyString
-  price: MyString
+  price: 1
   download_limit: MyString
   upload_limit: MyString
   account_id: 1
@@ -11,12 +11,12 @@ one:
   validity_period_units: MyString
   download_burst_limit: MyString
   upload_burst_limit: MyString
-  validity: MyString
+  validity: 1
   mikrotik_id: MyString
 
 two:
   name: MyString
-  price: MyString
+  price: 1
   download_limit: MyString
   upload_limit: MyString
   account_id: 1
@@ -25,5 +25,5 @@ two:
   validity_period_units: MyString
   download_burst_limit: MyString
   upload_burst_limit: MyString
-  validity: MyString
+  validity: 1
   mikrotik_id: MyString

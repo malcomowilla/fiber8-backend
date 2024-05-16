@@ -255,4 +255,496 @@ end
 #     setloading(false);
 #     setofflineerror(false);
 #   }
+
+
+
+
+
+
+
 # };
+
+
+
+
+
+
+
+
+
+
+
+
+
+class PPoePackagesController < ApplicationController
+  rescue_from ActiveRecord::RecordNotFound, with: :not_found_response
+
+set_current_tenant_through_filter
+
+
+
+
+
+
+  require 'net/http'
+  require 'uri'
+  require 'json'
+  # GET /p_poe_packages or /p_poe_packages.json
+
+  # def index
+  #   @packages = PPoePackage.all # Convert ActiveRecord objects to hashes
+
+before_action :set_my_tenant
+
+  #     # packages = @packages.map { |package| package.as_json }
+  
+  #     # # Broadcast the packages to the PpoePackagesChannel
+  #     # ActionCable.server.broadcast 'PpoePackagesChannel', packages
+      
+  # end
+
+
+
+  def set_my_tenant
+    set_current_tenant(current_user.account)
+  end
+
+
+  # def show
+  #   poe = PPoePackage.find_by(id: params[:id])
+  #   render json: poe
+  # end
+
+  # GET /p_poe_packages/1 or /p_poe_packages/1.json
+  def index
+   
+     
+  
+    @p_poe_package = PPoePackage.all
+ 
+    render json: @p_poe_package
+  end
+
+
+  
+  # POST /p_poe_packages or /p_poe_packages.json
+  
+  def create
+
+    # ActsAsTenant.with_tenant(current_user.account) do
+
+    
+    @p_poe_package = PPoePackage.create(p_poe_package_params)
+
+    if  @p_poe_package
+     
+      render json:  @p_poe_package, status: :created
+    # ActionCable.server.broadcast("ppoe_packages_channel", message: 'Package Sucessfully Created' )
+  else
+  
+    render json: {error: 'Unprocessable Entity'}, status: :unprocessable_entity
+    # ActionCable.server.broadcast("ppoe_packages_channel", error: 'Unprocessable Entity' )
+
+  end
+
+
+
+
+      
+      session[:router_name] = params[:router_name]
+
+
+      router_name = session[:router_name]
+
+      nas_router = NasRouter.find_by(name: router_name)
+    if nas_router
+      router_ip_address = nas_router.ip_address
+        router_password = nas_router.password
+       router_username = nas_router.username
+       puts router_username 
+    
+    else
+    
+      puts 'router not found'
+    end
+  
+      router_name = params[:router_name]
+      nas_router = NasRouter.find_by(name: router_name)
+    if nas_router
+      router_ip_address = nas_router.ip_address
+        router_password = nas_router.password
+       router_username = nas_router.username
+
+    else
+
+      puts 'router not found'
+    end
+
+  
+    
+  user1 = router_username
+  password = router_password
+  name = package_params[:name]
+    download_limit = package_params[:download_limit]
+    upload_limit = package_params[:upload_limit]
+    validity = package_params[:validity]
+    validity_period_units = package_params[:validity_period_units]
+    price =  package_params[:price]
+    tx_rate_limit=  package_params[:tx_rate_limit]
+    rx_rate_limit = package_params[:rx_rate_limit]
+  upload_burst_limit = package_params[:upload_burst_limit]
+  download_burst_limit = package_params[:download_burst_limit]
+
+  
+ validity_period =   if validity_period_units == 'days'
+  "#{validity}d 00:00:00"
+
+  elsif validity_period_units == 'hours'
+     "#{validity}:00:00"
+  
+    # Handle other units if necessary
+  end
+
+  
+
+  
+  request_body1={
+    name: name,
+  validity: validity_period ,
+  price: price
+  }
+
+
+uri = URI("http://#{router_ip_address}/rest/user-manager/profile/add")
+request = Net::HTTP::Post.new(uri)
+
+request.basic_auth user1, password
+request.body = request_body1.to_json
+
+request['Content-Type'] = 'application/json'
+
+  response = Net::HTTP.start(uri.hostname, uri.port) do |http|
+    http.request(request)
+  end
+
+  if response.is_a?(Net::HTTPSuccess)
+    data = JSON.parse(response.body)
+    puts data
+  else
+    puts "Failed to post name and validty: #{response.code} - #{response.message}"
+  end
+
+
+
+
+
+
+
+
+
+
+
+
+  request_body2 = {
+    
+    "download-limit" => download_limit,
+    "upload-limit" => upload_limit,
+"name" => name,
+"rate-limit-rx" => "#{rx_rate_limit}M",
+"rate-limit-tx" => "#{tx_rate_limit}M",
+"rate-limit-burst-rx" => "#{upload_burst_limit}M",
+"rate-limit-burst-tx" => "#{download_burst_limit}M",
+"uptime-limit" => validity_period
+  }
+
+
+uri = URI("http://#{router_ip_address}/rest/user-manager/limitation/add")
+request = Net::HTTP::Post.new(uri)
+
+request.basic_auth user1, password
+request.body = request_body2.to_json
+
+request['Content-Type'] = 'application/json'
+
+response = Net::HTTP.start(uri.hostname, uri.port) do |http|
+  http.request(request)
+end
+
+if response.is_a?(Net::HTTPSuccess)
+  data = JSON.parse(response.body)
+  puts data
+else
+  puts "Failed to post upload and download limit : #{response.code} - #{response.message}"
+end
+    
+
+
+
+
+
+
+
+
+
+request_body3 = {
+    
+profile:  name,
+limitation: name
+}
+
+
+
+uri = URI("http://#{router_ip_address}/rest/user-manager/profile-limitation/add")
+request = Net::HTTP::Post.new(uri)
+request.basic_auth user1, password
+request.body = request_body3.to_json
+
+request['Content-Type'] = 'application/json'
+
+response = Net::HTTP.start(uri.hostname, uri.port) do |http|
+  http.request(request)
+end
+
+if response.is_a?(Net::HTTPSuccess)
+  data = JSON.parse(response.body)
+  puts data
+else
+  puts "Failed to post profile limitation: #{response.code} - #{response.message}"
+end
+    
+
+
+
+
+
+  end
+
+
+
+  def delete
+  #   router_name = session[:router_name]
+
+  #   nas_router = NasRouter.find_by(name: router_name)
+  # if nas_router
+  #   router_ip_address = nas_router.ip_address
+  #     router_password = nas_router.password
+  #    router_username = nas_router.username
+  #    puts router_username 
+  
+  # else
+  
+  #   puts 'router not found'
+  # end
+  
+  
+  
+  # user1 = router_username
+  # password = router_password
+    
+  # id = params[:id]
+  # uri = URI("http://#{router_ip_address}/rest/user-manager/profile/#{id}")
+  # request = Net::HTTP::Delete.new(uri)
+  # request.basic_auth user1, password
+  
+  
+  # response = Net::HTTP.start(uri.hostname, uri.port) do |http|
+  #   http.request(request)
+  # end
+  
+  # if response.is_a?(Net::HTTPSuccess)
+  #   data = JSON.parse(response.body)
+  #   puts data
+  # else
+  #   puts "Failed to delete profile: #{response.code} - #{response.message}"
+  # end
+      
+  
+  
+  
+    package = PPoePackage.find_by(id: params[:id])
+
+if package
+  package.destroy
+  head :no_content
+else
+  render json: { error: "Package not found" }, status: :not_found
+end
+
+  end
+
+
+
+
+  private
+    # Use callbacks to share common setup or constraints between actions.
+  
+
+    # Only allow a list of trusted parameters through.
+    def p_poe_package_params
+      params.require(:p_poe_package).permit(:name, :download_limit, :upload_limit, :price, :validity, :upload_burst_limit,
+      :download_burst_limit, :tx_rate_limit, :rx_rate_limit,  :validity_period_units
+       )
+    end
+
+
+def not_found_response
+  render json: { error: "Package not found" }, status: :not_found
+end
+
+
+
+end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+class PPoePackage < ApplicationRecord
+  require 'securerandom'
+
+
+# after_create_commit :broadcast_creation
+# after_rollback :broadcast_creation_failure
+    # after_commit :broadcast_packages
+    validates :name, uniqueness: true
+    validates :price, uniqueness: true
+acts_as_tenant(:account)
+# self.primary_key = 'id'
+before_create :assign_uuid_to_id
+
+# def assign_uuid_to_id
+#   self.id ||= SecureRandom.uuid
+# end
+private
+def assign_uuid_to_id
+  self.id ||= SecureRandom.uuid
+end
+# def broadcast_creation
+#     ActionCable.server.broadcast("ppoe_packages_channel", message: 'Package Succesfully created', package: self.to_json)
+    
+# end
+
+
+
+
+def broadcast_packages
+
+# package_data = {
+#     name: self.name
+# }
+#     packages = PPoePackage.all
+#     puts packages
+#     ActionCable.server.broadcast("ppoe_packages_channel", packages)
+  end
+# def broadcast_creation_failure
+#   ActionCable.server.broadcast("ppoe_packages_channel", error: 'Package Creation Failed', package: self.to_json )
+# end
+end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+create_table "p_poe_packages", id: false, force: :cascade do |t|
+  t.string "name"
+  t.integer "price"
+  t.string "download_limit"
+  t.string "upload_limit"
+  t.datetime "created_at", null: false
+  t.datetime "updated_at", null: false
+  t.integer "account_id"
+  t.string "tx_rate_limit"
+  t.string "rx_rate_limit"
+  t.string "validity_period_units"
+  t.string "download_burst_limit"
+  t.string "upload_burst_limit"
+  t.string "validity"
+  t.string "mikrotik_id"
+  t.integer "id"
+end
+
+
+
+
+
+
+
+
+
+
+
+
+
+class PpoePackagesChannel < ApplicationCable::Channel
+  # def subscribed
+  #   stream_from "PpoePackagesChannel"
+
+  #   broadcast_packages
+
+  # end
+
+  # def broadcast_packages
+
+
+  #     @packages = PPoePackage.all
+  #     packages = @packages.map { |package| package.as_json }
+  
+  #     ActionCable.server.broadcast 'PpoePackagesChannel', packages
+    
+
+  # end
+
+  def unsubscribed
+    # Any cleanup needed when channel is unsubscribed
+  end
+end

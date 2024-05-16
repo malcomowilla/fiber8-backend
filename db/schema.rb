@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2024_05_07_100934) do
+ActiveRecord::Schema[7.1].define(version: 2024_05_16_105016) do
   create_table "accounts", force: :cascade do |t|
     t.string "subdomain"
     t.datetime "created_at", null: false
@@ -18,21 +18,51 @@ ActiveRecord::Schema[7.1].define(version: 2024_05_07_100934) do
     t.string "domain"
   end
 
+  create_table "nas_routers", force: :cascade do |t|
+    t.string "name"
+    t.string "ip_address"
+    t.string "username"
+    t.string "password"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.integer "account_id"
+  end
+
   create_table "p_poe_packages", force: :cascade do |t|
     t.string "name"
-    t.integer "price"
+    t.string "price"
     t.string "download_limit"
     t.string "upload_limit"
-    t.integer "validity"
     t.integer "account_id"
     t.string "tx_rate_limit"
     t.string "rx_rate_limit"
     t.string "validity_period_units"
     t.string "download_burst_limit"
     t.string "upload_burst_limit"
+    t.string "mikrotik_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    
+    t.integer "validiity"
+    t.integer "validity"
+  end
+
+  create_table "packages", force: :cascade do |t|
+    t.string "name"
+    t.integer "price"
+    t.string "download_limit"
+    t.string "upload_limit"
+    t.integer "account_id"
+    t.string "tx_rate_limit"
+    t.string "rx_rate_limit"
+    t.string "validity_period_units"
+    t.string "download_burst_limit"
+    t.string "upload_burst_limit"
+    t.integer "validity"
+    t.string "mikrotik_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.string "limitation_id"
+    t.string "profile_limitation_id"
   end
 
   create_table "subscribers", force: :cascade do |t|
@@ -65,6 +95,14 @@ ActiveRecord::Schema[7.1].define(version: 2024_05_07_100934) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.string "username"
+    t.integer "account_id"
+  end
+
+  create_table "zones", force: :cascade do |t|
+    t.string "name"
+    t.string "zone_code"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
     t.integer "account_id"
   end
 

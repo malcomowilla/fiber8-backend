@@ -1,3 +1,5 @@
 class NasRouter < ApplicationRecord
-    belongs_to :user
+    acts_as_tenant(:account)
+    has_secure_password
+
 end

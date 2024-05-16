@@ -1,7 +1,6 @@
 class User < ApplicationRecord
     has_secure_password
     acts_as_tenant(:account)
-    has_many :nas_routers
      
 # validates :password, presence: true 
 validates :password_confirmation, confirmation: { case_sensitive: true}
