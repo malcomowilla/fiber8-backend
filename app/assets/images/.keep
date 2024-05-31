@@ -748,3 +748,208 @@ class PpoePackagesChannel < ApplicationCable::Channel
     # Any cleanup needed when channel is unsubscribed
   end
 end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+class SubscribersController < ApplicationController
+  # before_action :set_subscriber, only: %i[ show edit update destroy ]
+  rescue_from ActiveRecord::RecordNotFound, with: :subscriber_not_found_response
+  rescue_from ActiveRecord::RecordInvalid, with: :subscriber_invalid
+
+  set_current_tenant_through_filter
+
+  before_action :set_my_tenant
+
+  def set_my_tenant
+    set_current_tenant(current_user.account)
+  end
+
+  # GET /subscribers or /subscribers.json
+  def index
+    @subscribers = Subscriber.all
+    render json: @subscribers
+  end
+
+  # GET /subscribers/1 or /subscribers/1.json
+  def show
+  end
+
+  # POST /subscribers or /subscribers.json
+  def create
+    @subscriber = Subscriber.new(subscriber_params)
+    @account = Account.find_by(domain: request.domain)
+
+    if @account.respond_to?(:prefix_and_digits)
+      Rails.logger.info "prefix_and_digits association exists"
+      @prefix_and_digit = @account.prefix_and_digits.first
+      if @prefix_and_digit.present?
+        found_prefix = @prefix_and_digit.prefix
+        found_digit = @prefix_and_digit.minimum_digits
+        Rails.logger.info "Prefix: #{found_prefix}, Digits: #{found_digit}"
+      else
+        Rails.logger.error "PrefixAndDigit not found for the account"
+        render json: { error: "PrefixAndDigit not found for the account" }, status: :unprocessable_entity
+        return
+      end
+    else
+      Rails.logger.error "prefix_and_digits association does not exist"
+      render json: { error: "Account does not have a 'prefix_and_digits' relationship" }, status: :unprocessable_entity
+      return
+    end
+
+    auto_generated_no = "#{found_prefix}#{Subscriber.maximum(:sequence_number).to_i.next.to_s.rjust(found_digit, '0')}" if found_prefix && found_digit
+
+    if params[:use_auto_generated_pppoe_username]
+      @subscriber.pppoe_username = auto_generated_no
+    end
+
+    @subscriber.ref_no = auto_generated_no
+
+    if @subscriber.save!
+      render json: @subscriber, status: :created
+    else
+      render json: @subscriber.errors, status: :unprocessable_entity
+    end
+  end
+
+  def get_general_settings
+    @account = Account.find_by(domain: request.domain)
+    if @account.respond_to?(:prefix_and_digits)
+      Rails.logger.info "prefix_and_digits association exists"
+      @prefix = @account.prefix_and_digits.all
+      render json: @prefix, status: :created
+    else
+      Rails.logger.error "prefix_and_digits association does not exist"
+      render json: { error: "Account does not have a 'prefix_and_digits' relationship" }, status: :unprocessable_entity
+    end
+  end
+
+  def update_general_settings
+    @account = Account.find_by(domain: request.domain)
+    if @account.respond_to?(:prefix_and_digits)
+      Rails.logger.info "prefix_and_digits association exists"
+      @prefix = @account.prefix_and_digits.first_or_initialize(prefix: params[:prefix], minimum_digits: params[:minimum_digits])
+      @prefix.update(prefix: params[:prefix], minimum_digits: params[:minimum_digits])
+      @prefix.user = current_user
+
+      if @prefix.save
+        Rails.logger.info "PrefixAndDigit created successfully: #{@prefix.inspect}"
+        render json: @prefix, status: :created
+      else
+        Rails.logger.error "Failed to create PrefixAndDigit: #{@prefix.errors.full_messages.join(", ")}"
+        render json: @prefix.errors, status: :unprocessable_entity
+      end
+    else
+      Rails.logger.error "prefix_and_digits association does not exist"
+      render json: { error: "Account does not have a 'prefix_and_digits' relationship" }, status: :unprocessable_entity
+    end
+
+    if @account.respond_to?(:subscribers)
+      Rails.logger.info "subscribers association exists"
+      @subscriber = @account.subscribers.all.ref_no
+
+      if params[:check_update_username] == true
+        Subscriber.update_all(pppoe_username: @subscriber)
+      end
+
+      if params[:check_update_password] == true
+        Subscriber.update_all(pppoe_password: @subscriber)
+      end
+    else
+      render json: { error: "Account does not have a 'subscribers' relationship" }, status: :unprocessable_entity
+    end
+  end
+
+  def update
+    found_subscriber = set_subscriber
+    if found_subscriber.update(subscriber_params)
+      render json: found_subscriber
+    else
+      render json: found_subscriber.errors, status: :unprocessable_entity
+    end
+  end
+
+  def delete
+    found_subscriber = set_subscriber
+    found_subscriber.destroy
+    head :no_content
+  end
+
+  private
+
+  def subscriber_invalid(invalid)
+    render json: { error: invalid.record.errors.full_messages }, status: :unprocessable_entity
+  end
+
+  def subscriber_not_found_response
+    render json: { error: "Subscriber Not Found" }, status: :not_found
+  end
+
+  def set_subscriber
+    @subscriber = Subscriber.find_by(id: params[:id])
+  end
+
+  def subscriber_prefix_prefered_no_digits_params
+    params.permit(:prefix, :minimum_digits)
+  end
+
+  def prefix_and_digits_params
+    params.require(:prefix_and_digit).permit(:prefix, :minimum_digits)
+  end
+
+  def subscriber_params
+    params.require(:subscriber).permit(:name, :phone_number, :ppoe_username, :ppoe_password, :email, :ppoe_package,
+                                       :date_registered, :ref_no, :valid_until, :package_name, :installation_fee, :subscriber_discount, :second_phone_number)
+  end
+end
+Front-End Changes
+Assuming you are using React, update the form to include a checkbox for the auto-generated PPPoE username:
+
+javascript
+Copy code
+import React, { useState } from 'react';
+
+const SubscriberDetails = ({ handleClose, formData, createSubscriber, handleChangeForm, setFormData, isloading }) => {
+  const { name, ref_no, ppoe_password, ppoe_username, phone_number, email, second_phone_number, package_name, installation_fee, subscriber_discount, date_registered } = formData;
+
+  const [useAutoGeneratedPppoeUsername, setUseAutoGeneratedPppoeUsername] = useState(false);
+
+  const handleSubmit = (event) => {
+    event.preventDefault();
+    createSubscriber({ ...formData, use_auto_generated_pppoe_username: useAutoGeneratedPppoeUsername });
+  };
+
+  return (
+    <form onSubmit={handleSubmit}>
+      {/* existing form fields */}
+      <div>
+        <input
+          type="checkbox"
+          id="autoGeneratedPppoeUsername"
+          checked={useAutoGeneratedPppoeUsername}
+          onChange={(e) => setUseAutoGeneratedPppoeUsername(e.target.checked)}
+        />
+        <label htmlFor="autoGeneratedPppoeUsername">Use Auto-Generated Number as PPPoE Username</label>
+      </div>
+      {/* submit button and other form elements */}
+    </form>
+  );
+};
+
+export default SubscriberDetails;

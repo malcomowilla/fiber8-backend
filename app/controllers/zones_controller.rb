@@ -3,6 +3,7 @@ class ZonesController < ApplicationController
   set_current_tenant_through_filter
 
   before_action :set_my_tenant
+    # before_save :zone_code
   # before_action :set_zone, only: %i[ show edit update destroy ]
   rescue_from ActiveRecord::RecordNotFound, with: :zone_not_found_response
 
@@ -24,13 +25,14 @@ class ZonesController < ApplicationController
   # GET /zones/new
   def create
     @zone = Zone.create(zone_params)
+@zone.zone_code =  SecureRandom.alphanumeric(6).upcase 
 
     if @zone
-      render json: @zone, status: :created
+      render json: @zone, status: :created,  serializer:  ZoneSerializer
 
 
     else
-      render json: {error: 'canot process zone'}, status: :unprocessable_entity
+      render json: {error: 'cannot create zone'}, status: :unprocessable_entity
     end
   end
 
@@ -46,10 +48,19 @@ class ZonesController < ApplicationController
 
   end
 
+
+
+  def delete
+    found_zone = set_zone
+    found_zone.destroy
+    head :no_content
+
+  end
   private
     # Use callbacks to share common setup or constraints between actions.
     def set_zone
       @zone = Zone.find_by(id: params[:id])
+     
     end
 
 
@@ -62,12 +73,17 @@ class ZonesController < ApplicationController
       params.require(:zone).permit(:name,:zone_code)
     end
 
-
+  
 
 def zone_not_found_response
   render json: { error: "Zone Not Found" }, status: :not_found
 end
 
 
+def zone_code
+  self.zone_code = SecureRandom.alphanumeric(6) 
+  
+
+end
 
 end

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2024_05_16_105016) do
+ActiveRecord::Schema[7.1].define(version: 2024_05_21_163833) do
   create_table "accounts", force: :cascade do |t|
     t.string "subdomain"
     t.datetime "created_at", null: false
@@ -63,19 +63,39 @@ ActiveRecord::Schema[7.1].define(version: 2024_05_16_105016) do
     t.datetime "updated_at", null: false
     t.string "limitation_id"
     t.string "profile_limitation_id"
+    t.string "router_name"
+  end
+
+  create_table "prefix_and_digits", force: :cascade do |t|
+    t.string "prefix"
+    t.integer "minimum_digits"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.integer "account_id"
+    t.integer "user_id"
   end
 
   create_table "subscribers", force: :cascade do |t|
     t.string "name"
-    t.integer "phone_number"
     t.string "ppoe_username"
     t.string "ppoe_password"
     t.string "email"
     t.string "ppoe_package"
-    t.date "date_registered"
-    t.integer "ref_no"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.datetime "date_registered"
+    t.datetime "valid_until"
+    t.integer "account_id"
+    t.string "ref_no"
+    t.integer "sequence_number"
+    t.string "package_name"
+    t.string "installation_fee"
+    t.string "subscriber_discount"
+    t.string "second_phone_number"
+    t.string "router_name"
+    t.string "phone_number"
+    t.string "mikrotik_user_id"
+    t.index ["sequence_number"], name: "index_subscribers_on_sequence_number"
   end
 
   create_table "subscriptions", force: :cascade do |t|
@@ -87,6 +107,7 @@ ActiveRecord::Schema[7.1].define(version: 2024_05_16_105016) do
     t.datetime "expiry"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.integer "account_id"
   end
 
   create_table "users", force: :cascade do |t|

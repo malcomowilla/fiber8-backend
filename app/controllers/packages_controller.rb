@@ -58,7 +58,7 @@ class PackagesController < ApplicationController
     
       @package = Package.all
    
-      render json: @package, each_serializer: PackageSerializer
+      render json: @package, each_serializer:  PackageRouterSerializer
     end
   
   
@@ -67,6 +67,7 @@ class PackagesController < ApplicationController
             def create
           
                   session[:router_name] = params[:router_name]
+                  puts @package.inspect  
 
               
               @package = Package.new(package_params)
@@ -87,12 +88,12 @@ class PackagesController < ApplicationController
 
                 end
               else
-              
                 render json: {error: 'Package Already Created'}, status: :unprocessable_entity
+              
             
               end
             
-
+                
               end
 
     
@@ -100,6 +101,8 @@ class PackagesController < ApplicationController
 
             
               def update_package
+                        session[:router_name] = params[:router_name]
+
                 package = Package.find_by(id: params[:id])
             
                   
@@ -276,9 +279,6 @@ class PackagesController < ApplicationController
 
 
 def fetch_limitation_id_from_mikrotik(package_name)
-
-
-  
   
         router_name = session[:router_name]
   
@@ -481,7 +481,7 @@ end
 
       def package_params
         params.require(:package).permit(:name, :download_limit, :upload_limit, :price, :validity, :upload_burst_limit,
-        :download_burst_limit,  :validity_period_units
+        :download_burst_limit,  :validity_period_units, :router_name
          )
       end
   
