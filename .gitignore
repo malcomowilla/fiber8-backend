@@ -12,7 +12,7 @@
 /.env*
 # / .secrets
 !/.env*.erb
-.kamal/secrets
+.kamal/secrets*
 # Ignore all logfiles and tempfiles.
 /log/*
 /tmp/*
