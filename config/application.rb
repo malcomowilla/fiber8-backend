@@ -1,6 +1,11 @@
 require_relative "boot"
 
 require "rails/all"
+require_relative '../app/middleware/set_tenant'
+
+
+
+
 
 # Require the gems listed in Gemfile, including any gems
 # you've limited to :test, :development, or :production.
@@ -16,7 +21,7 @@ module Fiber8backend
     # config.session_store :cookie_store, key: '_hue_session', domain: :all
     # puts("Loading cookies session store KEY")
 
-
+config.middleware.use SetTenant
     puts("Loading cookies session store options")
     config.session_options = {
       httponly: true,
@@ -42,7 +47,6 @@ module Fiber8backend
 
 config.hosts = nil
     config.middleware.use ActionDispatch::Cookies
-    config.middleware.use ActionDispatch::Session::CookieStore, key: '_fiber8backend_session', domain: :all
     # puts("Loading cookies session store options")
     # config.session_store :cookie_store, key: '_fiber8backend_session', httponly: true, same_site: :none, secure: Rails.env.production?
 # Use SameSite=Strict for all cookies to help protect against CSRF

@@ -1,0 +1,72 @@
+<%= form_with(model: hotspot_package) do |form| %>
+  <% if hotspot_package.errors.any? %>
+    <div style="color: red">
+      <h2><%= pluralize(hotspot_package.errors.count, "error") %> prohibited this hotspot_package from being saved:</h2>
+
+      <ul>
+        <% hotspot_package.errors.each do |error| %>
+          <li><%= error.full_message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div>
+    <%= form.label :name, style: "display: block" %>
+    <%= form.text_field :name %>
+  </div>
+
+  <div>
+    <%= form.label :price, style: "display: block" %>
+    <%= form.text_field :price %>
+  </div>
+
+  <div>
+    <%= form.label :download_limit, style: "display: block" %>
+    <%= form.text_field :download_limit %>
+  </div>
+
+  <div>
+    <%= form.label :upload_limit, style: "display: block" %>
+    <%= form.text_field :upload_limit %>
+  </div>
+
+  <div>
+    <%= form.label :account_id, style: "display: block" %>
+    <%= form.number_field :account_id %>
+  </div>
+
+  <div>
+    <%= form.label :tx_rate_limit, style: "display: block" %>
+    <%= form.text_field :tx_rate_limit %>
+  </div>
+
+  <div>
+    <%= form.label :rx_rate_limit, style: "display: block" %>
+    <%= form.text_field :rx_rate_limit %>
+  </div>
+
+  <div>
+    <%= form.label :validity_period_units, style: "display: block" %>
+    <%= form.text_field :validity_period_units %>
+  </div>
+
+  <div>
+    <%= form.label :download_burst_limit, style: "display: block" %>
+    <%= form.text_field :download_burst_limit %>
+  </div>
+
+  <div>
+    <%= form.label :upload_burst_limitmikrotik_id, style: "display: block" %>
+    <%= form.number_field :upload_burst_limitmikrotik_id %>
+  </div>
+
+  <div>
+    <%= form.label :validity, style: "display: block" %>
+    <%= form.number_field :validity %>
+  </div>
+
+  <div>
+    <%= form.submit %>
+  </div>
+<% end %>

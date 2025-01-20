@@ -1,0 +1,27 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  name: MyString
+  price: MyString
+  download_limit: MyString
+  upload_limit: MyString
+  account_id: 1
+  tx_rate_limit: MyString
+  rx_rate_limit: MyString
+  validity_period_units: MyString
+  download_burst_limit: MyString
+  upload_burst_limitmikrotik_id: 1
+  validity: 1
+
+two:
+  name: MyString
+  price: MyString
+  download_limit: MyString
+  upload_limit: MyString
+  account_id: 1
+  tx_rate_limit: MyString
+  rx_rate_limit: MyString
+  validity_period_units: MyString
+  download_burst_limit: MyString
+  upload_burst_limitmikrotik_id: 1
+  validity: 1

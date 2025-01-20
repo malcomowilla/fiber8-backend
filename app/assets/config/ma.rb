@@ -1,9 +1,9 @@
 
-sequence_number = 1
+sequence_number = 2
 prefix = 'FK'
-minimum_number = 6
+minimum_number = '6'
 
-number_prefix =  "#{prefix}#{sequence_number.to_s.rjust(minimum_number, '0')}"
+number_prefix =  "#{prefix}#{sequence_number.to_s.rjust(minimum_number.to_i, '0')}"
 
 
 puts number_prefix

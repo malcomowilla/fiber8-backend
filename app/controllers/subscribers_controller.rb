@@ -5,13 +5,15 @@ rescue_from  ActiveRecord::RecordInvalid, with: :subscriber_invalid
 
 set_current_tenant_through_filter
 
-before_action :set_my_tenant
+# before_action :set_my_tenant
 
 
 
-  def set_my_tenant
-    set_current_tenant(current_user.account)
-  end
+  # def set_my_tenant
+  #   set_current_tenant(current_user.account)
+  # end
+  # 
+  #
   # GET /subscribers or /subscribers.json
   def index
     @subscribers = Subscriber.all
@@ -51,7 +53,7 @@ before_action :set_my_tenant
         return
       end
   
-      auto_generated_no = @subscriber.ref_no = "#{found_prefix}#{@subscriber.sequence_number.to_s.rjust(found_digit, '0')}" if found_prefix && found_digit
+  auto_generated_no = @subscriber.ref_no = "#{found_prefix}#{@subscriber.sequence_number.to_s.rjust(found_digit, '0')}" if found_prefix && found_digit
       if params[:check_update_username] == true
         
         @subscriber.update(ppoe_username: auto_generated_no)
@@ -95,7 +97,8 @@ def get_general_settings
     @prefix = @account.prefix_and_digits.all
     # render json: @prefix
     render json: @prefix,  context: {check_update_username: params[:check_update_username], 
-    check_update_password: params[:check_update_password] 
+    check_update_password: params[:check_update_password] , welcome_back_message: params[:welcome_back_message],
+    router_name: params[:router_name]
   }
 
   # render json: @prefix, status: :created, context: {
@@ -120,9 +123,11 @@ end
 
 
       if @prefix.save
+        
         Rails.logger.info "PrefixAndDigit created successfully: #{@prefix.inspect}"
-        render json: @prefix, status: :created, serializer: PrefixDigitsSerializer,context: {check_update_username: params[:check_update_username], 
-        check_update_password: params[:check_update_password] }
+        render json: @prefix, status: :created, serializer: PrefixDigitsSerializer,context: {check_update_username:
+         params[:check_update_username],  welcome_back_message: params[:welcome_back_message],
+        check_update_password: params[:check_update_password], router_name: params[:router_name] }
       else
         Rails.logger.error "Failed to create PrefixAndDigit: #{@prefix.errors.full_messages.join(", ")}"
         render json: @prefix.errors, status: :unprocessable_entity

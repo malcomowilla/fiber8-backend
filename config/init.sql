@@ -1,0 +1,2 @@
+
+CREATE DATABASE kamal_aitechs_fiber8backend;

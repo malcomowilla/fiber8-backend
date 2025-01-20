@@ -1,0 +1,10 @@
+<p style="color: green"><%= notice %></p>
+
+<%= render @router_setting %>
+
+<div>
+  <%= link_to "Edit this router setting", edit_router_setting_path(@router_setting) %> |
+  <%= link_to "Back to router settings", router_settings_path %>
+
+  <%= button_to "Destroy this router setting", @router_setting, method: :delete %>
+</div>

@@ -1,0 +1,14 @@
+<p style="color: green"><%= notice %></p>
+
+<h1>Hotspot packages</h1>
+
+<div id="hotspot_packages">
+  <% @hotspot_packages.each do |hotspot_package| %>
+    <%= render hotspot_package %>
+    <p>
+      <%= link_to "Show this hotspot package", hotspot_package %>
+    </p>
+  <% end %>
+</div>
+
+<%= link_to "New hotspot package", new_hotspot_package_path %>
