@@ -10,9 +10,9 @@
 
 # Ignore all environment files (except templates).
 /.env*
-/ .secrets
+# / .secrets
 !/.env*.erb
-
+.kamal/secrets
 # Ignore all logfiles and tempfiles.
 /log/*
 /tmp/*
