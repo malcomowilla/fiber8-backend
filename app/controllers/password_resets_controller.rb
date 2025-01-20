@@ -11,9 +11,9 @@ end
     if @user
         
     PasswordMailer.with(user: @user).reset.deliver_now
-    render json: {message: "Nimekutumia email ebu cheki gmail yako!"}, status: :ok
+    render json: {message: "Nimekutumia email ya kureset password cheki gmail account yako!!"}, status: :ok
     else
-        render json: {error: 'Email not found please try again'}, status: :unprocessable_entity
+        render json: {error: 'Hatuna Email Yako Bro'}, status: :unprocessable_entity
     end
 
    end

@@ -1,8 +1,8 @@
 class ZonesController < ApplicationController
 
-  set_current_tenant_through_filter
+  # set_current_tenant_through_filter
 
-  before_action :set_my_tenant
+  # before_action :set_my_tenant
     # before_save :zone_code
   # before_action :set_zone, only: %i[ show edit update destroy ]
   rescue_from ActiveRecord::RecordNotFound, with: :zone_not_found_response
@@ -10,9 +10,9 @@ class ZonesController < ApplicationController
   
   
   
-    def set_my_tenant
-      set_current_tenant(current_user.account)
-    end
+    # def set_my_tenant
+    #   set_current_tenant(current_user.account)
+    # end
 
 
   # GET /zones or /zones.json

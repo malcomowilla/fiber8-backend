@@ -3,20 +3,22 @@ class User < ApplicationRecord
     acts_as_tenant(:account)
     has_many :prefix_and_digits
 
-     
-# validates :password, presence: true 
-validates :password_confirmation, confirmation: { case_sensitive: true}
+    has_many :admin_web_authn_credentials, dependent: :destroy
 
-validate :validate_complex_password
+#  validates :password, presence: true 
 
-validates :email,  uniqueness: {case_sensitive: true}, format: { with: URI::MailTo::EMAIL_REGEXP } 
-# validate :validate_email_format
-validates :username, presence: true, length: {minimum: 6, maximum: 20}, uniqueness: true
-def validate_email_format
-    unless email.end_with?('@gmail.com') || email.end_with?('co.ke')
-        errors.add(:email, 'must be a valid email adress ending with gmail.com')
-    end
-end
+# validates :password_confirmation, confirmation: { case_sensitive: true}
+
+# validate :validate_complex_password
+
+# validates :email,  uniqueness: {case_sensitive: true}, format: { with: URI::MailTo::EMAIL_REGEXP } 
+# # validate :validate_email_format
+# validates :username, presence: true, length: {minimum: 6, maximum: 20}, uniqueness: true
+# def validate_email_format
+#     unless email.end_with?('@gmail.com') || email.end_with?('co.ke')
+#         errors.add(:email, 'must be a valid email adress ending with gmail.com')
+#     end
+# end
 
 
 # validates :password, presence: true, uniqueness: true

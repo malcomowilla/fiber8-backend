@@ -8,7 +8,23 @@ class PackageSerializer < ActiveModel::Serializer
     "#{self.object.upload_limit}M/#{self.object.download_limit}M"
   end
 
+  # def valid
+  #   self.object.validity_period_units == 'days' ? "#{self.object.validity}days" : "#{self.object.validity}hour"
+  # end
+  # 
+  #
   def valid
-    self.object.validity_period_units == 'days' ? "#{self.object.validity}days" : "#{self.object.validity}hour"
+    case self.object.validity_period_units
+    when 'days'
+      "#{self.object.validity} days"
+    when 'hour'
+      "#{self.object.validity} hour"
+    when 'minutes'
+      "#{self.object.validity} minutes"
+    else
+      nil # Return nil if no match is found
+    end
   end
 end
+
+

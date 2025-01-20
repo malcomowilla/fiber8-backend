@@ -18,3 +18,6 @@ class CreatePPoePackages < ActiveRecord::Migration[7.1]
     end
   end
 end
+
+# db/migrate/20240420145643_add_download_burst_and_upload_burst_limit_to_p_poe_packages.rb
+# 20240513121015_create_p_poe_packages.rb

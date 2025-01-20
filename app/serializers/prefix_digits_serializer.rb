@@ -5,6 +5,20 @@ class PrefixDigitsSerializer <  ActiveModel::Serializer
 
 attribute :check_update_username, if: :include_check_update_username?
 attribute :check_update_password, if: :include_check_update_password?
+attribute :welcome_back_message, if: :include_welcome_back_message?
+attribute :router_name, if: :include_router_name_present? 
+
+
+
+def include_router_name_present?
+
+  context_present? 
+    end
+  
+  
+    def router_name
+      instance_options[:context][:router_name]
+    end
 def include_check_update_password?
     context_present? && instance_options[:context][:check_update_password] == true
   
@@ -13,6 +27,12 @@ def include_check_update_password?
     context_present? && instance_options[:context][:check_update_username] == true
   
   end
+
+
+  def include_welcome_back_message?
+    context_present? && instance_options[:context][:welcome_back_message] == true 
+  end
+  
   
   def context_present?
     instance_options[:context].present?
@@ -22,11 +42,20 @@ def check_update_password
 end
 
 
+# def router_name
+# router_name
+# end
 
 
 def check_update_username
     true
 end
+
+
+def welcome_back_message
+  true
+end
+
 end
 
 

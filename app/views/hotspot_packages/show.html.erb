@@ -1,0 +1,10 @@
+<p style="color: green"><%= notice %></p>
+
+<%= render @hotspot_package %>
+
+<div>
+  <%= link_to "Edit this hotspot package", edit_hotspot_package_path(@hotspot_package) %> |
+  <%= link_to "Back to hotspot packages", hotspot_packages_path %>
+
+  <%= button_to "Destroy this hotspot package", @hotspot_package, method: :delete %>
+</div>

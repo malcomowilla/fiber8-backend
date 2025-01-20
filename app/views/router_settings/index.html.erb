@@ -1,0 +1,14 @@
+<p style="color: green"><%= notice %></p>
+
+<h1>Router settings</h1>
+
+<div id="router_settings">
+  <% @router_settings.each do |router_setting| %>
+    <%= render router_setting %>
+    <p>
+      <%= link_to "Show this router setting", router_setting %>
+    </p>
+  <% end %>
+</div>
+
+<%= link_to "New router setting", new_router_setting_path %>

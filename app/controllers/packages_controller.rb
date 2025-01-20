@@ -8,15 +8,15 @@ class PackagesController < ApplicationController
 
 
 
-  set_current_tenant_through_filter
+  # set_current_tenant_through_filter
 
-  before_action :set_my_tenant
+  # before_action :set_my_tenant
   
   
   
-    def set_my_tenant
-      set_current_tenant(current_user.account)
-    end
+    # def set_my_tenant
+    #   set_current_tenant(current_user.account)
+    # end
   
     def index
      
@@ -38,6 +38,8 @@ class PackagesController < ApplicationController
     #   puts 'router not found'
     # end
      
+
+    
     #   uri = URI("http://#{router_ip_address}/rest/user-manager/limitation")
     #   request = Net::HTTP::Get.new(uri)
     #   request.basic_auth user1, password
@@ -62,11 +64,10 @@ class PackagesController < ApplicationController
     end
   
   
-    
+  
             
             def create
           
-                  session[:router_name] = params[:router_name]
                   puts @package.inspect  
 
               
@@ -101,13 +102,13 @@ class PackagesController < ApplicationController
 
             
               def update_package
-                        session[:router_name] = params[:router_name]
+                        # session[:router_name] = params[:router_name]
 
                 package = Package.find_by(id: params[:id])
             
                   
                   if package
-                    router_name = session[:router_name]
+                    router_name = params[:router_name]
                   nas_router = NasRouter.find_by(name: router_name)
                   if nas_router
                     router_ip_address = nas_router.ip_address
@@ -280,8 +281,8 @@ class PackagesController < ApplicationController
 
 def fetch_limitation_id_from_mikrotik(package_name)
   
-        router_name = session[:router_name]
-  
+  router_name = params[:router_name]
+
         nas_router = NasRouter.find_by(name: router_name)
       if nas_router
         router_ip_address = nas_router.ip_address
@@ -359,8 +360,8 @@ end
 
         def fetch_profile_id_from_mikrotik(package_name)
         
-        router_name = session[:router_name]
-  
+        # router_name = session[:router_name]
+  router_name = params[:router_name]
         nas_router = NasRouter.find_by(name: router_name)
       if nas_router
         router_ip_address = nas_router.ip_address
@@ -429,8 +430,9 @@ end
 def fetch_profile_limitation_id(package_name)
   
 
-  router_name = session[:router_name]
-  
+  # router_name = session[:router_name]
+  router_name = params[:router_name]
+
         nas_router = NasRouter.find_by(name: router_name)
       if nas_router
         router_ip_address = nas_router.ip_address
