@@ -93,12 +93,19 @@ class ApplicationController < ActionController::Base
     
       
 
+    # database:
+    # password: gdg&53670a8*2/?
+  
+    # jwt_secret: gebn''{]a8*2/?
+
+
+
     def current_user
         @current_user ||= begin
           token = cookies.encrypted.signed[:jwt_user]
           if token  
             begin
-              decoded_token = JWT.decode(token, ENV['JWT_SECRET'], true, algorithm: 'HS256')
+              decoded_token = JWT.decode(token,  Rails.application.credentials.dig(:jwt_secret), true, algorithm: 'HS256')
             user_id = decoded_token[0]['user_id']
             @current_user = User.find_by(id: user_id)
               return @current_user if @current_user

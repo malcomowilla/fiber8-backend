@@ -44,6 +44,8 @@
 
 
 
+
+
 default: &default
   adapter: postgresql
   encoding: unicode
@@ -111,10 +113,10 @@ test:
 #
 production:
   <<: *default
-  host: <%= ENV["DB_HOST"] %>
+  host: localhost
   database: kamal_aitechs_fiber8backend
   username: kamal_aitechs_fiber8backend
-  password: <%= ENV["POSTGRES_PASSWORD"] %>
+  password: Rails.application.credentials.dig(:database, :password)
 
 
 
