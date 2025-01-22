@@ -2,6 +2,10 @@ Rails.application.routes.draw do
   resources :router_settings
   resources :hotspot_packages
  
+  # kaorizebabnon$5%
+  # kaori
+  # kaori12
+
 
 mount ActionCable.server => '/cable'
 

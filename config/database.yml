@@ -56,7 +56,15 @@ default: &default
 development:
   <<: *default
   database: fiber8backend_development
+  port: 5433
+  host: localhost
+  username:  <%= Rails.application.credentials.dig(:database, :username) %>
+  password: <%= Rails.application.credentials.dig(:database, :password) %>
+  
 
+# database:
+#   username: postgres
+#   password: kaori12
   # The specified database role being used to connect to PostgreSQL.
   # To create additional roles in PostgreSQL see `$ createuser --help`.
   # When left blank, PostgreSQL will use the default role. This is
@@ -115,10 +123,7 @@ production:
   <<: *default
   host: localhost
   database: kamal_aitechs_fiber8backend
-  username: kamal_aitechs_fiber8backend
-  password: Rails.application.credentials.dig(:database, :password)
-
-
+  
 
   # <<: *default
   # # database: quality_smiles_backend_production
