@@ -58,11 +58,8 @@ development:
   database: fiber8backend_development
   port: 5433
   host: localhost
-  # username:  <%= Rails.application.credentials.dig(:database, :username) %>
-  # password: <%= Rails.application.credentials.dig(:database, :password) %>
-  
-username: postgres
-password: kaori12
+  username: postgres
+  password: kaori12
 
   # The specified database role being used to connect to PostgreSQL.
   # To create additional roles in PostgreSQL see `$ createuser --help`.
