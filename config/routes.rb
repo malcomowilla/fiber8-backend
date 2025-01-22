@@ -6,6 +6,7 @@ Rails.application.routes.draw do
   # kaori
   # kaori12
 
+  # cp ./master_key/master.key /hfiber8-backend/config
 
 mount ActionCable.server => '/cable'
 
