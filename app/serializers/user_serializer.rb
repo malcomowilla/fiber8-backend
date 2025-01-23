@@ -1,5 +1,5 @@
 class UserSerializer < ActiveModel::Serializer
-  attributes :username, :email, :id, :created_at, :updated_at, :phone_number
+  attributes :username, :email, :id, :created_at, :updated_at, :phone_number, :role
 
   attribute :welcome_back_message, if: :include_welcome_back_message?
 
@@ -16,6 +16,8 @@ class UserSerializer < ActiveModel::Serializer
     "Welcome Back"
   end
   
+  
+
 
 end
 

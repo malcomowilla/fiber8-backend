@@ -6,7 +6,13 @@ class PackagesController < ApplicationController
   require 'uri'
   require 'json'
 
+    # before_action :authenticate_user!, only: [:index]
+    # load_and_authorize_resource
 
+
+
+    # listen 80;
+    #     listen [::]:80;
 
   # set_current_tenant_through_filter
 
@@ -274,6 +280,28 @@ class PackagesController < ApplicationController
     end
     
   
+
+
+
+    def authenticate_user!
+      
+      @current_user ||= begin
+          token = cookies.encrypted.signed[:jwt_user]
+          if token  
+            begin
+              decoded_token = JWT.decode(token, 
+               'gdg&53670a8*2/?', true, algorithm: 'HS256')
+            user_id = decoded_token[0]['user_id']
+            @current_user = User.find_by(id: user_id)
+              return @current_user if @current_user
+            rescue JWT::DecodeError, JWT::ExpiredSignature => e
+              Rails.logger.error "JWT Decode Error: #{e}"
+              render json: { error: 'Unauthorized' }, status: :unauthorized
+            end
+          end
+          nil
+        end
+    end
   
     private
       

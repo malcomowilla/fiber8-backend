@@ -1,0 +1,10 @@
+<p style="color: green"><%= notice %></p>
+
+<%= render @company_setting %>
+
+<div>
+  <%= link_to "Edit this company setting", edit_company_setting_path(@company_setting) %> |
+  <%= link_to "Back to company settings", company_settings_path %>
+
+  <%= button_to "Destroy this company setting", @company_setting, method: :delete %>
+</div>

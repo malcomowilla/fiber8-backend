@@ -5,6 +5,10 @@ class User < ApplicationRecord
 
     has_many :admin_web_authn_credentials, dependent: :destroy
 
+
+    enum :role,  [:super_administrator, :technician,
+ :customer_support,  :administrator, :agent]
+ 
 #  validates :password, presence: true 
 
 # validates :password_confirmation, confirmation: { case_sensitive: true}

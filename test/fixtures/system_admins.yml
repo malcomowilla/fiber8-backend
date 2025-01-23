@@ -1,0 +1,25 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  user_name: MyString
+  password_digest: MyString
+  email: MyString
+  verification_token: MyString
+  email_verified: false
+  role: MyString
+  fcm_token: MyString
+  webauthn_id: MyString
+  webauthn_authenticator_attachment: 
+  login_with_passkey: false
+
+two:
+  user_name: MyString
+  password_digest: MyString
+  email: MyString
+  verification_token: MyString
+  email_verified: false
+  role: MyString
+  fcm_token: MyString
+  webauthn_id: MyString
+  webauthn_authenticator_attachment: 
+  login_with_passkey: false

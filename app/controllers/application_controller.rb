@@ -93,10 +93,33 @@ class ApplicationController < ActionController::Base
     
       
 
-    # database:
-    # password: gdg&53670a8*2/?
-  
-    # jwt_secret: gebn''{]a8*2/?
+
+    def current_system_admin
+      @current_user ||= begin
+        token = cookies.encrypted.signed[:jwt_user]
+        if token  
+          begin
+            decoded_token = JWT.decode(token,  ENV['JWT_SECRET'], true, algorithm: 'HS256')
+          user_id = decoded_token[0]['user_id']
+          @current_user = User.find_by(id: user_id)
+            return @current_user if @current_user
+          rescue JWT::DecodeError, JWT::ExpiredSignature => e
+            Rails.logger.error "JWT Decode Error: #{e}"
+            render json: { error: 'Unauthorized' }, status: :unauthorized
+          end
+        end
+        nil
+      end
+           
+  end
+
+
+
+
+
+
+
+
 
 
 
@@ -105,7 +128,7 @@ class ApplicationController < ActionController::Base
           token = cookies.encrypted.signed[:jwt_user]
           if token  
             begin
-              decoded_token = JWT.decode(token,  Rails.application.credentials.dig(:jwt_secret), true, algorithm: 'HS256')
+              decoded_token = JWT.decode(token,  ENV['JWT_SECRET'], true, algorithm: 'HS256')
             user_id = decoded_token[0]['user_id']
             @current_user = User.find_by(id: user_id)
               return @current_user if @current_user
@@ -120,7 +143,13 @@ class ApplicationController < ActionController::Base
     end
 
 
-
+    def current_user_ability
+      if current_user.present?
+        @current_ability ||= Ability.new(current_user)
+      else
+        raise CanCan::AccessDenied
+      end
+    end
 
 
 

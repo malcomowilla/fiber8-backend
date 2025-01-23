@@ -1,0 +1,14 @@
+<p style="color: green"><%= notice %></p>
+
+<h1>System admin sms</h1>
+
+<div id="system_admin_sms">
+  <% @system_admin_sms.each do |system_admin_sm| %>
+    <%= render system_admin_sm %>
+    <p>
+      <%= link_to "Show this system admin sm", system_admin_sm %>
+    </p>
+  <% end %>
+</div>
+
+<%= link_to "New system admin sm", new_system_admin_sm_path %>

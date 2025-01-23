@@ -1,0 +1,10 @@
+<p style="color: green"><%= notice %></p>
+
+<%= render @system_admin %>
+
+<div>
+  <%= link_to "Edit this system admin", edit_system_admin_path(@system_admin) %> |
+  <%= link_to "Back to system admins", system_admins_path %>
+
+  <%= button_to "Destroy this system admin", @system_admin, method: :delete %>
+</div>

@@ -1,0 +1,2 @@
+module SystemAdminSmsHelper
+end
