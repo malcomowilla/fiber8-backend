@@ -5,7 +5,7 @@ class SetTenant
 
   def call(env)
     request = ActionDispatch::Request.new(env)
-    Rails.logger.info "Request object: #{request.inspect}"
+    Rails.logger.info "Request object: #{request.inspect}3"
 
     if host = request.headers['X-Original-Host']
       Rails.logger.info "Setting tenant for host: #{host}"

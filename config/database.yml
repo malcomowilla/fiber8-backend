@@ -56,10 +56,10 @@ default: &default
 development:
   <<: *default
   database: fiber8backend_development
-  port: 5433
+  port: 5432
   host: localhost
-  username: <%= ENV["DATABSE_USERNAME"] %>
-  password: <%= ENV["DATABASE_PASSWORD"] %>
+  username: postgres
+  password: kaori12
 
 
 

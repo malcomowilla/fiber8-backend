@@ -1,12 +1,10 @@
 Rails.application.routes.draw do
+  resources :system_admin_sms
+  resources :system_admins
+  resources :company_settings
   resources :router_settings
   resources :hotspot_packages
  
-  # kaorizebabnon$5%
-  # kaori
-  # kaori12
-
-  # cp ./master_key/master.key /hfiber8-backend/config
 
 mount ActionCable.server => '/cable'
 
@@ -29,7 +27,9 @@ post '/create_router', to: "nas_routers#create"
 patch '/update_router/:id', to: "nas_routers#update"
 get '/routers', to: 'nas_routers#index' 
 delete '/delete_router/:id', to: 'nas_routers#delete'
-
+post '/company_settings', to: 'company_settings#create'
+get '/get_company_settings', to: 'company_settings#index'
+get '/allow_get_company_settings', to: 'company_settings#allow_get_company_settings'
 
   get '/mikrotik_live', to: "mikrotik_live#mikrotik"
 

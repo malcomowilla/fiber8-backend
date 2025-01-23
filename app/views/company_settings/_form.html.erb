@@ -1,0 +1,47 @@
+<%= form_with(model: company_setting) do |form| %>
+  <% if company_setting.errors.any? %>
+    <div style="color: red">
+      <h2><%= pluralize(company_setting.errors.count, "error") %> prohibited this company_setting from being saved:</h2>
+
+      <ul>
+        <% company_setting.errors.each do |error| %>
+          <li><%= error.full_message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div>
+    <%= form.label :company_name, style: "display: block" %>
+    <%= form.text_field :company_name %>
+  </div>
+
+  <div>
+    <%= form.label :email_info, style: "display: block" %>
+    <%= form.text_field :email_info %>
+  </div>
+
+  <div>
+    <%= form.label :contact_info, style: "display: block" %>
+    <%= form.text_field :contact_info %>
+  </div>
+
+  <div>
+    <%= form.label :agent_email, style: "display: block" %>
+    <%= form.text_field :agent_email %>
+  </div>
+
+  <div>
+    <%= form.label :customer_support_phone_number, style: "display: block" %>
+    <%= form.text_field :customer_support_phone_number %>
+  </div>
+
+  <div>
+    <%= form.label :customer_support_email, style: "display: block" %>
+    <%= form.text_field :customer_support_email %>
+  </div>
+
+  <div>
+    <%= form.submit %>
+  </div>
+<% end %>

@@ -1,0 +1,67 @@
+<%= form_with(model: system_admin) do |form| %>
+  <% if system_admin.errors.any? %>
+    <div style="color: red">
+      <h2><%= pluralize(system_admin.errors.count, "error") %> prohibited this system_admin from being saved:</h2>
+
+      <ul>
+        <% system_admin.errors.each do |error| %>
+          <li><%= error.full_message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div>
+    <%= form.label :user_name, style: "display: block" %>
+    <%= form.text_field :user_name %>
+  </div>
+
+  <div>
+    <%= form.label :password_digest, style: "display: block" %>
+    <%= form.text_field :password_digest %>
+  </div>
+
+  <div>
+    <%= form.label :email, style: "display: block" %>
+    <%= form.text_field :email %>
+  </div>
+
+  <div>
+    <%= form.label :verification_token, style: "display: block" %>
+    <%= form.text_field :verification_token %>
+  </div>
+
+  <div>
+    <%= form.label :email_verified, style: "display: block" %>
+    <%= form.check_box :email_verified %>
+  </div>
+
+  <div>
+    <%= form.label :role, style: "display: block" %>
+    <%= form.text_field :role %>
+  </div>
+
+  <div>
+    <%= form.label :fcm_token, style: "display: block" %>
+    <%= form.text_field :fcm_token %>
+  </div>
+
+  <div>
+    <%= form.label :webauthn_id, style: "display: block" %>
+    <%= form.text_field :webauthn_id %>
+  </div>
+
+  <div>
+    <%= form.label :webauthn_authenticator_attachment, style: "display: block" %>
+    <%= form.text_field :webauthn_authenticator_attachment %>
+  </div>
+
+  <div>
+    <%= form.label :login_with_passkey, style: "display: block" %>
+    <%= form.check_box :login_with_passkey %>
+  </div>
+
+  <div>
+    <%= form.submit %>
+  </div>
+<% end %>
