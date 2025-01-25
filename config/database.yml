@@ -60,8 +60,8 @@ development:
   host: localhost
   # username: postgres
   # password: kaori12
-  username: DATABASE_USERNAME
-  password: DATABASE_PASSWORD
+  username: <%= ENV['DATABASE_USERNAME'] %>
+  password: <%= ENV['DATABASE_PASSWORD'] %>
   
   # The specified database role being used to connect to PostgreSQL.
   # To create additional roles in PostgreSQL see `$ createuser --help`.
