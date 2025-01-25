@@ -46,6 +46,9 @@
 
 
 
+DATABSE_USERNAME = postgres
+DATABASE_PASSWORD = kaori12
+
 default: &default
   adapter: postgresql
   encoding: unicode
@@ -58,8 +61,10 @@ development:
   database: fiber8backend_development
   port: 5432
   host: localhost
-  username: postgres
-  password: kaori12
+  # username: postgres
+  # password: kaori12
+  username: DATABSE_USERNAME
+  password: DATABSE_PASSWORD
 
 
 
