@@ -69,7 +69,7 @@ get '/get_passkey_credentials', to: 'sessions#get_passkey_credentials'
 post '/update_profile', to: "sessions#update_admin"
 get "/password/reset/edit", to: "password_resets#edit"
 patch "password/reset/edit", to: "password_resets#update"
-  post '/sign_in' , to: 'sessions#create'
+  post '/api/sign_in' , to: 'sessions#create'
   post '/sign_up', to: 'users#create_users' 
   delete '/logout', to: 'sessions#destroy'
   post '/webauthn/authenticate', to: 'sessions#authenticate_webauthn'
