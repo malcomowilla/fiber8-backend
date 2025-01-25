@@ -16,6 +16,13 @@ delete '/delete_subscriber/:id', to: 'subscribers#delete'
 post '/update_general_settings', to: "subscribers#update_general_settings"
 patch 'update_hotspot_package/:id', to: 'hotspot_packages#update'
 delete 'delete_hotspot_package/:id', to: 'hotspot_packages#delete'
+get '/current_system_admin', to: 'system_admins#current_system_admin_controller_of_networks'
+post '/otp-verification', to: 'system_admins#verify_otp'
+post '/system-admin-login', to: 'system_admins#login'
+get '/phone_number_verified', to: 'system_admins#check_sms_already_verified'
+delete '/logout_system_admin', to: 'system_admins#logout'
+post '/invite_client', to: 'system_admins#invite_company_super_admins'
+
 
 post '/zone', to: "zones#create"
 get '/zones', to: 'zones#index'

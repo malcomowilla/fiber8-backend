@@ -95,14 +95,15 @@ class ApplicationController < ActionController::Base
 
 
     def current_system_admin
-      @current_user ||= begin
-        token = cookies.encrypted.signed[:jwt_user]
+      @current_sys_admin ||= begin
+        token = cookies.encrypted.signed[:jwt_system_admin]
         if token  
           begin
-            decoded_token = JWT.decode(token,  ENV['JWT_SECRET'], true, algorithm: 'HS256')
-          user_id = decoded_token[0]['user_id']
-          @current_user = User.find_by(id: user_id)
-            return @current_user if @current_user
+            decoded_token = JWT.decode(token,  ENV['JWT_SECRET'], 
+            true, algorithm: 'HS256')
+            system_admin_id = decoded_token[0]['system_admin_id']
+          @current_system_admin = SystemAdmin.find_by(id: system_admin_id)
+            return @current_system_admin if @current_system_admin
           rescue JWT::DecodeError, JWT::ExpiredSignature => e
             Rails.logger.error "JWT Decode Error: #{e}"
             render json: { error: 'Unauthorized' }, status: :unauthorized

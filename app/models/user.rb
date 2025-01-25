@@ -1,5 +1,6 @@
 class User < ApplicationRecord
-    has_secure_password
+    has_secure_password(validations: false)
+
     acts_as_tenant(:account)
     has_many :prefix_and_digits
 
