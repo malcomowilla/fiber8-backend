@@ -56,12 +56,11 @@ default: &default
 development:
   <<: *default
   database: fiber8backend_development
-  port: 5433
+  port: 5432
   host: localhost
-  # username: postgres
-  # password: kaori12
-  username: <%= ENV['DATABASE_USERNAME'] %>
-  password: <%= ENV['DATABASE_PASSWORD'] %>
+ 
+  # username: <%= ENV['DATABASE_USERNAME'] %>
+  # password: <%= ENV['DATABASE_PASSWORD'] %>
   
   # The specified database role being used to connect to PostgreSQL.
   # To create additional roles in PostgreSQL see `$ createuser --help`.
