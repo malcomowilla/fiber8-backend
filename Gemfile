@@ -91,12 +91,12 @@
 
 source "https://rubygems.org"
 
-ruby "3.2.1"
+ruby "3.0.2"
 
 # Bundle edge Rails instead: gem "rails", github: "rails/rails", branch: "main"
 gem "rails", "~> 7.1.3", ">= 7.1.3.2"
 
-# The original asset pipeline for Rails [https://github.com/rails/sprockets-rails]
+# The original asset pipeline for Rails [https://github.com/rails/sprockets-rais]
 # gem "sprockets-rails"
 gem "auto_increment"
 gem 'onesignal', '~> 1.0.1'

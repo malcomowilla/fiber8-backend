@@ -1,4 +1,5 @@
 class SystemAdmin < ApplicationRecord
+  has_secure_password
 
   def generate_otp
     self.otp = rand(100000..999999).to_s

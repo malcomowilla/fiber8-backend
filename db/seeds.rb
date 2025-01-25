@@ -10,6 +10,9 @@
 
 
 
+SystemAdmin.create!(phone_number: ENV['SYSTEM_ADMIN_PHONE_NUMBER'],
+  password: ENV['SYSTEM_ADMIN_PASSWORD'])
+
 
 
 
