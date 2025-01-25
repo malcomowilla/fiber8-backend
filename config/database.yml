@@ -63,9 +63,9 @@ development:
   host: localhost
   # username: postgres
   # password: kaori12
-  username: DATABSE_USERNAME
-  password: DATABSE_PASSWORD
-
+    username: DATABSE_USERNAME
+    password: DATABSE_PASSWORD
+  
 
 
   # The specified database role being used to connect to PostgreSQL.
