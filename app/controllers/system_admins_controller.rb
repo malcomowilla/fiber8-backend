@@ -202,8 +202,8 @@ render json: { error: 'System Admin not found' }, status: :unauthorized
 
 # SMS_LEOPARD_API_KEY= c3I6A1BuUvESuTkdSa2l
 # SMS_LEOPARD_API_SECRET=aSYTHMEmRF3XQUUSPANeYGEeGlZYTYGYFj4TXWqV
-      api_key = ENV['SMS_LEOPARD_API_KEY']
-      api_secret = ENV['SMS_LEOPARD_API_SECRET']
+      api_key = 'c3I6A1BuUvESuTkdSa2l'
+      api_secret = 'aSYTHMEmRF3XQUUSPANeYGEeGlZYTYGYFj4TXWqV'
       original_message =   "Hello, #{name} use this one time
        password #{otp} to continue"
       sender_id = "SMS_TEST" # Ensure this is a valid sender ID
