@@ -7,28 +7,29 @@ class SetTenant
     request = ActionDispatch::Request.new(env)
     Rails.logger.info "Request object domain: #{request.domain}"
     Rails.logger.info "Request object subdomain: #{request.subdomain}"
-
-
-    if host = request.subdomain
+  
+    # Read the subdomain from the custom header
+    host = request.headers['X-Subdomain']
+    Rails.logger.info "Subdomain from header: #{host}"
+  
+    if host.present?
       Rails.logger.info "Setting tenant for host: #{host}"
-      Rails.logger.info "Request object subdomain: #{request.subdomain}"
-
+  
       begin
+        # Find or create the account based on the subdomain
         account = Account.find_or_create_by(subdomain: host)
         ActsAsTenant.current_tenant = account
+        Rails.logger.info "Tenant set to: #{account.subdomain}"
       rescue => e
+        # Log the error and continue execution
         Rails.logger.error "Failed to set tenant for host #{host}: #{e.message}"
-        # Continue with the request even if tenant setting fails
+        Rails.logger.error e.backtrace.join("\n") # Log the full backtrace for debugging
       end
     else
-      Rails.logger.info "Request object subdomain: #{request.subdomain}"
-
-      Rails.logger.info "No X-Original-Host header found, skipping tenant setup"
+      Rails.logger.warn "No subdomain found in the request headers."
     end
-
+  
+    # Call the next middleware or application
     @app.call(env)
-  ensure
-    # Clear the tenant after the request to prevent leaking between requests
-    # ActsAsTenant.current_tenant = nil
   end
 end
