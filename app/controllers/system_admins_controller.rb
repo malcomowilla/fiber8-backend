@@ -36,7 +36,7 @@ class SystemAdminsController < ApplicationController
         #   ).deliver_now
 
 
-        send_password(@my_admin.phone_number, @my_admin.username, @my_admin.password, @my_admin.email)
+        send_password(@my_admin.system_admin_phone_number, @my_admin.username, @my_admin.password, @my_admin.email)
         render json: @my_admin, status: :created
       else
         render json: { errors: @my_admin.errors }, status: :unprocessable_entity
