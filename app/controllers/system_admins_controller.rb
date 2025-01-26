@@ -29,7 +29,7 @@ class SystemAdminsController < ApplicationController
     @my_admin.account = Account.find_or_create_by(subdomain: params[:company_domain_or_subdomain])
   
 
-    if @my_admin.errors.empty?
+    # if @my_admin.errors.empty?
       if @my_admin.save
         # AdminOnboardingMailer.admin_onboarding(@my_admin, 
        
@@ -41,9 +41,9 @@ class SystemAdminsController < ApplicationController
       else
         render json: { errors: @my_admin.errors }, status: :unprocessable_entity
       end
-    else
-      render json: { errors: @my_admin.errors }, status: :unprocessable_entity
-    end
+    # else
+    #   render json: { errors: @my_admin.errors }, status: :unprocessable_entity
+    # end
   end
 
 
