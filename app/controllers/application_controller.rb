@@ -95,6 +95,7 @@ class ApplicationController < ActionController::Base
 
 
     def current_system_admin
+      byebug
       @current_sys_admin ||= begin
         token = cookies.encrypted.signed[:jwt_system_admin]
         if token  
