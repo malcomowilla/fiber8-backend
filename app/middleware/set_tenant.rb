@@ -6,10 +6,13 @@ class SetTenant
   def call(env)
     request = ActionDispatch::Request.new(env)
     Rails.logger.info "Request object domain: #{request.domain}"
+    Rails.logger.info "Request object subdomain: #{request.subdomain}"
 
 
-    if host = request.subdomain
+    if host = request.subomain
       Rails.logger.info "Setting tenant for host: #{host}"
+      Rails.logger.info "Request object subdomain: #{request.subdomain}"
+
       begin
         account = Account.find_or_create_by(subdomain: host)
         ActsAsTenant.current_tenant = account
@@ -18,7 +21,7 @@ class SetTenant
         # Continue with the request even if tenant setting fails
       end
     else
-      Rails.logger.info "Request object domain: #{request.subdomain}"
+      Rails.logger.info "Request object subdomain: #{request.subdomain}"
 
       Rails.logger.info "No X-Original-Host header found, skipping tenant setup"
     end
