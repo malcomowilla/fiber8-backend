@@ -26,7 +26,7 @@ class SystemAdminsController < ApplicationController
     @my_admin.password = generate_secure_password(16)
     @my_admin.password_confirmation = generate_secure_password(16)
     @my_admin.role = 'super_administrator'
-    @my_admin.account = params[:company_domain_or_subdomain]
+    @my_admin.account = Account.find_or_create_by(subdomain: params[:company_domain_or_subdomain])
   
 
     if @my_admin.errors.empty?
