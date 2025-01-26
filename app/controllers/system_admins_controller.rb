@@ -96,7 +96,7 @@ render json: { error: 'System Admin not found' }, status: :unauthorized
 
         else
           @user.generate_otp
-          send_otp(@user.phone_number, @user.otp, @user.user_name)
+          send_otp(@user.system_admin_phone_number, @user.otp, @user.user_name)
           render json: { message: 'OTP sent successfully' }, status: :ok
         end
 
