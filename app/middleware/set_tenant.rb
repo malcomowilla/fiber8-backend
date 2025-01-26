@@ -9,7 +9,7 @@ class SetTenant
     Rails.logger.info "Request object subdomain: #{request.subdomain}"
 
 
-    if host = request.subomain
+    if host = request.subdomain
       Rails.logger.info "Setting tenant for host: #{host}"
       Rails.logger.info "Request object subdomain: #{request.subdomain}"
 
