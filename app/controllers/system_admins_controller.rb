@@ -55,7 +55,7 @@ class SystemAdminsController < ApplicationController
 
 
 def check_sms_already_verified
-  admin = SystemAdmin.find_by(system_admin_phone_number: params[:phone_number])
+  admin = SystemAdmin.find_by(system_admin_phone_number: params[:phone_number] ) || SystemAdmin.find_by(system_admin_phone_number: params[:phone_number2])
   if admin
     render json: { sms_verified: admin.system_admin_phone_number_verified }, status: :ok
   else
