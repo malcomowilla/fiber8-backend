@@ -24,7 +24,6 @@ class CompanySettingsController < ApplicationController
 
 
   def allow_get_company_settings  
-    
      # @company_settings = CompanySetting.first
      @account = ActsAsTenant.current_tenant
      @company_settings = @account.company_setting

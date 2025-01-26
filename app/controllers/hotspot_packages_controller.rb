@@ -1,5 +1,5 @@
 class HotspotPackagesController < ApplicationController
-  before_action :set_hotspot_package, only: %i[ show edit update destroy ]
+  # before_action :set_hotspot_package, only: %i[ show edit update destroy ]
 
   # GET /hotspot_packages or /hotspot_packages.json
 
@@ -90,6 +90,106 @@ end
       puts "Failed to fetch limitation: #{response.code} - #{response.message}"
     end
   end
+
+
+
+
+  def hotspot_login
+
+
+    nas_router = NasRouter.find_by(name: router_name)
+    if nas_router
+      router_ip_address = nas_router.ip_address
+        router_password = nas_router.password
+       router_username = nas_router.username
+    
+    else
+    
+      puts 'router not found'
+    end
+    uri = URI("http://192.168.80.1/rest/ip/hotspot/host")
+    request = Net::HTTP::Get.new(uri)
+    request.basic_auth 'admin', ''
+    
+    
+    response = Net::HTTP.start(uri.hostname, uri.port) do |http|
+      http.request(request)
+    end
+    
+      if response.is_a?(Net::HTTPSuccess)
+      data = JSON.parse(response.body)
+
+     data.each do |host|
+        puts "MAC Address: #{host['mac-address']}, IP Address: #{host['address']}"
+        host_ip = host['address']
+       #  client_mac_address = ClientMacAdresses.create(macadress: host['mac-address'])
+       #  client_mac_address.update(macadress: host['mac-address'])
+       #  return  host['address']
+       request_body1 = {
+
+       "name": "admin2",
+      
+       }
+       
+       uri = URI("http://192.168.80.1/rest/ip/hotspot/user/add")
+       request = Net::HTTP::Post.new(uri)
+       
+       request.basic_auth 'admin', ''
+       request.body = request_body1.to_json
+       
+       request['Content-Type'] = 'application/json'
+       
+       response = Net::HTTP.start(uri.hostname, uri.port) do |http|
+         http.request(request)
+       end
+       
+       if response.is_a?(Net::HTTPSuccess)
+         data = JSON.parse(response.body)
+         puts "user aded #{data}"
+
+
+# Router credentials
+router_ip = '192.168.80.1'
+router_user = 'admin'
+router_password = ''
+
+# User details
+user_mac = 'C6:3D:15:54:0F:2E'
+user_ip = "#{host_ip}"
+username = 'admin2'
+
+# Command to add user to Hotspot active list
+command = "/ip hotspot active login user=#{username} ip=#{user_ip}"
+
+begin
+Net::SSH.start(router_ip, router_user, password: router_password) do |ssh|
+output = ssh.exec!(command)
+puts "Command executed successfully: #{output}"
+end
+rescue StandardError => e
+puts "An error occurred: #{e.message}"
+end            
+       
+       else
+         puts "Failed to add user: #{response.code} - #{response.message}"
+       end
+       #  
+     end
+
+  
+       
+      
+  puts "mikrotik hosts#{data}"
+  
+    else
+      puts "Failed to fetch limitation: #{response.code} - #{response.message}"
+    end
+  end
+
+
+
+
+
 
   
   def index

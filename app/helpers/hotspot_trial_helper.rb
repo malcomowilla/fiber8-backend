@@ -1,0 +1,2 @@
+module HotspotTrialHelper
+end

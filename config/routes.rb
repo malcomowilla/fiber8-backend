@@ -9,36 +9,73 @@ Rails.application.routes.draw do
 mount ActionCable.server => '/cable'
 
 get '/get_general_settings', to: "subscribers#get_general_settings"
+get '/api/get_general_settings', to: "subscribers#get_general_settings"
 get '/subscribers', to: "subscribers#index"
+get '/api/subscribers', to: "subscribers#index"
 post '/subscriber', to: "subscribers#create"
+post '/api/subscriber', to: "subscribers#create"
 patch '/update_subscriber/:id', to: 'subscribers#update'
+patch '/api/update_subscriber/:id', to: 'subscribers#update'
 delete '/delete_subscriber/:id', to: 'subscribers#delete'
+delete '/api/delete_subscriber/:id', to: 'subscribers#delete'
 post '/update_general_settings', to: "subscribers#update_general_settings"
+post '/api/update_general_settings', to: "subscribers#update_general_settings"
 patch 'update_hotspot_package/:id', to: 'hotspot_packages#update'
+patch '/api/update_hotspot_package/:id', to: 'hotspot_packages#update'
 delete 'delete_hotspot_package/:id', to: 'hotspot_packages#delete'
+delete '/api/delete_hotspot_package/:id', to: 'hotspot_packages#delete'
+
 get '/current_system_admin', to: 'system_admins#current_system_admin_controller_of_networks'
+get 'api//current_system_admin', to: 'system_admins#current_system_admin_controller_of_networks'
+
 post '/otp-verification', to: 'system_admins#verify_otp'
+post '/api/otp-verification', to: 'system_admins#verify_otp'
 post '/system-admin-login', to: 'system_admins#login'
+post '/api/system-admin-login', to: 'system_admins#login'
 get '/phone_number_verified', to: 'system_admins#check_sms_already_verified'
+get '/api/phone_number_verified', to: 'system_admins#check_sms_already_verified'
 delete '/logout_system_admin', to: 'system_admins#logout'
+delete '/api/logout_system_admin', to: 'system_admins#logout'
 post '/invite_client', to: 'system_admins#invite_company_super_admins'
+post '/api/invite_client', to: 'system_admins#invite_company_super_admins'
+
 
 
 post '/zone', to: "zones#create"
+post '/api/zone', to: "zones#create"
 get '/zones', to: 'zones#index'
+get '/api/zones', to: 'zones#index'
 patch '/update_zone/:id', to: 'zones#update'
+patch '/api/update_zone/:id', to: 'zones#update'
 delete '/delete_zone/:id', to: 'zones#delete'
 
+delete '/api/delete_zone/:id', to: 'zones#delete'
+
+
 post '/create_router', to: "nas_routers#create"
+post '/api/create_router', to: "nas_routers#create"
+
 
 patch '/update_router/:id', to: "nas_routers#update"
+patch '/api/update_router/:id', to: "nas_routers#update"
 get '/routers', to: 'nas_routers#index' 
+get '/api/routers', to: 'nas_routers#index'
 delete '/delete_router/:id', to: 'nas_routers#delete'
+delete '/api/delete_router/:id', to: 'nas_routers#delete'
+
 post '/company_settings', to: 'company_settings#create'
+post '/api/company_settings', to: 'company_settings#create'
 get '/get_company_settings', to: 'company_settings#index'
+get '/api/get_company_settings', to: 'company_settings#index'
 get '/allow_get_company_settings', to: 'company_settings#allow_get_company_settings'
+get '/api/allow_get_company_settings', to: 'company_settings#allow_get_company_settings'
+
+post '/hotspot_trial', to: 'hotspot_trial#create'
+post '/api/hotspot_trial', to: 'hotspot_trial#create'
+
 
   get '/mikrotik_live', to: "mikrotik_live#mikrotik"
+  get '/api/mikrotik_live', to: "mikrotik_live#mikrotik"
 
   # get "up" => "rails/health#show", as: :rails_health_check
   get '/up', to: 'health#up'
@@ -46,41 +83,71 @@ get '/allow_get_company_settings', to: 'company_settings#allow_get_company_setti
   # root "posts#index"
 
 get "/password/reset", to: "password_resets#new"
+get "/api/password/reset", to: "password_resets#new"
 post "/password/reset", to: "password_resets#create"
+post "/api/password/reset", to: "password_resets#create"
+
 
 get '/auth/auth0/callback', to: 'auth0#callback'
 get '/auth/failure', to: 'auth0#failure'
 
 
 get '/packages' , to: "packages#index"
+get '/api/packages' , to: "packages#index"
 post '/create_package', to: 'packages#create'
+post '/api/create_package', to: 'packages#create'
 get '/get_package', to: 'packages#index'
+get '/api/get_package', to: 'packages#index'
 get '/create_package/:id', to: 'packages#show'
+get '/api/create_package/:id', to: 'packages#show'
 patch '/update_package/:id', to: 'packages#update_package'
+patch '/api/update_package/:id', to: 'packages#update_package'
 delete '/package/:id',  to: 'packages#delete'
+delete '/api/package/:id',  to: 'packages#delete'
+
 
 
 get '/csrf_token', to: 'csrf_tokens#new'
 
 
 get "/me", to: "users#profile"
+get "/api/me", to: "users#profile"
 get '/get_passkey_credentials', to: 'sessions#get_passkey_credentials'
+get '/api/get_passkey_credentials', to: 'sessions#get_passkey_credentials'
+
 
 post '/update_profile', to: "sessions#update_admin"
+post '/api/update_profile', to: "sessions#update_admin"
 get "/password/reset/edit", to: "password_resets#edit"
+get "/api/password/reset/edit", to: "password_resets#edit"
 patch "password/reset/edit", to: "password_resets#update"
+patch "/api/password/reset/edit", to: "password_resets#update"
   post '/api/sign_in' , to: 'sessions#create'
+  post '/sign_in' , to: 'sessions#create'
+
   post '/api/sign_up', to: 'users#create_users' 
-  delete 'api/logout', to: 'sessions#destroy'
+  delete '/api/logout', to: 'sessions#destroy'
+  delete '/api/logout', to: 'sessions#destroy'
+  delete '/logout', to: 'sessions#destroy'
+  delete '/api/logout', to: 'sessions#destroy'
+
   post '/webauthn/authenticate', to: 'sessions#authenticate_webauthn'
+  post '/api/webauthn/authenticate', to: 'sessions#authenticate_webauthn'
   post '/webauthn/verify', to: 'sessions#verify_webauthn'
+  post '/api/webauthn/verify', to: 'sessions#verify_webauthn'
 
 
 post '/webauthn/register', to: 'sessions#register_webauthn'
+post '/api/webauthn/register', to: 'sessions#register_webauthn'
 
 post '/webauthn/create', to: 'sessions#create_webauthn'
+post '/api/webauthn/create', to: 'sessions#create_webauthn'
 delete '/delete_passkey', to: 'sessions#delete_webauthn'
+delete '/api/delete_passkey', to: 'sessions#delete_webauthn'
+
 
   
   get '/currently_logged_in_user', to: 'sessions#currently_logged_in_user'
+  get '/api/currently_logged_in_user', to: 'sessions#currently_logged_in_user'
+
 end

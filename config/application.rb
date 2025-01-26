@@ -45,7 +45,7 @@ config.middleware.use SetTenant
     # config.eager_load_paths << Rails.root.join("extras")
     # config/application.rb
 
-config.hosts = nil
+# config.hosts = nil
     config.middleware.use ActionDispatch::Cookies
     # puts("Loading cookies session store options")
     # config.session_store :cookie_store, key: '_fiber8backend_session', httponly: true, same_site: :none, secure: Rails.env.production?
