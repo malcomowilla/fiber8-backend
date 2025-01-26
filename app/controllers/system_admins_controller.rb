@@ -81,7 +81,8 @@ render json: { error: 'System Admin not found' }, status: :unauthorized
 
   def login
     @user = SystemAdmin.find_by(
-     SystemAdmin.find_by(system_admin_phone_number: params[:phone_number]))
+      system_admin_phone_number: params[:phone_number]
+    )
 
     if @user&.authenticate(params[:password])
       
