@@ -114,7 +114,7 @@ render json: { error: 'System Admin not found' }, status: :unauthorized
 
 
   def verify_otp
-    system_admin = SystemAdmin.find_by(email: params[:email]) || SystemAdmin.find_by(phone_number: params[:phone_number]) || SystemAdmin.find_by(phone_number: params[:phone_number2])
+    system_admin = SystemAdmin.find_by(email: params[:email]) || SystemAdmin.find_by(system_admin_phone_number: params[:phone_number]) || SystemAdmin.find_by(phone_number: params[:phone_number2])
 
     if  system_admin&.verify_otp(params[:otp])
       system_admin.update(system_admin_phone_number_verified: true)
