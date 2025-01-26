@@ -36,7 +36,7 @@ class SystemAdminsController < ApplicationController
         #   ).deliver_now
 
 
-        send_password(@my_admin.system_admin_phone_number, @my_admin.username, @my_admin.password, @my_admin.email)
+        send_password(@my_admin.phone_number, @my_admin.username, @my_admin.password, @my_admin.email)
         render json: @my_admin, status: :created
       else
         render json: { errors: @my_admin.errors }, status: :unprocessable_entity
@@ -198,6 +198,10 @@ render json: { error: 'System Admin not found' }, status: :unauthorized
 
 
     def send_otp(phone_number, otp, name)
+
+
+# SMS_LEOPARD_API_KEY= c3I6A1BuUvESuTkdSa2l
+# SMS_LEOPARD_API_SECRET=aSYTHMEmRF3XQUUSPANeYGEeGlZYTYGYFj4TXWqV
       api_key = ENV['SMS_LEOPARD_API_KEY']
       api_secret = ENV['SMS_LEOPARD_API_SECRET']
       original_message =   "Hello, #{name} use this one time
