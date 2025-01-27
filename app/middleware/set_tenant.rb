@@ -56,19 +56,25 @@ class SetTenant
 
     if host.present?
       Rails.logger.info "Setting tenant for host: #{host}"
-
+    
       begin
         # Find or create the account based on the subdomain
         account = Account.find_or_create_by(subdomain: host)
-        ActsAsTenant.current_tenant = account
-        # Rails.logger.info "Tenant set to: #{account.subdomain}"
+    
+        # Ensure the account is valid and has a subdomain
+        if account.subdomain.present?
+          ActsAsTenant.current_tenant = account
+        else
+          Rails.logger.error "Invalid account or empty subdomain for host: #{host}"
+          # Handle the error case (e.g., raise an exception or return an error response)
+        end
       rescue => e
-        # Log the error and continue execution
-        # Rails.logger.error "Failed to set tenant for host #{host}: #{e.message}"
-        # Rails.logger.error e.backtrace.join("\n") # Log the full backtrace for debugging
+        Rails.logger.error "Error setting tenant for host: #{host}. Error: #{e.message}"
+        # Handle the exception (e.g., raise an exception or return an error response)
       end
     else
-      Rails.logger.warn "No subdomain found in the request headers."
+      Rails.logger.warn "Empty or missing subdomain in request headers"
+      # Handle the case where the subdomain is missing (e.g., raise an exception or return an error response)
     end
 
     # Call the next middleware or application
