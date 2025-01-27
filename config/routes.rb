@@ -7,7 +7,9 @@ Rails.application.routes.draw do
  
 
 mount ActionCable.server => '/cable'
-
+scope '/api' do
+  resources :hotspot_packages
+end
 get '/api/router_settings', to: 'router_settings#index'
 post '/api/router_settings', to: 'router_settings#create'
 post '/router_settings', to: 'router_settings#create'
