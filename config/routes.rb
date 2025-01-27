@@ -8,7 +8,7 @@ Rails.application.routes.draw do
 
 mount ActionCable.server => '/cable'
 
-
+get '/api/router_settings', to: 'router_settings#index'
 post '/api/router_settings', to: 'router_settings#create'
 post '/router_settings', to: 'router_settings#create'
 get '/api/allow_get_router_settings', to: 'router_settings#allow_get_router_settings'
