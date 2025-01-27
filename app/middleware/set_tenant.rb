@@ -51,6 +51,7 @@ class SetTenant
     request = ActionDispatch::Request.new(env)
     # Rails.logger.info "Request headers: #{request.headers.to_h}" # Log all headers
     host = request.headers['X-Subdomain']
+    
     # Rails.logger.info "Subdomain from header: #{host}"
 
     if host.present?

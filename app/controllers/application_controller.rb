@@ -5,7 +5,7 @@ class ApplicationController < ActionController::Base
     # before_action :set_tenant
     # set_current_tenant_by_subdomain_or_domain(:account, :subdomain, :domain)
 
-
+before_action :set_current_tenant
 
 
     # before_action :authorized
@@ -80,9 +80,13 @@ class ApplicationController < ActionController::Base
 # def logged_in?
 # !!current_user
 # end
+def set_current_tenant
 
-
-
+  host = request.headers['X-Subdomain']
+  account = Account.find_or_create_by(subdomain: host)
+  ActsAsTenant.current_tenant = account || host
+  
+end
 
 
 
