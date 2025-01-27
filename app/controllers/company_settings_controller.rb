@@ -24,6 +24,8 @@ class CompanySettingsController < ApplicationController
 
 
   def allow_get_company_settings  
+    # account = Account.find_or_create_by(subdomain: host)
+    # ActsAsTenant.current_tenant = account
      # @company_settings = CompanySetting.first
      @account = ActsAsTenant.current_tenant
      @company_settings = @account.company_setting

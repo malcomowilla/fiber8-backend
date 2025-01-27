@@ -19,6 +19,11 @@ class RouterSettingsController < ApplicationController
     end
   end
 
+
+  def allow_get_router_settings
+    @router_settings = RouterSetting.all
+    render json: @router_settings
+  end
   # PATCH/PUT /router_settings/1 or /router_settings/1.json
  
 
