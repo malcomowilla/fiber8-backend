@@ -452,7 +452,9 @@ end
     #     end
 
     def create
-
+      host = request.headers['X-Subdomain']
+      account = Account.find_or_create_by(subdomain: host)
+          ActsAsTenant.current_tenant = account || host 
         @user = User.find_by(email: params[:email])
 
         if @user&.authenticate(params[:password])
