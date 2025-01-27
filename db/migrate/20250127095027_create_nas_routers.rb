@@ -5,6 +5,7 @@ class CreateNasRouters < ActiveRecord::Migration[7.1]
       t.string :ip_address
       t.string :username
       t.string :password
+      t.integer :account_id
 
       t.timestamps
     end

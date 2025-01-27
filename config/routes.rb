@@ -8,6 +8,11 @@ Rails.application.routes.draw do
 
 mount ActionCable.server => '/cable'
 
+
+post '/api/router_settings', to: 'router_settings#create'
+post '/router_settings', to: 'router_settings#create'
+get '/api/allow_get_router_settings', to: 'router_settings#allow_get_router_settings'
+get '/allow_get_router_settings', to: 'router_settings#allow_get_router_settings'
 get '/get_general_settings', to: "subscribers#get_general_settings"
 get '/api/get_general_settings', to: "subscribers#get_general_settings"
 get '/subscribers', to: "subscribers#index"
@@ -26,7 +31,7 @@ delete 'delete_hotspot_package/:id', to: 'hotspot_packages#delete'
 delete '/api/delete_hotspot_package/:id', to: 'hotspot_packages#delete'
 
 get '/current_system_admin', to: 'system_admins#current_system_admin_controller_of_networks'
-get 'api//current_system_admin', to: 'system_admins#current_system_admin_controller_of_networks'
+get '/api/current_system_admin', to: 'system_admins#current_system_admin_controller_of_networks'
 
 post '/otp-verification', to: 'system_admins#verify_otp'
 post '/api/otp-verification', to: 'system_admins#verify_otp'
