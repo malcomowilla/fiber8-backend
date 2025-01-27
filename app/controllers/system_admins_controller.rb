@@ -251,8 +251,8 @@ render json: { error: 'System Admin not found' }, status: :unauthorized
 
 
     def send_password(phone_number, username, password, email)
-      api_key = ENV['SMS_LEOPARD_API_KEY']
-      api_secret = ENV['SMS_LEOPARD_API_SECRET']
+      api_key = 'c3I6A1BuUvESuTkdSa2l'
+      api_secret ='aSYTHMEmRF3XQUUSPANeYGEeGlZYTYGYFj4TXWqV'
       original_message =   "Hello, #{username} use this credentials to login to your account password:#{password} email:#{email}"
       sender_id = "SMS_TEST" # Ensure this is a valid sender ID
   
