@@ -17,7 +17,7 @@ class CompanySettingsController < ApplicationController
       # logo_url: @company_settings&.logo&.attached? ? url_for(@company_settings.logo) : nil,
       logo_url: @company_settings&.logo&.attached? ? rails_blob_url(@company_settings.logo, host: '102.221.35.116',
       
-      protocol: 'http'
+      protocol: 'https'
       ) : nil
 
       }
