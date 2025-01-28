@@ -27,7 +27,7 @@ class SystemAdminsController < ApplicationController
     @my_admin.password = generate_secure_password(16)
     @my_admin.password_confirmation = generate_secure_password(16)
     @my_admin.role = 'super_administrator'
-    # @my_admin.account = Account.find_or_create_by(subdomain: params[:company_domain_or_subdomain])
+    #  @my_admin.account = ActsAsTenant.current_tenant
   
 
     # if @my_admin.errors.empty?
@@ -37,7 +37,7 @@ class SystemAdminsController < ApplicationController
         #   ).deliver_now
 
 
-        send_password(@my_admin.phone_number, @my_admin.username, @my_admin.password, @my_admin.email)
+        send_password(@my_admin.phone_number, @my_admin.password, @my_admin.email)
         render json: @my_admin, status: :created
       else
         render json: { errors: @my_admin.errors }, status: :unprocessable_entity
@@ -251,12 +251,12 @@ render json: { error: 'System Admin not found' }, status: :unauthorized
 
 
 
-    def send_password(phone_number, username, password, email)
+    def send_password(phone_number,password, email)
       api_key = 'c3I6A1BuUvESuTkdSa2l'
       api_secret = 'aSYTHMEmRF3XQUUSPANeYGEeGlZYTYGYFj4TXWqV'
 
       
-      original_message = "Hello, #{username} use this credentials to login to your account password:#{password} email:#{email}"
+      original_message = "Hello use this credentials to login to your account password:#{password} email:#{email}"
       sender_id = "SMS_TEST" # Ensure this is a valid sender ID
   
       uri = URI("https://api.smsleopard.com/v1/sms/send")
