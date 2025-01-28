@@ -1,6 +1,6 @@
 class ApplicationController < ActionController::Base
 
-    # set_current_tenant_through_filter
+    set_current_tenant_through_filter
 
     # before_action :set_tenant
     # set_current_tenant_by_subdomain_or_domain(:account, :subdomain, :domain)
@@ -84,9 +84,9 @@ def set_tenant
 
   host = request.headers['X-Subdomain']
   @account = Account.find_by(subdomain: host)
+ActsAsTenant.current_tenant = @account
 
-
-  set_current_tenant(@account)
+  # set_current_tenant(@account)
 rescue ActiveRecord::RecordNotFound
   render json: { error: 'Invalid tenant' }, status: :not_found
 
