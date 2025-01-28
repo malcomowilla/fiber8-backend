@@ -81,10 +81,10 @@ class ApplicationController < ActionController::Base
 # !!current_user
 # end
 def set_tenant
-
   host = request.headers['X-Subdomain']
   @account = Account.find_by(subdomain: host)
 ActsAsTenant.current_tenant = @account
+Rails.logger.info "Setting tenant for app#{ActsAsTenant.current_tenant}"
 
   # set_current_tenant(@account)
 rescue ActiveRecord::RecordNotFound
