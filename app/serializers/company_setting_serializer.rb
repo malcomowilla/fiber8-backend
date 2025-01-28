@@ -20,7 +20,7 @@ class CompanySettingSerializer < ActiveModel::Serializer
     return unless object.logo.attached?
 
     # Generate the full URL for the logo
-    Rails.application.routes.url_helpers.rails_blob_url(object.logo, host: 'your-vps-domain-or-ip')
+    Rails.application.routes.url_helpers.rails_blob_url(object.logo, host: '102.221.35.116')
   end
 
 
