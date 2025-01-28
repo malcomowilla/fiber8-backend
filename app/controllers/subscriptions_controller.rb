@@ -3,33 +3,26 @@ class SubscriptionsController < ApplicationController
 
   # GET /subscriptions or /subscriptions.json
 
-
+set_current_tenant_through_filter
 
 before_action :set_current_tenant
 
 
-  def set_current_tenant
-    host = request.headers['X-Subdomain']
-    if host.present?
-      Rails.logger.info "Setting tenant for host: #{host}"
+  
     
-      begin
-        # Find or create the account based on the subdomain
-        account = Account.find_or_create_by(subdomain: host)
-    
-        # Ensure the account is valid and has a subdomain
-        if account.subdomain.present?
-          ActsAsTenant.current_tenant = account
-        else
-          Rails.logger.error "Invalid account or empty subdomain for host: #{host}"
-          # Handle the error case (e.g., raise an exception or return an error response)
-        end
-      rescue => e
-        Rails.logger.error "Error setting tenant for host: #{host}. Error: #{e.message}"
-        # Handle the exception (e.g., raise an exception or return an error response)
-      end
-    
-    end
+def set_tenant
+
+  host = request.headers['X-Subdomain']
+  @account = Account.find_by(subdomain: host)
+
+
+  set_current_tenant(@account)
+rescue ActiveRecord::RecordNotFound
+  render json: { error: 'Invalid tenant' }, status: :not_found
+
+  
+end
+
 
   def index
     @subscriptions = Subscription.all
