@@ -5,10 +5,6 @@ class CompanySettingSerializer < ActiveModel::Serializer
 
 
 
-
-  
-
-
   include Rails.application.routes.url_helpers
   include ActionView::Helpers::AssetUrlHelper
   attributes :id, :company_name, :contact_info, :email_info, :logo, 
