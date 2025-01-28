@@ -3,9 +3,9 @@ class SubscriptionsController < ApplicationController
 
   # GET /subscriptions or /subscriptions.json
 
-# set_current_tenant_through_filter
+set_current_tenant_through_filter
 
-# before_action :set_current_tenant
+before_action :set_current_tenant
 
 
   
@@ -14,9 +14,10 @@ def set_tenant
 
   host = request.headers['X-Subdomain']
   @account = Account.find_by(subdomain: host)
+  ActsAsTenant.current_tenant = @account
 
 
-  set_current_tenant(@account)
+  # set_current_tenant(@account)
 rescue ActiveRecord::RecordNotFound
   render json: { error: 'Invalid tenant' }, status: :not_found
 
