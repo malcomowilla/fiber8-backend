@@ -1,5 +1,6 @@
 class HotspotPackage < ApplicationRecord
+  acts_as_tenant(:account)
+
 validates :name, presence: true, uniqueness: true
-acts_as_tenant(:account)
 
 end
