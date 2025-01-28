@@ -47,7 +47,7 @@ class HotspotTrialController < ApplicationController
       #  username = 'admin2'
        
        # Command to add user to Hotspot active list
-       command = "/ip hotspot active login user=#{router_user} mac=#{host_mac}"
+       command = "/ip hotspot active login user=#{router_user} ip=#{host_ip}"
        
        begin
         Net::SSH.start(router_ip_address, router_username, password: router_password, verify_host_key: :never) do |ssh|
