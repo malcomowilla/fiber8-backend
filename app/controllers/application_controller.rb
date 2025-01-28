@@ -5,7 +5,7 @@ class ApplicationController < ActionController::Base
     # before_action :set_tenant
     # set_current_tenant_by_subdomain_or_domain(:account, :subdomain, :domain)
 
-before_action :set_current_tenant
+before_action :set_tenant
 
 
     # before_action :authorized
@@ -80,31 +80,16 @@ before_action :set_current_tenant
 # def logged_in?
 # !!current_user
 # end
-def set_current_tenant
+def set_tenant
 
   host = request.headers['X-Subdomain']
-  if host.present?
-    Rails.logger.info "Setting tenant for host: #{host}"
-  
-    begin
-      # Find or create the account based on the subdomain
-      account = Account.find_or_create_by(subdomain: host)
-  
-      # Ensure the account is valid and has a subdomain
-      if account.subdomain.present?
-        ActsAsTenant.current_tenant = account
-      else
-        Rails.logger.error "Invalid account or empty subdomain for host: #{host}"
-        # Handle the error case (e.g., raise an exception or return an error response)
-      end
-    rescue => e
-      Rails.logger.error "Error setting tenant for host: #{host}. Error: #{e.message}"
-      # Handle the exception (e.g., raise an exception or return an error response)
-    end
-  else
-    Rails.logger.warn "Empty or missing subdomain in request headers"
-    # Handle the case where the subdomain is missing (e.g., raise an exception or return an error response)
-  end
+  @account = Account.find_by(subdomain: host)
+
+
+  set_current_tenant(@account)
+rescue ActiveRecord::RecordNotFound
+  render json: { error: 'Invalid tenant' }, status: :not_found
+end
   
 end
 
