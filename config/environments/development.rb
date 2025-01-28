@@ -9,13 +9,13 @@ Rails.application.configure do
   config.enable_reloading = true
   config.action_mailer.delivery_method = :letter_opener
   config.action_mailer.perform_deliveries = true
-  # Rails.application.routes.default_url_options[:host] = 'localhost:4000'
+  Rails.application.routes.default_url_options[:host] = '102.221.35.116'
   # Rails.application.routes.default_url_options[:host] = 'localhost:5173'
 
-  Rails.application.routes.default_url_options = {
-  host: '102.221.35.116',
-  protocol: 'http'
-}
+#   Rails.application.routes.default_url_options = {
+#   host: '102.221.35.116',
+#   protocol: 'http'
+# }
   config.action_mailer.delivery_method = :smtp
 config.action_mailer.smtp_settings = {
   address:              'smtp.gmail.com',
