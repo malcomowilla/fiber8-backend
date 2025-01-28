@@ -97,7 +97,9 @@ class SetTenant
         # Find or create the account based on the subdomain
         account = Account.find_or_create_by!(subdomain: host)
         ActsAsTenant.current_tenant = account
-        Rails.logger.info "Tenant set to: #{account.subdomain}"
+        # Rails.logger.info "Tenant set to: #{account.subdomain}"
+        Rails.logger.info "Setting tenant for app#{ActsAsTenant.current_tenant}"
+
       rescue StandardError => e
         # Log the error and continue execution
         Rails.logger.error "Failed to set tenant for host #{host}: #{e.message}"
