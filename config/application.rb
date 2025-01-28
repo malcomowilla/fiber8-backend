@@ -22,6 +22,7 @@ module Fiber8backend
     # puts("Loading cookies session store KEY")
 
 config.middleware.use SetTenant
+
     puts("Loading cookies session store options")
     config.session_options = {
       httponly: true,
