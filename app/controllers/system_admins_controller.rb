@@ -12,6 +12,7 @@ class SystemAdminsController < ApplicationController
 
 
   def invite_company_super_admins
+  Rails.logger.info "current tenant: #{ActsAsTenant.current_tenant}"
     # validate_invite_super_admin
   
     # Initialize @my_admin with the provided parameters
