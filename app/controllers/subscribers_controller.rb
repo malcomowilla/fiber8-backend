@@ -3,22 +3,22 @@ class SubscribersController < ApplicationController
   rescue_from ActiveRecord::RecordNotFound, with: :subscriber_not_found_response
 rescue_from  ActiveRecord::RecordInvalid, with: :subscriber_invalid
 
-set_current_tenant_through_filter
+# set_current_tenant_through_filter
 
-before_action :set_my_tenant
+# before_action :set_my_tenant
 
-def set_tenant
+# def set_tenant
 
-  host = request.headers['X-Subdomain']
-  @account = Account.find_by(subdomain: host)
+#   host = request.headers['X-Subdomain']
+#   @account = Account.find_by(subdomain: host)
 
 
-  set_current_tenant(@account)
-rescue ActiveRecord::RecordNotFound
-  render json: { error: 'Invalid tenant' }, status: :not_found
+#   set_current_tenant(@account)
+# rescue ActiveRecord::RecordNotFound
+#   render json: { error: 'Invalid tenant' }, status: :not_found
 
   
-end
+# end
   #
   # GET /subscribers or /subscribers.json
   def index
