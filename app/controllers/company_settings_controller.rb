@@ -15,7 +15,7 @@ class CompanySettingsController < ApplicationController
       customer_support_email: @company_settings&.customer_support_email,
       customer_support_phone_number: @company_settings&.customer_support_phone_number,
       # logo_url: @company_settings&.logo&.attached? ? url_for(@company_settings.logo) : nil,
-      logo_url: @company_settings&.logo&.attached? ? rails_blob_url(@company_settings.logo, host: '102.221.35.116',
+      logo_url: @company_settings&.logo&.attached? ? rails_blob_url(@company_settings.logo, host: '38d6-102-221-35-116.ngrok-free.app',
       
       protocol: 'https'
       ) : nil
