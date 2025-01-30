@@ -9,7 +9,7 @@ Rails.application.configure do
   config.enable_reloading = true
   config.action_mailer.delivery_method = :letter_opener
   config.action_mailer.perform_deliveries = true
-  Rails.application.routes.default_url_options[:host] = '102.221.35.116'
+  Rails.application.routes.default_url_options[:host] = '38d6-102-221-35-116.ngrok-free.app'
   # Rails.application.routes.default_url_options[:host] = 'localhost:5173'
 
 #   Rails.application.routes.default_url_options = {
