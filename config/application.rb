@@ -53,6 +53,6 @@ config.middleware.use SetTenant
     # config.session_store :cookie_store, key: '_fiber8backend_session', httponly: true, same_site: :none, secure: Rails.env.production?
 # Use SameSite=Strict for all cookies to help protect against CSRF
 config.action_dispatch.cookies_same_site_protection = :strict
-config.hosts << "https://8f5e-102-221-35-116.ngrok-free.app" 
+config.hosts << "8f5e-102-221-35-116.ngrok-free.app" 
   end
 end
