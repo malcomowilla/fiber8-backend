@@ -3,9 +3,9 @@ class SubscribersController < ApplicationController
   rescue_from ActiveRecord::RecordNotFound, with: :subscriber_not_found_response
 rescue_from  ActiveRecord::RecordInvalid, with: :subscriber_invalid
 
-set_current_tenant_through_filter
+# set_current_tenant_through_filter
 
-before_action :set_tenant
+# before_action :set_tenant
 
 def set_tenant
 
