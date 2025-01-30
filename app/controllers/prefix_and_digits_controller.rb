@@ -1,6 +1,6 @@
 class PrefixAndDigitsController < ApplicationController
 
-set_current_tenant_through_filter
+# set_current_tenant_through_filter
 
 # before_action :set_my_tenant
 

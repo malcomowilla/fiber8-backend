@@ -3,9 +3,9 @@ class SubscriptionsController < ApplicationController
 
   # GET /subscriptions or /subscriptions.json
 
-set_current_tenant_through_filter
+# set_current_tenant_through_filter
 
-before_action :set_current_tenant
+# before_action :set_current_tenant
 
 
   
