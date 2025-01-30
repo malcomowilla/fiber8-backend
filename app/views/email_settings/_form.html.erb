@@ -1,0 +1,47 @@
+<%= form_with(model: email_setting) do |form| %>
+  <% if email_setting.errors.any? %>
+    <div style="color: red">
+      <h2><%= pluralize(email_setting.errors.count, "error") %> prohibited this email_setting from being saved:</h2>
+
+      <ul>
+        <% email_setting.errors.each do |error| %>
+          <li><%= error.full_message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div>
+    <%= form.label :smtp_host, style: "display: block" %>
+    <%= form.text_field :smtp_host %>
+  </div>
+
+  <div>
+    <%= form.label :smtp_username, style: "display: block" %>
+    <%= form.text_field :smtp_username %>
+  </div>
+
+  <div>
+    <%= form.label :sender_email, style: "display: block" %>
+    <%= form.text_field :sender_email %>
+  </div>
+
+  <div>
+    <%= form.label :smtp_password, style: "display: block" %>
+    <%= form.text_field :smtp_password %>
+  </div>
+
+  <div>
+    <%= form.label :api_key, style: "display: block" %>
+    <%= form.text_field :api_key %>
+  </div>
+
+  <div>
+    <%= form.label :domain, style: "display: block" %>
+    <%= form.text_field :domain %>
+  </div>
+
+  <div>
+    <%= form.submit %>
+  </div>
+<% end %>

@@ -1,12 +1,25 @@
 class SystemAdminsController < ApplicationController
   # before_action :set_system_admin, only: %i[ show edit update destroy ]
 
-  # GET /system_admins or /system_admins.json
+  
+
+
+  # before_action :set_system_admin_email_settings
   def index
     @system_admins = SystemAdmin.all
     render json: @system_admins
   end
 
+  
+
+
+#   def set_system_admin_email_settings
+# # @current_account = ActsAsTenant.current_tenant
+# #     EmailSystemAdmin.configure(@current_account, current_system_admin)
+#   @current_account=ActsAsTenant.current_tenant 
+#   EmailConfiguration.configure(@current_account, current_system_admin)
+
+#   end
 
 
 
@@ -62,6 +75,18 @@ def check_sms_already_verified
   else
     render json: { error: 'SystemAdmin not found.' }, status: :not_found
   end
+end
+
+
+
+def check_email_already_verified
+  admin = SystemAdmin.find_by(email: params[:email]) || SystemAdmin.find_by(system_admin_phone_number: params[:phone_number] ) || SystemAdmin.find_by(system_admin_phone_number: params[:phone_number2]
+  )
+  if admin
+    render json: { email_verified: admin.email_verified }, status: :ok
+  else
+    render json: { error: 'SystemAdmin not found.' }, status: :not_found
+  end
 
 
 end
@@ -80,13 +105,47 @@ render json: { error: 'System Admin not found' }, status: :unauthorized
 
 
 
+  def get_system_admin_settings
+    sys_settings =  SystemAdminSetting.all
+    render json: sys_settings
+    
+      end
+
+
+
+
+  def create_system_admin_settings
+    if current_system_admin
+      sys_setings =  current_system_admin.system_admin_setting || current_system_admin.build_system_admin_setting
+      
+
+      sys_setings.update(login_with_passkey: params[:login_with_passkey], 
+      use_email_authentication: params[:use_email_authentication],
+      use_sms_authentication: params[:use_sms_authentication]
+      )
+      render json: { message: 'Login with passkey updated successfully' }, status: :ok
+    else
+
+      render json: { error: 'not authorized' }, status: :unauthorized
+      return
+    end
+
+
+  end
+
+
+
+
+
+
   def login
     @user = SystemAdmin.find_by(
       system_admin_phone_number: params[:phone_number]
-    )
+    ) || SystemAdmin.find_by(
+      email: params[:email])
 
     if @user&.authenticate(params[:password])
-      
+      if @user.system_admin_setting&.use_sms_authentication 
         if @user.system_admin_phone_number_verified
 
           token = generate_token(system_admin_id:  @user.id)
@@ -100,15 +159,45 @@ render json: { error: 'System Admin not found' }, status: :unauthorized
           send_otp(@user.system_admin_phone_number, @user.otp, @user.user_name)
           render json: { message: 'OTP sent successfully' }, status: :ok
         end
+      elsif @user.system_admin_setting&.use_email_authentication
+        
+        if @user.email_verified == true 
 
+          token = generate_token(system_admin_id:  @user.id)
+          cookies.encrypted.signed[:jwt_system_admin] = { value: token, 
+          httponly: true, secure: true,
+         sameSite: 'strict'}
+         render json:@user,   status: :accepted
+
+        else
+          @user.generate_otp
+          AdminOtpMailer.admin_otp(@user).deliver_now
+          # send_otp(@user.system_admin_phone_number, @user.otp, @user.user_name)
+          render json: { message: 'OTP sent successfully' }, status: :ok
+        end
+      else
+          token = generate_token(system_admin_id:  @user.id)
+        cookies.encrypted.signed[:jwt_system_admin] = { value: token, 
+        httponly: true, secure: true,
+       sameSite: 'strict'}
+       render json:@user,   status: :accepted
+       
+      end
 
     else
       render json: { error: 'Invalid phone number or password' }, status: :unauthorized
     end
-
-
-  
   end
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -118,7 +207,9 @@ render json: { error: 'System Admin not found' }, status: :unauthorized
     system_admin = SystemAdmin.find_by(email: params[:email]) || SystemAdmin.find_by(system_admin_phone_number: params[:phone_number]) || SystemAdmin.find_by(phone_number: params[:phone_number2])
 
     if  system_admin&.verify_otp(params[:otp])
-      system_admin.update(system_admin_phone_number_verified: true)
+      system_admin.update(system_admin_phone_number_verified: true, otp: nil)
+      system_admin.system_admin_setting.update(use_email_authentication: false, use_sms_authentication: false)
+
       token = generate_token(system_admin_id:  system_admin.id)
       cookies.encrypted.signed[:jwt_system_admin] = { value: token, httponly: true, secure: true , exp: 24.hours.from_now.to_i , sameSite: 'strict'}
       render json: { message: 'Login successful' }, status: :ok
@@ -130,6 +221,26 @@ render json: { error: 'System Admin not found' }, status: :unauthorized
 
   end
 
+
+
+  def verify_otp_email
+    system_admin = SystemAdmin.find_by(email: params[:email]) ||
+     SystemAdmin.find_by(system_admin_phone_number_verified: params[:phone_number]) || 
+     SystemAdmin.find_by(phone_number: params[:phone_number2])
+
+    if  system_admin&.verify_otp(params[:otp]) 
+      system_admin.update(email_verified: true, otp: nil)
+      system_admin.system_admin_setting.update(use_email_authentication: false)
+      token = generate_token(system_admin_id:  system_admin.id)
+      cookies.encrypted.signed[:jwt_system_admin] = { value: token, httponly: true, secure: true , exp: 24.hours.from_now.to_i , sameSite: 'strict'}
+      render json: { message: 'Login successful' }, status: :ok
+
+      
+    else
+      render json: { message: 'Invalid OTP' }, status: :unauthorized
+    end
+
+  end
 
 
 

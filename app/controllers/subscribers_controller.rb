@@ -12,7 +12,7 @@ def set_tenant
   host = request.headers['X-Subdomain']
   @account = Account.find_by(subdomain: host)
   ActsAsTenant.current_tenant = @account
-
+  EmailConfiguration.configure(@account)
 
   # set_current_tenant(@account)
 rescue ActiveRecord::RecordNotFound

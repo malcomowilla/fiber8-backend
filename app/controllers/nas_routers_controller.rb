@@ -9,6 +9,27 @@ class NasRoutersController < ApplicationController
   # end
 
 
+set_current_tenant_through_filter
+
+before_action :set_tenant
+
+
+
+
+    def set_tenant
+      host = request.headers['X-Subdomain']
+      @account = Account.find_by(subdomain: host)
+      @current_account= ActsAsTenant.current_tenant 
+      EmailConfiguration.configure(@current_account)
+    Rails.logger.info "Setting tenant for app#{ActsAsTenant.current_tenant}"
+    
+      # set_current_tenant(@account)
+    rescue ActiveRecord::RecordNotFound
+      render json: { error: 'Invalid tenant' }, status: :not_found
+    
+    end
+    
+
 
       def update
         nas_router = find_nas_router
@@ -36,9 +57,6 @@ class NasRoutersController < ApplicationController
     end
 
 
-  # GET /nas_routers/1/edit
-  def edit
-  end
 
   # POST /nas_routers or /nas_routers.json
   def create

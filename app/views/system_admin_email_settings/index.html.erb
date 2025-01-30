@@ -1,0 +1,14 @@
+<p style="color: green"><%= notice %></p>
+
+<h1>System admin email settings</h1>
+
+<div id="system_admin_email_settings">
+  <% @system_admin_email_settings.each do |system_admin_email_setting| %>
+    <%= render system_admin_email_setting %>
+    <p>
+      <%= link_to "Show this system admin email setting", system_admin_email_setting %>
+    </p>
+  <% end %>
+</div>
+
+<%= link_to "New system admin email setting", new_system_admin_email_setting_path %>

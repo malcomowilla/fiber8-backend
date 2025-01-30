@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2025_01_27_095027) do
+ActiveRecord::Schema[7.1].define(version: 2025_01_29_190412) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -76,6 +76,18 @@ ActiveRecord::Schema[7.1].define(version: 2025_01_27_095027) do
     t.datetime "updated_at", null: false
     t.integer "account_id"
     t.string "logo"
+  end
+
+  create_table "email_settings", force: :cascade do |t|
+    t.string "smtp_host"
+    t.string "smtp_username"
+    t.string "sender_email"
+    t.string "smtp_password"
+    t.string "api_key"
+    t.string "domain"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.integer "account_id"
   end
 
   create_table "hotspot_packages", force: :cascade do |t|
@@ -201,6 +213,26 @@ ActiveRecord::Schema[7.1].define(version: 2025_01_27_095027) do
     t.integer "account_id"
   end
 
+  create_table "system_admin_email_settings", force: :cascade do |t|
+    t.string "smtp_host"
+    t.string "smtp_username"
+    t.string "sender_email"
+    t.string "smtp_password"
+    t.string "api_keydomain"
+    t.integer "system_admin_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
+
+  create_table "system_admin_settings", force: :cascade do |t|
+    t.boolean "login_with_passkey"
+    t.boolean "use_sms_authentication", default: false
+    t.boolean "use_email_authentication", default: false
+    t.integer "system_admin_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
+
   create_table "system_admin_sms", force: :cascade do |t|
     t.string "user"
     t.string "message"
@@ -229,6 +261,7 @@ ActiveRecord::Schema[7.1].define(version: 2025_01_27_095027) do
     t.boolean "system_admin_phone_number_verified", default: false
     t.string "system_admin_phone_number"
     t.string "otp"
+    t.boolean "use_sms_authentication", default: false
   end
 
   create_table "users", force: :cascade do |t|

@@ -10,12 +10,12 @@ before_action :set_current_tenant
 
   
     
-def set_tenant
+def set_current_tenant
 
   host = request.headers['X-Subdomain']
   @account = Account.find_by(subdomain: host)
-  ActsAsTenant.current_tenant = @account
-
+   @current_account=ActsAsTenant.current_tenant 
+  EmailConfiguration.configure(@current_account)
 
   # set_current_tenant(@account)
 rescue ActiveRecord::RecordNotFound
