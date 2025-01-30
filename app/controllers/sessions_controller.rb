@@ -66,7 +66,8 @@ class SessionsController < ApplicationController
     # require 'webauthn'
     # 
 
-
+    @current_account=ActsAsTenant.current_tenant 
+    EmailConfiguration.configure(@current_account)
 
 
 

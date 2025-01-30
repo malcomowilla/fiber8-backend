@@ -1,0 +1,2 @@
+class SystemAdminEmailSetting < ApplicationRecord
+end

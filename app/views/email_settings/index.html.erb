@@ -1,0 +1,14 @@
+<p style="color: green"><%= notice %></p>
+
+<h1>Email settings</h1>
+
+<div id="email_settings">
+  <% @email_settings.each do |email_setting| %>
+    <%= render email_setting %>
+    <p>
+      <%= link_to "Show this email setting", email_setting %>
+    </p>
+  <% end %>
+</div>
+
+<%= link_to "New email setting", new_email_setting_path %>

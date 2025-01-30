@@ -10,8 +10,11 @@
 
 
 
-SystemAdmin.create!(system_admin_phone_number: ENV['SYSTEM_ADMIN_PHONE_NUMBER'],
-  password: ENV['SYSTEM_ADMIN_PASSWORD'])
+SystemAdmin.create(system_admin_phone_number: ENV['SYSTEM_ADMIN_PHONE_NUMBER'],
+  password: ENV['SYSTEM_ADMIN_PASSWORD'],
+  # role: 'system_administrator',
+  
+  email: ENV['SYSTEM_ADMIN_EMAIL'])
 
 
 

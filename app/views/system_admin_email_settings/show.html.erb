@@ -1,0 +1,10 @@
+<p style="color: green"><%= notice %></p>
+
+<%= render @system_admin_email_setting %>
+
+<div>
+  <%= link_to "Edit this system admin email setting", edit_system_admin_email_setting_path(@system_admin_email_setting) %> |
+  <%= link_to "Back to system admin email settings", system_admin_email_settings_path %>
+
+  <%= button_to "Destroy this system admin email setting", @system_admin_email_setting, method: :delete %>
+</div>

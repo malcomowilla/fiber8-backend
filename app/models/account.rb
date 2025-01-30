@@ -7,6 +7,7 @@ class Account < ApplicationRecord
     has_many :subscriptions, dependent: :destroy    
     has_many :prefix_and_digits, dependent: :destroy
     has_one :company_setting, dependent: :destroy
+    has_one :email_setting, dependent: :destroy
     # validates :subdomain, presence: true
     
 end

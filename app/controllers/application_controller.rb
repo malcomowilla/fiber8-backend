@@ -2,7 +2,7 @@ class ApplicationController < ActionController::Base
 
     set_current_tenant_through_filter
 
-    # before_action :set_tenant
+    before_action :set_tenant
     # set_current_tenant_by_subdomain_or_domain(:account, :subdomain, :domain)
 
 # before_action :set_current_tenant
@@ -80,10 +80,35 @@ class ApplicationController < ActionController::Base
 # def logged_in?
 # !!current_user
 # end
+# 
+
+
+
+
+
+
+
+
+# def set_email
+      
+  
+#   @current_account=ActsAsTenant.current_tenant 
+#   EmailConfiguration.configure(@current_account)
+#   # Define the directory for storing QR codes
+  
+# end
+
+
+
+
+
+
 def set_tenant
   host = request.headers['X-Subdomain']
   @account = Account.find_by(subdomain: host)
-ActsAsTenant.current_tenant = @account
+  @current_account=ActsAsTenant.current_tenant 
+  EmailConfiguration.configure(@current_account, params[:email] || params[:phone_number])
+  # EmailSystemAdmin.configure(@current_account, current_system_admin)
 Rails.logger.info "Setting tenant for app#{ActsAsTenant.current_tenant}"
 
   # set_current_tenant(@account)
@@ -104,6 +129,7 @@ end
 
 
     def current_system_admin
+      # byebug
       @current_sys_admin ||= begin
         token = cookies.encrypted.signed[:jwt_system_admin]
         if token  

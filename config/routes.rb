@@ -1,4 +1,6 @@
 Rails.application.routes.draw do
+  resources :email_settings
+  resources :system_admin_email_settings
   resources :system_admin_sms
   resources :system_admins
   resources :company_settings
@@ -34,12 +36,20 @@ delete '/api/delete_hotspot_package/:id', to: 'hotspot_packages#delete'
 
 get '/current_system_admin', to: 'system_admins#current_system_admin_controller_of_networks'
 get '/api/current_system_admin', to: 'system_admins#current_system_admin_controller_of_networks'
+get '/get_system_admin_settings', to: 'system_admins#get_system_admin_settings'
+get '/api/get_system_admin_settings', to: 'system_admins#get_system_admin_settings'
+post '/create_system_admin_settings', to: 'system_admins#create_system_admin_settings'
+post '/api/create_system_admin_settings', to: 'system_admins#create_system_admin_settings'
 
 post '/otp-verification', to: 'system_admins#verify_otp'
 post '/api/otp-verification', to: 'system_admins#verify_otp'
 post '/system-admin-login', to: 'system_admins#login'
 post '/api/system-admin-login', to: 'system_admins#login'
 get '/phone_number_verified', to: 'system_admins#check_sms_already_verified'
+post '/verify_otp_email', to: 'system_admins#verify_otp_email'
+post '/api/verify_otp_email', to: 'system_admins#verify_otp_email'
+get '/email_verified', to: 'system_admins#check_email_already_verified'
+get '/api/email_verified', to: 'system_admins#check_email_already_verified'
 get '/api/phone_number_verified', to: 'system_admins#check_sms_already_verified'
 delete '/logout_system_admin', to: 'system_admins#logout'
 delete '/api/logout_system_admin', to: 'system_admins#logout'

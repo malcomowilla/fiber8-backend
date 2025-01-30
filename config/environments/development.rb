@@ -56,6 +56,7 @@ config.action_mailer.smtp_settings = {
 
   # Don't care if the mailer can't send.
   config.action_mailer.raise_delivery_errors = false
+  config.hosts << "https://8f5e-102-221-35-116.ngrok-free.app" 
 
   config.action_mailer.perform_caching = false
 
@@ -97,6 +98,6 @@ config.active_storage.service = :local
   # Raise error when a before_action's only/except options reference missing actions
   config.action_controller.raise_on_missing_callback_actions = false
 
-  config.force_ssl = true
+  # config.force_ssl = true
 
 end
