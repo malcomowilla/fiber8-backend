@@ -70,7 +70,10 @@ customer_support_phone_number: @company_setting.customer_support_phone_number,
 agent_email: @company_setting.agent_email,
 contact_info: @company_setting.contact_info,
 email_info: @company_setting.email_info,
-logo_url: @company_setting.logo.attached? ? url_for(@company_setting.logo) : nil
+logo_url: @company_setting.logo.attached? ? url_for(@company_setting.logo,
+host: '38d6-102-221-35-116.ngrok-free.app',
+protocol: 'https'
+) : nil
 }
   else
     render json: { errors: @company_setting.errors }, status: :unprocessable_entity

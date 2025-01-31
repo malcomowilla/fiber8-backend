@@ -22,7 +22,7 @@ module Fiber8backend
     # puts("Loading cookies session store KEY")
 
 config.middleware.use SetTenant
-
+# config.hosts << ".ngrok-free.app" 
     puts("Loading cookies session store options")
     config.session_options = {
       httponly: true,
