@@ -1,0 +1,14 @@
+<p style="color: green"><%= notice %></p>
+
+<h1>System admin web authn credentials</h1>
+
+<div id="system_admin_web_authn_credentials">
+  <% @system_admin_web_authn_credentials.each do |system_admin_web_authn_credential| %>
+    <%= render system_admin_web_authn_credential %>
+    <p>
+      <%= link_to "Show this system admin web authn credential", system_admin_web_authn_credential %>
+    </p>
+  <% end %>
+</div>
+
+<%= link_to "New system admin web authn credential", new_system_admin_web_authn_credential_path %>

@@ -1,4 +1,5 @@
 Rails.application.routes.draw do
+  resources :system_admin_web_authn_credentials
   resources :email_settings
   resources :system_admin_email_settings
   resources :system_admin_sms
@@ -40,6 +41,11 @@ get '/get_system_admin_settings', to: 'system_admins#get_system_admin_settings'
 get '/api/get_system_admin_settings', to: 'system_admins#get_system_admin_settings'
 post '/create_system_admin_settings', to: 'system_admins#create_system_admin_settings'
 post '/api/create_system_admin_settings', to: 'system_admins#create_system_admin_settings'
+post '/webauthn/verify-system-admin', to: 'system_admins#verify_webauthn_system_admin'
+post '/api/webauthn/verify-system-admin', to: 'system_admins#verify_webauthn_system_admin'
+post '/webauthn/register_system_admin', to: 'system_admins#register_webauthn_system_admin'
+post '/api/webauthn/register_system_admin', to: 'system_admins#register_webauthn_system_admin'
+
 
 post '/otp-verification', to: 'system_admins#verify_otp'
 post '/api/otp-verification', to: 'system_admins#verify_otp'
@@ -53,10 +59,23 @@ get '/api/email_verified', to: 'system_admins#check_email_already_verified'
 get '/api/phone_number_verified', to: 'system_admins#check_sms_already_verified'
 delete '/logout_system_admin', to: 'system_admins#logout'
 delete '/api/logout_system_admin', to: 'system_admins#logout'
+
+post '/webauthn/register_webauthn_system_admin', to: 'system_admins#register_webauthn_system_admin'
+post '/api/webauthn/register_webauthn_system_admin', to: 'system_admins#register_webauthn_system_admin'
+
+post '/webauthn/create_webauthn_system_admin', to: 'system_admins#create_webauthn_system_admin'
+post '/api/webauthn/create_webauthn_system_admin', to: 'system_admins#create_webauthn_system_admin'
+post '/webauthn/authenticate_webauthn_login_system_admin', to: 'system_admins#authenticate_webauthn_login_system_admin'
+post '/api/webauthn/authenticate_webauthn_login_system_admin', to: 'system_admins#authenticate_webauthn_login_system_admin'
+post '/webauthn/verify_webauthn_login_system_admin', to: 'system_admins#verify_webauthn_login_system_admin'
+post '/api/webauthn/verify_webauthn_login_system_admin', to: 'system_admins#verify_webauthn_login_system_admin'
+
 post '/invite_client', to: 'system_admins#invite_company_super_admins'
 post '/api/invite_client', to: 'system_admins#invite_company_super_admins'
 
+get '/api/get_passkey_credentials_system_admin', to: 'system_admins#get_passkey_credentials_system_admin'
 
+get '/get_passkey_credentials_system_admin', to: 'system_admins#get_passkey_credentials_system_admin'
 
 post '/zone', to: "zones#create"
 post '/api/zone', to: "zones#create"

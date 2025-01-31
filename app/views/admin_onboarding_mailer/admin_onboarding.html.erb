@@ -1,0 +1,100 @@
+
+
+<!DOCTYPE html>
+<html>
+<head>
+  <meta content='text/html; charset=UTF-8' http-equiv='Content-Type' />
+  <style>
+    body {
+      font-family: 'Helvetica Neue', Arial, sans-serif;
+      line-height: 1.6;
+      color: #333333;
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 20px;
+      background-color: #f5f5f5;
+    }
+    .container {
+      background-color: #ffffff;
+      border-radius: 8px;
+      padding: 30px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    .header {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    .logo {
+      max-width: 150px;
+      margin-bottom: 20px;
+    }
+    .title {
+      color: #22c55e;
+      font-size: 24px;
+      font-weight: bold;
+      margin-bottom: 20px;
+    }
+    .content {
+      margin-bottom: 30px;
+    }
+    .button {
+      display: inline-block;
+      background-color: #22c55e;
+      color: white !important;
+      padding: 12px 24px;
+      text-decoration: none;
+      border-radius: 6px;
+      font-weight: bold;
+      margin: 20px 0;
+    }
+    .footer {
+      text-align: center;
+      color: #666666;
+      font-size: 14px;
+      margin-top: 30px;
+      padding-top: 20px;
+      border-top: 1px solid #eeeeee;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+     
+      <div class="title">Welcome to <%= 'Aitechs' %></div>
+    </div>
+
+    <div class="content">
+      <p>Hello <%= @admin.username %>,</p>
+      
+      <p>You have been invited to join <%= 'Aitechs' %> as an <%= @admin.role %>. We're excited to 
+      have you on board!</p>
+
+      <p>Here are your login credentials:</p>
+      <ul>
+        <li><strong>Email:</strong> <%= @admin.email %></li>
+        <li><strong>Password:</strong> <%= @admin.password %></li>
+      </ul>
+
+<p>Additionally here are your email confifuration settings:</p>
+<ul>
+  <li><strong>SMTP Host:</strong> <%= @smtp_host %></li>
+  <li><strong>SMTP Username:</strong> <%= @smtp_username %></li>
+  <li><strong>Sender Email:</strong> <%= @sender_email %></li>
+  <li><strong>SMTP Password:</strong> <%= @smtp_password %></li>
+  <li><strong>API Key:</strong> <%= @api_key %></li>
+  <li><strong>Domain:</strong> <%= @domain %></li>
+</ul>
+     <center>
+        <a href="http://<%= @domain%>/signin" class="button">
+          Sign In Now
+        </a>
+      </center>
+
+      <p>If you have any questions or need assistance, please don't hesitate to contact us.</p>
+      <p>Best regards,<br>The Security Team</p>
+    </div>
+
+    <div class="footer">
+      <p>This is an automated message, please do not reply directly to this email.</p>
+      <p>&copy; <%= Time.current.year %> <%= 'Aitechs' %>. All rights reserved.</p>

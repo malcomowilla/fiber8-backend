@@ -1,5 +1,6 @@
 class SystemAdmin < ApplicationRecord
   has_secure_password
+  has_many :system_admin_web_authn_credentials, dependent: :destroy
   has_one :system_admin_setting, dependent: :destroy
 
   def generate_otp

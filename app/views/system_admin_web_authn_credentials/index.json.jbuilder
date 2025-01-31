@@ -1,0 +1,1 @@
+json.array! @system_admin_web_authn_credentials, partial: "system_admin_web_authn_credentials/system_admin_web_authn_credential", as: :system_admin_web_authn_credential
