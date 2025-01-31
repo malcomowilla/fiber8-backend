@@ -1,0 +1,10 @@
+<p style="color: green"><%= notice %></p>
+
+<%= render @system_admin_web_authn_credential %>
+
+<div>
+  <%= link_to "Edit this system admin web authn credential", edit_system_admin_web_authn_credential_path(@system_admin_web_authn_credential) %> |
+  <%= link_to "Back to system admin web authn credentials", system_admin_web_authn_credentials_path %>
+
+  <%= button_to "Destroy this system admin web authn credential", @system_admin_web_authn_credential, method: :delete %>
+</div>
