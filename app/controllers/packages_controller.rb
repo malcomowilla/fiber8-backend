@@ -11,9 +11,6 @@ class PackagesController < ApplicationController
 
 
 
-    # listen 80;
-    #     listen [::]:80;
-
   # set_current_tenant_through_filter
 
   # before_action :set_my_tenant

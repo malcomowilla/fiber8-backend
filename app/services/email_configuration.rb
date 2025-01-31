@@ -4,16 +4,20 @@ class EmailConfiguration
   def self.configure(current_account, current_system_admin)
     # current_account =  current_account 
     if current_account.nil?
-      Rails.logger.warn "No current account found. Using fallback email settings."
+      Rails.logger.info "No current account found for super admin. Using fallback email settings."
       set_fallback_settings
 
     elsif current_system_admin.present?
+      Rails.logger.info "confiuring system admin email settings."
+
       Rails.application.config.action_mailer.delivery_method = :mailtrap
       Rails.application.config.action_mailer.mailtrap_settings = {
         api_key: "d848f326f33a7aa8db359e399fd7c510"
       }
       
     else
+      Rails.logger.info "configuring email settings for super admin."
+
       configure_for_account(current_account)
 
 
