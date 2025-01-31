@@ -98,6 +98,6 @@ config.active_storage.service = :local
   # Raise error when a before_action's only/except options reference missing actions
   config.action_controller.raise_on_missing_callback_actions = false
 
-  config.force_ssl = true
+  # config.force_ssl = true
 
 end
