@@ -46,6 +46,7 @@ config.middleware.use SetTenant
     # config.eager_load_paths << Rails.root.join("extras")
     # config/application.rb
     # config.force_ssl = true
+    Rails.application.routes.default_url_options[:host] = '38d6-102-221-35-116.ngrok-free.app'
 
 # config.hosts = nil
     config.middleware.use ActionDispatch::Cookies
