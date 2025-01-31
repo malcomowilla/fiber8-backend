@@ -1,8 +1,8 @@
 class ApplicationController < ActionController::Base
 
-    # set_current_tenant_through_filter
+    set_current_tenant_through_filter
 
-    # before_action :set_tenant
+    before_action :set_tenant
     # set_current_tenant_by_subdomain_or_domain(:account, :subdomain, :domain)
 
 # before_action :set_current_tenant
@@ -107,7 +107,7 @@ def set_tenant
   host = request.headers['X-Subdomain']
   @account = Account.find_by(subdomain: host)
   @current_account=ActsAsTenant.current_tenant 
-  EmailConfiguration.configure(@current_account, params[:email] || params[:phone_number])
+  EmailConfiguration.configure(@current_account, ENV['SYSTEM_ADMIN_EMAIL'])
   # EmailSystemAdmin.configure(@current_account, current_system_admin)
 Rails.logger.info "Setting tenant for app#{ActsAsTenant.current_tenant}"
 

@@ -2,7 +2,7 @@ class SystemAdminsController < ApplicationController
   # before_action :set_system_admin, only: %i[ show edit update destroy ]
 
   
-
+before_action :set_system_admin_email_settings
 
   # before_action :set_system_admin_email_settings
   def index
@@ -13,13 +13,13 @@ class SystemAdminsController < ApplicationController
   
 
 
-#   def set_system_admin_email_settings
-# # @current_account = ActsAsTenant.current_tenant
-# #     EmailSystemAdmin.configure(@current_account, current_system_admin)
-#   @current_account=ActsAsTenant.current_tenant 
-#   EmailConfiguration.configure(@current_account, current_system_admin)
+  def set_system_admin_email_settings
+# @current_account = ActsAsTenant.current_tenant
+#     EmailSystemAdmin.configure(@current_account, current_system_admin)
+  @current_account=ActsAsTenant.current_tenant 
+  EmailConfiguration.configure(@current_account, ENV['SYSTEM_ADMIN_EMAIL'])
 
-#   end
+  end
 
 
 

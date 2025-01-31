@@ -3,16 +3,16 @@ class SubscribersController < ApplicationController
   rescue_from ActiveRecord::RecordNotFound, with: :subscriber_not_found_response
 rescue_from  ActiveRecord::RecordInvalid, with: :subscriber_invalid
 
-# set_current_tenant_through_filter
+set_current_tenant_through_filter
 
-# before_action :set_tenant
+before_action :set_tenant
 
 def set_tenant
 
   host = request.headers['X-Subdomain']
   @account = Account.find_by(subdomain: host)
   ActsAsTenant.current_tenant = @account
-  EmailConfiguration.configure(@account)
+  EmailConfiguration.configure(@account, ENV['SYSTEM_ADMIN_EMAIL'])
 
   # set_current_tenant(@account)
 rescue ActiveRecord::RecordNotFound
