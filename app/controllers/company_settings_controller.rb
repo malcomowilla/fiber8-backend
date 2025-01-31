@@ -47,8 +47,10 @@ class CompanySettingsController < ApplicationController
       agent_email: @company_settings&.agent_email,
       customer_support_email: @company_settings&.customer_support_email,
       customer_support_phone_number: @company_settings&.customer_support_phone_number,
-      logo_url: @company_settings&.logo&.attached? ? Rails.application.routes.default_url_options[:host] = '38d6-102-221-35-116.ngrok-free.app'
-      : nil
+      # logo_url: @company_settings&.logo&.attached? ? url_for(@company_settings.logo,
+      # ) : nil
+      logo_url: @company_settings&.logo&.attached? ? rails_blob_url(@company_settings.logo, host: 'https://38d6-102-221-35-116.ngrok-free.app') : nil
+
       # logo_url: @company_settings&.logo&.attached? ? rails_blob_url(@company_settings.logo, host: '38d6-102-221-35-116.ngrok-free.app',
       
       # protocol: 'https'
