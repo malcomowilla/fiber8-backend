@@ -1,4 +1,9 @@
 Rails.application.routes.draw do
+  resources :ip_pools
+  resources :subscriber_settings
+  resources :support_tickets
+  resources :sms_settings
+  # resources :sms
   resources :system_admin_web_authn_credentials
   resources :email_settings
   resources :system_admin_email_settings
@@ -7,12 +12,26 @@ Rails.application.routes.draw do
   resources :company_settings
   resources :router_settings
   resources :hotspot_packages
- 
 
+
+  # "name": "any",
+  # "next-pool": "any",
+  # "ranges": "any",
+  # {{baseUrl}}/ip/pool/remove
+  # {{baseUrl}}/ip/pool/add
 mount ActionCable.server => '/cable'
 scope '/api' do
+  resources :ip_pools
+
+  resources :subscriber_settings
+  resources :email_settings
   resources :hotspot_packages
+  resources :sms_settings
+
 end
+
+get '/get_sms_balance', to: 'sms#get_the_sms_balance'
+get '/api/get_sms_balance', to: 'sms#get_the_sms_balance'
 get '/api/router_settings', to: 'router_settings#index'
 post '/api/router_settings', to: 'router_settings#create'
 post '/router_settings', to: 'router_settings#create'
@@ -21,6 +40,8 @@ get '/allow_get_router_settings', to: 'router_settings#allow_get_router_settings
 get '/get_general_settings', to: "subscribers#get_general_settings"
 get '/api/get_general_settings', to: "subscribers#get_general_settings"
 get '/subscribers', to: "subscribers#index"
+post '/api/subscribers/import', to: "subscribers#import"
+post '/subscribers/import', to: "subscribers#import"
 get '/api/subscribers', to: "subscribers#index"
 post '/subscriber', to: "subscribers#create"
 post '/api/subscriber', to: "subscribers#create"
@@ -127,6 +148,9 @@ post "/api/password/reset", to: "password_resets#create"
 get '/auth/auth0/callback', to: 'auth0#callback'
 get '/auth/failure', to: 'auth0#failure'
 
+
+get '/api/allow_get_packages' , to: "packages#allow_get_packages"
+get '/allow_get_packages' , to: "packages#allow_get_packages"
 
 get '/packages' , to: "packages#index"
 get '/api/packages' , to: "packages#index"

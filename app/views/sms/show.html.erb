@@ -1,0 +1,10 @@
+<p style="color: green"><%= notice %></p>
+
+<%= render @sm %>
+
+<div>
+  <%= link_to "Edit this sm", edit_sm_path(@sm) %> |
+  <%= link_to "Back to sms", sms_path %>
+
+  <%= button_to "Destroy this sm", @sm, method: :delete %>
+</div>

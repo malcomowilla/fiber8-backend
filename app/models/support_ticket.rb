@@ -1,0 +1,2 @@
+class SupportTicket < ApplicationRecord
+end

@@ -1,0 +1,10 @@
+<p style="color: green"><%= notice %></p>
+
+<%= render @support_ticket %>
+
+<div>
+  <%= link_to "Edit this support ticket", edit_support_ticket_path(@support_ticket) %> |
+  <%= link_to "Back to support tickets", support_tickets_path %>
+
+  <%= button_to "Destroy this support ticket", @support_ticket, method: :delete %>
+</div>

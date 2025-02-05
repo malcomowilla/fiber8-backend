@@ -1,0 +1,2 @@
+module SubscriberSettingsHelper
+end

@@ -1,0 +1,14 @@
+<p style="color: green"><%= notice %></p>
+
+<h1>Support tickets</h1>
+
+<div id="support_tickets">
+  <% @support_tickets.each do |support_ticket| %>
+    <%= render support_ticket %>
+    <p>
+      <%= link_to "Show this support ticket", support_ticket %>
+    </p>
+  <% end %>
+</div>
+
+<%= link_to "New support ticket", new_support_ticket_path %>

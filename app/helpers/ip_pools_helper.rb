@@ -1,0 +1,2 @@
+module IpPoolsHelper
+end

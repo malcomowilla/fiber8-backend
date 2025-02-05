@@ -169,6 +169,7 @@ group :development do
   # gem "spring"
 end
 
+gem 'activerecord-import'
 
 
 gem "omniauth-auth0", "~> 3.1"

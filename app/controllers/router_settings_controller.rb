@@ -10,7 +10,7 @@ class RouterSettingsController < ApplicationController
   # POST /router_settings or /router_settings.json
   def create
     @router_setting = RouterSetting.first_or_initialize(router_setting_params)
-    @router_setting.update(router_setting_params)
+    @router_setting.update(use_radius: params[:use_radius], router_name: params[:router_name])
       if @router_setting.save
         render json: @router_setting, status: :created
       else
@@ -45,6 +45,6 @@ class RouterSettingsController < ApplicationController
 
     # Only allow a list of trusted parameters through.
     def router_setting_params
-      params.require(:router_setting).permit(:router_name)
+      params.require(:router_setting).permit(:router_name, :use_radius)
     end
 end

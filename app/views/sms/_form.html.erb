@@ -1,0 +1,52 @@
+<%= form_with(model: sm) do |form| %>
+  <% if sm.errors.any? %>
+    <div style="color: red">
+      <h2><%= pluralize(sm.errors.count, "error") %> prohibited this sm from being saved:</h2>
+
+      <ul>
+        <% sm.errors.each do |error| %>
+          <li><%= error.full_message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div>
+    <%= form.label :user, style: "display: block" %>
+    <%= form.text_field :user %>
+  </div>
+
+  <div>
+    <%= form.label :message, style: "display: block" %>
+    <%= form.text_field :message %>
+  </div>
+
+  <div>
+    <%= form.label :date, style: "display: block" %>
+    <%= form.datetime_field :date %>
+  </div>
+
+  <div>
+    <%= form.label :status, style: "display: block" %>
+    <%= form.text_field :status %>
+  </div>
+
+  <div>
+    <%= form.label :admin_user, style: "display: block" %>
+    <%= form.text_field :admin_user %>
+  </div>
+
+  <div>
+    <%= form.label :system_user, style: "display: block" %>
+    <%= form.text_field :system_user %>
+  </div>
+
+  <div>
+    <%= form.label :account_id, style: "display: block" %>
+    <%= form.number_field :account_id %>
+  </div>
+
+  <div>
+    <%= form.submit %>
+  </div>
+<% end %>

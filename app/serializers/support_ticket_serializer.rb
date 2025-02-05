@@ -1,0 +1,3 @@
+class SupportTicketSerializer < ActiveModel::Serializer
+  attributes :id, :issue_description, :status, :priority, :agent, :ticket_number, :customer, :name, :email, :phone_number, :date_created, :ticket_category, :sequence_number, :date_closed, :agent_review, :agent_response, :agent_response, :account_id, :date_of_creation
+end
