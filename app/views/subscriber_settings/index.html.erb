@@ -1,0 +1,14 @@
+<p style="color: green"><%= notice %></p>
+
+<h1>Subscriber settings</h1>
+
+<div id="subscriber_settings">
+  <% @subscriber_settings.each do |subscriber_setting| %>
+    <%= render subscriber_setting %>
+    <p>
+      <%= link_to "Show this subscriber setting", subscriber_setting %>
+    </p>
+  <% end %>
+</div>
+
+<%= link_to "New subscriber setting", new_subscriber_setting_path %>

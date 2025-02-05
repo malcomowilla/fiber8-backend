@@ -1,0 +1,107 @@
+<%= form_with(model: support_ticket) do |form| %>
+  <% if support_ticket.errors.any? %>
+    <div style="color: red">
+      <h2><%= pluralize(support_ticket.errors.count, "error") %> prohibited this support_ticket from being saved:</h2>
+
+      <ul>
+        <% support_ticket.errors.each do |error| %>
+          <li><%= error.full_message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div>
+    <%= form.label :issue_description, style: "display: block" %>
+    <%= form.text_field :issue_description %>
+  </div>
+
+  <div>
+    <%= form.label :status, style: "display: block" %>
+    <%= form.text_field :status %>
+  </div>
+
+  <div>
+    <%= form.label :priority, style: "display: block" %>
+    <%= form.text_field :priority %>
+  </div>
+
+  <div>
+    <%= form.label :agent, style: "display: block" %>
+    <%= form.text_field :agent %>
+  </div>
+
+  <div>
+    <%= form.label :ticket_number, style: "display: block" %>
+    <%= form.text_field :ticket_number %>
+  </div>
+
+  <div>
+    <%= form.label :customer, style: "display: block" %>
+    <%= form.text_field :customer %>
+  </div>
+
+  <div>
+    <%= form.label :name, style: "display: block" %>
+    <%= form.text_field :name %>
+  </div>
+
+  <div>
+    <%= form.label :email, style: "display: block" %>
+    <%= form.text_field :email %>
+  </div>
+
+  <div>
+    <%= form.label :phone_number, style: "display: block" %>
+    <%= form.text_field :phone_number %>
+  </div>
+
+  <div>
+    <%= form.label :date_created, style: "display: block" %>
+    <%= form.datetime_field :date_created %>
+  </div>
+
+  <div>
+    <%= form.label :ticket_category, style: "display: block" %>
+    <%= form.text_field :ticket_category %>
+  </div>
+
+  <div>
+    <%= form.label :sequence_number, style: "display: block" %>
+    <%= form.number_field :sequence_number %>
+  </div>
+
+  <div>
+    <%= form.label :date_closed, style: "display: block" %>
+    <%= form.datetime_field :date_closed %>
+  </div>
+
+  <div>
+    <%= form.label :agent_review, style: "display: block" %>
+    <%= form.text_field :agent_review %>
+  </div>
+
+  <div>
+    <%= form.label :agent_response, style: "display: block" %>
+    <%= form.text_field :agent_response %>
+  </div>
+
+  <div>
+    <%= form.label :agent_response, style: "display: block" %>
+    <%= form.text_field :agent_response %>
+  </div>
+
+  <div>
+    <%= form.label :account_id, style: "display: block" %>
+    <%= form.number_field :account_id %>
+  </div>
+
+  <div>
+    <%= form.label :date_of_creation, style: "display: block" %>
+    <%= form.datetime_field :date_of_creation %>
+  </div>
+
+  <div>
+    <%= form.submit %>
+  </div>
+<% end %>

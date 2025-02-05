@@ -1,0 +1,9 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  ip_range: MyString
+  pool_name: MyString
+
+two:
+  ip_range: MyString
+  pool_name: MyString

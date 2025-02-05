@@ -1,0 +1,41 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  issue_description: MyString
+  status: MyString
+  priority: MyString
+  agent: MyString
+  ticket_number: MyString
+  customer: MyString
+  name: MyString
+  email: MyString
+  phone_number: MyString
+  date_created: 2025-02-02 23:24:58
+  ticket_category: MyString
+  sequence_number: 1
+  date_closed: 2025-02-02 23:24:58
+  agent_review: MyString
+  agent_response: MyString
+  agent_response: MyString
+  account_id: 1
+  date_of_creation: 2025-02-02 23:24:58
+
+two:
+  issue_description: MyString
+  status: MyString
+  priority: MyString
+  agent: MyString
+  ticket_number: MyString
+  customer: MyString
+  name: MyString
+  email: MyString
+  phone_number: MyString
+  date_created: 2025-02-02 23:24:58
+  ticket_category: MyString
+  sequence_number: 1
+  date_closed: 2025-02-02 23:24:58
+  agent_review: MyString
+  agent_response: MyString
+  agent_response: MyString
+  account_id: 1
+  date_of_creation: 2025-02-02 23:24:58

@@ -1,0 +1,17 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  api_key: MyString
+  api_secret: MyString
+  sender_id: MyString
+  short_code: MyString
+  username: MyString
+  accoun_id: 1
+
+two:
+  api_key: MyString
+  api_secret: MyString
+  sender_id: MyString
+  short_code: MyString
+  username: MyString
+  accoun_id: 1

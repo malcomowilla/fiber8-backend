@@ -1,0 +1,14 @@
+<p style="color: green"><%= notice %></p>
+
+<h1>Sms settings</h1>
+
+<div id="sms_settings">
+  <% @sms_settings.each do |sms_setting| %>
+    <%= render sms_setting %>
+    <p>
+      <%= link_to "Show this sms setting", sms_setting %>
+    </p>
+  <% end %>
+</div>
+
+<%= link_to "New sms setting", new_sms_setting_path %>

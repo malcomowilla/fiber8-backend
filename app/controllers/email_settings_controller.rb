@@ -1,51 +1,56 @@
 class EmailSettingsController < ApplicationController
-  before_action :set_email_setting, only: %i[ show edit update destroy ]
+  # before_action :set_email_setting, only: %i[ show edit update destroy ]
 
   # GET /email_settings or /email_settings.json
+
+
+
+
+  set_current_tenant_through_filter
+
+  before_action :set_tenant
+
+
+
+
+  def set_tenant
+
+    host = request.headers['X-Subdomain']
+    @account = Account.find_by(subdomain: host)
+  
+  
+    set_current_tenant(@account)
+  rescue ActiveRecord::RecordNotFound
+    render json: { error: 'Invalid tenant' }, status: :not_found
+  
+    
+  end
+
+
+
+
   def index
     @email_settings = EmailSetting.all
+    render json: @email_settings
   end
 
-  # GET /email_settings/1 or /email_settings/1.json
-  def show
-  end
-
-  # GET /email_settings/new
-  def new
-    @email_setting = EmailSetting.new
-  end
-
-  # GET /email_settings/1/edit
-  def edit
-  end
 
   # POST /email_settings or /email_settings.json
   def create
-    @email_setting = EmailSetting.new(email_setting_params)
-
-    respond_to do |format|
+    @email_setting = EmailSetting.first_or_initialize(email_setting_params)
+    @email_setting.update(email_setting_params)
       if @email_setting.save
-        format.html { redirect_to email_setting_url(@email_setting), notice: "Email setting was successfully created." }
-        format.json { render :show, status: :created, location: @email_setting }
+       render json: @email_setting, status: :created
       else
-        format.html { render :new, status: :unprocessable_entity }
-        format.json { render json: @email_setting.errors, status: :unprocessable_entity }
+      render json: @email_setting.errors, status: :unprocessable_entity 
       end
-    end
+    
   end
+
+
 
   # PATCH/PUT /email_settings/1 or /email_settings/1.json
-  def update
-    respond_to do |format|
-      if @email_setting.update(email_setting_params)
-        format.html { redirect_to email_setting_url(@email_setting), notice: "Email setting was successfully updated." }
-        format.json { render :show, status: :ok, location: @email_setting }
-      else
-        format.html { render :edit, status: :unprocessable_entity }
-        format.json { render json: @email_setting.errors, status: :unprocessable_entity }
-      end
-    end
-  end
+  
 
   # DELETE /email_settings/1 or /email_settings/1.json
   def destroy
@@ -65,6 +70,7 @@ class EmailSettingsController < ApplicationController
 
     # Only allow a list of trusted parameters through.
     def email_setting_params
-      params.require(:email_setting).permit(:smtp_host, :smtp_username, :sender_email, :smtp_password, :api_key, :domain)
+      params.require(:email_setting).permit(:smtp_host, :smtp_username, :sender_email, :smtp_password, :api_key, :domain,
+      :smtp_port)
     end
 end
