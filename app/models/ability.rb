@@ -13,6 +13,12 @@ class Ability
 
 
     # assign_permissions_based_on_flags(admin)
+    # 
+
+
+
+
+
     
     if admin.role == 'super_administrator'
       can :manage, :all
@@ -25,6 +31,14 @@ class Ability
     can :read, :all
 
 
+    elsif admin.role == 'customer_support'
+      can :manage,  SupportTicket
+      can :read, Subscriber
+
+
+    elsif admin.role == 'agent'
+      can :manage,  SupportTicket
+      can :read, Subscriber
       Rails.logger.info "Super administrator can manage and read all"
     # elsif admin.role == 'administrator'  
     #   can :manage, Payment
@@ -90,92 +104,146 @@ class Ability
 
 
 
-    can :read, :get_settings_for_store_manager if admin.can_read_settings 
-    can :read, :get_settings_for_tickets if admin.can_read_settings
-    can :read, :get_settings_for_store if admin.can_read_settings 
-    can :read, :get_settings_for_provider if admin.can_read_settings
-    can :read, :get_settings_for_customer if admin.can_read_settings 
-    can :read, :get_admin_settings if admin.can_read_settings 
-    can :read, :get_sms_balance if admin.can_read_sms
-    can :read, :get_sms_balance if admin.can_manage_sms
-    can :read, :get_all_sms if admin.can_read_sms
-    can :read, :get_calendar_settings if admin.can_read_settings
-    can :read, :get_chat_messages if admin.can_read_chats 
-    can :read, :get_chat_messages if admin.can_manage_chats 
-    can :manage, :create_chat_message if admin.can_manage_chats 
-
-can :read, :customer_stats if admin.can_read_customer_stats
-
-can :read, :service_provider_stats if admin.can_read_service_provider_stats
-can :manage, :send_individual if admin.can_manage_individual_email
 
 
-    can :read, :get_calendar_settings if admin.can_manage_settings
-    can :read, :get_settings_for_store_manager if admin.can_manage_settings 
-    can :read, :get_settings_for_store if admin.can_manage_settings 
-    can :read, :get_settings_for_provider if admin.can_manage_settings
-    can :read, :get_settings_for_customer if admin.can_manage_settings 
-    can :read, :get_admin_settings if admin.can_manage_settings 
-    can :read, :get_settings_for_tickets if admin.can_manage_settings
+
+
+#     can :read, :get_settings_for_store_manager if admin.can_read_settings 
+#     can :read, :get_settings_for_tickets if admin.can_read_settings
+#     can :read, :get_settings_for_store if admin.can_read_settings 
+#     can :read, :get_settings_for_provider if admin.can_read_settings
+#     can :read, :get_settings_for_customer if admin.can_read_settings 
+#     can :read, :get_admin_settings if admin.can_read_settings 
+#     can :read, :get_sms_balance if admin.can_read_sms
+#     can :read, :get_sms_balance if admin.can_manage_sms
+#     can :read, :get_all_sms if admin.can_read_sms
+#     can :read, :get_calendar_settings if admin.can_read_settings
+#     can :read, :get_chat_messages if admin.can_read_chats 
+#     can :read, :get_chat_messages if admin.can_manage_chats 
+#     can :manage, :create_chat_message if admin.can_manage_chats 
+
+# can :read, :customer_stats if admin.can_read_customer_stats
+
+# can :read, :service_provider_stats if admin.can_read_service_provider_stats
+# can :manage, :send_individual if admin.can_manage_individual_email
+
+
+#     can :read, :get_calendar_settings if admin.can_manage_settings
+#     can :read, :get_settings_for_store_manager if admin.can_manage_settings 
+#     can :read, :get_settings_for_store if admin.can_manage_settings 
+#     can :read, :get_settings_for_provider if admin.can_manage_settings
+#     can :read, :get_settings_for_customer if admin.can_manage_settings 
+#     can :read, :get_admin_settings if admin.can_manage_settings 
+#     can :read, :get_settings_for_tickets if admin.can_manage_settings
     
 
-    can :manage, :create_for_customer if admin.can_manage_settings
-    can :manage, :create_for_store if admin.can_manage_settings
-    can :manage, :create_for_provider if admin.can_manage_settings
-    can :manage, :create_admin_settings if admin.can_manage_settings
-    can :manage, :create_for_store_manager if admin.can_manage_settings
-    can :manage, :create_for_tickets if admin.can_manage_settings
-    can :manage, :create_calendar_settings if admin.can_manage_settings
+#     can :manage, :create_for_customer if admin.can_manage_settings
+#     can :manage, :create_for_store if admin.can_manage_settings
+#     can :manage, :create_for_provider if admin.can_manage_settings
+#     can :manage, :create_admin_settings if admin.can_manage_settings
+#     can :manage, :create_for_store_manager if admin.can_manage_settings
+#     can :manage, :create_for_tickets if admin.can_manage_settings
+#     can :manage, :create_calendar_settings if admin.can_manage_settings
 
     # t.string "can_manage_calendar"
     # t.string "can_read_calendar"
 
 
+
+
+
+    # ,:can_read_ticket_settings,
+    # :can_read_ppoe_package,:can_manage_ppoe_package,:can_manage_company_setting,:can_read_company_setting,
+    # :can_manage_email_setting,:can_read_email_setting,:can_manage_hotspot_packages,:can_read_hotspot_packages,
+    # :can_manage_ip_pool, :can_read_ip_pool, :can_manage_nas_routers,:can_read_nas_routers,:can_manage_router_setting,
+    # :can_manage_sms, :can_read_sms, :can_manage_sms_settings, :can_read_sms_settings,:can_manage_subscriber_setting,
+    # :can_read_subscriber_setting,:can_manage_subscription, :can_read_subscription,:can_read_support_tickets,
+    # :can_read_support_tickets,:can_manage_users, :can_read_users,:can_manage_zones,:can_read_zones
+  
+
+
+    
     Rails.logger.info "can_read_settings: #{admin.can_read_settings}"
 
-    can :manage, Payment if admin.can_manage_payment
-    can :read, Payment if admin.can_read_payment
+    can :manage, Subscriber if admin.can_manage_subscriber
+    can :read, Subscriber if admin.can_read_read_subscriber
+
+    can :manage, CompanySetting if admin.can_manage_company_setting
+    can :read, CompanySetting if admin.can_read_company_setting
+      
+
+    can :manage, EmailSetting if admin.can_manage_email_setting
+    can :read, EmailSetting if admin.can_read_email_setting
+      
+
+    can :manage, HotspotPackage if admin.can_manage_hotspot_packages
+    can :read, HotspotPackage if admin.can_read_hotspot_packages
+    
     can :manage, Sm if admin.can_manage_sms
     can :read, Sm if admin.can_read_sms
-    can :read, SmsTemplate if admin.can_read_sms_templates
-    can :manage, SmsTemplate if admin.can_manage_sms_templates
-    can :manage, SupportTicket if admin.can_manage_tickets
-    can :read, SupportTicket if admin.can_read_tickets 
+    # can :read, SmsTemplate if admin.can_read_sms_templates
+    # can :manage, SmsTemplate if admin.can_manage_sms_templates
+    can :manage, SupportTicket if admin.can_manage_support_tickets
+    can :read, SupportTicket if admin.can_read_support_tickets
+   
+
+can :manage, RouterSetting if admin.can_manage_router_setting
+can :read, RouterSetting if admin.can_read_router_setting
+  
+
+can :manage, Package if admin.can_manage_ppoe_package
+can :read, Package if admin.can_read_ppoe_package
 
 
-can :manage, CalendarEvent if admin.can_manage_calendar
-can :read, CalendarEvent if admin.can_read_calendar
+can :manage, IpPool if admin.can_manage_ip_pool
+can :read, IpPool if admin.can_read_ip_pool
+
+
+can :manage, NasRouter if admin.can_manage_nas_routers
+can :read, NasRouter if admin.can_read_nas_routers
+  
+
+can :manage, SubscriberSetting if admin.can_manage_subscriber_setting
+can :read, SubscriberSetting if admin.can_read_subscriber_setting
+  
+can :manage, SmsSetting if admin.can_manage_sms_settings
+can :read, SmsSetting if admin.can_read_sms_settings
+
+
+
+
+
+
+
+    can :manage, TicketSetting if admin.can_manage_ticket_settings
+    can :read, TicketSetting if admin.can_read_ticket_settings
+
+
+
+# can :manage, CalendarEvent if admin.can_manage_calendar
+# can :read, CalendarEvent if admin.can_read_calendar
 
  
 
 
-    can :manage, Admin if admin.can_manage_user
-    can :read, Admin if admin.can_read_user
+    can :manage, User if admin.can_manage_users
+    can :read, User if admin.can_read_users
 
-    can :manage, GeneralSetting if admin.can_manage_settings
+    # can :manage, GeneralSetting if admin.can_manage_settings
 
-    can :manage, Customer if admin.can_manage_customers
-    can :read, Customer if admin.can_read_customers
+    can :manage, Subscription if admin.can_manage_subscription
+    can :read, Subscription if admin.can_read_subscription
 
-    can :manage, ServiceProvider if admin.can_manage_service_provider
-    can :read, ServiceProvider if admin.can_read_service_provider
-
-    can :manage, Store if admin.can_manage_store
-    can :read, Store if admin.can_read_store
-
-    can :manage, StoreManager if admin.can_manage_store_manager
-    can :read, StoreManager if admin.can_read_store_manager
-
-    can :manage, Location if admin.can_manage_location
-    can :read, Location if admin.can_read_location
-    cannot :manage, SubLocation if admin.can_manage_sub_location == false
-    can :manage, SubLocation if admin.can_manage_sub_location 
-    can :read, SubLocation if admin.can_read_sub_location
+    # can :manage, Location if admin.can_manage_location
+    # can :read, Location if admin.can_read_location
+    # cannot :manage, SubLocation if admin.can_manage_sub_location == false
+    # can :manage, SubLocation if admin.can_manage_sub_location 
+    # can :read, SubLocation if admin.can_read_sub_location
 
     # can :manage, Invoice if admin.can_manage_invoice
     # can :read, Invoice if admin.can_read_invoice
 
-    can :manage, FinancesAndAccount if admin.can_manage_finances_account
-    can :read, FinancesAndAccount if admin.can_read_finances_account
+    # can :manage, FinancesAndAccount if admin.can_manage_finances_account
+    # can :read, FinancesAndAccount if admin.can_read_finances_account
   end
 end

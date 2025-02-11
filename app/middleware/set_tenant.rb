@@ -82,7 +82,7 @@ class SetTenant
 
   def call(env)
     request = ActionDispatch::Request.new(env)
-
+# Rails.logger.info " emailin middleware #{request.email}"
     Rails.logger.info "Request object domain: #{request.domain}"
     Rails.logger.info "Request object subdomain: #{request.subdomain}"
 

@@ -7,6 +7,7 @@ class SubscriptionsController < ApplicationController
 
 # before_action :set_current_tenant
 
+load_and_authorize_resource
 
   
     

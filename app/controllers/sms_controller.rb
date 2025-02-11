@@ -1,5 +1,6 @@
 class SmsController < ApplicationController
   before_action :set_sm, only: %i[ show edit update destroy ]
+  load_and_authorize_resource
 
   # GET /sms or /sms.json
   def index

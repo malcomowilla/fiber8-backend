@@ -1,4 +1,5 @@
   class UsersController < ApplicationController
+    load_and_authorize_resource except: [:authenticate_webauthn, :verify_webauthn, :profile]
 
     rescue_from ActiveRecord::RecordInvalid, with: :creation_error 
 
@@ -21,7 +22,29 @@
     
 
 
-
+    def unblock_email
+      email = params[:email]
+      cache_key = "rack::attack:logins/email:#{email.downcase.strip}"
+  
+      if Rails.cache.exist?(cache_key)
+        Rails.cache.delete(cache_key)
+        render json: { message: "Email #{email} unblocked successfully." }, status: :ok
+      else
+        render json: { error: "Email #{email} not found or not blocked." }, status: :not_found
+      end
+    end
+  
+    def unblock_ip
+      ip = params[:ip]
+      cache_key = "rack::attack:logins/ip:#{ip}"
+  
+      if Rails.cache.exist?(cache_key)
+        Rails.cache.delete(cache_key)
+        render json: { message: "IP #{ip} unblocked successfully." }, status: :ok
+      else
+        render json: { error: "IP #{ip} not found or not blocked." }, status: :not_found
+      end
+    end
 
 
 

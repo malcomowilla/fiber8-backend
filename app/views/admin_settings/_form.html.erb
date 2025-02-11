@@ -1,0 +1,67 @@
+<%= form_with(model: admin_setting) do |form| %>
+  <% if admin_setting.errors.any? %>
+    <div style="color: red">
+      <h2><%= pluralize(admin_setting.errors.count, "error") %> prohibited this admin_setting from being saved:</h2>
+
+      <ul>
+        <% admin_setting.errors.each do |error| %>
+          <li><%= error.full_message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div>
+    <%= form.label :enable_2fa_for_admin_sms, style: "display: block" %>
+    <%= form.check_box :enable_2fa_for_admin_sms %>
+  </div>
+
+  <div>
+    <%= form.label :enable_2fa_for_admin_email, style: "display: block" %>
+    <%= form.check_box :enable_2fa_for_admin_email %>
+  </div>
+
+  <div>
+    <%= form.label :send_password_via_sms, style: "display: block" %>
+    <%= form.check_box :send_password_via_sms %>
+  </div>
+
+  <div>
+    <%= form.label :send_password_via_email, style: "display: block" %>
+    <%= form.check_box :send_password_via_email %>
+  </div>
+
+  <div>
+    <%= form.label :check_inactive_days, style: "display: block" %>
+    <%= form.check_box :check_inactive_days %>
+  </div>
+
+  <div>
+    <%= form.label :check_inactive_hrs, style: "display: block" %>
+    <%= form.check_box :check_inactive_hrs %>
+  </div>
+
+  <div>
+    <%= form.label :check_inactive_minutes, style: "display: block" %>
+    <%= form.check_box :check_inactive_minutes %>
+  </div>
+
+  <div>
+    <%= form.label :enable_2fa_for_admin_passkeys, style: "display: block" %>
+    <%= form.check_box :enable_2fa_for_admin_passkeys %>
+  </div>
+
+  <div>
+    <%= form.label :account_id, style: "display: block" %>
+    <%= form.number_field :account_id %>
+  </div>
+
+  <div>
+    <%= form.label :user_id, style: "display: block" %>
+    <%= form.number_field :user_id %>
+  </div>
+
+  <div>
+    <%= form.submit %>
+  </div>
+<% end %>

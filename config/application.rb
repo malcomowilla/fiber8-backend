@@ -2,6 +2,8 @@ require_relative "boot"
 
 require "rails/all"
 require_relative '../app/middleware/set_tenant'
+# require_relative '../app/middleware/blocked_user'
+
 
 
 
@@ -20,8 +22,12 @@ module Fiber8backend
   class Application < Rails::Application
     # config.session_store :cookie_store, key: '_hue_session', domain: :all
     # puts("Loading cookies session store KEY")
+    # config.middleware.use Rack::Attack
+    # config.middleware.use BlockedUser
+    Rails.application.config.middleware.delete Rack::Attack
 
 config.middleware.use SetTenant
+
 # config.hosts << ".ngrok-free.app" 
     puts("Loading cookies session store options")
     config.session_options = {
