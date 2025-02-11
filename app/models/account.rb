@@ -11,6 +11,8 @@ class Account < ApplicationRecord
     has_one :email_setting, dependent: :destroy
     has_one :router_setting, dependent: :destroy
     has_one :subscriber_setting, dependent: :destroy
+    has_one :ticket_setting, dependent: :destroy
+    has_one :admin_setting, dependent: :destroy
     # validates :subdomain, presence: true
     
 end

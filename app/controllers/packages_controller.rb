@@ -1,7 +1,8 @@
 class PackagesController < ApplicationController
   rescue_from ActiveRecord::RecordNotFound, with: :not_found_response
 
-  
+  load_and_authorize_resource
+
   require 'net/http'
   require 'uri'
   require 'json'
@@ -87,6 +88,44 @@ class PackagesController < ApplicationController
                 @package = Package.new(package_params)
                 profile_id= fetch_profile_id_from_mikrotik(@package.name)
                 limitation_id = fetch_limitation_id_from_mikrotik(@package.name)
+
+
+
+               
+                
+                if Package.exists?(name: params[:name])
+                  render json: { error: "ip pool already exists" }, status: :unprocessable_entity
+                  return
+                  
+                end
+                
+
+                
+                if params[:name].blank?
+                  render json: { error: "package name is required" }, status: :unprocessable_entity
+                  return
+                end
+                
+                if params[:download_limit].blank?
+                  render json: { error: "download limit is required" }, status: :unprocessable_entity
+                  return
+                end
+                
+                if params[:upload_limit].blank?
+                  render json: { error: "upload limit is required" }, status: :unprocessable_entity
+                  return
+                end
+                
+                if params[:price].blank?
+                  render json: { error: "price is required" }, status: :unprocessable_entity
+                  return
+                end
+                
+
+
+
+
+
                   if  profile_id && limitation_id &&  @package.save
   
                  
@@ -108,7 +147,49 @@ class PackagesController < ApplicationController
                 end
               
               else
+
+
+            
+
+
+                if params[:ip_pool].blank?
+                  render json: { error: "ip pool is required" }, status: :unprocessable_entity
+                  return
+                end
+                
+                if Package.exists?(name: params[:name])
+                  render json: { error: "ip pool already exists" }, status: :unprocessable_entity
+                  return
+                  
+                end
+                
+
+                
+                if params[:name].blank?
+                  render json: { error: "package name is required" }, status: :unprocessable_entity
+                  return
+                end
+                
+                if params[:download_limit].blank?
+                  render json: { error: "download limit is required" }, status: :unprocessable_entity
+                  return
+                end
+                
+                if params[:upload_limit].blank?
+                  render json: { error: "upload limit is required" }, status: :unprocessable_entity
+                  return
+                end
+                
+                if params[:price].blank?
+                  render json: { error: "price is required" }, status: :unprocessable_entity
+                  return
+                end
+                
+                
                 ppoe_profile_id = fetch_ppp_profile_id_from_mikrotik
+
+
+
                 if ppoe_profile_id && @package.save
                   @package.update(ppoe_profile_id: ppoe_profile_id)
                   render json:  @package, status: :created

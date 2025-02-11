@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2025_02_04_190259) do
+ActiveRecord::Schema[7.2].define(version: 2025_02_09_165126) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -47,6 +47,25 @@ ActiveRecord::Schema[7.1].define(version: 2025_02_04_190259) do
     t.bigint "blob_id", null: false
     t.string "variation_digest", null: false
     t.index ["blob_id", "variation_digest"], name: "index_active_storage_variant_records_uniqueness", unique: true
+  end
+
+  create_table "admin_settings", force: :cascade do |t|
+    t.boolean "enable_2fa_for_admin_sms"
+    t.boolean "enable_2fa_for_admin_email"
+    t.boolean "send_password_via_sms"
+    t.boolean "send_password_via_email"
+    t.boolean "check_inactive_days"
+    t.boolean "check_inactive_hrs"
+    t.boolean "check_inactive_minutes"
+    t.boolean "enable_2fa_for_admin_passkeys"
+    t.integer "account_id"
+    t.integer "user_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.boolean "check_is_inactive", default: false
+    t.string "checkinactiveminutes"
+    t.string "checkinactivehrs"
+    t.string "checkinactivedays"
   end
 
   create_table "admin_web_authn_credentials", force: :cascade do |t|
@@ -354,6 +373,14 @@ ActiveRecord::Schema[7.1].define(version: 2025_02_04_190259) do
     t.boolean "use_sms_authentication", default: false
   end
 
+  create_table "ticket_settings", force: :cascade do |t|
+    t.string "prefix"
+    t.string "minimum_digits"
+    t.integer "account_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
+
   create_table "users", force: :cascade do |t|
     t.string "email"
     t.datetime "created_at", null: false
@@ -365,6 +392,47 @@ ActiveRecord::Schema[7.1].define(version: 2025_02_04_190259) do
     t.string "webauthn_id"
     t.jsonb "webauthn_authenticator_attachment"
     t.integer "role", default: 0
+    t.boolean "locked_account", default: false
+    t.datetime "locked_at"
+    t.boolean "can_manage_subscriber", default: false
+    t.boolean "can_read_read_subscriber", default: false
+    t.boolean "can_manage_ticket_settings", default: false
+    t.boolean "can_read_ticket_settings", default: false
+    t.boolean "can_read_ppoe_package", default: false
+    t.boolean "can_manage_ppoe_package", default: false
+    t.boolean "can_manage_company_setting", default: false
+    t.boolean "can_read_company_setting", default: false
+    t.boolean "can_manage_email_setting", default: false
+    t.boolean "can_read_email_setting", default: false
+    t.boolean "can_manage_hotspot_packages", default: false
+    t.boolean "can_read_hotspot_packages", default: false
+    t.boolean "can_manage_ip_pool", default: false
+    t.boolean "can_read_ip_pool", default: false
+    t.boolean "can_manage_nas_routers", default: false
+    t.boolean "can_read_nas_routers", default: false
+    t.boolean "can_manage_router_setting", default: false
+    t.boolean "can_manage_sms", default: false
+    t.boolean "can_read_sms", default: false
+    t.boolean "can_manage_sms_settings", default: false
+    t.boolean "can_read_sms_settings", default: false
+    t.boolean "can_manage_subscriber_setting", default: false
+    t.boolean "can_read_subscriber_setting", default: false
+    t.boolean "can_manage_subscription", default: false
+    t.boolean "can_read_subscription", default: false
+    t.boolean "can_read_support_tickets", default: false
+    t.boolean "can_manage_users", default: false
+    t.boolean "can_read_users", default: false
+    t.boolean "can_manage_zones", default: false
+    t.boolean "can_read_zones", default: false
+    t.datetime "date_registered"
+    t.boolean "send_password_via_sms", default: false
+    t.boolean "send_password_via_email", default: false
+    t.boolean "can_read_router_setting", default: false
+    t.boolean "can_manage_user_setting", default: false
+    t.boolean "can_read_user_setting", default: false
+    t.boolean "can_manage_support_tickets", default: false
+    t.boolean "can_read_user_settings", default: false
+    t.boolean "can_manage_user_settings", default: false
   end
 
   create_table "zones", force: :cascade do |t|

@@ -2,6 +2,7 @@ class EmailSettingsController < ApplicationController
   # before_action :set_email_setting, only: %i[ show edit update destroy ]
 
   # GET /email_settings or /email_settings.json
+  load_and_authorize_resource
 
 
 

@@ -1,0 +1,25 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  enable_2fa_for_admin_sms: false
+  enable_2fa_for_admin_email: false
+  send_password_via_sms: false
+  send_password_via_email: false
+  check_inactive_days: false
+  check_inactive_hrs: false
+  check_inactive_minutes: false
+  enable_2fa_for_admin_passkeys: false
+  account_id: 1
+  user_id: 1
+
+two:
+  enable_2fa_for_admin_sms: false
+  enable_2fa_for_admin_email: false
+  send_password_via_sms: false
+  send_password_via_email: false
+  check_inactive_days: false
+  check_inactive_hrs: false
+  check_inactive_minutes: false
+  enable_2fa_for_admin_passkeys: false
+  account_id: 1
+  user_id: 1

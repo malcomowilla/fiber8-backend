@@ -2,6 +2,13 @@ class ApplicationController < ActionController::Base
 
     set_current_tenant_through_filter
 
+
+
+    rescue_from CanCan::AccessDenied do |exception|
+      render json: { error: "Access Denied: #{exception.message}" }, status: :forbidden
+    end
+
+    
     before_action :set_tenant
     # set_current_tenant_by_subdomain_or_domain(:account, :subdomain, :domain)
 

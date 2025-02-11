@@ -1,4 +1,6 @@
 Rails.application.routes.draw do
+  resources :admin_settings
+ 
   resources :ip_pools
   resources :subscriber_settings
   resources :support_tickets
@@ -12,24 +14,48 @@ Rails.application.routes.draw do
   resources :company_settings
   resources :router_settings
   resources :hotspot_packages
+  resource :ticket_settings
 
 
-  # "name": "any",
-  # "next-pool": "any",
-  # "ranges": "any",
-  # {{baseUrl}}/ip/pool/remove
-  # {{baseUrl}}/ip/pool/add
+
+  # allow_get_admin_settings
+ 
 mount ActionCable.server => '/cable'
 scope '/api' do
   resources :ip_pools
-
+  resources :support_tickets
+  resource :ticket_settings
   resources :subscriber_settings
   resources :email_settings
   resources :hotspot_packages
   resources :sms_settings
+  resources :admin_settings
 
 end
 
+
+delete '/api/delete_user/:id', to: 'user_invite#delete_user'
+delete '/delete_user/:id', to: 'user_invite#delete_user'
+
+get '/get_all_admins', to: 'user_invite#get_all_admins'
+get '/api/get_all_admins', to: 'user_invite#get_all_admins'
+post '/invite_client', to: 'user_invite#invite_users'
+patch '/update_client/:id', to: 'user_invite#update'
+patch '/api/update_client/:id', to: 'user_invite#update'
+
+post '/api/invite_client', to: 'user_invite#invite_users'
+get '/api/allow_get_admin_settings', to: 'admin_settings#allow_get_admin_settings'
+get '/allow_get_admin_settings', to: 'admin_settings#allow_get_admin_settings'
+get '/get_all_clients', to: 'accounts#index'
+get '/api/get_all_clients', to: 'accounts#index'
+patch '/api/update_ticket/:id', to: 'support_tickets#update'
+patch '/update_ticket/:id', to: 'support_tickets#update'
+post '/api/create_ticket', to: 'support_tickets#create'
+post '/create_ticket', to: 'support_tickets#create'
+get '/api/get_tickets', to: 'support_tickets#index'
+get '/get_tickets', to: 'support_tickets#index'
+get '/api/allow_get_ticket_settings', to: 'ticket_settings#allow_get_ticket_settings'
+get '/allow_get_ticket_settings', to: 'ticket_settings#allow_get_ticket_settings'
 get '/get_sms_balance', to: 'sms#get_the_sms_balance'
 get '/api/get_sms_balance', to: 'sms#get_the_sms_balance'
 get '/api/router_settings', to: 'router_settings#index'
@@ -91,8 +117,8 @@ post '/api/webauthn/authenticate_webauthn_login_system_admin', to: 'system_admin
 post '/webauthn/verify_webauthn_login_system_admin', to: 'system_admins#verify_webauthn_login_system_admin'
 post '/api/webauthn/verify_webauthn_login_system_admin', to: 'system_admins#verify_webauthn_login_system_admin'
 
-post '/invite_client', to: 'system_admins#invite_company_super_admins'
-post '/api/invite_client', to: 'system_admins#invite_company_super_admins'
+post '/invite_client_super_admins', to: 'system_admins#invite_company_super_admins'
+post '/api/invite_client_super_admins', to: 'system_admins#invite_company_super_admins'
 
 get '/api/get_passkey_credentials_system_admin', to: 'system_admins#get_passkey_credentials_system_admin'
 

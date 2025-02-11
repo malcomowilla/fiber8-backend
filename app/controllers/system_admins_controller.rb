@@ -23,10 +23,13 @@ before_action :set_system_admin_email_settings
   
     relying_party = WebAuthn::RelyingParty.new(
       # origin: "https://#{request.headers['X-Original-Host']}",
-      origin: "https://#{request.headers['X-Subdomain-Aitechs']}",
-      name: "#{request.headers['x-subdomain']}",
+      # origin: "https://#{request.headers['X-Subdomain-Aitechs']}",
+      origin: "http://localhost:5173",
+      # name: "#{request.headers['x-subdomain']}",
+       name: 'aitechs', 
       # id: request.headers['X-Original-Host']
-      id: "#{request.headers['x-subdomain']}"
+      # id: "#{request.headers['x-subdomain']}"
+       id: 'localhost'
     )
   
     if admin.present?
@@ -75,10 +78,13 @@ before_action :set_system_admin_email_settings
 
       # Initialize the Relying Party
       relying_party = WebAuthn::RelyingParty.new(
-        origin: "https://#{request.headers['X-Subdomain-Aitechs']}",
-        name: "#{request.headers['x-subdomain']}",
-        # id: request.headers['X-Original-Host']
-        id: "#{request.headers['x-subdomain']}"
+         # origin: "https://#{request.headers['X-Subdomain-Aitechs']}",
+      origin: "http://localhost:5173",
+      # name: "#{request.headers['x-subdomain']}",
+       name: 'aitechs', 
+      # id: request.headers['X-Original-Host']
+      # id: "#{request.headers['x-subdomain']}"
+       id: 'localhost'
       )
 
       # Validate incoming credential
@@ -344,7 +350,7 @@ end
         #   ).deliver_now
 
         AdminOnboardingMailer.admin_onboarding(@my_admin).deliver_now
-
+        BlockedUserMailer.notify_block(@my_admin).deliver_now
         # send_password(@my_admin.phone_number, @my_admin.password, @my_admin.email)
         render json: @my_admin, status: :created
       else

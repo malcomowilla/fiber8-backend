@@ -1,5 +1,6 @@
 class SmsSettingsController < ApplicationController
   # before_action :set_sms_setting, only: %i[ show edit update destroy ]
+  load_and_authorize_resource
 
   # GET /sms_settings or /sms_settings.json
   # 

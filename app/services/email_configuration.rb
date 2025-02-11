@@ -7,15 +7,15 @@ class EmailConfiguration
       Rails.logger.info "No current account found for super admin. Using fallback email settings."
       set_fallback_settings
 
-    elsif current_system_admin.present?
-      Rails.logger.info "confiuring system admin email settings."
+    # elsif current_system_admin.present?
+    #   Rails.logger.info "confiuring system admin email settings."
 
-      Rails.application.config.action_mailer.delivery_method = :mailtrap
-      Rails.application.config.action_mailer.mailtrap_settings = {
-        api_key: "d848f326f33a7aa8db359e399fd7c510"
-      }
+    #   Rails.application.config.action_mailer.delivery_method = :mailtrap
+    #   Rails.application.config.action_mailer.mailtrap_settings = {
+    #     api_key: "d848f326f33a7aa8db359e399fd7c510"
+    #   }
       
-    else
+    elsif current_account.present?
       Rails.logger.info "configuring email settings for super admin."
 
       configure_for_account(current_account)
@@ -33,13 +33,21 @@ class EmailConfiguration
     email_setting = account.email_setting
 
     if email_setting&.api_key.present?
-      Rails.logger.info "Configuring Mailtrap with API Key"
+      Rails.logger.info "Configuring Mailtrap with API Key super admin #{account.email_setting.api_key}"
       Rails.application.config.action_mailer.delivery_method = :mailtrap
       Rails.application.config.action_mailer.mailtrap_settings = {
-        api_key: email_setting.api_key
+        api_key: account.email_setting.api_key
       }
     elsif email_setting.present?
       Rails.logger.info "Configuring SMTP with Email Settings"
+ Rails.logger.info "Configuring Mailtrap with API Key super adminn #{account.email_setting.api_key}"
+      Rails.application.config.action_mailer.delivery_method = :mailtrap
+      Rails.application.config.action_mailer.mailtrap_settings = {
+        api_key: 'd848f326f33a7aa8db359e399fd7c510'
+      }
+     
+    else 
+
       Rails.application.config.action_mailer.delivery_method = :smtp
       Rails.application.config.action_mailer.smtp_settings = {
         user_name: email_setting.smtp_username,
@@ -50,9 +58,8 @@ class EmailConfiguration
         authentication: :plain,
         enable_starttls_auto: true
       }
-    else 
-      Rails.logger.warn "No email settings found for account. Using fallback."
-      set_fallback_settings
+      # Rails.logger.warn "No email settings found for account. Using fallback."
+      # set_fallback_settings
     end
   end
 

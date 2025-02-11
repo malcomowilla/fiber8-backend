@@ -1,5 +1,6 @@
 class NasRoutersController < ApplicationController
   rescue_from ActiveRecord::RecordNotFound, with: :router_not_found_response
+  load_and_authorize_resource
 
   # set_current_tenant_through_filter
   # before_action :set_my_tenant

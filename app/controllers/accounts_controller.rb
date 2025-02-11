@@ -1,13 +1,20 @@
 class AccountsController < ApplicationController
-  before_action :set_account, only: %i[ show edit update destroy ]
+  # before_action :set_account, only: %i[ show edit update destroy ]
+
+  # def index
+  #   @accounts = Account.all
+  # end
+
+  # def show
+  # end
+
+
+
 
   def index
-    @accounts = Account.all
+    @accounts = Account.all.includes(:users)
+    render json:  @accounts
   end
-
-  def show
-  end
-
  
   def create
     @account = Account.new(account_params)
@@ -30,7 +37,7 @@ class AccountsController < ApplicationController
       @account = Account.find(params[:id])
     end
 
-    def account_params
-      params.require(:account).permit(:name, :subdomain)
-    end
+    # def account_params
+    #   params.require(:account).permit(:name, :subdomain)
+    # end
 end

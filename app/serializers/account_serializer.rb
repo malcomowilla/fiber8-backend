@@ -1,3 +1,4 @@
 class AccountSerializer < ActiveModel::Serializer
-  attributes :id, :name, :subdomain
+  attributes :id, :subdomain
+  has_many :users
 end

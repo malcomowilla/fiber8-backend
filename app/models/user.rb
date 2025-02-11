@@ -3,7 +3,7 @@ class User < ApplicationRecord
 
     acts_as_tenant(:account)
     has_many :prefix_and_digits
-
+    has_one :admin_setting, dependent: :destroy
     has_many :admin_web_authn_credentials, dependent: :destroy
 
 

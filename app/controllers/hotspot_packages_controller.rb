@@ -3,6 +3,7 @@ class HotspotPackagesController < ApplicationController
 
   # GET /hotspot_packages or /hotspot_packages.json
 
+  load_and_authorize_resource
 
 
   # /ip/hotspot/host?as-string=any&as-string-value=any&number=any&value-name=any

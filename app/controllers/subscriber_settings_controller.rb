@@ -1,5 +1,6 @@
 class SubscriberSettingsController < ApplicationController
   # before_action :set_subscriber_setting, only: %i[ show edit update destroy ]
+  load_and_authorize_resource
 
   # GET /subscriber_settings or /subscriber_settings.json
   def index

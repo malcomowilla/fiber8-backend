@@ -1,6 +1,7 @@
 class CompanySettingsController < ApplicationController
   # before_action :set_company_setting, only: %i[ show edit update destroy ]
 
+load_and_authorize_resource except: [:allow_get_company_settings]
   # GET /company_settings or /company_settings.json
   def index
     # @company_settings = CompanySetting.first

@@ -3,6 +3,47 @@ class SessionsController < ApplicationController
 
   set_current_tenant_through_filter
 before_action :set_tenant
+# before_action :throttle_login
+
+
+# rate_limit to: 10, within: 3.minutes, only: :create, with: -> { 
+#   redirect_to "http://localhost:5173/login" # Change this to your React login page URL
+# }
+
+rate_limit to: 20, within: 5.minutes, only: :create, with: -> { 
+  # Find the user by email (you need to get it from params)
+  user = User.find_by(email: params[:email])
+  
+  # Lock the account if the user exists
+  user.update(locked_account: true, locked_at: Time.current) if user.present?
+
+  # Return JSON response
+  render json: { redirect: "http://localhost:5173/account-locked" }, status: :too_many_requests 
+}
+
+
+
+
+def throttle_login
+  ip = request.remote_ip
+  key = "failed_logins:#{ip}"
+
+  count = Rails.cache.read(key).to_i
+
+  if count >= 20  # Allow only 5 login attempts
+    render json: { error: "Too many login attempts. Try again later." }, status: :too_many_requests
+    return
+  end
+
+  Rails.cache.write(key, count + 1, expires_in: 1.minutes) # Lockout for 5 minutes
+end
+
+
+
+
+
+
+
 
 
 
@@ -473,40 +514,59 @@ end
     def create
      
         @user = User.find_by(email: params[:email])
+return render json: { error: 'User Not Found' }, status: :not_found if @user.nil?
+
+
+if @user.locked_account == true && @user&.locked_at > 5.minutes.ago
+  render json: { error: 'Account locked' }, status: :locked # 423 Locked
+      
+
+      else
+
+       
+
+
 
         if @user&.authenticate(params[:password])
-            # set_current_tenant(@user.account)
-            # session[:user_id] = @user.id
+          # set_current_tenant(@user.account)
+          # session[:user_id] = @user.id
+          # reset_login_attempts 
+          token = generate_token(user_id: @user.id)
+    
+          cookies.encrypted.signed[:jwt_user] = { value: token, httponly: true, secure: true,
+         sameSite: 'strict'}
 
-            token = generate_token(user_id: @user.id)
-      
-            cookies.encrypted.signed[:jwt_user] = { value: token, httponly: true, secure: true,
-           sameSite: 'strict'}
 
 
+     
 
-       
-
-       
+     
 
 
 
 render json:@user,   status: :accepted
 
-               
-          
-
-
-        else
-          render json: { error: 'Invalid email or password' }, status: :unauthorized
-        end
+             
         
+
+
+      else
+        render json: { error: 'Invalid email or password' }, status: :unauthorized
+      end
       end
     
+
+    end
+
+
     private
 
 
 
+    def reset_login_attempts
+      key = "failed_logins:#{request.remote_ip}"
+      Rails.cache.delete(key)  # ✅ Reset count on successful login
+    end
 
 
 
