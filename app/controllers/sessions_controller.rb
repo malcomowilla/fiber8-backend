@@ -12,10 +12,10 @@ before_action :set_tenant
 
 rate_limit to: 20, within: 5.minutes, only: :create, with: -> { 
   # Find the user by email (you need to get it from params)
-  user = User.find_by(email: params[:email])
+  # user = User.find_by(email: params[:email])
   
-  # Lock the account if the user exists
-  user.update(locked_account: true, locked_at: Time.current) if user.present?
+  # # Lock the account if the user exists
+  # user.update(locked_account: true, locked_at: Time.current) if user.present?
 
   # Return JSON response
   render json: { redirect: "http://localhost:5173/account-locked" }, status: :too_many_requests 
@@ -514,6 +514,7 @@ end
     def create
      
         @user = User.find_by(email: params[:email])
+return render json: { error: 'User Not Found' }, status: :not_found if @user.nil?
 
 
 if @user.locked_account == true && @user&.locked_at > 5.minutes.ago
