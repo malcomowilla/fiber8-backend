@@ -514,7 +514,6 @@ end
     def create
      
         @user = User.find_by(email: params[:email])
-return render json: { error: 'User Not Found' }, status: :not_found if @user.nil?
 
 
 if @user.locked_account == true && @user&.locked_at > 5.minutes.ago
