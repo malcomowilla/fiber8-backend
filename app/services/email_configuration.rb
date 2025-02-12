@@ -7,13 +7,13 @@ class EmailConfiguration
       Rails.logger.info "No current account found for super admin. Using fallback email settings."
       set_fallback_settings
 
-    # elsif current_system_admin.present?
-    #   Rails.logger.info "confiuring system admin email settings."
+    elsif current_system_admin.present?
+      Rails.logger.info "configuring system admin email settings."
 
-    #   Rails.application.config.action_mailer.delivery_method = :mailtrap
-    #   Rails.application.config.action_mailer.mailtrap_settings = {
-    #     api_key: "d848f326f33a7aa8db359e399fd7c510"
-    #   }
+      Rails.application.config.action_mailer.delivery_method = :mailtrap
+      Rails.application.config.action_mailer.mailtrap_settings = {
+        api_key: "d848f326f33a7aa8db359e399fd7c510"
+      }
       
     elsif current_account.present?
       Rails.logger.info "configuring email settings for super admin."
@@ -30,7 +30,7 @@ class EmailConfiguration
   private
 
   def self.configure_for_account(account)
-    email_setting = account.email_setting
+    email_setting = account&.email_setting
 
     if email_setting&.api_key.present?
       Rails.logger.info "Configuring Mailtrap with API Key super admin #{account.email_setting.api_key}"
@@ -41,11 +41,15 @@ class EmailConfiguration
     elsif email_setting.present?
       Rails.logger.info "Configuring SMTP with Email Settings"
  Rails.logger.info "Configuring Mailtrap with API Key super adminn #{account.email_setting.api_key}"
+      # Rails.application.config.action_mailer.delivery_method = :mailtrap
+      # Rails.application.config.action_mailer.mailtrap_settings = {
+      #   api_key: 'd848f326f33a7aa8db359e399fd7c510'
+      # }
+     
       Rails.application.config.action_mailer.delivery_method = :mailtrap
       Rails.application.config.action_mailer.mailtrap_settings = {
-        api_key: 'd848f326f33a7aa8db359e399fd7c510'
+        api_key: account.email_setting.api_key
       }
-     
     else 
 
       Rails.application.config.action_mailer.delivery_method = :smtp

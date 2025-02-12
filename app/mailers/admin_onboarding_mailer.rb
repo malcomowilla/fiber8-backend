@@ -4,7 +4,6 @@ class AdminOnboardingMailer < ApplicationMailer
   # smtp_host, smtp_username, sender_email, smtp_password, api_key, domain
   def admin_onboarding(admin
    )
-  
     @admin = admin
     # @domain = domain
     # @smtp_host = smtp_host
