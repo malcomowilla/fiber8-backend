@@ -9,7 +9,7 @@ Rails.application.configure do
   config.enable_reloading = true
   config.action_mailer.delivery_method = :letter_opener
   config.action_mailer.perform_deliveries = true
-  Rails.application.routes.default_url_options[:host] = '937e-102-221-35-92.ngrok-free.app'
+  Rails.application.routes.default_url_options[:host] = '8209-102-221-35-92.ngrok-free.app'
   # Rails.application.routes.default_url_options[:host] = 'localhost:5173'
 
 #   Rails.application.routes.default_url_options = {
@@ -59,7 +59,7 @@ config.action_mailer.smtp_settings = {
 
   # Don't care if the mailer can't send.
   config.action_mailer.raise_delivery_errors = false
-  config.hosts << "937e-102-221-35-92.ngrok-free.app" 
+  config.hosts << "8209-102-221-35-92.ngrok-free.app" 
 
   config.action_mailer.perform_caching = false
 
