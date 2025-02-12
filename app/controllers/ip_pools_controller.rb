@@ -192,7 +192,7 @@ end
 
 
   def ip_pool_params
-    params.permit(:pool_name, :start_ip, :end_ip, :description, :router_name)
+    params.permit(:pool_name, :start_ip, :end_ip, :description)
   end
 
 
