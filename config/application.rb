@@ -52,7 +52,7 @@ config.middleware.use SetTenant
     # config.eager_load_paths << Rails.root.join("extras")
     # config/application.rb
     # config.force_ssl = true
-    Rails.application.routes.default_url_options[:host] = '38d6-102-221-35-116.ngrok-free.app'
+    Rails.application.routes.default_url_options[:host] = '937e-102-221-35-92.ngrok-free.app'
 
 # config.hosts = nil
     config.middleware.use ActionDispatch::Cookies
@@ -60,6 +60,6 @@ config.middleware.use SetTenant
     # config.session_store :cookie_store, key: '_fiber8backend_session', httponly: true, same_site: :none, secure: Rails.env.production?
 # Use SameSite=Strict for all cookies to help protect against CSRF
 config.action_dispatch.cookies_same_site_protection = :strict
-config.hosts << "38d6-102-221-35-116.ngrok-free.app" 
+config.hosts << "937e-102-221-35-92.ngrok-free.app" 
   end
 end
