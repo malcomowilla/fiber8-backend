@@ -36,7 +36,7 @@ class IpPoolsController < ApplicationController
 
     ip_pool_id = fetch_ip_pool
     if ip_pool_id && @ip_pool.save
-      @ip_pool = update(ip_pool_id: ip_pool_id)
+      @ip_pool.update(ip_pool_id: ip_pool_id)
       render json: @ip_pool, status: :created
 
     else
@@ -191,6 +191,11 @@ end
   def ip_pool_params
     params.permit(:pool_name, :start_ip, :end_ip, :description)
   end
+
+
+
+
+
 
 def fetch_ip_pool
   router_name = params[:router_name]
