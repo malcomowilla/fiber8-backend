@@ -30,11 +30,10 @@ class IpPoolsController < ApplicationController
   end
 
   def create
+    Rails.logger.debug "IP Pool Params: #{params[:ip_pool].inspect}"
+
     @ip_pool = IpPool.new(
-      start_ip: params[:start_ip],
-      end_ip: params[:end_ip],
-      pool_name: params[:pool_name],
-      description: params[:description]
+      ip_pool_params
     )
 
     ip_pool_id = fetch_ip_pool
@@ -192,6 +191,12 @@ end
 
 
 
+  def ip_pool_params
+    params.permit(:pool_name, :start_ip, :end_ip, :description, :router_name)
+  end
+
+
+
 def fetch_ip_pool
   router_name = params[:router_name]
         
@@ -242,6 +247,7 @@ end
 
 
 end
+
 
 
  # "name": "any",
