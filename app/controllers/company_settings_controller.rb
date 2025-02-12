@@ -15,7 +15,8 @@ load_and_authorize_resource except: [:allow_get_company_settings]
       agent_email: @company_settings&.agent_email,
       customer_support_phone_number: @company_settings&.customer_support_phone_number,
       customer_support_email: @company_settings&.customer_support_email,
-      logo_url: @company_settings&.logo&.attached? ? rails_blob_url(@company_settings.logo, host: '8209-102-221-35-92.ngrok-free.app', protocol: 'https') : nil
+      logo_url: @company_settings&.logo&.attached? ? rails_blob_url(@company_settings.logo, 
+      host: '8209-102-221-35-92.ngrok-free.app', protocol: 'https', port: nil) : nil
 
       # customer_support_phone_number: @company_settings&.customer_support_phone_number,
       # logo_url: @company_settings&.logo&.attached? ? url_for(@company_settings.logo) : nil,
@@ -54,7 +55,7 @@ load_and_authorize_resource except: [:allow_get_company_settings]
       # logo_url: @company_settings&.logo&.attached? ? url_for(@company_settings.logo,
       # ) : nil
       
-      logo_url: @company_settings&.logo&.attached? ? rails_blob_url(@company_settings.logo, host: '8209-102-221-35-92.ngrok-free.app', protocol: 'https') : nil
+      logo_url: @company_settings&.logo&.attached? ? rails_blob_url(@company_settings.logo, host: '8209-102-221-35-92.ngrok-free.app', protocol: 'https', port: nil) : nil
       # logo_url: @company_settings&.logo&.attached? ? rails_blob_url(@company_settings.logo, host: '38d6-102-221-35-116.ngrok-free.app', protocol: 'https') : nil
       # logo_url: @company_settings&.logo&.attached? ? 
       # rails_blob_url(@company_settings.logo, host: '38d6-102-221-35-116.ngrok-free.app', protocol: 'https', port: nil) 
@@ -82,7 +83,10 @@ customer_support_phone_number: @company_setting.customer_support_phone_number,
 agent_email: @company_setting.agent_email,
 contact_info: @company_setting.contact_info,
 email_info: @company_setting.email_info,
-logo_url: @company_setting.logo.attached? ? url_for(@company_setting.logo) : nil
+# logo_url: @company_setting.logo.attached? ? url_for(@company_setting.logo) : nil
+logo_url: @company_settings&.logo&.attached? ? rails_blob_url(@company_settings.logo, host: '8209-102-221-35-92.ngrok-free.app', protocol: 'https', port: nil) : nil
+
+
 }
   else
     render json: { errors: @company_setting.errors }, status: :unprocessable_entity
