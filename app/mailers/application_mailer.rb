@@ -11,7 +11,7 @@ class ApplicationMailer < ActionMailer::Base
    
     
     ActsAsTenant.with_tenant(ActsAsTenant.current_tenant) do
-      Rails.logger.debug "Tenant inside mailer: #{EmailSetting.first.sender_email}"
+      # Rails.logger.debug "Tenant inside mailer: #{EmailSetting.first.sender_email}"
       # ActsAsTenant.current_tenant&.email_setting&.sender_email  
       EmailSetting.first.sender_email
     end
