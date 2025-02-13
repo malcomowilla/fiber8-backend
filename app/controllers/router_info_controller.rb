@@ -78,7 +78,7 @@ before_action :set_tenant
       cpu_load: "#{data["cpu-load"]}%",
       memory_usage: format_memory_usage(data["total-memory"], data["free-memory"]),
       disk_usage: format_disk_usage(data["total-hdd-space"], data["free-hdd-space"]),
-      uptime: format_uptime(data["uptime"]),
+      uptime: data["uptime"],
       version: data["version"],
       build_time: data["build-time"]
     }
