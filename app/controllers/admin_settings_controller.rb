@@ -2,12 +2,17 @@ class AdminSettingsController < ApplicationController
   # before_action :set_admin_setting, only: %i[ show edit update destroy ]
 
 
-  load_and_authorize_resource
+  load_and_authorize_resource except: [:allow_get_admin_settings]
   # GET /admin_settings or /admin_settings.json
   def index
     @admin_settings = AdminSetting.all
     render json: @admin_settings
   end
+
+
+
+
+
 
 
 def allow_get_admin_settings
