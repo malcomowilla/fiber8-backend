@@ -55,8 +55,10 @@ load_and_authorize_resource except: [:allow_get_company_settings]
       # logo_url: @company_settings&.logo&.attached? ? url_for(@company_settings.logo,
       # ) : nil
       
-      logo_url: @company_settings&.logo&.attached? ? rails_blob_url(@company_settings.logo, host: '8209-102-221-35-92.ngrok-free.app', protocol: 'https', port: nil,
-      ) : nil
+      logo_url:   @company_settings&.logo&.attached? ? "/rails/active_storage/#{@company_settings.logo.key}" : nil
+
+      # logo_url: @company_settings&.logo&.attached? ? rails_blob_url(@company_settings.logo, host: '8209-102-221-35-92.ngrok-free.app', protocol: 'https', port: nil,
+      # ) : nil
       # logo_url: @company_settings&.logo&.attached? ? rails_blob_url(@company_settings.logo, host: '38d6-102-221-35-116.ngrok-free.app', protocol: 'https') : nil
       # logo_url: @company_settings&.logo&.attached? ? 
       # rails_blob_url(@company_settings.logo, host: '38d6-102-221-35-116.ngrok-free.app', protocol: 'https', port: nil) 
