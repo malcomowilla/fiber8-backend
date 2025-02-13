@@ -122,8 +122,8 @@ end
         id: "#{request.headers['X-Subdomain']}.aitechs.co.ke"
       )
     
-      relying_party = WebAuthn::RelyingParty.new(
-        # origin: "https://#{request.headers['X-Original-Host']}",
+      # relying_party = WebAuthn::RelyingParty.new(
+      #   origin: "https://#{request.headers['X-Original-Host']}",
       #   origin: "http://localhost:5173",
       #   name: "#{request.headers['X-Subdomain']}",
       #   # id: request.headers['X-Original-Host']
