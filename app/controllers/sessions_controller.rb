@@ -329,7 +329,7 @@ end
     @credential = current_user.admin_web_authn_credentials.find_by(id: params[:id])
     if @credential
       @credential.destroy()
-      WebAuthn.signal_unknown_credential(@credential.id)
+      # WebAuthn.signal_unknown_credential(@credential.id)
       render json: { message: 'Credential deleted' }, status: :ok
     else
       render json: { error: 'Credential not found' }, status: :not_found
@@ -374,10 +374,16 @@ end
           )
         end
 
+        # relying_party = WebAuthn::RelyingParty.new(
+        #   origin: "http://#{request.headers['X-Subdomain']}",
+        #   name: "#{request.headers['X-Subdomain']}",
+        #   id: 'localhost'
+        # )
+
         relying_party = WebAuthn::RelyingParty.new(
-          origin: "http://localhost:5173",
-          name: "#{request.headers['X-Original-Host']}",
-          id: 'localhost'
+          origin: "https://#{request.headers['X-Subdomain']}.aitechs.co.ke",
+          name: "#{request.headers['X-Subdomain']}.aitechs.co.ke",
+          id: "#{request.headers['X-Subdomain']}.aitechs.co.ke"
         )
 
 
@@ -424,13 +430,20 @@ end
   def create_webauthn
     begin
   
+      # relying_party = WebAuthn::RelyingParty.new(
+      #   # origin: "https://#{request.headers['X-Original-Host']}",
+      #   origin: "http://localhost:5173",
+      #   # name: "fiber8",
+      #   name: "#{request.headers['X-Original-Host']}",
+      #   # id: request.headers['X-Original-Host']
+      #   id: "localhost"
+      # )
+      # 
+      #
       relying_party = WebAuthn::RelyingParty.new(
-        # origin: "https://#{request.headers['X-Original-Host']}",
-        origin: "http://localhost:5173",
-        # name: "fiber8",
-        name: "#{request.headers['X-Original-Host']}",
-        # id: request.headers['X-Original-Host']
-        id: "localhost"
+        origin: "https://#{request.headers['X-Subdomain']}.aitechs.co.ke",
+        name: "#{request.headers['X-Subdomain']}.aitechs.co.ke",
+        id: "#{request.headers['X-Subdomain']}.aitechs.co.ke"
       )
   
       challenge = params[:credential][:challenge]
