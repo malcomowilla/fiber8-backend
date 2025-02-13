@@ -30,11 +30,11 @@ config.middleware.use SetTenant
 
 # config.hosts << ".ngrok-free.app" 
     puts("Loading cookies session store options")
-    # config.session_options = {
-    #   httponly: true,
-    #   same_site: "Lax",
-    #   secure: false
-    # }
+    config.session_options = {
+      httponly: true,
+      same_site: "Lax",
+      secure: false
+    }
     # Initialize configuration defaults for originally generated Rails version.
     config.load_defaults 7.1
 
