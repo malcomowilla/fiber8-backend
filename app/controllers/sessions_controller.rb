@@ -122,10 +122,10 @@ end
         id: "#{request.headers['X-Subdomain']}.aitechs.co.ke"
       )
     
-      # relying_party = WebAuthn::RelyingParty.new(
-      #   # origin: "https://#{request.headers['X-Original-Host']}",
+      relying_party = WebAuthn::RelyingParty.new(
+        # origin: "https://#{request.headers['X-Original-Host']}",
       #   origin: "http://localhost:5173",
-      #   name: "#{request.headers['X-Original-Host']}",
+      #   name: "#{request.headers['X-Subdomain']}",
       #   # id: request.headers['X-Original-Host']
       #   id: "localhost"
       # )
@@ -181,10 +181,10 @@ end
         # relying_party = WebAuthn::RelyingParty.new(
         #   origin: "http://localhost:5173",
         #   # name: "aitechs",
-        #   name: "#{request.headers['X-Original-Host']}",
+        #   name: "#{request.headers['X-Subdomain']}",
         #   id: "localhost"
         # )
-        # 
+        
         #
         relying_party = WebAuthn::RelyingParty.new(
           origin: "https://#{request.headers['X-Subdomain']}.aitechs.co.ke",
@@ -386,7 +386,7 @@ end
         end
 
         # relying_party = WebAuthn::RelyingParty.new(
-        #   origin: "http://#{request.headers['X-Subdomain']}",
+        #   origin: "http://localhost:5173",
         #   name: "#{request.headers['X-Subdomain']}",
         #   id: 'localhost'
         # )
@@ -445,12 +445,13 @@ end
       #   # origin: "https://#{request.headers['X-Original-Host']}",
       #   origin: "http://localhost:5173",
       #   # name: "fiber8",
-      #   name: "#{request.headers['X-Original-Host']}",
+      #   name: "#{request.headers['X-Subdomain']}",
       #   # id: request.headers['X-Original-Host']
       #   id: "localhost"
       # )
-      # 
-      #
+      
+      
+      
       relying_party = WebAuthn::RelyingParty.new(
         origin: "https://#{request.headers['X-Subdomain']}.aitechs.co.ke",
         name: "#{request.headers['X-Subdomain']}.aitechs.co.ke",
