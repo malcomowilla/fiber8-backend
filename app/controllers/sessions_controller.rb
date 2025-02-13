@@ -116,15 +116,19 @@ end
       # "id": ""AdVZRNnFYkuE-z2ExPy7YNCjTEbBPiGqJHJ0DSMW8d_3H63vtT5dcjFWa_QUp5bNTimc5J3_SSXIeFVuUeAbxTo",
       # "5TR0TJqgdKRNuqsDhDQV6L7ccHct5B_xGUJ1HJWp0G4" =>  chalenge,
       admin = User.find_by(username: params[:user_name]) || User.find_by(email: params[:email])
-    
-    
       relying_party = WebAuthn::RelyingParty.new(
-        # origin: "https://#{request.headers['X-Original-Host']}",
-        origin: "http://localhost:5173",
-        name: "#{request.headers['X-Original-Host']}",
-        # id: request.headers['X-Original-Host']
-        id: "localhost"
+        origin: "https://#{request.headers['X-Subdomain']}.aitechs.co.ke",
+        name: "#{request.headers['X-Subdomain']}.aitechs.co.ke",
+        id: "#{request.headers['X-Subdomain']}.aitechs.co.ke"
       )
+    
+      # relying_party = WebAuthn::RelyingParty.new(
+      #   # origin: "https://#{request.headers['X-Original-Host']}",
+      #   origin: "http://localhost:5173",
+      #   name: "#{request.headers['X-Original-Host']}",
+      #   # id: request.headers['X-Original-Host']
+      #   id: "localhost"
+      # )
     
       if admin.present?
         options = relying_party.options_for_authentication(allow: admin.admin_web_authn_credentials.map { |c| c.webauthn_id })
@@ -174,11 +178,18 @@ end
         end
   
         # Initialize the Relying Party
+        # relying_party = WebAuthn::RelyingParty.new(
+        #   origin: "http://localhost:5173",
+        #   # name: "aitechs",
+        #   name: "#{request.headers['X-Original-Host']}",
+        #   id: "localhost"
+        # )
+        # 
+        #
         relying_party = WebAuthn::RelyingParty.new(
-          origin: "http://localhost:5173",
-          # name: "aitechs",
-          name: "#{request.headers['X-Original-Host']}",
-          id: "localhost"
+          origin: "https://#{request.headers['X-Subdomain']}.aitechs.co.ke",
+          name: "#{request.headers['X-Subdomain']}.aitechs.co.ke",
+          id: "#{request.headers['X-Subdomain']}.aitechs.co.ke"
         )
   
         # Validate incoming credential
