@@ -15,7 +15,7 @@
 Rails.application.config.middleware.insert_before 0, Rack::Cors do
   allow do
     origins ->(origin, _env) {
-      origin.present? && (origin == "https://aitechs.co.ke" || origin.match?(/^https:\/\/.*\.aitechs\.co\.ke$/))
+      origin.present? && (origin ==  origin.match?(/^https:\/\/.*\.aitechs\.co\.ke$/) || "https://aitechs.co.ke" == origin)
     }
     resource "*", headers: :any, methods: [:get, :post, :patch, :put, :delete, :options]
   end
