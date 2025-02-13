@@ -33,7 +33,9 @@ scope '/api' do
 
 end
 
+get '/api/router_info', to: 'router_info#router_info'
 
+get '/router_info', to: 'router_info#router_info'
 delete '/api/delete_user/:id', to: 'user_invite#delete_user'
 delete '/delete_user/:id', to: 'user_invite#delete_user'
 
