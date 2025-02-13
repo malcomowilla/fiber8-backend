@@ -56,11 +56,11 @@ load_and_authorize_resource except: [:allow_get_company_settings]
       # ) : nil
       # 
       #
-      logo_url: @company_settings&.logo&.attached? ? 
-  "https://8209-102-221-35-92.ngrok-free.app/rails/active_storage/blobs/#{@company_settings.logo.key}" : nil
-
   #     logo_url: @company_settings&.logo&.attached? ? 
-  # URI.join("https://8209-102-221-35-92.ngrok-free.app", Rails.application.routes.url_helpers.rails_blob_path(@company_settings.logo)).to_s : nil
+  # "https://8209-102-221-35-92.ngrok-free.app/rails/active_storage/blobs/#{@company_settings.logo.key}" : nil
+
+      logo_url: @company_settings&.logo&.attached? ? 
+  URI.join("https://8209-102-221-35-92.ngrok-free.app", Rails.application.routes.url_helpers.rails_blob_path(@company_settings.logo)).to_s : nil
 
       # logo_url: @company_settings&.logo&.attached? ? "#{Rails.application.routes.default_url_options[:host]}/rails/active_storage/blobs/#{@company_settings.logo.key}" : nil
 
