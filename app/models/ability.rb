@@ -39,6 +39,10 @@ class Ability
     elsif admin.role == 'agent'
       can :manage,  SupportTicket
       can :read, Subscriber
+
+
+    else
+      assign_permissions_based_on_flags(admin)
       Rails.logger.info "Super administrator can manage and read all"
     # elsif admin.role == 'administrator'  
     #   can :manage, Payment
@@ -163,7 +167,7 @@ class Ability
 
 
     
-    Rails.logger.info "can_read_settings: #{admin.can_read_settings}"
+    # Rails.logger.info "can_read_settings: #{admin.can_read_settings}"
 
     can :manage, Subscriber if admin.can_manage_subscriber
     can :read, Subscriber if admin.can_read_read_subscriber
