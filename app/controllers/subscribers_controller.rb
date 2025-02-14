@@ -2,6 +2,9 @@ class SubscribersController < ApplicationController
   # before_action :set_subscriber, only: %i[ show edit update destroy ]
   rescue_from ActiveRecord::RecordNotFound, with: :subscriber_not_found_response
 rescue_from  ActiveRecord::RecordInvalid, with: :subscriber_invalid
+
+  # load_and_authorize_resource except: [:import]
+load_and_authorize_resource 
 require 'csv'
 
 set_current_tenant_through_filter

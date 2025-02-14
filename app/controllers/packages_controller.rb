@@ -1,7 +1,7 @@
 class PackagesController < ApplicationController
   rescue_from ActiveRecord::RecordNotFound, with: :not_found_response
 
-  load_and_authorize_resource
+  load_and_authorize_resource except: [:allow_get_packages]
 
   require 'net/http'
   require 'uri'
