@@ -594,7 +594,7 @@ ip_pool = package_params[:ip_pool]
           if token  
             begin
               decoded_token = JWT.decode(token, 
-               'gdg&53670a8*2/?', true, algorithm: 'HS256')
+               ENV['JWT_SECRET_KEY'])
             user_id = decoded_token[0]['user_id']
             @current_user = User.find_by(id: user_id)
               return @current_user if @current_user

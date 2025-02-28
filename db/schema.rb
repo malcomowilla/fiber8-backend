@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2025_02_09_165126) do
+ActiveRecord::Schema[7.2].define(version: 2025_02_26_071400) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -19,6 +19,7 @@ ActiveRecord::Schema[7.2].define(version: 2025_02_09_165126) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.string "domain"
+    t.index ["subdomain"], name: "index_accounts_on_subdomain", unique: true
   end
 
   create_table "active_storage_attachments", force: :cascade do |t|
@@ -128,6 +129,25 @@ ActiveRecord::Schema[7.2].define(version: 2025_02_09_165126) do
     t.string "profile_limitation_id"
     t.string "upload_burst_limit"
     t.string "user_profile_id"
+    t.datetime "valid_from"
+    t.datetime "valid_until"
+    t.string "weekdays", default: [], array: true
+  end
+
+  create_table "hotspot_templates", force: :cascade do |t|
+    t.string "name"
+    t.integer "account_id"
+    t.string "preview_image"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.boolean "sleekspot", default: false
+    t.boolean "attractive", default: false
+    t.boolean "clean", default: false
+    t.boolean "default", default: false
+    t.boolean "flat", default: false
+    t.boolean "minimal", default: false
+    t.boolean "simple", default: false
+    t.boolean "default_template", default: false
   end
 
   create_table "ip_pools", force: :cascade do |t|
@@ -207,6 +227,17 @@ ActiveRecord::Schema[7.2].define(version: 2025_02_09_165126) do
     t.datetime "updated_at", null: false
     t.integer "account_id"
     t.boolean "use_radius", default: false
+  end
+
+  create_table "router_statuses", force: :cascade do |t|
+    t.integer "tenant_id"
+    t.string "ip"
+    t.boolean "reachable"
+    t.text "response"
+    t.datetime "checked_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.integer "account_id"
   end
 
   create_table "sessions", force: :cascade do |t|

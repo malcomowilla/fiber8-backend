@@ -1,0 +1,15 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  tenant_id: 1
+  ip: MyString
+  reachable: false
+  response: MyText
+  checked_at: 2025-02-19 22:37:12
+
+two:
+  tenant_id: 1
+  ip: MyString
+  reachable: false
+  response: MyText
+  checked_at: 2025-02-19 22:37:12

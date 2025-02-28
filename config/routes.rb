@@ -1,4 +1,5 @@
 Rails.application.routes.draw do
+  resources :hotspot_templates
   resources :admin_settings
  
   resources :ip_pools
@@ -30,9 +31,13 @@ scope '/api' do
   resources :hotspot_packages
   resources :sms_settings
   resources :admin_settings
+  resources :hotspot_templates
 
 end
 
+
+
+get '/allow_get_hotspot_templates ', to: 'hotspot_templates#allow_get_hotspot_templates'
 get '/api/router_info', to: 'router_info#router_info'
 
 
@@ -141,6 +146,9 @@ delete '/api/delete_zone/:id', to: 'zones#delete'
 post '/create_router', to: "nas_routers#create"
 post '/api/create_router', to: "nas_routers#create"
 
+get '/router_ping_response', to: 'nas_routers#router_ping_response'
+get '/api/router_ping_response', to: 'nas_routers#router_ping_response'
+
 
 patch '/update_router/:id', to: "nas_routers#update"
 patch '/api/update_router/:id', to: "nas_routers#update"
@@ -238,5 +246,33 @@ delete '/api/delete_passkey', to: 'sessions#delete_webauthn'
   
   get '/currently_logged_in_user', to: 'sessions#currently_logged_in_user'
   get '/api/currently_logged_in_user', to: 'sessions#currently_logged_in_user'
+
+
+
+
+
+
+
+
+#   {
+#   "address": "any",
+#   "arp-ping": "any",
+#   "as-value": "any",
+#   "count": "any",
+#   "do-not-fragment": "any",
+#   "dscp": "any",
+#   "interface": "any",
+#   "interval": "any",
+#   "size": "any",
+#   "src-address": "any",
+#   "ttl": "any",
+#   "vrf": "any",
+#   "without-paging": "any",
+#   ".proplist": "any",
+#   ".query": "array"
+# }
+
+
+
 
 end

@@ -2,8 +2,8 @@ class NasRoutersController < ApplicationController
   rescue_from ActiveRecord::RecordNotFound, with: :router_not_found_response
   load_and_authorize_resource
 
-  # set_current_tenant_through_filter
-  # before_action :set_my_tenant
+  set_current_tenant_through_filter
+  before_action :set_tenant
 
   # def set_my_tenant
   #   set_current_tenant(current_user.account)
@@ -13,6 +13,56 @@ class NasRoutersController < ApplicationController
 # set_current_tenant_through_filter
 
 # before_action :set_tenant
+
+
+
+def router_ping_response
+
+#   request_body1={
+#     name: name,
+#   validity: validity_period,
+#   price: price
+#   }
+
+
+# uri = URI("http://#{router_ip_address}/rest/user-manager/profile/add")
+# request = Net::HTTP::Post.new(uri)
+
+# request.basic_auth router_username, router_password
+# request.body = request_body1.to_json
+
+# request['Content-Type'] = 'application/json'
+
+#   response = Net::HTTP.start(uri.hostname, uri.port) do |http|
+#     http.request(request)
+#   end
+
+#   if response.is_a?(Net::HTTPSuccess)
+#     data = JSON.parse(response.body)
+#     return data['ret']
+   
+
+#   else
+#     puts "Failed to ping router: #{response.code} - #{response.message}"
+#   end
+#   
+@tenant = ActsAsTenant.current_tenant
+router_status = RouterStatus.where(tenant_id: @tenant.id).order(checked_at: :desc).first
+
+    if router_status
+      # Render the cached data
+      render json: { router_status: router_status }, status: :ok
+    else
+      # Handle case where cache is empty
+      render json: { error: "No router status found for tenant #{@tenant.id}" }, status: :not_found
+    end
+
+
+end
+
+
+
+
 
 
 
