@@ -6,7 +6,8 @@ class RouterInfoController < ApplicationController
 set_current_tenant_through_filter
 before_action :set_tenant
 
-
+require 'bigdecimal'
+require 'bigdecimal/util'
 
 
 
@@ -85,15 +86,22 @@ before_action :set_tenant
   end
   
   def format_memory_usage(total_memory, free_memory)
-    total_memory_mb = (total_memory.to_f / 1024 / 1024).round(2)
-    free_memory_mb = (free_memory.to_f / 1024 / 1024).round(2)
+    total_memory_mb = BigDecimal(total_memory) / (1024 * 1024)
+    free_memory_mb = BigDecimal(free_memory) / (1024 * 1024)
     used_memory_mb = total_memory_mb - free_memory_mb
   
     {
-      total: "#{total_memory_mb} MB",
-      free: "#{free_memory_mb} MB",
-      used: "#{used_memory_mb} MB"
+      total: "#{format_number(total_memory_mb)} MB",
+      free: "#{format_number(free_memory_mb)} MB",
+      used: "#{format_number(used_memory_mb)} MB"
     }
+  end
+
+
+
+  def format_number(value)
+    rounded_value = value.round(2).to_f
+    rounded_value.to_s.sub(/\.?0+$/, '') # Removes unnecessary .00 or trailing zeros
   end
   
   def format_disk_usage(total_hdd_space, free_hdd_space)

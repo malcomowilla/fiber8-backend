@@ -209,8 +209,10 @@ group :test do
   gem "selenium-webdriver"
 end
 gem "http"
-gem "sidekiq", "~> 7.3"
-gem "sidekiq-scheduler", "~> 5.0"
+gem "sidekiq"
+# gem "sidekiq-scheduler", "~> 5.0"
+gem 'sidekiq-scheduler'
+
 gem "browser"
 gem 'rqrcode'
 

@@ -499,8 +499,8 @@ DEPENDENCIES
   rqrcode
   securerandom
   selenium-webdriver
-  sidekiq (~> 7.3)
-  sidekiq-scheduler (~> 5.0)
+  sidekiq
+  sidekiq-scheduler
   sprockets-rails
   truemail
   twilio-ruby (~> 7.2.0)

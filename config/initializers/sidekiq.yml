@@ -1,0 +1,72 @@
+
+
+
+
+# config/sidekiq.yml
+
+# Default settings for all environments
+default:
+  :concurrency: 5
+  :queues:
+    - default
+
+# Development-specific settings
+development:
+  :queues:
+    - default
+
+# Production-specific settings
+production:
+  :queues:
+    - default
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

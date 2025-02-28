@@ -1,0 +1,10 @@
+<p style="color: green"><%= notice %></p>
+
+<%= render @hotspot_template %>
+
+<div>
+  <%= link_to "Edit this hotspot template", edit_hotspot_template_path(@hotspot_template) %> |
+  <%= link_to "Back to hotspot templates", hotspot_templates_path %>
+
+  <%= button_to "Destroy this hotspot template", @hotspot_template, method: :delete %>
+</div>
