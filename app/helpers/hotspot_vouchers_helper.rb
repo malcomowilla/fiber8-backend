@@ -1,0 +1,2 @@
+module HotspotVouchersHelper
+end

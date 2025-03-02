@@ -1,0 +1,2 @@
+module AddUserProfileIdAndUserIdToHotspotVouchersHelper
+end

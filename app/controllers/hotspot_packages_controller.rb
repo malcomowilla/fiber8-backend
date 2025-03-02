@@ -363,54 +363,34 @@ if  use_radius == true
 
         }
 
+
           
-    
+  
+
                 req_body2 = {
-                  
-                  # "download-limit" => download_limit,
-                  # "upload-limit" => upload_limit,
-              "name" => name,
-              # "rate-limit-rx" => "#{upload_limit}M",
-              # "rate-limit-tx" => "#{download_limit}M",
-              # "rate-limit-burst-rx" => "#{upload_burst_limit}M",
-              # "rate-limit-burst-tx" => "#{download_burst_limit}M",
-              "uptime-limit" => validity_period
-                }
-
-
-
-                req_body3 = {
-                  # "address-list": "any",
-                  # "address-pool": "any",
-                
-                  
-                  "name": "#{name}",
-                 
-                  # "rate-limit": "any",
-                  "session-timeout": "#{validity_period}",
-                  # "shared-users": "any",
-                 
-                
-              
+      
+                # "download-limit" => download_limit,
+                # "upload-limit" => upload_limit,
+            "name" => name,
+            # "rate-limit-rx" => "#{upload_limit}M",
+            # "rate-limit-tx" => "#{download_limit}M",
+            # "rate-limit-burst-rx" => "#{upload_burst_limit}M",
+            # "rate-limit-burst-tx" => "#{download_burst_limit}M",
+            # "uptime-limit" => validity_period
               }
 
-
-
-
-
-              req_body4 = {
-                # "address-list": "any",
-                # "address-pool": "any",
-              
-                
-                "name": "#{name}",
-                "rate-limit": "#{upload_limit}M/#{download_limit}M",
-                "session-timeout": "#{validity_period}",
-                # "shared-users": "any",
+              req_body2["rate-limit-rx"] = "#{upload_limit}M" if upload_limit.present?
+              req_body2["rate-limit-tx"] = "#{download_limit}M" if download_limit.present?
+              req_body2["rate-limit-burst-rx"] = "#{upload_burst_limit}M" if upload_burst_limit.present?
+              req_body2["rate-limit-burst-tx"] = "#{download_burst_limit}M" if download_burst_limit.present?
+              req_body2["uptime-limit"] = "#{validity_period}" if validity_period.present?
+                  
                
-              
-            
-            }
+
+
+
+
+             
 
                 # /ip/hotspot/user/profile/add
                 uri = URI("http://#{router_ip_address}/rest/user-manager/profile/#{profile_id}") 
@@ -436,27 +416,50 @@ if  use_radius == true
           req2.body = req_body2.to_json
           # req3.body = req_body3.to_json
 
-          req2.body =   if params[:download_limit].present? && params[:upload_limit].present?
-           req_body4.to_json
-      
-         
-      
-           else
-             req_body3.to_json
-           end
-
+          
           response = Net::HTTP.start(uri.hostname, uri.port){|http| http.request(req)}
           response2 = Net::HTTP.start(uri2.hostname, uri2.port){|http| http.request(req2)} 
-          # response3 = Net::HTTP.start(uri3.hostname, uri3.port){|http| http.request(req3)}
 
-          if response.is_a?(Net::HTTPSuccess) && response2.is_a?(Net::HTTPSuccess) && response3.is_a?(Net::HTTPSuccess)
+          if response.is_a?(Net::HTTPSuccess) && response2.is_a?(Net::HTTPSuccess)
 
-        # if response3.is_a?(Net::HTTPSuccess)
+          
+
+    request_body3 = {
+      #    "from-time": format_for_mikrotik(params[:valid_from]),
+      # "till-time": format_for_mikrotik(params[:valid_until]),
+      # "weekdays": 'monday',
+        profile:  name,
+        limitation: name,
+        # weekdays: format_weekdays(params[:weekdays]) 
+        }
+        request_body3["from-time"] = format_for_mikrotik(params[:valid_from]) if params[:valid_from].present?
+    request_body3["till-time"] = format_for_mikrotik(params[:valid_until]) if params[:valid_until].present?
+    request_body3["weekdays"] = format_weekdays(params[:weekdays]) if params[:weekdays].present? 
+        
+        
+        uri = URI("http://#{router_ip_address}/rest/user-manager/profile-limitation/#{@hotspot_package.profile_limitation_id}")
+        request3 = Net::HTTP::Patch.new(uri)
+        request3.basic_auth router_username, router_password
+        request3.body = request_body3.to_json
+        
+        request3['Content-Type'] = 'application/json'
+        
+        response3 = Net::HTTP.start(uri.hostname, uri.port) do |http|
+          http.request(request3)
+        end
+        
+        if response3.is_a?(Net::HTTPSuccess)
           @hotspot_package.update(hotspot_package_params)
           render json: @hotspot_package
+          # data = JSON.parse(response.body)
+          # return data['ret']
         else
-          puts "Failed to update profile  : #{response.code} - #{response.message}"
-          puts "Failed to update limitation : #{response2.code} - #{response2.message}"
+          puts "Failed to update profile limitation: #{response3.code} - #{response3.message}"
+        end
+          
+        else
+          puts "Failed to update profile:#{response.code} - #{response.message}"
+          puts "Failed to update limitation:#{response2.code} - #{response2.message}"
 
           render json: { error: "Failed to update package" }, status: :unprocessable_entity
 
@@ -465,7 +468,7 @@ if  use_radius == true
         
       else
       
-        render json: { error: " limitation ID, or profile ID not found in the package" }, status: :unprocessable_entity
+        render json: { error: "limitation ID, or profile ID not found in the package" }, status: :unprocessable_entity
 
       end
       else
@@ -492,10 +495,10 @@ if  use_radius == true
 
       profile_id =  @hotspot_package.profile_id
       limitation_id =  @hotspot_package.limitation_id
-      # user_profile_id =  @hotspot_package.user_profile_id
+      user_profile_id =  @hotspot_package.user_profile_id
 
-      if profile_id.present? && limitation_id.present?
-      # if user_profile_id.present?
+      # if profile_id.present? && limitation_id.present?
+      if user_profile_id.present?
         
         download_limit = params[:download_limit]
         upload_limit = params[:upload_limit]
@@ -524,14 +527,6 @@ if  use_radius == true
 
 
 
-        req_body={
-          "name" => name,
-
-          :price => price,
-          :validity => validity_period
-
-        }
-
           
     
                 req_body2 = {
@@ -545,24 +540,6 @@ if  use_radius == true
               # "rate-limit-burst-tx" => "#{download_burst_limit}M",
               "uptime-limit" => validity_period
                 }
-
-
-
-                req_body3 = {
-                  # "address-list": "any",
-                  # "address-pool": "any",
-                
-                  
-                  "name": "#{name}",
-                 
-                  # "rate-limit": "any",
-                  "session-timeout": "#{validity_period}",
-                  # "shared-users": "any",
-                 
-                
-              
-              }
-
 
 
 
@@ -582,41 +559,35 @@ if  use_radius == true
             }
 
                 # /ip/hotspot/user/profile/add
-                uri = URI("http://#{router_ip_address}/rest/user-manager/profile/#{profile_id}") 
-                uri2 = URI("http://#{router_ip_address}/rest/user-manager/limitation/#{limitation_id}") 
+                # uri = URI("http://#{router_ip_address}/rest/user-manager/profile/#{profile_id}") 
+                # uri2 = URI("http://#{router_ip_address}/rest/user-manager/limitation/#{limitation_id}") 
 
 
-                # uri3 = URI("http://#{router_ip_address}/rest/ip/hotspot/user/profile/#{user_profile_id}")
+                uri3 = URI("http://#{router_ip_address}/rest/ip/hotspot/user/profile/#{user_profile_id}")
 
 
-                req = Net::HTTP::Patch.new(uri)
-                req2 = Net::HTTP::Patch.new(uri2)
-                  #  req3 = Net::HTTP::Patch.new(uri3)
+                # req = Net::HTTP::Patch.new(uri)
+                # req2 = Net::HTTP::Patch.new(uri2)
+                   req3 = Net::HTTP::Patch.new(uri3)
 
-                    req.basic_auth router_username, router_password
-                    req2.basic_auth router_username, router_password
-                  #  req3.basic_auth router_username, router_password
+                    # req.basic_auth router_username, router_password
+                    # req2.basic_auth router_username, router_password
+                   req3.basic_auth router_username, router_password
 
-                    req['Content-Type'] = 'application/json'
-                    req2['Content-Type'] = 'application/json'
-                    # req3['Content-Type'] = 'application/json'
+                    # req['Content-Type'] = 'application/json'
+                    # req2['Content-Type'] = 'application/json'
+                    req3['Content-Type'] = 'application/json'
 
-          req.body = req_body.to_json
-          req2.body = req_body2.to_json
-          # req3.body = req_body3.to_json
+          # req.body = req_body.to_json
+          # req2.body = req_body2.to_json
+          req3.body = req_body4.to_json
 
-          req2.body =   if params[:download_limit].present? && params[:upload_limit].present?
-           req_body4.to_json
-      
-         
-      
-           else
-             req_body3.to_json
-           end
+          # req2.body =   if params[:download_limit].present? && params[:upload_limit].present?
+                 
 
-          response = Net::HTTP.start(uri.hostname, uri.port){|http| http.request(req)}
-          response2 = Net::HTTP.start(uri2.hostname, uri2.port){|http| http.request(req2)} 
-          # response3 = Net::HTTP.start(uri3.hostname, uri3.port){|http| http.request(req3)}
+          # response = Net::HTTP.start(uri.hostname, uri.port){|http| http.request(req)}
+          # response2 = Net::HTTP.start(uri2.hostname, uri2.port){|http| http.request(req2)} 
+          response3 = Net::HTTP.start(uri3.hostname, uri3.port){|http| http.request(req3)}
 
           if response.is_a?(Net::HTTPSuccess) && response2.is_a?(Net::HTTPSuccess) && response3.is_a?(Net::HTTPSuccess)
 
@@ -634,15 +605,14 @@ if  use_radius == true
         
       else
       
-        render json: { error: " limitation ID, or profile ID not found in the package" }, status: :unprocessable_entity
+        render json: { error: "user profile id not found in the package" }, status: :unprocessable_entity
 
       end
       else
         render json: { error: 'Unprocesable entity' }, status: :unprocessable_entity
       end
 
-      
-
+    
     end
     
   end
