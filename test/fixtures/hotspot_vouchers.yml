@@ -1,0 +1,15 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  voucher: MyString
+  status: MyString
+  expiration: 2025-02-28 10:09:16
+  speed_limit: MyString
+  phone: MyString
+
+two:
+  voucher: MyString
+  status: MyString
+  expiration: 2025-02-28 10:09:16
+  speed_limit: MyString
+  phone: MyString

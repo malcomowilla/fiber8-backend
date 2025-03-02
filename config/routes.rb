@@ -1,4 +1,7 @@
 Rails.application.routes.draw do
+  get "add_user_profile_id_and_user_id_to_hotspot_vouchers/user_manager_user_id"
+  get "add_user_profile_id_and_user_id_to_hotspot_vouchers/user_profile_id"
+  resources :hotspot_vouchers
   resources :hotspot_templates
   resources :admin_settings
  
@@ -32,6 +35,7 @@ scope '/api' do
   resources :sms_settings
   resources :admin_settings
   resources :hotspot_templates
+  resources :hotspot_vouchers
 
 end
 

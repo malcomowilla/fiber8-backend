@@ -1,0 +1,12 @@
+<% content_for :title, "Editing hotspot voucher" %>
+
+<h1>Editing hotspot voucher</h1>
+
+<%= render "form", hotspot_voucher: @hotspot_voucher %>
+
+<br>
+
+<div>
+  <%= link_to "Show this hotspot voucher", @hotspot_voucher %> |
+  <%= link_to "Back to hotspot vouchers", hotspot_vouchers_path %>
+</div>

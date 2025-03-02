@@ -4,6 +4,10 @@ class HotspotPackageSerializer < ActiveModel::Serializer
   :valid_from, :valid_until, :weekdays
 
 
+
+
+
+  
   def valid_from
     object.valid_from.strftime('%I:%M %p') if object.valid_from.present?
   end
