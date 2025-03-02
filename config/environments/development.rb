@@ -9,7 +9,9 @@ Rails.application.configure do
   config.enable_reloading = true
   config.action_mailer.delivery_method = :letter_opener
   config.action_mailer.perform_deliveries = true
-  Rails.application.routes.default_url_options[:host] = 'solving-choice-dutch-utah.trycloudflare.com'
+  Rails.application.routes.default_url_options[:host] = 'connections-ministry-clause-realtors.trycloudflare.com'
+
+  # Rails.application.routes.default_url_options[:host] = 'solving-choice-dutch-utah.trycloudflare.com'
   # Rails.application.routes.default_url_options[:host] = 'localhost:5173'
 
 #   Rails.application.routes.default_url_options = {
