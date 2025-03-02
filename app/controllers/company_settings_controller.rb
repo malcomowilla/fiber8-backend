@@ -20,7 +20,7 @@ load_and_authorize_resource except: [:allow_get_company_settings]
 
 
       logo_url: @company_settings&.logo&.attached? ? 
-  URI.join("https://solving-choice-dutch-utah.trycloudflare.com", Rails.application.routes.url_helpers.rails_blob_path(@company_settings.logo)).to_s : nil
+  URI.join("https://connections-ministry-clause-realtors.trycloudflare.com", Rails.application.routes.url_helpers.rails_blob_path(@company_settings.logo)).to_s : nil
 
       # customer_support_phone_number: @company_settings&.customer_support_phone_number,
       # logo_url: @company_settings&.logo&.attached? ? url_for(@company_settings.logo) : nil,
@@ -64,7 +64,7 @@ load_and_authorize_resource except: [:allow_get_company_settings]
   # "https://8209-102-221-35-92.ngrok-free.app/rails/active_storage/blobs/#{@company_settings.logo.key}" : nil
 
       logo_url: @company_settings&.logo&.attached? ? 
-  URI.join("https://solving-choice-dutch-utah.trycloudflare.com", Rails.application.routes.url_helpers.rails_blob_path(@company_settings.logo)).to_s : nil
+  URI.join("https://connections-ministry-clause-realtors.trycloudflare.com", Rails.application.routes.url_helpers.rails_blob_path(@company_settings.logo)).to_s : nil
 
       # logo_url: @company_settings&.logo&.attached? ? "#{Rails.application.routes.default_url_options[:host]}/rails/active_storage/blobs/#{@company_settings.logo.key}" : nil
 
@@ -98,7 +98,8 @@ agent_email: @company_setting.agent_email,
 contact_info: @company_setting.contact_info,
 email_info: @company_setting.email_info,
 # logo_url: @company_setting.logo.attached? ? url_for(@company_setting.logo) : nil
-logo_url: @company_settings&.logo&.attached? ? rails_blob_url(@company_settings.logo, host: '8209-102-221-35-92.ngrok-free.app', protocol: 'https', port: nil) : nil
+logo_url: @company_settings&.logo&.attached? ? rails_blob_url(@company_settings.logo,
+ host: 'connections-ministry-clause-realtors.trycloudflare.com', protocol: 'https', port: nil) : nil
 
 
 }
