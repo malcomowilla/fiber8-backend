@@ -395,6 +395,7 @@ end
 
 
   def current_system_admin_controller_of_networks
+
     if current_system_admin
       render json: current_system_admin, status: :ok
 
@@ -402,6 +403,8 @@ end
 render json: { error: 'System Admin not found' }, status: :unauthorized
 
     end
+
+
   end
 
 
@@ -607,7 +610,7 @@ render json: { error: 'System Admin not found' }, status: :unauthorized
 
 
     def generate_token(payload)
-      JWT.encode(payload, ENV['JWT_SECRET'], 'HS256')
+      JWT.encode(payload, ENV['JWT_SECRET_KEY'], 'HS256')
     end
 
     # Only allow a list of trusted parameters through.
