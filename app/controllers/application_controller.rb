@@ -147,7 +147,7 @@ end
           @current_system_admin = SystemAdmin.find_by(id: system_admin_id)
             return @current_system_admin if @current_system_admin
           rescue JWT::DecodeError, JWT::ExpiredSignature => e
-            Rails.logger.error "JWT Decode Error: #{e}"
+            Rails.logger.error "JWT Decode Error system admin: #{e}"
             render json: { error: 'Unauthorized' }, status: :unauthorized
           end
         end
@@ -176,7 +176,7 @@ end
             @current_user = User.find_by(id: user_id)
               return @current_user if @current_user
             rescue JWT::DecodeError, JWT::ExpiredSignature => e
-              Rails.logger.error "JWT Decode Error: #{e}"
+              Rails.logger.error "JWT Decode Error super admin: #{e}"
               render json: { error: 'Unauthorized' }, status: :unauthorized
             end
           end
