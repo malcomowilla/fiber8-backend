@@ -9,7 +9,7 @@ Rails.application.configure do
   config.enable_reloading = true
   config.action_mailer.delivery_method = :letter_opener
   config.action_mailer.perform_deliveries = true
-  Rails.application.routes.default_url_options[:host] = 'connections-ministry-clause-realtors.trycloudflare.com'
+  Rails.application.routes.default_url_options[:host] = 'speeches-air-una-dolls.trycloudflare.com'
 
   # Rails.application.routes.default_url_options[:host] = 'solving-choice-dutch-utah.trycloudflare.com'
   # Rails.application.routes.default_url_options[:host] = 'localhost:5173'
@@ -62,7 +62,7 @@ config.action_mailer.smtp_settings = {
   # Don't care if the mailer can't send.
   config.action_mailer.raise_delivery_errors = false
   # config.hosts << "solving-choice-dutch-utah.trycloudflare.com" 
-config.hosts << "connections-ministry-clause-realtors.trycloudflare.com"
+config.hosts << "speeches-air-una-dolls.trycloudflare.com"
   config.action_mailer.perform_caching = false
 
   # Print deprecation notices to the Rails logger.
