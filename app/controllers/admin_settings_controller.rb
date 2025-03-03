@@ -18,8 +18,11 @@ class AdminSettingsController < ApplicationController
 
 
 def allow_get_admin_settings
-  @admin_settings = AdminSetting.all
-  render json: @admin_settings
+  # @admin_settings = AdminSetting.all
+  # render json: @admin_settings
+  # 
+  # admin_settings = AdminSetting.for_user(current_user.id)
+  render json: admin_settings
 end
 
 
