@@ -597,9 +597,10 @@ render json:@user,   status: :accepted
 
 
 
-    
+    # decoded_token = JWT.decode(token,  ENV['JWT_SECRET'], true, algorithm: 'HS256')
+
     def generate_token(payload)
-        JWT.encode(payload, ENV['JWT_SECRET'])
+        JWT.encode(payload, ENV['JWT_SECRET'], 'HS256')
       end
 
     def validate_admin_update
