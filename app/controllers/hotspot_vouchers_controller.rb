@@ -55,7 +55,7 @@ class HotspotVouchersController < ApplicationController
 
     user_manager_user_id = get_user_manager_user_id(@hotspot_voucher)
     user_profile_id = get_user_profile_id_from_mikrotik(@hotspot_voucher)
-if user_manager_user_id.present? && user_profile_id.present?
+if user_manager_user_id && user_profile_id
     # calculate_expiration(package, hotspot_package_created)
     @hotspot_voucher.update(voucher: generate_voucher_code,
       user_manager_user_id: user_manager_user_id,
@@ -275,7 +275,7 @@ if response.is_a?(Net::HTTPSuccess)
         return data['ret']
 
 else
-  puts "Failed to fetch  user manager user from mikrotik  : #{response.code} - #{response.message}"
+  puts "Failed to fetch user manager user from mikrotik  : #{response.code} - #{response.message}"
 end
 
   
@@ -292,24 +292,26 @@ def get_user_profile_id_from_mikrotik(hotspot_voucher)
     router_ip_address = nas_router.ip_address
       router_password = nas_router.password
      router_username = nas_router.username
-
-
-      else
-      
-        render json: { error: 'NAS router not found' }, status: :not_found
-        return
-      end
+  
+  else
+  
+    render json: { error: 'NAS router not found' }, status: :not_found
+    return
+  end
 
 
   request_body = {
    
     
-  "user": "#{hotspot_voucher.voucher}",
-    "profile": "#{hotspot_voucher.package}",
+  # "user": "#{hotspot_voucher.voucher}",
+  
+      "user": "#{hotspot_voucher.voucher}",
+    "profile": "#{params[:package]}",
  
 }
+Rails.logger.info "Request body: #{request_body}"
 
-uri = URI("http://#{router_ip_address}/rest/user-profile/add")
+uri = URI("http://#{router_ip_address}/rest/user-manager/user-profile/add")
 request = Net::HTTP::Post.new(uri)
 request.basic_auth router_username, router_password
 request['Content-Type'] = 'application/json'
@@ -324,7 +326,7 @@ data = JSON.parse(response.body)
       return data['ret']
 
 else
-puts "Failed to fetch user manager user profile id from : #{response.code} - #{response.message}"
+puts "Failed to fetch user manager user profile id from mikrotik : #{response.code} - #{response.message}"
 end
 
 

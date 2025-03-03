@@ -517,6 +517,7 @@ end
 def currently_logged_in_user
     if  current_user
         render json: current_user, status: :accepted
+        return
     else
         render json: { error: "Not authorized" }, status: :unauthorized
     end
