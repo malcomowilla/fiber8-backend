@@ -599,7 +599,7 @@ render json:@user,   status: :accepted
 
     
     def generate_token(payload)
-        JWT.encode(payload, ENV['JWT_SECRET_KEY'])
+        JWT.encode(payload, ENV['JWT_SECRET'])
       end
 
     def validate_admin_update

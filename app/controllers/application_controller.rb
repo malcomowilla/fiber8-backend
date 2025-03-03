@@ -171,7 +171,7 @@ end
           token = cookies.encrypted.signed[:jwt_user]
           if token  
             begin
-              decoded_token = JWT.decode(token,  ENV['JWT_SECRET_KEY'], true, algorithm: 'HS256')
+              decoded_token = JWT.decode(token,  ENV['JWT_SECRET'], true, algorithm: 'HS256')
             user_id = decoded_token[0]['user_id']
             @current_user = User.find_by(id: user_id)
               return @current_user if @current_user
