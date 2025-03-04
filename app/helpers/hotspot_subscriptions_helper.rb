@@ -1,0 +1,2 @@
+module HotspotSubscriptionsHelper
+end

@@ -1,4 +1,5 @@
 Rails.application.routes.draw do
+  resources :hotspot_subscriptions
   get "add_user_profile_id_and_user_id_to_hotspot_vouchers/user_manager_user_id"
   get "add_user_profile_id_and_user_id_to_hotspot_vouchers/user_profile_id"
   resources :hotspot_vouchers
@@ -41,6 +42,9 @@ end
 
 
 
+get '/get_active_hotspot_users', to: 'hotspot_subscriptions#get_active_hotspot_users'
+
+get '/api/get_active_hotspot_users', to: 'hotspot_subscriptions#get_active_hotspot_users'
 get '/allow_get_hotspot_templates ', to: 'hotspot_templates#allow_get_hotspot_templates'
 get '/api/router_info', to: 'router_info#router_info'
 post '/login_with_hotspot_voucher', to: 'hotspot_vouchers#login_with_hotspot_voucher'

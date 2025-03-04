@@ -1,0 +1,12 @@
+<% content_for :title, "Editing hotspot subscription" %>
+
+<h1>Editing hotspot subscription</h1>
+
+<%= render "form", hotspot_subscription: @hotspot_subscription %>
+
+<br>
+
+<div>
+  <%= link_to "Show this hotspot subscription", @hotspot_subscription %> |
+  <%= link_to "Back to hotspot subscriptions", hotspot_subscriptions_path %>
+</div>
