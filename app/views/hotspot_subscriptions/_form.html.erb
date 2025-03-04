@@ -1,0 +1,52 @@
+<%= form_with(model: hotspot_subscription) do |form| %>
+  <% if hotspot_subscription.errors.any? %>
+    <div style="color: red">
+      <h2><%= pluralize(hotspot_subscription.errors.count, "error") %> prohibited this hotspot_subscription from being saved:</h2>
+
+      <ul>
+        <% hotspot_subscription.errors.each do |error| %>
+          <li><%= error.full_message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div>
+    <%= form.label :voucher, style: "display: block" %>
+    <%= form.text_field :voucher %>
+  </div>
+
+  <div>
+    <%= form.label :ip_address, style: "display: block" %>
+    <%= form.text_field :ip_address %>
+  </div>
+
+  <div>
+    <%= form.label :start_time, style: "display: block" %>
+    <%= form.text_field :start_time %>
+  </div>
+
+  <div>
+    <%= form.label :up_time, style: "display: block" %>
+    <%= form.text_field :up_time %>
+  </div>
+
+  <div>
+    <%= form.label :download, style: "display: block" %>
+    <%= form.text_field :download %>
+  </div>
+
+  <div>
+    <%= form.label :upload, style: "display: block" %>
+    <%= form.text_field :upload %>
+  </div>
+
+  <div>
+    <%= form.label :account_id, style: "display: block" %>
+    <%= form.number_field :account_id %>
+  </div>
+
+  <div>
+    <%= form.submit %>
+  </div>
+<% end %>
