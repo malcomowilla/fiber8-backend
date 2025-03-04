@@ -9,6 +9,9 @@ class HotspotVouchersController < ApplicationController
   before_action :set_tenant
 
 
+  require 'net/http'
+  require 'json'
+  require 'net/ssh'
 
 
 
@@ -53,11 +56,11 @@ class HotspotVouchersController < ApplicationController
       voucher: generate_voucher_code
     )
 
-    user_manager_user_id = get_user_manager_user_id(@hotspot_voucher)
-    user_profile_id = get_user_profile_id_from_mikrotik(@hotspot_voucher)
+    user_manager_user_id = get_user_manager_user_id(@hotspot_voucher.voucher)
+    user_profile_id = get_user_profile_id_from_mikrotik(@hotspot_voucher.voucher)
 if user_manager_user_id && user_profile_id
     # calculate_expiration(package, hotspot_package_created)
-    @hotspot_voucher.update(voucher: generate_voucher_code,
+    @hotspot_voucher.update(
       user_manager_user_id: user_manager_user_id,
         user_profile_id: user_profile_id,
     )
@@ -104,6 +107,139 @@ puts 'testt123'
     
   end
 
+
+
+
+
+
+
+  # def login_with_hotspot_voucher
+  #   @hotspot_voucher = HotspotVoucher.find_by(voucher: params[:voucher])
+  #   if  @hotspot_voucher
+  #   router_name = params[:router_name]
+  
+  #   nas_router = NasRouter.find_by(name: router_name)
+    
+  #   unless nas_router
+  #     return render json: { error: 'Router not found' }, status: 404
+  #   end
+  
+  #   router_ip_address = nas_router.ip_address
+  #   router_password = nas_router.password
+  #   router_username = nas_router.username
+  
+  #   uri = URI("http://#{router_ip_address}/rest/ip/hotspot/host")
+  #   request = Net::HTTP::Get.new(uri)
+  #   request.basic_auth router_username, router_password
+  
+  #   response = Net::HTTP.start(uri.hostname, uri.port) { |http| http.request(request) }
+  
+  #   unless response.is_a?(Net::HTTPSuccess)
+  #     return render json: { error: "Failed to fetch Mikrotik hosts", status: response.code, message: response.message }, status: 500
+  #   end
+  
+  #   data = JSON.parse(response.body)
+  #   failed_hosts = []
+  #   successful_hosts = []
+  
+  #   data.each do |host|
+  #     host_ip = host['address']
+  #     host_mac = host['mac-address']
+  
+  #     command = "/ip hotspot active login user=#{params[:voucher]} ip=#{host_ip}"
+      
+  #     begin
+  #       Net::SSH.start(router_ip_address, router_username, password: router_password, verify_host_key: :never) do |ssh|
+  #         output = ssh.exec!(command)
+  #         successful_hosts << { ip: host_ip, mac: host_mac, response: output }
+  #       end
+  #     rescue StandardError => e
+  #       failed_hosts << { ip: host_ip, mac: host_mac, error: e.message }
+  #     end
+  #   end
+  
+  #   render json: {
+  #     message: 'Mikrotik host data processed successfully',
+  #     successful_hosts: successful_hosts,
+  #     failed_hosts: failed_hosts
+  #   }, status: :ok
+
+
+  # else
+  #   render json: { error: 'invalid voucher' }, status: :not_found
+  # end
+  # end
+  
+
+  def login_with_hotspot_voucher
+    return render json: { error: 'Voucher and router name are required' }, status: :bad_request unless params[:voucher].present? && params[:router_name].present?
+  
+    @hotspot_voucher = HotspotVoucher.find_by(voucher: params[:voucher])
+    return render json: { error: 'Invalid voucher' }, status: :not_found unless @hotspot_voucher
+  
+    # Check if the voucher is expired (Assuming there's an `expires_at` column)
+    if @hotspot_voucher.expiration.present? && @hotspot_voucher.expiration < Time.current
+      return render json: { error: 'Voucher expired' }, status: :forbidden
+    end
+    
+  
+    nas_router = NasRouter.find_by(name: params[:router_name]) || NasRouter.find_by(name: ActsAsTenant.current_tenant.router_setting)
+    return render json: { error: 'Router not found' }, status: :not_found unless nas_router
+  
+    router_ip_address = nas_router.ip_address
+    router_password = nas_router.password
+    router_username = nas_router.username
+  
+    uri = URI("http://#{router_ip_address}/rest/ip/hotspot/host")
+    request = Net::HTTP::Get.new(uri)
+    request.basic_auth router_username, router_password
+  
+    begin
+      response = Net::HTTP.start(uri.hostname, uri.port, read_timeout: 10, open_timeout: 5) { |http| http.request(request) }
+      return render json: { error: "Failed to fetch MikroTik hosts", status: response.code, message: response.message }, status: :internal_server_error unless response.is_a?(Net::HTTPSuccess)
+    rescue StandardError => e
+      return render json: { error: "Failed to connect to router", message: e.message }, status: :internal_server_error
+    end
+  
+    data = JSON.parse(response.body)
+    failed_hosts = []
+    successful_hosts = []
+  
+    data.each do |host|
+      host_ip = host['address']
+      host_mac = host['mac-address']
+      command = "/ip hotspot active login user=#{params[:voucher]} ip=#{host_ip}"
+  
+      begin
+        Net::SSH.start(router_ip_address, router_username, password: router_password, verify_host_key: :never) do |ssh|
+          output = ssh.exec!(command)
+          if output.include?('failure')
+            failed_hosts << { ip: host_ip, mac: host_mac, error: "Login failed: #{output}" }
+          else
+            successful_hosts << { ip: host_ip, mac: host_mac, response: output }
+          end
+        end
+      rescue Net::SSH::AuthenticationFailed
+        return render json: { error: 'SSH authentication failed' }, status: :unauthorized
+      rescue StandardError => e
+        failed_hosts << { ip: host_ip, mac: host_mac, error: e.message }
+      end
+    end
+  
+    if successful_hosts.any?
+      return render json: {
+        message: 'Connected successfully',
+        successful_hosts: successful_hosts,
+        failed_hosts: failed_hosts
+      }, status: :ok
+    else
+      return render json: {
+        error: 'Failed to connect any devices',
+        failed_hosts: failed_hosts
+      }, status: :internal_server_error
+    end
+  end
+  
   private
     # Use callbacks to share common setup or constraints between actions.
     def set_hotspot_voucher
@@ -256,7 +392,7 @@ def get_user_manager_user_id(hotspot_voucher)
   request_body = {
    
     
-    "name": "#{hotspot_voucher.voucher}",
+    "name": "#{hotspot_voucher}",
    
 }
 
@@ -305,7 +441,7 @@ def get_user_profile_id_from_mikrotik(hotspot_voucher)
     
   # "user": "#{hotspot_voucher.voucher}",
   
-      "user": "#{hotspot_voucher.voucher}",
+      "user": "#{hotspot_voucher}",
     "profile": "#{params[:package]}",
  
 }
