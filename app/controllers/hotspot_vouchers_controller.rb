@@ -184,7 +184,7 @@ puts 'testt123'
     end
     
   
-    nas_router = NasRouter.find_by(name: params[:router_name]) || NasRouter.find_by(name: ActsAsTenant.current_tenant.router_setting)
+    nas_router = NasRouter.find_by(name: ActsAsTenant.current_tenant.router_setting)
     return render json: { error: 'Router not found' }, status: :not_found unless nas_router
   
     router_ip_address = nas_router.ip_address
