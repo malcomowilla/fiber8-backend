@@ -1,6 +1,6 @@
 class RouterSettingsController < ApplicationController
   # before_action :set_router_setting, only: %i[ show edit update destroy ]
-  load_and_authorize_resource
+  load_and_authorize_resource except: [:allow_get_router_settings]
 
   # GET /router_settings or /router_settings.json
   def index
