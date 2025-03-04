@@ -43,6 +43,8 @@ end
 
 get '/allow_get_hotspot_templates ', to: 'hotspot_templates#allow_get_hotspot_templates'
 get '/api/router_info', to: 'router_info#router_info'
+post '/login_with_hotspot_voucher', to: 'hotspot_vouchers#login_with_hotspot_voucher'
+post '/api/login_with_hotspot_voucher', to: 'hotspot_vouchers#login_with_hotspot_voucher'
 
 
 get '/router_info', to: 'router_info#router_info'
