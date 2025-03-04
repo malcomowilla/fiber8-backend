@@ -172,7 +172,8 @@ puts 'testt123'
   
 
   def login_with_hotspot_voucher
-    return render json: { error: 'Voucher and router name are required' }, status: :bad_request unless params[:voucher].present? && params[:router_name].present?
+    return render json: { error: 'Voucher and router name are required' }, 
+    status: :bad_request unless params[:voucher].present? 
   
     @hotspot_voucher = HotspotVoucher.find_by(voucher: params[:voucher])
     return render json: { error: 'Invalid voucher' }, status: :not_found unless @hotspot_voucher
