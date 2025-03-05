@@ -109,7 +109,7 @@ company_photo = Account.find_by(subdomain: subdomain).company_setting&.logo&.att
         
       # end|| params[:send_password_via_email] == 'true'
       subdomain = request.headers['X-Subdomain']
-      send_password_via_email= Account.find_by(subdomain: subdomain).admin_setting.send_password_via_email
+      send_password_via_email= Account.find_by(subdomain: subdomain).admin_setting&.send_password_via_email
 
 if send_password_via_email == true || send_password_via_email == 'true'
 
