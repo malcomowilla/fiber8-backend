@@ -7,7 +7,7 @@ class AdminSettingsController < ApplicationController
   def index
     # @admin_settings = AdminSetting.all
     # render json: @admin_settings
-    admin_settings = AdminSetting.for_user(current_user.id)
+    admin_settings = AdminSetting.all
   render json: admin_settings
   end
 
@@ -35,10 +35,10 @@ end
   # POST /admin_settings or /admin_settings.json
   def create
     @admin_setting = AdminSetting.first_or_initialize(
-      admin_setting_params.merge(
+      admin_setting_params
 
-      user: current_user
-      )
+      # user: current_user
+      
       )
     @admin_setting.update!(admin_setting_params)
       if @admin_setting.save
