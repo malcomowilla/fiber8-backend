@@ -40,7 +40,12 @@ end
       user: current_user
       )
       )
-    @admin_setting.update!(admin_setting_params)
+    @admin_setting.update!(
+      admin_setting_params.merge(
+
+      user: current_user
+      )
+    )
       if @admin_setting.save
          render json: @admin_setting, status: :created
       else
