@@ -5,7 +5,7 @@ class User < ApplicationRecord
     has_many :prefix_and_digits
     has_one :admin_setting, dependent: :destroy
     has_many :admin_web_authn_credentials, dependent: :destroy
-
+    # before_destroy :delete_admin_setting
 
     enum :role,  [:super_administrator, :technician,
  :customer_support,  :administrator, :agent]
@@ -32,7 +32,11 @@ class User < ApplicationRecord
 
    
 
+private
 
+def delete_admin_setting
+    admin_setting.destroy if admin_setting.present?
+  end
 
 def validate_complex_password
     if password.present? and !password.match(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{12,}$/) 
