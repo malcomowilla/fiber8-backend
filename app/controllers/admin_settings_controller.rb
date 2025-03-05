@@ -34,7 +34,12 @@ end
 
   # POST /admin_settings or /admin_settings.json
   def create
-    @admin_setting = AdminSetting.first_or_initialize(user: current_user)
+    @admin_setting = AdminSetting.first_or_initialize(
+      admin_setting_params.merge(
+
+      user: current_user
+      )
+      )
     @admin_setting.update!(admin_setting_params)
       if @admin_setting.save
          render json: @admin_setting, status: :created
