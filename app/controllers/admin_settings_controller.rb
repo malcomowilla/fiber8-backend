@@ -5,9 +5,9 @@ class AdminSettingsController < ApplicationController
   load_and_authorize_resource except: [:allow_get_admin_settings]
   # GET /admin_settings or /admin_settings.json
   def index
-    @admin_settings = AdminSetting.all
+    # @admin_settings = AdminSetting.all
     # render json: @admin_settings
-    # admin_settings = AdminSetting.for_user(current_user.id)
+    @admin_settings = AdminSetting.for_user(current_user.id)
   render json: @admin_settings
   end
 
@@ -18,11 +18,13 @@ class AdminSettingsController < ApplicationController
 
 
 def allow_get_admin_settings
-  @admin_settings = AdminSetting.all
-  render json: @admin_settings
+  admin = params[:admin_email]
+  @admin = User.find_by(email: admin)
+  # @admin_settings = AdminSetting.all
+  # render json: @admin_settings
   
-  # admin_settings = AdminSetting.for_user(current_user.id)
-  # render json: admin_settings
+  admin_settings = AdminSetting.for_user(@admin.id)
+  render json: admin_settings
 end
 
 
