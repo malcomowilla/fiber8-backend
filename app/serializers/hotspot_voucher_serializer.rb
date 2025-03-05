@@ -6,4 +6,13 @@ def expiration
   object.expiration.strftime("%B %d, %Y at %I:%M %p") if object.expiration.present?
 end
 
+
+
+def status
+  return "expired" if object.expiration.present? && object.expiration < Time.current
+
+  object.status
 end
+end
+
+

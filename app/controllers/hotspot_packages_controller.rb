@@ -3,7 +3,7 @@ class HotspotPackagesController < ApplicationController
 
   # GET /hotspot_packages or /hotspot_packages.json
 
-  load_and_authorize_resource
+  load_and_authorize_resource :except => [:allow_get_hotspot_packages]
 
 
   # /ip/hotspot/host?as-string=any&as-string-value=any&number=any&value-name=any
@@ -199,6 +199,11 @@ end
 
   end
 
+
+  def allow_get_hotspot_packages
+    @hotspot_packages = HotspotPackage.all
+    render json: @hotspot_packages
+  end
   
   # POS T /hotspot_packages or /hotspot_packages.json
   def create
