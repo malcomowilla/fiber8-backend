@@ -8,7 +8,7 @@ class AdminSettingsController < ApplicationController
     @admin_settings = AdminSetting.all
     # render json: @admin_settings
     # admin_settings = AdminSetting.for_user(current_user.id)
-  render json: admin_settings
+  render json: @admin_settings
   end
 
 
