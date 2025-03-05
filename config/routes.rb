@@ -42,6 +42,10 @@ end
 
 
 
+get '/api/allow_get_hotspot_packages', to: 'hotspot_packages#allow_get_hotspot_packages'
+get '/allow_get_hotspot_packages', to: 'hotspot_packages#allow_get_hotspot_packages'
+
+
 get '/get_active_hotspot_users', to: 'hotspot_subscriptions#get_active_hotspot_users'
 
 get '/api/get_active_hotspot_users', to: 'hotspot_subscriptions#get_active_hotspot_users'
