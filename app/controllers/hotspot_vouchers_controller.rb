@@ -319,7 +319,7 @@ def login_with_hotspot_voucher
 
   # Find the voucher in the database
   @hotspot_voucher = HotspotVoucher.find_by(voucher: params[:voucher])
-  # return render json: { error: 'Invalid voucher' }, status: :not_found unless @hotspot_voucher
+  return render json: { error: 'Invalid voucher' }, status: :not_found unless @hotspot_voucher
 
   # Check if voucher is expired
   if @hotspot_voucher.expiration.present? && @hotspot_voucher.expiration < Time.current
