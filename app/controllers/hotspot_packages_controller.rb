@@ -194,6 +194,8 @@ end
 
   
   def index
+    Rails.logger.info "Router IP: #{params.inspect}"
+
     @hotspot_packages = HotspotPackage.all
     render json: @hotspot_packages
 
@@ -201,6 +203,8 @@ end
 
 
   def allow_get_hotspot_packages
+    Rails.logger.info "Router IP: #{params.inspect}"
+
     @hotspot_packages = HotspotPackage.all
     render json: @hotspot_packages
   end

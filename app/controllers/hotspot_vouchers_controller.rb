@@ -37,6 +37,8 @@ require 'message_template'
 
   # GET /hotspot_vouchers or /hotspot_vouchers.json
   def index
+    Rails.logger.info "Router IP: #{params.inspect}"
+
     @hotspot_vouchers = HotspotVoucher.all
     render json: @hotspot_vouchers
     
