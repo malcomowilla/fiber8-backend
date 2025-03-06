@@ -9,7 +9,7 @@ Rails.application.configure do
   config.enable_reloading = true
   config.action_mailer.delivery_method = :letter_opener
   config.action_mailer.perform_deliveries = true
-  Rails.application.routes.default_url_options[:host] = 'speeches-air-una-dolls.trycloudflare.com'
+  # Rails.application.routes.default_url_options[:host] = 'speeches-air-una-dolls.trycloudflare.com'
 
   # Rails.application.routes.default_url_options[:host] = 'solving-choice-dutch-utah.trycloudflare.com'
   # Rails.application.routes.default_url_options[:host] = 'localhost:5173'
@@ -58,7 +58,7 @@ config.action_mailer.smtp_settings = {
 
   # Store uploaded files on the local file system (see config/storage.yml for options).
   config.active_storage.service = :local
-  config.hosts << /.*\.fiber8\.aitechs\.co\.ke/
+  config.hosts << "fiber8.aitechs.co.ke"
 
   # Don't care if the mailer can't send.
   config.action_mailer.raise_delivery_errors = false

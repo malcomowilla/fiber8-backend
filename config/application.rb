@@ -54,6 +54,7 @@ config.middleware.use SetTenant
     # config/application.rb
     # config.force_ssl = true
     Rails.application.routes.default_url_options[:host] = 'solving-choice-dutch-utah.trycloudflare.com'
+    config.hosts << "fiber8.aitechs.co.ke"
 
 # config.hosts = nil
     config.middleware.use ActionDispatch::Cookies
@@ -61,6 +62,6 @@ config.middleware.use SetTenant
     # config.session_store :cookie_store, key: '_fiber8backend_session', httponly: true, same_site: :none, secure: Rails.env.production?
 # Use SameSite=Strict for all cookies to help protect against CSRF
 config.action_dispatch.cookies_same_site_protection = :strict
-config.hosts << "solving-choice-dutch-utah.trycloudflare.com" 
+# config.hosts << "solving-choice-dutch-utah.trycloudflare.com" 
   end
 end
