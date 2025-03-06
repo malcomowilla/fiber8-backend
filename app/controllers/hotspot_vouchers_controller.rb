@@ -312,6 +312,9 @@ router_ip_address = nas_router.ip_address
 
 
 def login_with_hotspot_voucher
+
+  Rals.logger.info "Router IP: #{params[:ip]}"
+
   return render json: { error: 'Voucher is required' }, status: :bad_request unless params[:voucher].present?
 
   # Get client IP
@@ -337,7 +340,6 @@ local_ip = Socket.ip_address_list.detect do |intf|
   intf.ipv4_private? && !intf.ipv4_loopback?
 end&.ip_address
 
-Rals.logger.info "Router IP: #{params[:ip]}"
   # Log in the device using SSH
   command = "/ip hotspot active login user=#{params[:voucher]} ip=#{params[:ip]}"
 
