@@ -12,7 +12,8 @@ class HotspotVouchersController < ApplicationController
   require 'net/http'
   require 'json'
   require 'net/ssh'
-
+$LOAD_PATH.unshift(File.join(File.dirname(__FILE__), '..', 'lib'))
+require 'message_template'
 
 
 
@@ -39,6 +40,7 @@ class HotspotVouchersController < ApplicationController
     render json: @hotspot_vouchers
     
   end
+
 
   # GET /hotspot_vouchers/1 or /hotspot_vouchers/1.json
   
@@ -222,11 +224,10 @@ router_ip_address = nas_router.ip_address
     @hotspot_voucher = HotspotVoucher.find_by(voucher: params[:voucher])
     return render json: { error: 'Invalid voucher' }, status: :not_found unless @hotspot_voucher
   
-    # Check if the voucher is expired (Assuming there's an `expires_at` column)
+    # Check if the voucher is expired
     if @hotspot_voucher.expiration.present? && @hotspot_voucher.expiration < Time.current
       return render json: { error: 'Voucher expired' }, status: :forbidden
     end
-    
   
     nas_router = NasRouter.find_by(name: params[:router_name]) || NasRouter.find_by(name: ActsAsTenant.current_tenant.router_setting)
     return render json: { error: 'Router not found' }, status: :not_found unless nas_router
@@ -235,55 +236,57 @@ router_ip_address = nas_router.ip_address
     router_password = nas_router.password
     router_username = nas_router.username
   
+    # Get the client's IP address
+    client_ip = request.remote_ip
+    if client_ip.blank? || client_ip == '127.0.0.1'
+      return render json: { error: 'Could not determine client IP' }, status: :bad_request
+    end
+  
     uri = URI("http://#{router_ip_address}/rest/ip/hotspot/host")
     request = Net::HTTP::Get.new(uri)
     request.basic_auth router_username, router_password
   
     begin
       response = Net::HTTP.start(uri.hostname, uri.port, read_timeout: 10, open_timeout: 5) { |http| http.request(request) }
-      return render json: { error: "Failed to fetch MikroTik hosts", status: response.code, message: response.message }, status: :internal_server_error unless response.is_a?(Net::HTTPSuccess)
+      return render json: { error: "Failed to fetch hosts server error", status: response.code, message: response.message }, status: :internal_server_error unless response.is_a?(Net::HTTPSuccess)
     rescue StandardError => e
       return render json: { error: "Failed to connect to router", message: e.message }, status: :internal_server_error
     end
   
     data = JSON.parse(response.body)
-    failed_hosts = []
-    successful_hosts = []
+    
+    # Find the host matching the client's IP
+    matched_host = data.find { |host| host['address'] == client_ip }
   
-    data.each do |host|
-      host_ip = host['address']
-      host_mac = host['mac-address']
-      command = "/ip hotspot active login user=#{params[:voucher]} ip=#{host_ip}"
-  
-      begin
-        Net::SSH.start(router_ip_address, router_username, password: router_password, verify_host_key: :never) do |ssh|
-          output = ssh.exec!(command)
-          if output.include?('failure')
-            failed_hosts << { ip: host_ip, mac: host_mac, error: "Login failed: #{output}" }
-          else
-            successful_hosts << { ip: host_ip, mac: host_mac, response: output }
-          end
-        end
-      rescue Net::SSH::AuthenticationFailed
-        return render json: { error: 'SSH authentication failed' }, status: :unauthorized
-      rescue StandardError => e
-        failed_hosts << { ip: host_ip, mac: host_mac, error: e.message }
-      end
+    if matched_host.nil?
+      return render json: { error: "Device not found on the router for IP: #{client_ip}" }, status: :not_found
     end
   
-    if successful_hosts.any?
-      return render json: {
-        message: 'Connected successfully',
-        successful_hosts: successful_hosts,
-        failed_hosts: failed_hosts
-      }, status: :ok
-    else
-      return render json: {
-        error: 'Failed to connect any devices',
-        failed_hosts: failed_hosts
-      }, status: :internal_server_error
+    host_ip = matched_host['address']
+    host_mac = matched_host['mac-address']
+    command = "/ip hotspot active login user=#{params[:voucher]} ip=#{host_ip}"
+  
+    begin
+      Net::SSH.start(router_ip_address, router_username, password: router_password, verify_host_key: :never) do |ssh|
+        output = ssh.exec!(command)
+        if output.include?('failure')
+          return render json: { error: "Login failed: #{output}" }, status: :unauthorized
+        else
+          return render json: {
+            message: 'Connected successfully',
+            device_ip: host_ip,
+            device_mac: host_mac,
+            response: output
+          }, status: :ok
+        end
+      end
+    rescue Net::SSH::AuthenticationFailed
+      return render json: { error: 'SSH authentication failed' }, status: :unauthorized
+    rescue StandardError => e
+      return render json: { error: "Failed to log in device", message: e.message }, status: :internal_server_error
     end
   end
+  
   
   private
     # Use callbacks to share common setup or constraints between actions.
@@ -523,19 +526,68 @@ end
 
 
 
-
-    # {{b aseUrl}}/user-manager/user-profile/add
-
-    # {
-    #   "copy-from": "any",
-    #   "profile": "any",
-    #   "user": "any",
-    #   ".proplist": "any",
-    #   ".query": "array"
-    # }
+private
 
 
+def send_voucher(phone_number, voucher)
+api_key = ActsAsTenant.current_tenant.sms_setting.api_key
+api_secret = ActsAsTenant.current_tenant.sms_setting.api_secret
 
+  # SMS_LEOPARD_API_KEY= c3I6A1BuUvESuTkdSa2l
+  # SMS_LEOPARD_API_SECRET=aSYTHMEmRF3XQUUSPANeYGEeGlZYTYGYFj4TXWqV
+        api_key = api_key
+        api_secret = api_secret
+       
+
+
+sms_template =  ActsAsTenant.current_tenant.sms_template
+send_voucher_template = sms_template.send_voucher_template
+original_message = sms_template ?  MessageTemplate.interpolate(send_voucher_template,{customer_code: customer_code, 
+name: name})  :   "Hello, here is your voucher code: {{voucher_code}}.
+         This code is valid for {{validity_period}}. Enjoy browsing with {{company_name}}!"
+
+
+        sender_id = "SMS_TEST" # Ensure this is a valid sender ID
+    
+        uri = URI("https://api.smsleopard.com/v1/sms/send")
+        params = {
+          username: api_key,
+          password: api_secret,
+          message: original_message,
+          destination: phone_number,
+          source: sender_id
+        }
+        uri.query = URI.encode_www_form(params)
+    
+        response = Net::HTTP.get_response(uri)
+        if response.is_a?(Net::HTTPSuccess)
+          sms_data = JSON.parse(response.body)
+      
+          if sms_data['success']
+            sms_recipient = sms_data['recipients'][0]['number']
+            sms_status = sms_data['recipients'][0]['status']
+            
+            puts "Recipient: #{sms_recipient}, Status: #{sms_status}"
+      
+            # Save the original message and response details in your database
+            SystemAdminSm.create!(
+              user: sms_recipient,
+              message: original_message,
+              status: sms_status,
+              date:Time.now.strftime('%Y-%m-%d %I:%M:%S %p'),
+              system_user: 'system'
+            )
+            
+            # Return a JSON response or whatever is appropriate for your application
+            # render json: { success: true, message: "Message sent successfully", recipient: sms_recipient, status: sms_status }
+          else
+            render json: { error: "Failed to send message: #{sms_data['message']}" }
+          end
+        else
+          puts "Failed to send message: #{response.body}"
+          # render json: { error: "Failed to send message: #{response.body}" }
+        end
+      end
 
 
 
