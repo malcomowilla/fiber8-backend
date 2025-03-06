@@ -313,7 +313,7 @@ router_ip_address = nas_router.ip_address
 
 def login_with_hotspot_voucher
 
-  Rails.logger.info "Router IP: #{params[:ip]}"
+  Rails.logger.info "Router IP: #{params.inspect}"
 
   return render json: { error: 'Voucher is required' }, status: :bad_request unless params[:voucher].present?
 
