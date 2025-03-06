@@ -1,0 +1,16 @@
+<p style="color: green"><%= notice %></p>
+
+<% content_for :title, "Sms templates" %>
+
+<h1>Sms templates</h1>
+
+<div id="sms_templates">
+  <% @sms_templates.each do |sms_template| %>
+    <%= render sms_template %>
+    <p>
+      <%= link_to "Show this sms template", sms_template %>
+    </p>
+  <% end %>
+</div>
+
+<%= link_to "New sms template", new_sms_template_path %>

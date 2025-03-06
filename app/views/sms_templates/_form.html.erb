@@ -1,0 +1,32 @@
+<%= form_with(model: sms_template) do |form| %>
+  <% if sms_template.errors.any? %>
+    <div style="color: red">
+      <h2><%= pluralize(sms_template.errors.count, "error") %> prohibited this sms_template from being saved:</h2>
+
+      <ul>
+        <% sms_template.errors.each do |error| %>
+          <li><%= error.full_message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div>
+    <%= form.label :send_voucher_template, style: "display: block" %>
+    <%= form.text_field :send_voucher_template %>
+  </div>
+
+  <div>
+    <%= form.label :voucher_template, style: "display: block" %>
+    <%= form.text_field :voucher_template %>
+  </div>
+
+  <div>
+    <%= form.label :account_id, style: "display: block" %>
+    <%= form.number_field :account_id %>
+  </div>
+
+  <div>
+    <%= form.submit %>
+  </div>
+<% end %>

@@ -1,0 +1,12 @@
+<% content_for :title, "Editing sms template" %>
+
+<h1>Editing sms template</h1>
+
+<%= render "form", sms_template: @sms_template %>
+
+<br>
+
+<div>
+  <%= link_to "Show this sms template", @sms_template %> |
+  <%= link_to "Back to sms templates", sms_templates_path %>
+</div>

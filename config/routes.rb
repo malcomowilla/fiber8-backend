@@ -1,4 +1,5 @@
 Rails.application.routes.draw do
+  resources :sms_templates
   resources :hotspot_subscriptions
   get "add_user_profile_id_and_user_id_to_hotspot_vouchers/user_manager_user_id"
   get "add_user_profile_id_and_user_id_to_hotspot_vouchers/user_profile_id"
@@ -28,6 +29,7 @@ Rails.application.routes.draw do
 mount ActionCable.server => '/cable'
 scope '/api' do
   resources :ip_pools
+  resources :sms_templates
   resources :support_tickets
   resource :ticket_settings
   resources :subscriber_settings

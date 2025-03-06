@@ -1,0 +1,2 @@
+class SmsTemplate < ApplicationRecord
+end

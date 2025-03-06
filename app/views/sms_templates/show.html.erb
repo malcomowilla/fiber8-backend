@@ -1,0 +1,10 @@
+<p style="color: green"><%= notice %></p>
+
+<%= render @sms_template %>
+
+<div>
+  <%= link_to "Edit this sms template", edit_sms_template_path(@sms_template) %> |
+  <%= link_to "Back to sms templates", sms_templates_path %>
+
+  <%= button_to "Destroy this sms template", @sms_template, method: :delete %>
+</div>
