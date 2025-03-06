@@ -315,7 +315,7 @@ def login_with_hotspot_voucher
 
   Rails.logger.info "Router IP: #{params.inspect}"
 
-  return render json: { error: 'Voucher is required' }, status: :bad_request unless params[:voucher].present?
+  return render json: { error: 'oucher is required' }, status: :bad_request unless params[:voucher].present?
 
   # Get client IP
   client_ip = request.remote_ip
