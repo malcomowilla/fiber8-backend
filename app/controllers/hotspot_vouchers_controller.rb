@@ -322,7 +322,7 @@ def login_with_hotspot_voucher
   end
 
   # MikroTik credentials
-  router_ip = '192.168.1.66'
+  router_ip = '10.2.0.2'
   router_user = 'admin'
   router_pass = ''
 
