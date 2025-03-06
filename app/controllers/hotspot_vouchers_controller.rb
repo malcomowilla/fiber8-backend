@@ -234,7 +234,7 @@ router_ip_address = nas_router.ip_address
     end
 
     # MikroTik credentials
-    router_ip = '192.168.1.66'
+    router_ip = '10.2.0.2'
     router_user = 'admin'
     router_pass = ''
 
