@@ -332,21 +332,28 @@ def login_with_hotspot_voucher
   end
 
   # MikroTik credentials
-  router_ip = '10.2.0.2'
-  router_user = 'admin'
-  router_pass = ''
+ 
+
+      nas_router = NasRouter.find_by(name: router_name)
+    
+    unless nas_router
+      return render json: { error: 'Router not found' }, status: 404
+    end
+  
+    router_ip_address = nas_router.ip_address
+    router_password = nas_router.password
+    router_username = nas_router.username
 
 
-
-local_ip = Socket.ip_address_list.detect do |intf|
-  intf.ipv4_private? && !intf.ipv4_loopback?
-end&.ip_address
+# local_ip = Socket.ip_address_list.detect do |intf|
+#   intf.ipv4_private? && !intf.ipv4_loopback?
+# end&.ip_address
 
   # Log in the device using SSH
   command = "/ip hotspot active login user=#{params[:voucher]} ip=#{params[:ip]}"
 
   begin
-    Net::SSH.start(router_ip, router_user, password: router_pass, verify_host_key: :never) do |ssh|
+    Net::SSH.start(router_ip_address,  router_username, password: router_password, verify_host_key: :never) do |ssh|
       output = ssh.exec!(command)
       if output.include?('failure')
         render json: { error: "Login failed: #{output}" }, status: :unauthorized
