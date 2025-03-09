@@ -2,9 +2,26 @@ class SmsController < ApplicationController
   before_action :set_sm, only: %i[ show edit update destroy ]
   load_and_authorize_resource
 
+
+  set_current_tenant_through_filter
+before_action :set_tenant
+
+def set_tenant
+
+  host = request.headers['X-Subdomain']
+  @account = Account.find_by(subdomain: host)
+
+
+  set_current_tenant(@account)
+rescue ActiveRecord::RecordNotFound
+  render json: { error: 'Invalid tenant' }, status: :not_found
+
+  
+end
   # GET /sms or /sms.json
   def index
     @sms = Sm.all
+    render json: @sms
   end
 
   # GET /sms/1 or /sms/1.json
@@ -23,11 +40,16 @@ class SmsController < ApplicationController
 
   def get_the_sms_balance
 
-sms_leopard = ActsAsTenant.current_tenant.sms_setting.sms_provider == 'SMS leopard' 
+selected_provider = params[:selected_provider] 
 
 
-if sms_leopard
-  get_balance
+if selected_provider == "SMS leopard"
+  get_balance(selected_provider)
+
+elsif selected_provider == "TextSms"
+  get_text_sms_balance(selected_provider)
+else
+  render json: { number: '0' }
 end
 
     # get_balance
@@ -75,14 +97,43 @@ end
   private
     # Use callbacks to share common setup or constraints between actions.
 
+def get_text_sms_balance(selected_provider)
+  api_key = SmsSetting.find_by(sms_provider: selected_provider).api_key
+  partnerId = SmsSetting.find_by(sms_provider: selected_provider).partnerID
+Rails.logger.info "api_key found #{api_key}"
+Rails.logger.info "api_secret found #{api_key}"
+
+  uri = URI("https://sms.textsms.co.ke/api/services/getbalance")  
+  params = {
+    apikey: api_key,
+    partnerID: partnerId,
+   
+  }
+  uri.query = URI.encode_www_form(params)
+
+  response = Net::HTTP.get_response(uri)
+  if response.is_a?(Net::HTTPSuccess)
+    puts "Your Balance #{response.body}"
+    balance_data = JSON.parse(response.body)
+    balance = balance_data['credit']
+    render json: {message: "SMS Balance:#{balance}"},status: :ok
+  else
+    render json: {error: "Error Getting Balance: #{response.body}" }
+    puts "Error Getting Balance: #{response.body}"
+  end 
 
 
+end
 
-    def get_balance
-      api_key = ENV['SMS_LEOPARD_API_KEY']
-      api_secret = ENV['SMS_LEOPARD_API_SECRET']
-  
-      uri = URI("https://api.smsleopard.com/v1/balance")
+
+    def get_balance(selected_provider)
+
+      api_key = SmsSetting.find_by(sms_provider: selected_provider).api_key
+      api_secret = SmsSetting.find_by(sms_provider: selected_provider).api_secret
+  Rails.logger.info "api_key found #{api_key}"
+   Rails.logger.info "api_secret found #{api_key}"
+
+      uri = URI("https://api.smsleopard.com/v1/balance")  
       params = {
         username: api_key,
         password: api_secret,
