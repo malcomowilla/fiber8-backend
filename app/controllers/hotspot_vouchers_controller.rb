@@ -85,25 +85,25 @@ if user_manager_user_id && user_profile_id
        
 
 
-        if params[:phone].present?
-           voucher_expiration = calculate_expiration_send_to_customer(params[:package])
+        # if params[:phone].present?
+        #    voucher_expiration = calculate_expiration_send_to_customer(params[:package])
 
-           if params[:selected_provider] == "SMS leopard"
-             send_voucher(params[:phone], @hotspot_voucher.voucher,
-             voucher_expiration
-             )
+        #    if params[:selected_provider] == "SMS leopard"
+        #      send_voucher(params[:phone], @hotspot_voucher.voucher,
+        #      voucher_expiration
+        #      )
              
-           elsif  params[:selected_provider] == "TextSms"
-             send_voucher_text_sms(params[:phone], @hotspot_voucher.voucher,
-             voucher_expiration
-             )
+        #    elsif  params[:selected_provider] == "TextSms"
+        #      send_voucher_text_sms(params[:phone], @hotspot_voucher.voucher,
+        #      voucher_expiration
+        #      )
              
-           end
-        # send_voucher(params[:phone], @hotspot_voucher.voucher,
-        # voucher_expiration
-        # )
+        #    end
+        # # send_voucher(params[:phone], @hotspot_voucher.voucher,
+        # # voucher_expiration
+        # # )
 
-        end
+        # end
         
         
 
