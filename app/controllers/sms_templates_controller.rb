@@ -1,34 +1,47 @@
 class SmsTemplatesController < ApplicationController
-  before_action :set_sms_template, only: %i[ show edit update destroy ]
+  # before_action :set_sms_template, only: %i[ show edit update destroy ]
 
+  set_current_tenant_through_filter
+  before_action :set_tenant
   # GET /sms_templates or /sms_templates.json
+
+
+
+
+
+  def set_tenant
+
+    host = request.headers['X-Subdomain']
+    @account = Account.find_by(subdomain: host)
+  
+  
+    set_current_tenant(@account)
+  rescue ActiveRecord::RecordNotFound
+    render json: { error: 'Invalid tenant' }, status: :not_found
+  
+    
+  end
+
+
+
   def index
     @sms_templates = SmsTemplate.all
-    render jspn: @sms_templates
+    render json: @sms_templates
   end
 
-  # GET /sms_templates/1 or /sms_templates/1.json
-  def show
-  end
-
-  # GET /sms_templates/new
-  def new
-    @sms_template = SmsTemplate.new
-  end
-
-  # GET /sms_templates/1/edit
-  def edit
-  end
 
   # POST /sms_templates or /sms_templates.json
   def create
-    @sms_template = SmsTemplate.first_or_initialize
-    @sms_template.update(
-      @sms_template.send_voucher_template = sms_template_params[:send_voucher_template],
-      @sms_template.voucher_template = sms_template_params[:voucher_template]
+    @sms_template = SmsTemplate.first_or_initialize(
+      send_voucher_template: params[:send_voucher_template],
+      voucher_template: params[:voucher_template]
     )
-      @sms_template.send_voucher_template = sms_template_params[:send_voucher_template]
-      @sms_template.voucher_template = sms_template_params[:voucher_template]
+    @sms_template.update(
+      send_voucher_template: params[:send_voucher_template],
+      voucher_template: params[:voucher_template]
+    )
+      # @sms_template.send_voucher_template = sms_template_params[:send_voucher_template]
+      # @sms_template.voucher_template = sms_template_params[:voucher_template]
 
       if @sms_template.save
         render json: @sms_template, status: :created

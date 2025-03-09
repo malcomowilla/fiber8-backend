@@ -81,6 +81,33 @@ if user_manager_user_id && user_profile_id
     )
     calculate_expiration(params[:package], @hotspot_voucher)
       if @hotspot_voucher.save
+
+       
+
+
+        if params[:phone].present?
+           voucher_expiration = calculate_expiration_send_to_customer(params[:package])
+
+           if params[:selected_provider] == "SMS leopard"
+             send_voucher(params[:phone], @hotspot_voucher.voucher,
+             voucher_expiration
+             )
+             
+           elsif  params[:selected_provider] == "TextSms"
+             send_voucher_text_sms(params[:phone], @hotspot_voucher.voucher,
+             voucher_expiration
+             )
+             
+           end
+        # send_voucher(params[:phone], @hotspot_voucher.voucher,
+        # voucher_expiration
+        # )
+
+        end
+        
+        
+
+
         render json: @hotspot_voucher, status: :created
       else
         render json: @hotspot_voucher.errors, status: :unprocessable_entity 
@@ -315,9 +342,9 @@ router_ip_address = nas_router.ip_address
 
 def login_with_hotspot_voucher
 
-  Rails.logger.info "Router IP: #{params.inspect}"
+  # Rails.logger.info "Router IP: #{params.inspect}"
 
-  return render json: { error: 'oucher is required' }, status: :bad_request unless params[:voucher].present?
+  return render json: { error: 'voucher is required' }, status: :bad_request unless params[:voucher].present?
 
   # Get client IP
   client_ip = request.remote_ip
@@ -333,7 +360,7 @@ def login_with_hotspot_voucher
 
   # MikroTik credentials
  
-
+router_name = params[:router_name]
       nas_router = NasRouter.find_by(name: router_name)
     
     unless nas_router
@@ -445,7 +472,7 @@ end
 def calculate_expiration(package, hotspot_package_created)
   hotspot_package = HotspotPackage.find_by(name: package)
 
-  return render json: { error: 'Package not found' }, status: :not_found unless hotspot_package
+  return render json: { error: 'Package not found' }, status: :not_found unless hotspot_package_created
 
   # Calculate expiration
   expiration_time = if hotspot_package.validity.present? && hotspot_package.validity_period_units.present?
@@ -483,6 +510,58 @@ def calculate_expiration(package, hotspot_package_created)
 end
 
 
+
+
+
+
+
+
+
+
+def calculate_expiration_send_to_customer(package)
+  hotspot_package = HotspotPackage.find_by(name: package)
+
+  return render json: { error: 'Package not found' }, status: :not_found unless hotspot_package
+
+  # Calculate expiration
+  expiration_time = if hotspot_package.validity.present? && hotspot_package.validity_period_units.present?
+    start_time = hotspot_package.valid_from || Time.current
+
+    case hotspot_package.validity_period_units.downcase
+    when 'days'
+      start_time + hotspot_package.validity.days
+    when 'hours'
+      start_time + hotspot_package.validity.hours
+    when 'minutes'
+      start_time + hotspot_package.validity.minutes
+    else
+      nil
+    end
+  elsif hotspot_package.valid_until.present? && hotspot_package.valid_from.present?
+    hotspot_package.valid_until
+  else
+    nil
+  end
+
+  # Update status only if expiration is present
+  # if expiration_time.present?
+  #   status = expiration_time > Time.current ? "active" : "expired"
+  #   hotspot_package_created.update(status: status,  expiration: expiration_time&.strftime("%B %d, %Y at %I:%M %p"),)
+  # else
+  #   status = "unknown" # Handle cases with no expiration logic
+  # end
+
+  # Return both expiration and status
+  {
+    expiration: expiration_time&.strftime("%B %d, %Y at %I:%M %p"),
+  }
+end
+
+
+
+
+
+# selected_provider
 
     def generate_voucher_code
       loop do
@@ -613,12 +692,13 @@ end
 private
 
 
-def send_voucher(phone_number, voucher)
+def send_voucher(phone_number, voucher_code,
+  voucher_exporation
+  )
 api_key = ActsAsTenant.current_tenant.sms_setting.api_key
 api_secret = ActsAsTenant.current_tenant.sms_setting.api_secret
 
-  # SMS_LEOPARD_API_KEY= c3I6A1BuUvESuTkdSa2l
-  # SMS_LEOPARD_API_SECRET=aSYTHMEmRF3XQUUSPANeYGEeGlZYTYGYFj4TXWqV
+
         api_key = api_key
         api_secret = api_secret
        
@@ -626,9 +706,11 @@ api_secret = ActsAsTenant.current_tenant.sms_setting.api_secret
 
 sms_template =  ActsAsTenant.current_tenant.sms_template
 send_voucher_template = sms_template.send_voucher_template
-original_message = sms_template ?  MessageTemplate.interpolate(send_voucher_template,{customer_code: customer_code, 
-name: name})  :   "Hello, here is your voucher code: {{voucher_code}}.
-         This code is valid for {{validity_period}}. Enjoy browsing with {{company_name}}!"
+original_message = sms_template ?  MessageTemplate.interpolate(send_voucher_template,{
+  
+voucher_code: voucher_code,
+})  :   "Hello, here is your voucher code: #{voucher_code}.
+         This code is valid for #{voucher_exporation}. Enjoy your browsing"
 
 
         sender_id = "SMS_TEST" # Ensure this is a valid sender ID
@@ -674,6 +756,136 @@ name: name})  :   "Hello, here is your voucher code: {{voucher_code}}.
       end
 
 
+
+
+
+
+
+
+      def send_voucher(phone_number, voucher_code,
+        voucher_exporation
+        )
+      api_key = ActsAsTenant.current_tenant.sms_setting.api_key
+      api_secret = ActsAsTenant.current_tenant.sms_setting.api_secret
+      
+      
+              api_key = api_key
+              api_secret = api_secret
+             
+      
+      
+      sms_template =  ActsAsTenant.current_tenant.sms_template
+      send_voucher_template = sms_template.send_voucher_template
+      original_message = sms_template ?  MessageTemplate.interpolate(send_voucher_template,{
+        
+      voucher_code: voucher_code,
+      })  :   "Hello, here is your voucher code: #{voucher_code}.
+               This code is valid for #{voucher_exporation}. Enjoy your browsing"
+      
+      
+              sender_id = "SMS_TEST" # Ensure this is a valid sender ID
+          
+              uri = URI("https://api.smsleopard.com/v1/sms/send")
+              params = {
+                username: api_key,
+                password: api_secret,
+                message: original_message,
+                destination: phone_number,
+                source: sender_id
+              }
+              uri.query = URI.encode_www_form(params)
+          
+              response = Net::HTTP.get_response(uri)
+              if response.is_a?(Net::HTTPSuccess)
+                sms_data = JSON.parse(response.body)
+            
+                if sms_data['success']
+                  sms_recipient = sms_data['recipients'][0]['number']
+                  sms_status = sms_data['recipients'][0]['status']
+                  
+                  puts "Recipient: #{sms_recipient}, Status: #{sms_status}"
+            
+                  # Save the original message and response details in your database
+                  SystemAdminSm.create!(
+                    user: sms_recipient,
+                    message: original_message,
+                    status: sms_status,
+                    date:Time.now.strftime('%Y-%m-%d %I:%M:%S %p'),
+                    system_user: 'system'
+                  )
+                  
+                  # Return a JSON response or whatever is appropriate for your application
+                  # render json: { success: true, message: "Message sent successfully", recipient: sms_recipient, status: sms_status }
+                else
+                  render json: { error: "Failed to send message: #{sms_data['message']}" }
+                end
+              else
+                puts "Failed to send message: #{response.body}"
+                # render json: { error: "Failed to send message: #{response.body}" }
+              end
+            end
+
+
+
+
+
+           def send_voucher_text_sms(phone_number, voucher_code, voucher_exporation)
+  sms_setting = SmsSetting.find_by(sms_provider: params[:selected_provider])
+
+  if sms_setting.nil?
+    render json: { error: "SMS provider not found" }, status: :not_found
+    return
+  end
+
+  api_key = sms_setting&.api_key
+  partnerID = sms_setting&.partnerID 
+
+  sms_template = ActsAsTenant.current_tenant.sms_template
+  send_voucher_template = sms_template&.send_voucher_template
+
+  original_message = if sms_template
+    MessageTemplate.interpolate(send_voucher_template, { voucher_code: voucher_code })
+  else
+    "Hello, here is your voucher code: #{voucher_code}. This code is valid for #{voucher_exporation}. Enjoy your browsing"
+  end
+
+  uri = URI("https://sms.textsms.co.ke/api/services/sendsms")
+  params = {
+    apikey: api_key,
+    message: original_message,
+    mobile: phone_number,
+    partnerID: partnerID,
+    shortcode: 'TextSMS'
+  }
+  uri.query = URI.encode_www_form(params)
+
+  response = Net::HTTP.get_response(uri)
+
+  if response.is_a?(Net::HTTPSuccess)
+    sms_data = JSON.parse(response.body)
+
+    if sms_data['responses'] && sms_data['responses'][0]['respose-code'] == 200
+      sms_recipient = sms_data['responses'][0]['mobile']
+      sms_status = sms_data['responses'][0]['response-description']
+
+      puts "Recipient: #{sms_recipient}, Status: #{sms_status}"
+
+      # Save the message and response details in your database
+      SystemAdminSm.create!(
+        user: sms_recipient,
+        message: original_message,
+        status: sms_status,
+        date: Time.now.strftime('%Y-%m-%d %I:%M:%S %p'),
+        system_user: 'system'
+      )
+    else
+      render json: { error: "Failed to send message: #{sms_data['responses'][0]['response-description']}" }
+    end
+  else
+    puts "Failed to send message: #{response.body}"
+    render json: { error: "Failed to send message: #{response.body}" }
+  end
+end
 
 
 

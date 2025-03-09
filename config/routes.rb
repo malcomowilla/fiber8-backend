@@ -43,6 +43,8 @@ scope '/api' do
 end
 
 
+get '/api/saved_sms_settings', to: 'sms_settings#saved_sms_settings'
+get '/saved_sms_settings', to: 'sms_settings#saved_sms_settings'
 
 get '/api/allow_get_hotspot_packages', to: 'hotspot_packages#allow_get_hotspot_packages'
 get '/allow_get_hotspot_packages', to: 'hotspot_packages#allow_get_hotspot_packages'

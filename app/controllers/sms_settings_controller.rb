@@ -8,12 +8,19 @@ class SmsSettingsController < ApplicationController
   set_current_tenant_through_filter
   before_action :set_tenant
   def index
-    @sms_settings = SmsSetting.all
+    @sms_settings = SmsSetting.find_by(sms_provider: params[:provider])
     render json: @sms_settings
   end
 
 
 
+
+
+  def saved_sms_settings
+    
+    @sms_settings = SmsSetting.all
+    render json: @sms_settings
+  end
 
   def set_tenant
 
@@ -26,13 +33,27 @@ class SmsSettingsController < ApplicationController
     render json: { error: 'Invalid tenant' }, status: :not_found
   
     
-  end
+   end
 
+  # api key =>c3I6A1BuUvESuTkdSa2l
+  # api secret => aSYTHMEmRF3XQUUSPANeYGEeGlZYTYGYFj4TXWqV
   # POST /sms_settings or /sms_settings.json
   def create
-    @sms_setting = SmsSetting.first_or_initialize(sms_setting_params)
-    @sms_setting.update(sms_setting_params)
-      if @sms_setting.save
+    # @sms_setting = SmsSetting.find_or_initialize_by(sms_setting_params)
+      @sms_setting = SmsSetting.find_or_initialize_by(
+        api_secret: params[:api_secret],
+        api_key: params[:api_key],
+      ) 
+    @sms_setting.update(
+      api_key: params[:api_key],
+      api_secret: params[:api_secret],
+      sender_id: params[:sender_id],
+      short_code: params[:short_code],
+      sms_provider: params[:sms_provider],
+      partnerID: params[:partnerID]
+
+    )
+      if  @sms_setting.save 
         render json: @sms_setting, status: :created
       else
         render json: @sms_setting.errors, status: :unprocessable_entity 
@@ -72,7 +93,7 @@ class SmsSettingsController < ApplicationController
     # Only allow a list of trusted parameters through.
     def sms_setting_params
       params.require(:sms_setting).permit(:api_key, :api_secret, :sender_id, :short_code, :username, 
-      :sms_provider
+      :sms_provider, :partnerID
       )
     end
 end
