@@ -907,15 +907,12 @@ end
 
 
 def get_active_sessions(voucher)
-  # Use SSH to query the MikroTik router and get active users
   command = "/ip hotspot active print where user=#{voucher}"
 
   router_name = params[:router_name]
   nas_router = NasRouter.find_by(name: router_name)
 
-  unless nas_router
-    return render json: { error: 'Router not found' }, status: :not_found
-  end
+  return [] unless nas_router
 
   router_ip_address = nas_router.ip_address
   router_password = nas_router.password
@@ -926,25 +923,20 @@ def get_active_sessions(voucher)
       output = ssh.exec!(command)
 
       if output.include?('failure')
-        render json: { error: "Getting active sessions failed: #{output}" }, status: :unauthorized
+        Rails.logger.error "Getting active sessions failed: #{output}"
+        return []
       else
-        # Log the response and return session count
         Rails.logger.info "Response active users from MikroTik: #{output}"
-
-        # Parse the output to count active sessions
         active_sessions = output.split("\n").reject(&:empty?)
-
-        render json: {
-          message: 'Fetched active sessions successfully',
-          active_sessions_count: active_sessions.count,
-          active_sessions: active_sessions
-        }, status: :ok
+        return active_sessions
       end
     end
   rescue Net::SSH::AuthenticationFailed
-    render json: { error: 'SSH authentication failed' }, status: :unauthorized
+    Rails.logger.error 'SSH authentication failed'
+    return []
   rescue StandardError => e
-    render json: { error: "Failed to get active sessions", message: e.message }, status: :internal_server_error
+    Rails.logger.error "Failed to get active sessions: #{e.message}"
+    return []
   end
 end
 
