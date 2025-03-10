@@ -1,0 +1,16 @@
+<p style="color: green"><%= notice %></p>
+
+<% content_for :title, "Hotspot settings" %>
+
+<h1>Hotspot settings</h1>
+
+<div id="hotspot_settings">
+  <% @hotspot_settings.each do |hotspot_setting| %>
+    <%= render hotspot_setting %>
+    <p>
+      <%= link_to "Show this hotspot setting", hotspot_setting %>
+    </p>
+  <% end %>
+</div>
+
+<%= link_to "New hotspot setting", new_hotspot_setting_path %>

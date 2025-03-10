@@ -1,4 +1,5 @@
 Rails.application.routes.draw do
+  resources :hotspot_settings
   resources :sms_templates
   resources :hotspot_subscriptions
   get "add_user_profile_id_and_user_id_to_hotspot_vouchers/user_manager_user_id"
@@ -39,13 +40,20 @@ scope '/api' do
   resources :admin_settings
   resources :hotspot_templates
   resources :hotspot_vouchers
+  resources :hotspot_settings
+  resources :hotspot_subscriptions
 
 end
 
 
+# get '/api/allow_get_hotspot_setting', to: 'hotspot_settings#allow_get_hotspot_setting'
+# get '/allow_get_hotspot_setting', to: 'hotspot_settings#allow_get_hotspot_setting'
+ 
 get '/api/saved_sms_settings', to: 'sms_settings#saved_sms_settings'
 get '/saved_sms_settings', to: 'sms_settings#saved_sms_settings'
 
+get '/get_hotspot_settings', to: 'hotspot_settings#get_hotspot_setting'
+get '/api/get_hotspot_settings', to: 'hotspot_settings#get_hotspot_setting'
 get '/api/allow_get_hotspot_packages', to: 'hotspot_packages#allow_get_hotspot_packages'
 get '/allow_get_hotspot_packages', to: 'hotspot_packages#allow_get_hotspot_packages'
 
