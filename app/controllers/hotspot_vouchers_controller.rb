@@ -115,7 +115,7 @@ if user_manager_user_id && user_profile_id
         render json: @hotspot_voucher.errors, status: :unprocessable_entity 
       end
     else
-      Rails.logger.info "Failed to obtain the   usermanager user id from mikrotik"
+      Rails.logger.info "Failed to obtain the   user manager user id from mikrotik"
       # render json: { error: 'Failed to obtain the   usermanager user id from mikrotik' }, status: :unprocessable_entity
     end
 
@@ -352,6 +352,17 @@ def login_with_hotspot_voucher
   # Get client IP
   client_ip = request.remote_ip
 
+
+  shared_users = params[:shared_users].to_i
+
+  # Check current active sessions for this voucher
+  active_sessions = get_active_sessions(params[:voucher])
+
+  if active_sessions.count >= shared_users
+    render json: { error: "Voucher is already used by another device" }, status: :forbidden
+
+  end
+
   # Find the voucher in the database
   @hotspot_voucher = HotspotVoucher.find_by(voucher: params[:voucher])
   return render json: { error: 'Invalid voucher' }, status: :not_found unless @hotspot_voucher
@@ -378,6 +389,8 @@ router_name = params[:router_name]
 # local_ip = Socket.ip_address_list.detect do |intf|
 #   intf.ipv4_private? && !intf.ipv4_loopback?
 # end&.ip_address
+# 
+
 
   # Log in the device using SSH
   command = "/ip hotspot active login user=#{params[:voucher]} ip=#{params[:ip]}"
@@ -891,6 +904,50 @@ voucher_code: voucher_code,
     # render json: { error: "Failed to send message: #{response.body}" }
   end
 end
+
+
+def get_active_sessions(voucher)
+  # Use SSH to query the MikroTik router and get active users
+  command = "/ip hotspot active print where user=#{voucher}"
+
+  router_name = params[:router_name]
+  nas_router = NasRouter.find_by(name: router_name)
+
+  unless nas_router
+    return render json: { error: 'Router not found' }, status: :not_found
+  end
+
+  router_ip_address = nas_router.ip_address
+  router_password = nas_router.password
+  router_username = nas_router.username
+
+  begin
+    Net::SSH.start(router_ip_address, router_username, password: router_password, verify_host_key: :never) do |ssh|
+      output = ssh.exec!(command)
+
+      if output.include?('failure')
+        render json: { error: "Getting active sessions failed: #{output}" }, status: :unauthorized
+      else
+        # Log the response and return session count
+        Rails.logger.info "Response active users from MikroTik: #{output}"
+
+        # Parse the output to count active sessions
+        active_sessions = output.split("\n").reject(&:empty?)
+
+        render json: {
+          message: 'Fetched active sessions successfully',
+          active_sessions_count: active_sessions.count,
+          active_sessions: active_sessions
+        }, status: :ok
+      end
+    end
+  rescue Net::SSH::AuthenticationFailed
+    render json: { error: 'SSH authentication failed' }, status: :unauthorized
+  rescue StandardError => e
+    render json: { error: "Failed to get active sessions", message: e.message }, status: :internal_server_error
+  end
+end
+
 
 
 
