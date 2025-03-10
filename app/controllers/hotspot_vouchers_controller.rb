@@ -359,14 +359,26 @@ def login_with_hotspot_voucher
   return render json: { error: 'Invalid voucher' }, status: :not_found unless @hotspot_voucher
 
 
-  shared_users =@hotspot_voucher.shared_users.to_i
+  # shared_users =@hotspot_voucher.shared_users.to_i
 
-  # Check current active sessions for this voucher
+  # # Check current active sessions for this voucher
+  # active_sessions = get_active_sessions(params[:voucher])
+
+  # if active_sessions.count >= shared_users
+  #   return render json: { error: "Voucher is already used by another device" }, status: :forbidden
+
+  # end
+  # 
+  #
+  #
   active_sessions = get_active_sessions(params[:voucher])
 
-  if active_sessions.count >= shared_users
-    return render json: { error: "Voucher is already used by another device" }, status: :forbidden
+if @hotspot_voucher.shared_users.to_i == 1
+  # Check if the voucher is already in use
+  active_voucher_sessions = active_sessions.select { |session| session.include?(params[:voucher]) }
 
+  if active_voucher_sessions.any?
+    return render json: { error: "Voucher is already used by another device" }, status: :forbidden
   end
   # Check if voucher is expired
   if @hotspot_voucher.expiration.present? && @hotspot_voucher.expiration < Time.current
