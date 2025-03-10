@@ -356,11 +356,10 @@ def login_with_hotspot_voucher
   shared_users = params[:shared_users].to_i
 
   # Check current active sessions for this voucher
-  active_sessions = get_active_sessions
+  active_sessions = get_active_sessions(params[:voucher])
 
   if active_sessions.count >= shared_users
-    return render json: { error: "Voucher is already used by another device" }, status: :forbidden
-
+    render json: { error: "Voucher is already used by another device" }, status: :forbidden
 
   end
 
@@ -400,7 +399,7 @@ router_name = params[:router_name]
     Net::SSH.start(router_ip_address,  router_username, password: router_password, verify_host_key: :never) do |ssh|
       output = ssh.exec!(command)
       if output.include?('failure')
-        return render json: { error: "Login failed: #{output}" }, status: :unauthorized
+        render json: { error: "Login failed: #{output}" }, status: :unauthorized
       else
         render json: {
           message: 'Connected successfully',
@@ -411,7 +410,7 @@ router_name = params[:router_name]
     end
   rescue Net::SSH::AuthenticationFailed
     render json: { error: 'SSH authentication failed' }, status: :unauthorized
-  rescue StandardError => e 
+  rescue StandardError => e
     render json: { error: "Failed to log in device", message: e.message }, status: :internal_server_error
   end
 end
@@ -907,36 +906,15 @@ voucher_code: voucher_code,
 end
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-def get_active_sessions
+def get_active_sessions(voucher)
   # Use SSH to query the MikroTik router and get active users
-  command = "/ip hotspot active print where user=#{params[:voucher]}"
+  command = "/ip hotspot active print where user=#{voucher}"
 
   router_name = params[:router_name]
   nas_router = NasRouter.find_by(name: router_name)
 
   unless nas_router
-    return []
+    return render json: { error: 'Router not found' }, status: :not_found
   end
 
   router_ip_address = nas_router.ip_address
@@ -948,23 +926,27 @@ def get_active_sessions
       output = ssh.exec!(command)
 
       if output.include?('failure')
-        Rails.logger.error "Getting active sessions failed: #{output}"
-        return []
+        render json: { error: "Getting active sessions failed: #{output}" }, status: :unauthorized
       else
+        # Log the response and return session count
+        Rails.logger.info "Response active users from MikroTik: #{output}"
+
         # Parse the output to count active sessions
         active_sessions = output.split("\n").reject(&:empty?)
-        return active_sessions
+
+        render json: {
+          message: 'Fetched active sessions successfully',
+          active_sessions_count: active_sessions.count,
+          active_sessions: active_sessions
+        }, status: :ok
       end
     end
   rescue Net::SSH::AuthenticationFailed
-    Rails.logger.error "SSH authentication failed"
-    return []
+    render json: { error: 'SSH authentication failed' }, status: :unauthorized
   rescue StandardError => e
-    Rails.logger.error "Failed to get active sessions: #{e.message}"
-    return []
+    render json: { error: "Failed to get active sessions", message: e.message }, status: :internal_server_error
   end
 end
-
 
 
 
