@@ -371,19 +371,17 @@ def login_with_hotspot_voucher
   # 
   #
   #
-  active_voucher_sessions = get_active_sessions(params[:voucher])
+  active_sessions = get_active_sessions(params[:voucher])
 
-
-  shared_users =@hotspot_voucher.shared_users.to_i
+if @hotspot_voucher.shared_users.to_i == 1
+  # Check if the voucher is already in use
+  active_voucher_sessions = active_sessions.select { |session| session.include?(params[:voucher]) }
 
   if active_voucher_sessions.any?
-
-
-    if active_voucher_sessions.count >= shared_users 
-      return render json: { error: "Voucher is already used by the maximum number of allowed devices (#{shared_users})" }, status: :forbidden
-    end
+    return render json: { error: "Voucher is already used by another device" }, status: :forbidden
   end
 
+end
   # Check if voucher is expired
   if @hotspot_voucher.expiration.present? && @hotspot_voucher.expiration < Time.current
     return render json: { error: 'Voucher expired' }, status: :forbidden
@@ -945,6 +943,7 @@ def get_active_sessions(voucher)
       else
         Rails.logger.info "Response active users from MikroTik: #{output}"
         active_sessions = output.split("\n").reject(&:empty?)
+         Rails.logger.info "Response active users from MikroTik: #{active_sessions}"
         return active_sessions
       end
     end
