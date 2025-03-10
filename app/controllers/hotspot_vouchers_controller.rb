@@ -359,7 +359,8 @@ def login_with_hotspot_voucher
   active_sessions = get_active_sessions
 
   if active_sessions.count >= shared_users
-    render json: { error: "Voucher is already used by another device" }, status: :forbidden
+    return render json: { error: "Voucher is already used by another device" }, status: :forbidden
+
 
   end
 
@@ -377,9 +378,9 @@ def login_with_hotspot_voucher
 router_name = params[:router_name]
       nas_router = NasRouter.find_by(name: router_name)
     
-    # unless nas_router
-    #   return render json: { error: 'Router not found' }, status: 404
-    # end
+    unless nas_router
+      return render json: { error: 'Router not found' }, status: 404
+    end
   
     router_ip_address = nas_router.ip_address
     router_password = nas_router.password
@@ -399,7 +400,7 @@ router_name = params[:router_name]
     Net::SSH.start(router_ip_address,  router_username, password: router_password, verify_host_key: :never) do |ssh|
       output = ssh.exec!(command)
       if output.include?('failure')
-        render json: { error: "Login failed: #{output}" }, status: :unauthorized
+        return render json: { error: "Login failed: #{output}" }, status: :unauthorized
       else
         render json: {
           message: 'Connected successfully',
@@ -410,7 +411,7 @@ router_name = params[:router_name]
     end
   rescue Net::SSH::AuthenticationFailed
     render json: { error: 'SSH authentication failed' }, status: :unauthorized
-  rescue StandardError => e
+  rescue StandardError => e 
     render json: { error: "Failed to log in device", message: e.message }, status: :internal_server_error
   end
 end
