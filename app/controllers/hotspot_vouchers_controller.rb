@@ -943,9 +943,12 @@ def get_active_sessions(voucher)
       else
         Rails.logger.info "Response active users from MikroTik: #{output}"
         # active_sessions = output.split("\n").reject(&:empty?)
-         active_sessions = output.split("\n").map(&:strip).reject(&:empty?)
+        active_sessions = output.split("\n").map(&:strip).reject(&:empty?)
 
-         Rails.logger.info "Response active users from MikroTik active sessons: #{active_sessions}"
+        # Remove headers and only keep actual session rows
+        active_sessions.reject! { |line| line.start_with?("Flags", "Columns", "#") }
+        
+        Rails.logger.info "Filtered active sessions: #{active_sessions.inspect}"
         return active_sessions
       end
     end
