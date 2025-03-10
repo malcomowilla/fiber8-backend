@@ -380,6 +380,8 @@ if @hotspot_voucher.shared_users.to_i == 1
   if active_voucher_sessions.any?
     return render json: { error: "Voucher is already used by another device" }, status: :forbidden
   end
+
+end
   # Check if voucher is expired
   if @hotspot_voucher.expiration.present? && @hotspot_voucher.expiration < Time.current
     return render json: { error: 'Voucher expired' }, status: :forbidden
