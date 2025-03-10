@@ -356,7 +356,7 @@ def login_with_hotspot_voucher
   shared_users = params[:shared_users].to_i
 
   # Check current active sessions for this voucher
-  active_sessions = get_active_sessions(params[:voucher])
+  active_sessions = get_active_sessions
 
   if active_sessions.count >= shared_users
     render json: { error: "Voucher is already used by another device" }, status: :forbidden
@@ -906,9 +906,9 @@ voucher_code: voucher_code,
 end
 
 
-def get_active_sessions(voucher)
+def get_active_sessions
   # Use SSH to query the MikroTik router and get active users
-  command = "/ip hotspot active print where user=#{voucher}"
+  command = "/ip hotspot active print where user=#{params[:voucher]}"
 
   router_name = params[:router_name]
   nas_router = NasRouter.find_by(name: router_name)
