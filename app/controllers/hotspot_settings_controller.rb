@@ -140,7 +140,7 @@ email: params[:email],
 
     # Only allow a list of trusted parameters through.
     def hotspot_setting_params
-      params.require(:hotspot_setting).permit(:phone_number, :hotspot_name, 
+      params.permit(:phone_number, :hotspot_name, 
       :hotspot_info, :hotspot_banner, :account_id, :email)
     end
 end
