@@ -377,7 +377,9 @@ def login_with_hotspot_voucher
   shared_users =@hotspot_voucher.shared_users.to_i
 
   if active_voucher_sessions.any?
-    if active_voucher_sessions.count >= shared_users
+
+
+    if active_voucher_sessions.count >= shared_users 
       return render json: { error: "Voucher is already used by the maximum number of allowed devices (#{shared_users})" }, status: :forbidden
     end
   end
