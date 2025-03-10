@@ -377,9 +377,9 @@ def login_with_hotspot_voucher
 router_name = params[:router_name]
       nas_router = NasRouter.find_by(name: router_name)
     
-    unless nas_router
-      return render json: { error: 'Router not found' }, status: 404
-    end
+    # unless nas_router
+    #   return render json: { error: 'Router not found' }, status: 404
+    # end
   
     router_ip_address = nas_router.ip_address
     router_password = nas_router.password
