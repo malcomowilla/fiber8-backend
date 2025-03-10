@@ -14,6 +14,7 @@ class Account < ApplicationRecord
     has_one :ticket_setting, dependent: :destroy
     has_one :admin_setting, dependent: :destroy
     has_one :sms_template, dependent: :destroy
+    has_one :hotspot_setting, dependent: :destroy
     # validates :subdomain, presence: true
     
 end

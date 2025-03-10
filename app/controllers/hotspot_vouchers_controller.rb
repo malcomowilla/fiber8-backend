@@ -85,25 +85,25 @@ if user_manager_user_id && user_profile_id
        
 
 
-        # if params[:phone].present?
-        #    voucher_expiration = calculate_expiration_send_to_customer(params[:package])
+        if params[:phone].present?
+           voucher_expiration = calculate_expiration_send_to_customer(params[:package])
 
-        #    if params[:selected_provider] == "SMS leopard"
-        #      send_voucher(params[:phone], @hotspot_voucher.voucher,
-        #      voucher_expiration
-        #      )
+           if params[:selected_provider] == "SMS leopard"
+             send_voucher(params[:phone], @hotspot_voucher.voucher,
+             voucher_expiration
+             )
              
-        #    elsif  params[:selected_provider] == "TextSms"
-        #      send_voucher_text_sms(params[:phone], @hotspot_voucher.voucher,
-        #      voucher_expiration
-        #      )
+           elsif  params[:selected_provider] == "TextSms"
+             send_voucher_text_sms(params[:phone], @hotspot_voucher.voucher,
+             voucher_expiration
+             )
              
-        #    end
-        # # send_voucher(params[:phone], @hotspot_voucher.voucher,
-        # # voucher_expiration
-        # # )
+           end
+        # send_voucher(params[:phone], @hotspot_voucher.voucher,
+        # voucher_expiration
+        # )
 
-        # end
+        end
         
         
 
@@ -879,11 +879,12 @@ voucher_code: voucher_code,
         system_user: 'system'
       )
     else
-      render json: { error: "Failed to send message: #{sms_data['responses'][0]['response-description']}" }
+      # render json: { error: "Failed to send message: #{sms_data['responses'][0]['response-description']}" }
+       Rails.logger.info "Failed to send message: #{sms_data['responses'][0]['response-description']}"
     end
   else
     puts "Failed to send message: #{response.body}"
-    render json: { error: "Failed to send message: #{response.body}" }
+    # render json: { error: "Failed to send message: #{response.body}" }
   end
 end
 

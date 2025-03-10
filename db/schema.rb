@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2025_03_09_112518) do
+ActiveRecord::Schema[7.2].define(version: 2025_03_10_101138) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -132,6 +132,17 @@ ActiveRecord::Schema[7.2].define(version: 2025_03_09_112518) do
     t.datetime "valid_from"
     t.datetime "valid_until"
     t.string "weekdays", default: [], array: true
+  end
+
+  create_table "hotspot_settings", force: :cascade do |t|
+    t.string "phone_number"
+    t.string "hotspot_name"
+    t.string "hotspot_info"
+    t.string "hotspot_banner"
+    t.integer "account_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.string "email"
   end
 
   create_table "hotspot_subscriptions", force: :cascade do |t|
