@@ -128,8 +128,8 @@ end
 
     def get_balance(selected_provider)
 
-      api_key = SmsSetting.find_by(sms_provider: selected_provider).api_key
-      api_secret = SmsSetting.find_by(sms_provider: selected_provider).api_secret
+      api_key = SmsSetting.find_by(sms_provider: selected_provider)&.api_key
+      api_secret = SmsSetting.find_by(sms_provider: selected_provider)&.api_secret
   Rails.logger.info "api_key found #{api_key}"
    Rails.logger.info "api_secret found #{api_key}"
 
