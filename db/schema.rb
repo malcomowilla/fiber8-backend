@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2025_03_10_101138) do
+ActiveRecord::Schema[7.2].define(version: 2025_03_10_120623) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -185,6 +185,7 @@ ActiveRecord::Schema[7.2].define(version: 2025_03_10_101138) do
     t.string "package"
     t.string "user_manager_user_id"
     t.string "user_profile_id"
+    t.string "shared_users"
   end
 
   create_table "ip_pools", force: :cascade do |t|

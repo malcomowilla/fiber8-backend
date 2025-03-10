@@ -68,6 +68,8 @@ require 'message_template'
       if use_radius == true
     @hotspot_voucher = HotspotVoucher.new(
       package: params[:package],
+      shared_users: params[:shared_users],
+      phone: params[:phone],
       voucher: generate_voucher_code
     )
 
@@ -128,7 +130,8 @@ puts 'testt123'
   # PATCH/PUT /hotspot_vouchers/1 or /hotspot_vouchers/1.json
   def update
       if @hotspot_voucher.update(
-        package: params[:package]
+        package: params[:package],
+        
       )
         render json: @hotspot_voucher, status: :ok
       else
@@ -604,9 +607,10 @@ def get_user_manager_user_id(hotspot_voucher)
    
     
     "name": "#{hotspot_voucher}",
+
    
 }
-
+ request_body["shared-users"] = params[:shared_users] if params[:shared_users].present?
 uri = URI("http://#{router_ip_address}/rest/user-manager/user/add")
 request = Net::HTTP::Post.new(uri)
 request.basic_auth router_username, router_password

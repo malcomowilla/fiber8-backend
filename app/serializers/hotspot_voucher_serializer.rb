@@ -1,5 +1,5 @@
 class HotspotVoucherSerializer < ActiveModel::Serializer
-  attributes :id, :voucher, :status, :expiration, :speed_limit, :phone, :package
+  attributes :id, :voucher, :status, :expiration, :speed_limit, :phone, :package, :shared_users 
 
   # expiration_time&.strftime("%B %d, %Y at %I:%M %p")
 def expiration
