@@ -359,7 +359,7 @@ def login_with_hotspot_voucher
   active_sessions = get_active_sessions(params[:voucher])
 
   if active_sessions.count >= shared_users
-    render json: { error: "Voucher is already used by another device" }, status: :forbidden
+    return render json: { error: "Voucher is already used by another device" }, status: :forbidden
 
   end
 
@@ -399,9 +399,9 @@ router_name = params[:router_name]
     Net::SSH.start(router_ip_address,  router_username, password: router_password, verify_host_key: :never) do |ssh|
       output = ssh.exec!(command)
       if output.include?('failure')
-        render json: { error: "Login failed: #{output}" }, status: :unauthorized
+        return render json: { error: "Login failed: #{output}" }, status: :unauthorized
       else
-        render json: {
+        return render json: {
           message: 'Connected successfully',
           device_ip: client_ip,
           response: output
