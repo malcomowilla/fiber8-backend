@@ -131,7 +131,7 @@ puts 'testt123'
   def update
       if @hotspot_voucher.update(
         package: params[:package],
-        
+
       )
         render json: @hotspot_voucher, status: :ok
       else
@@ -779,7 +779,7 @@ voucher_code: voucher_code,
       
       
       sms_template =  ActsAsTenant.current_tenant.sms_template
-      send_voucher_template = sms_template.send_voucher_template
+      send_voucher_template = sms_template&.send_voucher_template
       original_message = sms_template ?  MessageTemplate.interpolate(send_voucher_template,{
         
       voucher_code: voucher_code,
