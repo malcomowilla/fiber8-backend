@@ -22,23 +22,19 @@ before_action :set_system_admin_email_settings
   
   
     relying_party = WebAuthn::RelyingParty.new(
-      # # origin: "https://#{request.headers['X-Original-Host']}",
+     
+      #  # origin: "https://#{request.headers['X-Original-Host']}",
       # # origin: "https://#{request.headers['X-Subdomain-Aitechs']}",
-      # origin: "http://localhost:5173",
-      # # name: "#{request.headers['x-subdomain']}",
-      #  name: 'aitechs', 
+      # origin: "https://#{request.headers['X-Subdomain']}",
+      # name: "#{request.headers['X-Subdomain']}",
       # # id: request.headers['X-Original-Host']
-      # # id: "#{request.headers['x-subdomain']}"
-      #  id: 'localhost'
+      # id: "#{request.headers['X-Subdomain']}"
+      origin: "https://#{request.headers['X-Subdomain']}.aitechs.co.ke",
+      name: "#{request.headers['X-Subdomain']}.aitechs.co.ke",
+      id: "#{request.headers['X-Subdomain']}.aitechs.co.ke" 
+      
 
 
-
-       # origin: "https://#{request.headers['X-Original-Host']}",
-      # origin: "https://#{request.headers['X-Subdomain-Aitechs']}",
-      origin: "https://#{request.headers['X-Subdomain']}",
-      name: "#{request.headers['X-Subdomain']}",
-      # id: request.headers['X-Original-Host']
-      id: "#{request.headers['X-Subdomain']}"
 
     )
   
@@ -97,12 +93,14 @@ before_action :set_system_admin_email_settings
       #  id: 'localhost'
        # origin: "https://#{request.headers['X-Original-Host']}",
       # origin: "https://#{request.headers['X-Subdomain-Aitechs']}",
-      origin: "https://#{request.headers['X-Subdomain']}",
-      name: "#{request.headers['X-Subdomain']}",
-      # id: request.headers['X-Original-Host']
-      id: "#{request.headers['X-Subdomain']}"  
+      # origin: "https://#{request.headers['X-Subdomain']}",
+      # name: "#{request.headers['X-Subdomain']}",
+      # # id: request.headers['X-Original-Host']
+      # id: "#{request.headers['X-Subdomain']}"  
       
-      
+      origin: "https://#{request.headers['X-Subdomain']}.aitechs.co.ke",
+      name: "#{request.headers['X-Subdomain']}.aitechs.co.ke",
+      id: "#{request.headers['X-Subdomain']}.aitechs.co.ke" 
       
       )
 
@@ -218,20 +216,18 @@ def register_webauthn_system_admin
       end
 
       relying_party = WebAuthn::RelyingParty.new(
-        # origin: "https://#{request.headers['X-Subdomain-Aitechs']}",
-        # name: "#{request.headers['x-subdomain']}",
-        # # id: request.headers['X-Original-Host']
-        # id: "#{request.headers['x-subdomain']}"
-        # 
-
+      
+      origin: "https://#{request.headers['X-Subdomain']}.aitechs.co.ke",
+      name: "#{request.headers['X-Subdomain']}.aitechs.co.ke",
+      id: "#{request.headers['X-Subdomain']}.aitechs.co.ke" 
 
 
          # origin: "https://#{request.headers['X-Original-Host']}",
       # origin: "https://#{request.headers['X-Subdomain-Aitechs']}",
-      origin: "https://#{request.headers['X-Subdomain']}",
-      name: "#{request.headers['X-Subdomain']}",
-      # id: request.headers['X-Original-Host']
-      id: "#{request.headers['X-Subdomain']}"
+      # origin: "https://#{request.headers['X-Subdomain']}",
+      # name: "#{request.headers['X-Subdomain']}",
+      # # id: request.headers['X-Original-Host']
+      # id: "#{request.headers['X-Subdomain']}"
       )
 
 
@@ -280,11 +276,16 @@ def create_webauthn_system_admin
     relying_party = WebAuthn::RelyingParty.new(
       # origin: "https://#{request.headers['X-Original-Host']}",
       # origin: "https://#{request.headers['X-Subdomain-Aitechs']}",
-        origin: "https://#{request.headers['X-Subdomain']}",
-      name: "#{request.headers['X-Subdomain']}",
-      # id: request.headers['X-Original-Host']
-      id: "#{request.headers['X-Subdomain']}"
+      #   origin: "https://#{request.headers['X-Subdomain']}",
+      # name: "#{request.headers['X-Subdomain']}",
+      # # id: request.headers['X-Original-Host']
+      # id: "#{request.headers['X-Subdomain']}"
+
+      origin: "https://#{request.headers['X-Subdomain']}.aitechs.co.ke",
+      name: "#{request.headers['X-Subdomain']}.aitechs.co.ke",
+      id: "#{request.headers['X-Subdomain']}.aitechs.co.ke" 
     )
+
 
     challenge = params[:credential][:challenge]
 
