@@ -6,9 +6,25 @@ class HotspotPackagesController < ApplicationController
   load_and_authorize_resource :except => [:allow_get_hotspot_packages]
 
 
+  set_current_tenant_through_filter
+
+  before_action :set_tenant
   # /ip/hotspot/host?as-string=any&as-string-value=any&number=any&value-name=any
    
 
+  def set_tenant
+
+    host = request.headers['X-Subdomain'] 
+    Rails.logger.info("Setting tenant for host: #{host}")
+  
+    @account = Account.find_by(subdomain: host)
+    set_current_tenant(@account)
+  
+    unless @account
+      render json: { error: 'Invalid tenant' }, status: :not_found
+    end
+    
+  end
 
   def authenticate_hotspot_package
 
@@ -60,7 +76,6 @@ router_user = 'admin'
 router_password = ''
 
 # User details
-user_mac = 'C6:3D:15:54:0F:2E'
 user_ip = "#{host_ip}"
 username = 'admin2'
 
@@ -213,87 +228,143 @@ end
   def create
 
 
-      
-    if HotspotPackage.exists?(name: params[:name])
-      render json: { error: "ip pool already exists" }, status: :unprocessable_entity
-      return
-      
-    end
+    host = request.headers['X-Subdomain'] 
+
+
+if host === 'demo'
+  
+
+
+     
+  if HotspotPackage.exists?(name: params[:name])
+    render json: { error: "ip pool already exists" }, status: :unprocessable_entity
+    return
     
+  end
+  
 
+  
+  if params[:name].blank?
+    render json: { error: "package name is required" }, status: :unprocessable_entity
+    return
+  end
+  
+  # if params[:download_limit].blank?
+  #   render json: { error: "download limit is required" }, status: :unprocessable_entity
+  #   return
+  # end
+  
+  # if params[:upload_limit].blank?
+  #   render json: { error: "upload limit is required" }, status: :unprocessable_entity
+  #   return
+  # end
+  
+  if params[:price].blank?
+    render json: { error: "price is required" }, status: :unprocessable_entity
+    return
+  end
+  @hotspot_package = HotspotPackage.new(hotspot_package_params)
+  use_radius = ActsAsTenant.current_tenant.router_setting.use_radius
+
+
+
+    if @hotspot_package.save
     
-    if params[:name].blank?
-      render json: { error: "package name is required" }, status: :unprocessable_entity
-      return
-    end
-    
-    # if params[:download_limit].blank?
-    #   render json: { error: "download limit is required" }, status: :unprocessable_entity
-    #   return
-    # end
-    
-    # if params[:upload_limit].blank?
-    #   render json: { error: "upload limit is required" }, status: :unprocessable_entity
-    #   return
-    # end
-    
-    if params[:price].blank?
-      render json: { error: "price is required" }, status: :unprocessable_entity
-      return
-    end
-    @hotspot_package = HotspotPackage.new(hotspot_package_params)
-    use_radius = ActsAsTenant.current_tenant.router_setting.use_radius
-
-    if !use_radius
-
-
-      if @hotspot_package.save
-        # profile_id= fetch_profile_id_from_mikrotik
-        # limitation_id = fetch_limitation_id_from_mikrotik
-        # profile_limitation_id =  fetch_profile_limitation_id
-        user_profile_id = fetch_user_profile_id_from_mikrotik  
-        
-        # if profile_id && limitation_id && profile_limitation_id && user_profile_id
-
-        if user_profile_id
-          # @hotspot_package.update(limitation_id: limitation_id,
-          #  profile_limitation_id: profile_limitation_id, profile_id: profile_id,user_profile_id: user_profile_id)
-
-          @hotspot_package.update(user_profile_id: user_profile_id)
-          render json: @hotspot_package, status: :created
-        else
-          render json: { error: 'Failed to obtain the  ids from mikrotik' }, status: :unprocessable_entity
-        end
-          
-          # render json: @hotspot_package, status: :created
-      else
-     render json: @hotspot_package.errors, status: :unprocessable_entity
-      end
-
+           
+        render json: @hotspot_package, status: :created
     else
-
-    
-      if @hotspot_package.save
-        profile_id= fetch_profile_id_from_mikrotik
-        limitation_id = fetch_limitation_id_from_mikrotik
-        profile_limitation_id =  fetch_profile_limitation_id
-        
-        if profile_id && limitation_id && profile_limitation_id 
-
-          @hotspot_package.update(limitation_id: limitation_id,
-           profile_limitation_id: profile_limitation_id, profile_id: profile_id)
-
-          render json: @hotspot_package, status: :created
-        else
-          render json: { error: 'Failed to obtain the  ids from mikrotik' }, status: :unprocessable_entity
-        end
-          
-          # render json: @hotspot_package, status: :created
-      else
-     render json: @hotspot_package.errors, status: :unprocessable_entity
-      end
-
+   render json: @hotspot_package.errors, status: :unprocessable_entity
     end
+
+
+
+  
+  
+else
+       
+  if HotspotPackage.exists?(name: params[:name])
+    render json: { error: "ip pool already exists" }, status: :unprocessable_entity
+    return
+    
+  end
+  
+
+  
+  if params[:name].blank?
+    render json: { error: "package name is required" }, status: :unprocessable_entity
+    return
+  end
+  
+  # if params[:download_limit].blank?
+  #   render json: { error: "download limit is required" }, status: :unprocessable_entity
+  #   return
+  # end
+  
+  # if params[:upload_limit].blank?
+  #   render json: { error: "upload limit is required" }, status: :unprocessable_entity
+  #   return
+  # end
+  
+  if params[:price].blank?
+    render json: { error: "price is required" }, status: :unprocessable_entity
+    return
+  end
+  @hotspot_package = HotspotPackage.new(hotspot_package_params)
+  use_radius = ActsAsTenant.current_tenant.router_setting.use_radius
+
+  if !use_radius
+
+
+    if @hotspot_package.save
+      # profile_id= fetch_profile_id_from_mikrotik
+      # limitation_id = fetch_limitation_id_from_mikrotik
+      # profile_limitation_id =  fetch_profile_limitation_id
+      user_profile_id = fetch_user_profile_id_from_mikrotik  
+      
+      # if profile_id && limitation_id && profile_limitation_id && user_profile_id
+
+      if user_profile_id
+        # @hotspot_package.update(limitation_id: limitation_id,
+        #  profile_limitation_id: profile_limitation_id, profile_id: profile_id,user_profile_id: user_profile_id)
+
+        @hotspot_package.update(user_profile_id: user_profile_id)
+        render json: @hotspot_package, status: :created
+      else
+        render json: { error: 'Failed to obtain the  ids from mikrotik' }, status: :unprocessable_entity
+      end
+        
+        # render json: @hotspot_package, status: :created
+    else
+   render json: @hotspot_package.errors, status: :unprocessable_entity
+    end
+
+  else
+
+  
+    if @hotspot_package.save
+      profile_id= fetch_profile_id_from_mikrotik
+      limitation_id = fetch_limitation_id_from_mikrotik
+      profile_limitation_id =  fetch_profile_limitation_id
+      
+      if profile_id && limitation_id && profile_limitation_id 
+
+        @hotspot_package.update(limitation_id: limitation_id,
+         profile_limitation_id: profile_limitation_id, profile_id: profile_id)
+
+        render json: @hotspot_package, status: :created
+      else
+        render json: { error: 'Failed to obtain the  ids from mikrotik' }, status: :unprocessable_entity
+      end
+        
+        # render json: @hotspot_package, status: :created
+    else
+   render json: @hotspot_package.errors, status: :unprocessable_entity
+    end
+
+  end
+end
+
+ 
   end
 
 
@@ -304,11 +375,25 @@ end
 
   # PATCH/PUT /hotspot_packages/1 or /hotspot_packages/1.json
   def update
-      # if @hotspot_package.update(hotspot_package_params)
-      #   render json: @hotspot_package
-      # else
-      #    render json: @hotspot_package.errors, status: :unprocessable_entity 
-      # end
+   
+      
+      host = request.headers['X-Subdomain'] 
+
+      
+      if host == 'demo'
+        @hotspot_package = HotspotPackage.find(params[:id])
+        
+
+        if  @hotspot_package
+          @hotspot_package.update(hotspot_package_params)
+        render json: @hotspot_package
+        else
+          
+          render json: { error: 'Hotspot package not found' }, status: :not_found
+        end
+      else
+
+
       use_radius = ActsAsTenant.current_tenant.router_setting.use_radius
       @hotspot_package = set_hotspot_package
 
@@ -623,6 +708,10 @@ if  use_radius == true
 
     
     end
+
+        
+      end
+      
     
   end
 
@@ -632,9 +721,17 @@ if  use_radius == true
 
   # DELETE /hotspot_packages/1 or /hotspot_packages/1.json
   def destroy
-    # @hotspot_package.destroy!
 
-    use_radius = ActsAsTenant.current_tenant.router_setting.use_radius
+
+    host = request.headers['X-Subdomain'] 
+    if host === 'demo'
+      @hotspot_package = set_hotspot_package
+      @hotspot_package.destroy!
+      render json: { message: "Package deleted successfully" }
+      
+    else
+
+      use_radius = ActsAsTenant.current_tenant.router_setting.use_radius
     if use_radius == false
     #    head :no_content 
     @hotspot_package = set_hotspot_package
@@ -750,10 +847,12 @@ end
 
 
 
+end 
+    end
+
 end
 
 
-end
 
 
 

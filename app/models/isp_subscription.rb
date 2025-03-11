@@ -1,0 +1,2 @@
+class IspSubscription < ApplicationRecord
+end

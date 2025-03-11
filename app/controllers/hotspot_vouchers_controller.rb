@@ -62,66 +62,94 @@ require 'message_template'
   # POST /hotspot_vouchers or /hotspot_vouchers.json
   def create
 
-    use_radius = ActsAsTenant.current_tenant.router_setting.use_radius
+    host = request.headers['X-Subdomain'] 
+    if host === 'demo'
 
+  if params[:package].blank?
+    render json: { error: "hotspot package is required" }, status: :unprocessable_entity
+    return
+  end
 
-      if use_radius == true
-    @hotspot_voucher = HotspotVoucher.new(
+      @hotspot_voucher = HotspotVoucher.new(
       package: params[:package],
       shared_users: params[:shared_users],
       phone: params[:phone],
       voucher: generate_voucher_code
     )
-
-    user_manager_user_id = get_user_manager_user_id(@hotspot_voucher.voucher)
-    user_profile_id = get_user_profile_id_from_mikrotik(@hotspot_voucher.voucher)
-if user_manager_user_id && user_profile_id
-    # calculate_expiration(package, hotspot_package_created)
-    @hotspot_voucher.update(
-      user_manager_user_id: user_manager_user_id,
-        user_profile_id: user_profile_id,
-    )
-    calculate_expiration(params[:package], @hotspot_voucher)
-      if @hotspot_voucher.save
-
-       
+    render json: @hotspot_voucher, status: :created
 
 
-        if params[:phone].present?
-           voucher_expiration = calculate_expiration_send_to_customer(params[:package])
-
-           if params[:selected_provider] == "SMS leopard"
-             send_voucher(params[:phone], @hotspot_voucher.voucher,
-             voucher_expiration
-             )
-             
-           elsif  params[:selected_provider] == "TextSms"
-             send_voucher_text_sms(params[:phone], @hotspot_voucher.voucher,
-             voucher_expiration
-             )
-             
-           end
-        # send_voucher(params[:phone], @hotspot_voucher.voucher,
-        # voucher_expiration
-        # )
-
-        end
-        
-        
+   
+    else
 
 
-        render json: @hotspot_voucher, status: :created
-      else
-        render json: @hotspot_voucher.errors, status: :unprocessable_entity 
+      use_radius = ActsAsTenant.current_tenant.router_setting.use_radius
+
+      if params[:package].blank?
+        render json: { error: "hotspot package is required" }, status: :unprocessable_entity
+        return
       end
-    else
-      Rails.logger.info "Failed to obtain the   user manager user id from mikrotik"
-      # render json: { error: 'Failed to obtain the   usermanager user id from mikrotik' }, status: :unprocessable_entity
+  
+        if use_radius == true
+      @hotspot_voucher = HotspotVoucher.new(
+        package: params[:package],
+        shared_users: params[:shared_users],
+        phone: params[:phone],
+        voucher: generate_voucher_code
+      )
+  
+      user_manager_user_id = get_user_manager_user_id(@hotspot_voucher.voucher)
+      user_profile_id = get_user_profile_id_from_mikrotik(@hotspot_voucher.voucher)
+  if user_manager_user_id && user_profile_id
+      # calculate_expiration(package, hotspot_package_created)
+      @hotspot_voucher.update(
+        user_manager_user_id: user_manager_user_id,
+          user_profile_id: user_profile_id,
+      )
+      calculate_expiration(params[:package], @hotspot_voucher)
+        if @hotspot_voucher.save
+  
+         
+  
+  
+          if params[:phone].present?
+             voucher_expiration = calculate_expiration_send_to_customer(params[:package])
+  
+             if params[:selected_provider] == "SMS leopard"
+               send_voucher(params[:phone], @hotspot_voucher.voucher,
+               voucher_expiration
+               )
+               
+             elsif  params[:selected_provider] == "TextSms"
+               send_voucher_text_sms(params[:phone], @hotspot_voucher.voucher,
+               voucher_expiration
+               )
+               
+             end
+          # send_voucher(params[:phone], @hotspot_voucher.voucher,
+          # voucher_expiration
+          # )
+  
+          end
+          
+          
+  
+  
+          render json: @hotspot_voucher, status: :created
+        else
+          render json: @hotspot_voucher.errors, status: :unprocessable_entity 
+        end
+      else
+        Rails.logger.info "Failed to obtain the   user manager user id from mikrotik"
+        # render json: { error: 'Failed to obtain the   usermanager user id from mikrotik' }, status: :unprocessable_entity
+      end
+  
+      else
+  puts 'testt123'
+      end
+
     end
 
-    else
-puts 'testt123'
-    end
   end
 
 
@@ -347,6 +375,7 @@ def login_with_hotspot_voucher
 
   # Rails.logger.info "Router IP: #{params.inspect}"
 
+  
   return render json: { error: 'voucher is required' }, status: :bad_request unless params[:voucher].present?
 
   # Get client IP

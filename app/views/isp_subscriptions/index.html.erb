@@ -1,0 +1,16 @@
+<p style="color: green"><%= notice %></p>
+
+<% content_for :title, "Isp subscriptions" %>
+
+<h1>Isp subscriptions</h1>
+
+<div id="isp_subscriptions">
+  <% @isp_subscriptions.each do |isp_subscription| %>
+    <%= render isp_subscription %>
+    <p>
+      <%= link_to "Show this isp subscription", isp_subscription %>
+    </p>
+  <% end %>
+</div>
+
+<%= link_to "New isp subscription", new_isp_subscription_path %>

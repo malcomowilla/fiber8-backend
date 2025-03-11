@@ -30,19 +30,31 @@ class IpPoolsController < ApplicationController
   end
 
   def create
-    @ip_pool = IpPool.new(
-      ip_pool_params
-    )
 
-    ip_pool_id = fetch_ip_pool
-    if ip_pool_id && @ip_pool.save
-      @ip_pool.update(ip_pool_id: ip_pool_id)
+    host = request.headers['X-Subdomain'] 
+
+    if  host == 'demo'
+      @ip_pool = IpPool.new(
+        ip_pool_params
+      )
+      @ip_pool.save
       render json: @ip_pool, status: :created
-
     else
-      render json: { error: "Failed to create ip pool" }, status: :unprocessable_entity
-  end
 
+      @ip_pool = IpPool.new(
+        ip_pool_params
+      )
+
+      ip_pool_id = fetch_ip_pool
+      if ip_pool_id && @ip_pool.save
+        @ip_pool.update(ip_pool_id: ip_pool_id)
+        render json: @ip_pool, status: :created
+  
+      else
+        render json: { error: "Failed to create ip pool" }, status: :unprocessable_entity
+    end
+    end
+   
 end
 
 
@@ -56,76 +68,95 @@ end
 
 
   def update
+    host = request.headers['X-Subdomain'] 
+
+
     @ip_pool = IpPool.find_by(id: params[:id])
 
-    router_name = params[:router_name]
-    nas_router = NasRouter.find_by(name: router_name)
-      router_ip_address = nas_router.ip_address
-      router_password = nas_router.password
-      router_username = nas_router.username
-    
-
-    return render json: { error: "router not found" }, status: :not_found unless nas_router
-
-    ip_pool_id = @ip_pool.ip_pool_id
 
 
-      unless ip_pool_id.present?
-        return render json: { error: "ip pool id missing in package" }, status: :unprocessable_entity
+    if host === 'demo'
+      if @ip_pool
+        @ip_pool.update(start_ip: params[:start_ip], end_ip: params[:end_ip],
+        pool_name: params[:pool_name], description: params[:description])
+      render json: @ip_pool, status: :ok
+      else
+        
+        render json: { error: "Ip pool not found" }, status: :not_found
       end
-
-
-    request_body = {
-    
-        "name" => params[:pool_name],
-        "ranges" => params[:start_ip] + "-" + params[:end_ip],
-        "next-pool" => "none",
-        "comment" => params[:description]
-    }  
-
-
-
-    if @ip_pool
-    
-
-      begin
-        uri = URI("http://#{router_ip_address}/rest/ip/pool/#{ip_pool_id}") 
-        req = Net::HTTP::Patch.new(uri)
-           
-
-            req.basic_auth router_username, router_password
-           
-            req['Content-Type'] = 'application/json'
-
-  req.body = request_body.to_json
-
-  response = Net::HTTP.start(uri.hostname, uri.port){|http| http.request(req)}
-
-
-if response.is_a?(Net::HTTPSuccess) 
-  @ip_pool.update(start_ip: params[:start_ip], end_ip: params[:end_ip],
-  pool_name: params[:pool_name], description: params[:description])
-render json: @ip_pool, status: :ok
-else
-  puts "Failed to update ip pool : #{response.code} - #{response.message}"
-
-  render json: { error: "Failed to update package" }, status: :unprocessable_entity
-
-end
-
-
-rescue Net::OpenTimeout, Net::ReadTimeout
-render json: { error: "Request timed out while connecting to the router. Please check if the router is online." }, status: :gateway_timeout
-rescue Errno::ECONNREFUSED
-render json: { error: "Failed to connect to the router at #{router_ip_address}. Connection refused." }, status: :bad_gateway
-rescue StandardError => e
-render json: { error: "An unexpected error occurred: #{e.message}" }, status: :internal_server_error
-
-end
-
     else
-      render json: { error: "Ip pool not found" }, status: :not_found
+
+      router_name = params[:router_name]
+      nas_router = NasRouter.find_by(name: router_name)
+        router_ip_address = nas_router.ip_address
+        router_password = nas_router.password
+        router_username = nas_router.username
+      
+  
+      return render json: { error: "router not found" }, status: :not_found unless nas_router
+  
+      ip_pool_id = @ip_pool.ip_pool_id
+  
+  
+        unless ip_pool_id.present?
+          return render json: { error: "ip pool id missing in package" }, status: :unprocessable_entity
+        end
+  
+  
+      request_body = {
+      
+          "name" => params[:pool_name],
+          "ranges" => params[:start_ip] + "-" + params[:end_ip],
+          "next-pool" => "none",
+          "comment" => params[:description]
+      }  
+  
+  
+  
+      if @ip_pool
+      
+  
+        begin
+          uri = URI("http://#{router_ip_address}/rest/ip/pool/#{ip_pool_id}") 
+          req = Net::HTTP::Patch.new(uri)
+             
+  
+              req.basic_auth router_username, router_password
+             
+              req['Content-Type'] = 'application/json'
+  
+    req.body = request_body.to_json
+  
+    response = Net::HTTP.start(uri.hostname, uri.port){|http| http.request(req)}
+  
+  
+  if response.is_a?(Net::HTTPSuccess) 
+    @ip_pool.update(start_ip: params[:start_ip], end_ip: params[:end_ip],
+    pool_name: params[:pool_name], description: params[:description])
+  render json: @ip_pool, status: :ok
+  else
+    puts "Failed to update ip pool : #{response.code} - #{response.message}"
+  
+    render json: { error: "Failed to update package" }, status: :unprocessable_entity
+  
+  end
+  
+  
+  rescue Net::OpenTimeout, Net::ReadTimeout
+  render json: { error: "Request timed out while connecting to the router. Please check if the router is online." }, status: :gateway_timeout
+  rescue Errno::ECONNREFUSED
+  render json: { error: "Failed to connect to the router at #{router_ip_address}. Connection refused." }, status: :bad_gateway
+  rescue StandardError => e
+  render json: { error: "An unexpected error occurred: #{e.message}" }, status: :internal_server_error
+  
+  end
+  
+      else
+        render json: { error: "Ip pool not found" }, status: :not_found
+      end
+      
     end
+   
 
   end
 
