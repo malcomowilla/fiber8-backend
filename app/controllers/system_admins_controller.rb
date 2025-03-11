@@ -22,14 +22,24 @@ before_action :set_system_admin_email_settings
   
   
     relying_party = WebAuthn::RelyingParty.new(
-      # origin: "https://#{request.headers['X-Original-Host']}",
+      # # origin: "https://#{request.headers['X-Original-Host']}",
+      # # origin: "https://#{request.headers['X-Subdomain-Aitechs']}",
+      # origin: "http://localhost:5173",
+      # # name: "#{request.headers['x-subdomain']}",
+      #  name: 'aitechs', 
+      # # id: request.headers['X-Original-Host']
+      # # id: "#{request.headers['x-subdomain']}"
+      #  id: 'localhost'
+
+
+
+       # origin: "https://#{request.headers['X-Original-Host']}",
       # origin: "https://#{request.headers['X-Subdomain-Aitechs']}",
-      origin: "http://localhost:5173",
-      # name: "#{request.headers['x-subdomain']}",
-       name: 'aitechs', 
+      origin: "https://#{request.headers['X-Subdomain']}",
+      name: "#{request.headers['X-Subdomain']}",
       # id: request.headers['X-Original-Host']
-      # id: "#{request.headers['x-subdomain']}"
-       id: 'localhost'
+      id: "#{request.headers['X-Subdomain']}"
+
     )
   
     if admin.present?
@@ -79,12 +89,21 @@ before_action :set_system_admin_email_settings
       # Initialize the Relying Party
       relying_party = WebAuthn::RelyingParty.new(
          # origin: "https://#{request.headers['X-Subdomain-Aitechs']}",
-      origin: "http://localhost:5173",
-      # name: "#{request.headers['x-subdomain']}",
-       name: 'aitechs', 
+      # origin: "http://localhost:5173",
+      # # name: "#{request.headers['x-subdomain']}",
+      #  name: 'aitechs', 
+      # # id: request.headers['X-Original-Host']
+      # # id: "#{request.headers['x-subdomain']}"
+      #  id: 'localhost'
+       # origin: "https://#{request.headers['X-Original-Host']}",
+      # origin: "https://#{request.headers['X-Subdomain-Aitechs']}",
+      origin: "https://#{request.headers['X-Subdomain']}",
+      name: "#{request.headers['X-Subdomain']}",
       # id: request.headers['X-Original-Host']
-      # id: "#{request.headers['x-subdomain']}"
-       id: 'localhost'
+      id: "#{request.headers['X-Subdomain']}"  
+      
+      
+      
       )
 
       # Validate incoming credential
@@ -199,10 +218,20 @@ def register_webauthn_system_admin
       end
 
       relying_party = WebAuthn::RelyingParty.new(
-        origin: "https://#{request.headers['X-Subdomain-Aitechs']}",
-        name: "#{request.headers['x-subdomain']}",
-        # id: request.headers['X-Original-Host']
-        id: "#{request.headers['x-subdomain']}"
+        # origin: "https://#{request.headers['X-Subdomain-Aitechs']}",
+        # name: "#{request.headers['x-subdomain']}",
+        # # id: request.headers['X-Original-Host']
+        # id: "#{request.headers['x-subdomain']}"
+        # 
+
+
+
+         # origin: "https://#{request.headers['X-Original-Host']}",
+      # origin: "https://#{request.headers['X-Subdomain-Aitechs']}",
+      origin: "https://#{request.headers['X-Subdomain']}",
+      name: "#{request.headers['X-Subdomain']}",
+      # id: request.headers['X-Original-Host']
+      id: "#{request.headers['X-Subdomain']}"
       )
 
 
@@ -250,10 +279,11 @@ def create_webauthn_system_admin
   
     relying_party = WebAuthn::RelyingParty.new(
       # origin: "https://#{request.headers['X-Original-Host']}",
-      origin: "https://#{request.headers['X-Subdomain-Aitechs']}",
-      name: "#{request.headers['x-subdomain']}",
+      # origin: "https://#{request.headers['X-Subdomain-Aitechs']}",
+        origin: "https://#{request.headers['X-Subdomain']}",
+      name: "#{request.headers['X-Subdomain']}",
       # id: request.headers['X-Original-Host']
-      id: "#{request.headers['x-subdomain']}"
+      id: "#{request.headers['X-Subdomain']}"
     )
 
     challenge = params[:credential][:challenge]
@@ -672,7 +702,7 @@ render json: { error: 'System Admin not found' }, status: :unauthorized
 
 
 
-    def send_password(phone_number,password, email)
+    def send_password(phone_number, password, email)
       api_key = 'c3I6A1BuUvESuTkdSa2l'
       api_secret = 'aSYTHMEmRF3XQUUSPANeYGEeGlZYTYGYFj4TXWqV'
 
