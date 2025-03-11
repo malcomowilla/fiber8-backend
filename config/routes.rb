@@ -1,4 +1,5 @@
 Rails.application.routes.draw do
+  resources :isp_subscriptions
   resources :hotspot_settings
   resources :sms_templates
   resources :hotspot_subscriptions

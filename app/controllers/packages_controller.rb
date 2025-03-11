@@ -81,123 +81,164 @@ class PackagesController < ApplicationController
                   # puts @package.inspect  
 
              
+                  host = request.headers['X-Subdomain'] 
 
-              use_radius = ActsAsTenant.current_tenant.router_setting.use_radius
-              @package = Package.new(package_params)
-              if use_radius
-                @package = Package.new(package_params)
-                profile_id= fetch_profile_id_from_mikrotik(@package.name)
-                limitation_id = fetch_limitation_id_from_mikrotik(@package.name)
+                  if host === 'demo'
 
+                    if Package.exists?(name: params[:name])
+                      render json: { error: "ip pool already exists" }, status: :unprocessable_entity
+                      return
+                      
+                    end
+                    
+    
+                    
+                    if params[:name].blank?
+                      render json: { error: "package name is required" }, status: :unprocessable_entity
+                      return
+                    end
+                    
+                    if params[:download_limit].blank?
+                      render json: { error: "download limit is required" }, status: :unprocessable_entity
+                      return
+                    end
+                    
+                    if params[:upload_limit].blank?
+                      render json: { error: "upload limit is required" }, status: :unprocessable_entity
+                      return
+                    end
+                    
+                    if params[:price].blank?
+                      render json: { error: "price is required" }, status: :unprocessable_entity
+                      return
+                    end
+                    
+    
+    
+                    @package = Package.new(package_params)
 
-
-               
-                
-                if Package.exists?(name: params[:name])
-                  render json: { error: "ip pool already exists" }, status: :unprocessable_entity
-                  return
-                  
-                end
-                
-
-                
-                if params[:name].blank?
-                  render json: { error: "package name is required" }, status: :unprocessable_entity
-                  return
-                end
-                
-                if params[:download_limit].blank?
-                  render json: { error: "download limit is required" }, status: :unprocessable_entity
-                  return
-                end
-                
-                if params[:upload_limit].blank?
-                  render json: { error: "upload limit is required" }, status: :unprocessable_entity
-                  return
-                end
-                
-                if params[:price].blank?
-                  render json: { error: "price is required" }, status: :unprocessable_entity
-                  return
-                end
-                
-
-
-
-
-
-                  if  profile_id && limitation_id &&  @package.save
-  
-                 
-                  if profile_id && limitation_id 
-                        @package.update(mikrotik_id: profile_id, limitation_id: limitation_id,)
-                        profile_limitation_id =  fetch_profile_limitation_id(@package.name)
-            @package.update(profile_limitation_id: profile_limitation_id)
-  
-                            render json:  @package, status: :created
-  
+                    @package.save
+                    render json: @package, serializer: PackageSerializer
                   else
-                          render json: { error: 'Failed to obtain the  ids' }, status: :unprocessable_entity
-  
-                  end
-                else
-                  render json: {error: 'Package Already Created'}, status: :unprocessable_entity
-                
-              
-                end
-              
-              else
-
-
-            
-
-
-                if params[:ip_pool].blank?
-                  render json: { error: "ip pool is required" }, status: :unprocessable_entity
-                  return
-                end
-                
-                if Package.exists?(name: params[:name])
-                  render json: { error: "ip pool already exists" }, status: :unprocessable_entity
-                  return
+                    use_radius = ActsAsTenant.current_tenant.router_setting.use_radius
+                    @package = Package.new(package_params)
+                    if use_radius
+                      @package = Package.new(package_params)
+                      profile_id= fetch_profile_id_from_mikrotik(@package.name)
+                      limitation_id = fetch_limitation_id_from_mikrotik(@package.name)
+      
+      
+      
+                     
+                      
+                      if Package.exists?(name: params[:name])
+                        render json: { error: "ip pool already exists" }, status: :unprocessable_entity
+                        return
+                        
+                      end
+                      
+      
+                      
+                      if params[:name].blank?
+                        render json: { error: "package name is required" }, status: :unprocessable_entity
+                        return
+                      end
+                      
+                      if params[:download_limit].blank?
+                        render json: { error: "download limit is required" }, status: :unprocessable_entity
+                        return
+                      end
+                      
+                      if params[:upload_limit].blank?
+                        render json: { error: "upload limit is required" }, status: :unprocessable_entity
+                        return
+                      end
+                      
+                      if params[:price].blank?
+                        render json: { error: "price is required" }, status: :unprocessable_entity
+                        return
+                      end
+                      
+      
+      
+      
+      
+      
+                        if  profile_id && limitation_id &&  @package.save
+        
+                       
+                        if profile_id && limitation_id 
+                              @package.update(mikrotik_id: profile_id, limitation_id: limitation_id,)
+                              profile_limitation_id =  fetch_profile_limitation_id(@package.name)
+                  @package.update(profile_limitation_id: profile_limitation_id)
+        
+                                  render json:  @package, status: :created
+        
+                        else
+                                render json: { error: 'Failed to obtain the  ids' }, status: :unprocessable_entity
+        
+                        end
+                      else
+                        render json: {error: 'Package Already Created'}, status: :unprocessable_entity
+                      
+                    
+                      end
+                    
+                    else
+      
+      
                   
-                end
-                
+      
+      
+                      if params[:ip_pool].blank?
+                        render json: { error: "ip pool is required" }, status: :unprocessable_entity
+                        return
+                      end
+                      
+                      if Package.exists?(name: params[:name])
+                        render json: { error: "ip pool already exists" }, status: :unprocessable_entity
+                        return
+                        
+                      end
+                      
+      
+                      
+                      if params[:name].blank?
+                        render json: { error: "package name is required" }, status: :unprocessable_entity
+                        return
+                      end
+                      
+                      if params[:download_limit].blank?
+                        render json: { error: "download limit is required" }, status: :unprocessable_entity
+                        return
+                      end
+                      
+                      if params[:upload_limit].blank?
+                        render json: { error: "upload limit is required" }, status: :unprocessable_entity
+                        return
+                      end
+                      
+                      if params[:price].blank?
+                        render json: { error: "price is required" }, status: :unprocessable_entity
+                        return
+                      end
+                      
+                      
+                      ppoe_profile_id = fetch_ppp_profile_id_from_mikrotik
+      
+      
+      
+                      if ppoe_profile_id && @package.save
+                        @package.update(ppoe_profile_id: ppoe_profile_id)
+                        render json:  @package, status: :created
+                      else
+                        render json: { error: 'Failed to obtain the  ppoe profile id from mikrotik' }, status: :unprocessable_entity
+                      end
+      
+                    end
 
-                
-                if params[:name].blank?
-                  render json: { error: "package name is required" }, status: :unprocessable_entity
-                  return
-                end
-                
-                if params[:download_limit].blank?
-                  render json: { error: "download limit is required" }, status: :unprocessable_entity
-                  return
-                end
-                
-                if params[:upload_limit].blank?
-                  render json: { error: "upload limit is required" }, status: :unprocessable_entity
-                  return
-                end
-                
-                if params[:price].blank?
-                  render json: { error: "price is required" }, status: :unprocessable_entity
-                  return
-                end
-                
-                
-                ppoe_profile_id = fetch_ppp_profile_id_from_mikrotik
-
-
-
-                if ppoe_profile_id && @package.save
-                  @package.update(ppoe_profile_id: ppoe_profile_id)
-                  render json:  @package, status: :created
-                else
-                  render json: { error: 'Failed to obtain the  ppoe profile id from mikrotik' }, status: :unprocessable_entity
-                end
-
-              end
+                  end
+             
             
                 
               end
@@ -208,240 +249,254 @@ class PackagesController < ApplicationController
             
               def update_package
                         # session[:router_name] = params[:router_name]
+                        host = request.headers['X-Subdomain'] 
+                        
+                        if host === 'demo'
+                          package = Package.find_by(id: params[:id])
+                          if package
+                            package.update(package_params)
+                            render json: package
 
-                package = Package.find_by(id: params[:id])
-                use_radius = ActsAsTenant.current_tenant.router_setting.use_radius
-
-                  if use_radius
-
-                    if package
-                      router_name = params[:router_name]
-                    nas_router = NasRouter.find_by(name: router_name)
-                    if nas_router
-                      router_ip_address = nas_router.ip_address
-                      router_password = nas_router.password
-                      router_username = nas_router.username
-                    else
-                      puts 'router not found'
-                    end
-  
-  
-  
-  
-  
-                    mikrotik_id = package.mikrotik_id
-                    limitation_id = package.limitation_id
-                    if mikrotik_id.present? && limitation_id.present?
-                      
-                      download_limit = package_params[:download_limit]
-                      upload_limit = package_params[:upload_limit]
-                  
-                    upload_burst_limit = package_params[:upload_burst_limit]
-                    download_burst_limit = package_params[:download_burst_limit]
-                        validity = package_params[:validity]
+                          else
+                            render json: { error: 'package not found' }, status: :not_found
                             
-                  price =  package_params[:price]
-                
-                        validity_period_units = package_params[:validity_period_units]
-                    name = package_params[:name]
-                
-                    
-                  validity_period  =   if validity_period_units == 'days'
-                    "#{validity}d 00:00:00"
-                  
-                    elsif validity_period_units == 'hours'
-                      "#{validity}:00:00"
-                    
-                    end
-  
-  
-  
-  
-                      req_body={
-                        "name" => name,
-  
-                        :price => price,
-                        :validity => validity_period
-  
-                      }
-  
-                        
-                  
-                              req_body2 = {
+                          end
+                        else
+
+                          package = Package.find_by(id: params[:id])
+                          use_radius = ActsAsTenant.current_tenant.router_setting.use_radius
+          
+                            if use_radius
+          
+                              if package
+                                router_name = params[:router_name]
+                              nas_router = NasRouter.find_by(name: router_name)
+                              if nas_router
+                                router_ip_address = nas_router.ip_address
+                                router_password = nas_router.password
+                                router_username = nas_router.username
+                              else
+                                puts 'router not found'
+                              end
+            
+            
+            
+            
+            
+                              mikrotik_id = package.mikrotik_id
+                              limitation_id = package.limitation_id
+                              if mikrotik_id.present? && limitation_id.present?
                                 
-                                "download-limit" => download_limit,
-                                "upload-limit" => upload_limit,
-                            "name" => name,
-                            "rate-limit-rx" => "#{upload_limit}M",
-                            "rate-limit-tx" => "#{download_limit}M",
-                            "rate-limit-burst-rx" => "#{upload_burst_limit}M",
-                            "rate-limit-burst-tx" => "#{download_burst_limit}M",
-                            "uptime-limit" => validity_period
-                              }
+                                download_limit = package_params[:download_limit]
+                                upload_limit = package_params[:upload_limit]
+                            
+                              upload_burst_limit = package_params[:upload_burst_limit]
+                              download_burst_limit = package_params[:download_burst_limit]
+                                  validity = package_params[:validity]
+                                      
+                            price =  package_params[:price]
+                          
+                                  validity_period_units = package_params[:validity_period_units]
+                              name = package_params[:name]
+                          
                               
-                              begin
-                              uri = URI("http://#{router_ip_address}/rest/user-manager/profile/#{mikrotik_id}") 
-                              uri2 = URI("http://#{router_ip_address}/rest/user-manager/limitation/#{limitation_id}") 
-                              req = Net::HTTP::Patch.new(uri)
-                              req2 = Net::HTTP::Patch.new(uri2)
-                                 
-  
-                                  req.basic_auth router_username, router_password
-                                  req2.basic_auth router_username, router_password
-                                 
-                                  req['Content-Type'] = 'application/json'
-                                  req2['Content-Type'] = 'application/json'
-  
-                        req.body = req_body.to_json
-                        req2.body = req_body2.to_json
-  
-                        response = Net::HTTP.start(uri.hostname, uri.port){|http| http.request(req)}
-                        response2 = Net::HTTP.start(uri2.hostname, uri2.port){|http| http.request(req2)} 
-  
-  
-                      if response.is_a?(Net::HTTPSuccess) && response2.is_a?(Net::HTTPSuccess) 
-                        package.update(package_params)
-                        render json: package
-                      else
-                        puts "Failed to update profile and limitation : #{response.code} - #{response.message}"
-  
-                        render json: { error: "Failed to update package" }, status: :unprocessable_entity
-  
-                      end
-  
-  
-    rescue Net::OpenTimeout, Net::ReadTimeout
-      render json: { error: "Request timed out while connecting to the router. Please check if the router is online." }, status: :gateway_timeout
-    rescue Errno::ECONNREFUSED
-      render json: { error: "Failed to connect to the router at #{router_ip_address}. Connection refused." }, status: :bad_gateway
-    rescue StandardError => e
-      render json: { error: "An unexpected error occurred: #{e.message}" }, status: :internal_server_error
-    
-                      end
-  
-                    
-                    else
-                    
-                      render json: { error: "Mikrotik ID, limitation ID, or profile limitation ID not found in the package" }, status: :unprocessable_entity
-  
-                    end
-  
-                    
-  
-                    else
-                      render json: { error: 'Unprocesable entity' }, status: :unprocessable_entity
-                    end
-
-
-                  else
-                      if package
-                      router_name = params[:router_name]
-                    nas_router = NasRouter.find_by(name: router_name)
-                    if nas_router
-                      router_ip_address = nas_router.ip_address
-                      router_password = nas_router.password
-                      router_username = nas_router.username
-                    else
-                      puts 'router not found'
-                    end
-  
-  
-  
-  
-  
-                  ppoe_profile_id = package.ppoe_profile_id
-                    if ppoe_profile_id.present?
-                      
-validity = package_params[:validity]
-
-validity = package_params[:validity]
-      validity_period_units = package_params[:validity_period_units]
-    
-   download_limit = package_params[:download_limit]
-   upload_limit = package_params[:upload_limit]
-   name = package_params[:name]
-  
-    
-   validity_period =   if validity_period_units == 'days'
-    "#{validity}d 00:00:00"
-  
-    elsif validity_period_units == 'hours'
-       "#{validity}:00:00"
-    
-    end
-
-ip_pool = package_params[:ip_pool]
-# pool_name = package_params[:pool_name]
-    request_body = {
-      # "comment": "any",
-      # "dns-server": "any",
-      "local-address": "#{ip_pool}",
-      "name": "#{name}",
-     
-      # "only-one": "any",
-      
-      "rate-limit": "#{upload_limit}/#{download_limit}",
-      "remote-address": "#{ip_pool}",
-      "session-timeout": "#{validity_period}",
-      # "use-encryption": "any",
-     
-     
-    }
-                     
-  
-                        
-                  
-                             
+                            validity_period  =   if validity_period_units == 'days'
+                              "#{validity}d 00:00:00"
+                            
+                              elsif validity_period_units == 'hours'
+                                "#{validity}:00:00"
                               
-                              begin
-                              uri = URI("http://#{router_ip_address}/rest/ppp/profile/#{ppoe_profile_id}") 
-                              req = Net::HTTP::Patch.new(uri)
-                                 
-  
-                                  req.basic_auth router_username, router_password
-                                 
-                                  req['Content-Type'] = 'application/json'
-  
-                        req.body = request_body.to_json
-  
-                        response = Net::HTTP.start(uri.hostname, uri.port){|http| http.request(req)}
-  
-  
-                      if response.is_a?(Net::HTTPSuccess)
-                        package.update(package_params)
-                        render json: package
-                      else
-                        puts "Failed to update ppoe profile : #{response.code} - #{response.message}"
-  
-                        render json: { error: "Failed to update package" }, status: :unprocessable_entity
-  
-                      end
-  
-  
-    rescue Net::OpenTimeout, Net::ReadTimeout
-      render json: { error: "Request timed out while connecting to the router. Please check if the router is online." }, status: :gateway_timeout
-    rescue Errno::ECONNREFUSED
-      render json: { error: "Failed to connect to the router at #{router_ip_address}. Connection refused." }, status: :bad_gateway
-    rescue StandardError => e
-      render json: { error: "An unexpected error occurred: #{e.message}" }, status: :internal_server_error
-    
-                      end
-  
-                    
-                    else
-                    
-                      render json: { error: "Mikrotik ID, limitation ID, or profile limitation ID not found in the package" }, status: :unprocessable_entity
-  
-                    end
-  
-                    
-  
-                    else
-                      render json: { error: 'Unprocesable entity' }, status: :unprocessable_entity
-                    end
-                  end
-                 
+                              end
+            
+            
+            
+            
+                                req_body={
+                                  "name" => name,
+            
+                                  :price => price,
+                                  :validity => validity_period
+            
+                                }
+            
+                                  
+                            
+                                        req_body2 = {
+                                          
+                                          "download-limit" => download_limit,
+                                          "upload-limit" => upload_limit,
+                                      "name" => name,
+                                      "rate-limit-rx" => "#{upload_limit}M",
+                                      "rate-limit-tx" => "#{download_limit}M",
+                                      "rate-limit-burst-rx" => "#{upload_burst_limit}M",
+                                      "rate-limit-burst-tx" => "#{download_burst_limit}M",
+                                      "uptime-limit" => validity_period
+                                        }
+                                        
+                                        begin
+                                        uri = URI("http://#{router_ip_address}/rest/user-manager/profile/#{mikrotik_id}") 
+                                        uri2 = URI("http://#{router_ip_address}/rest/user-manager/limitation/#{limitation_id}") 
+                                        req = Net::HTTP::Patch.new(uri)
+                                        req2 = Net::HTTP::Patch.new(uri2)
+                                           
+            
+                                            req.basic_auth router_username, router_password
+                                            req2.basic_auth router_username, router_password
+                                           
+                                            req['Content-Type'] = 'application/json'
+                                            req2['Content-Type'] = 'application/json'
+            
+                                  req.body = req_body.to_json
+                                  req2.body = req_body2.to_json
+            
+                                  response = Net::HTTP.start(uri.hostname, uri.port){|http| http.request(req)}
+                                  response2 = Net::HTTP.start(uri2.hostname, uri2.port){|http| http.request(req2)} 
+            
+            
+                                if response.is_a?(Net::HTTPSuccess) && response2.is_a?(Net::HTTPSuccess) 
+                                  package.update(package_params)
+                                  render json: package
+                                else
+                                  puts "Failed to update profile and limitation : #{response.code} - #{response.message}"
+            
+                                  render json: { error: "Failed to update package" }, status: :unprocessable_entity
+            
+                                end
+            
+            
+              rescue Net::OpenTimeout, Net::ReadTimeout
+                render json: { error: "Request timed out while connecting to the router. Please check if the router is online." }, status: :gateway_timeout
+              rescue Errno::ECONNREFUSED
+                render json: { error: "Failed to connect to the router at #{router_ip_address}. Connection refused." }, status: :bad_gateway
+              rescue StandardError => e
+                render json: { error: "An unexpected error occurred: #{e.message}" }, status: :internal_server_error
               
+                                end
+            
+                              
+                              else
+                              
+                                render json: { error: "Mikrotik ID, limitation ID, or profile limitation ID not found in the package" }, status: :unprocessable_entity
+            
+                              end
+            
+                              
+            
+                              else
+                                render json: { error: 'Unprocesable entity' }, status: :unprocessable_entity
+                              end
+          
+          
+                            else
+                                if package
+                                router_name = params[:router_name]
+                              nas_router = NasRouter.find_by(name: router_name)
+                              if nas_router
+                                router_ip_address = nas_router.ip_address
+                                router_password = nas_router.password
+                                router_username = nas_router.username
+                              else
+                                puts 'router not found'
+                              end
+            
+            
+            
+            
+            
+                            ppoe_profile_id = package.ppoe_profile_id
+                              if ppoe_profile_id.present?
+                                
+          validity = package_params[:validity]
+          
+          validity = package_params[:validity]
+                validity_period_units = package_params[:validity_period_units]
+              
+             download_limit = package_params[:download_limit]
+             upload_limit = package_params[:upload_limit]
+             name = package_params[:name]
+            
+              
+             validity_period =   if validity_period_units == 'days'
+              "#{validity}d 00:00:00"
+            
+              elsif validity_period_units == 'hours'
+                 "#{validity}:00:00"
+              
+              end
+          
+          ip_pool = package_params[:ip_pool]
+          # pool_name = package_params[:pool_name]
+              request_body = {
+                # "comment": "any",
+                # "dns-server": "any",
+                "local-address": "#{ip_pool}",
+                "name": "#{name}",
+               
+                # "only-one": "any",
+                
+                "rate-limit": "#{upload_limit}/#{download_limit}",
+                "remote-address": "#{ip_pool}",
+                "session-timeout": "#{validity_period}",
+                # "use-encryption": "any",
+               
+               
+              }
+                               
+            
+                                  
+                            
+                                       
+                                        
+                                        begin
+                                        uri = URI("http://#{router_ip_address}/rest/ppp/profile/#{ppoe_profile_id}") 
+                                        req = Net::HTTP::Patch.new(uri)
+                                           
+            
+                                            req.basic_auth router_username, router_password
+                                           
+                                            req['Content-Type'] = 'application/json'
+            
+                                  req.body = request_body.to_json
+            
+                                  response = Net::HTTP.start(uri.hostname, uri.port){|http| http.request(req)}
+            
+            
+                                if response.is_a?(Net::HTTPSuccess)
+                                  package.update(package_params)
+                                  render json: package
+                                else
+                                  puts "Failed to update ppoe profile : #{response.code} - #{response.message}"
+            
+                                  render json: { error: "Failed to update package" }, status: :unprocessable_entity
+            
+                                end
+            
+            
+              rescue Net::OpenTimeout, Net::ReadTimeout
+                render json: { error: "Request timed out while connecting to the router. Please check if the router is online." }, status: :gateway_timeout
+              rescue Errno::ECONNREFUSED
+                render json: { error: "Failed to connect to the router at #{router_ip_address}. Connection refused." }, status: :bad_gateway
+              rescue StandardError => e
+                render json: { error: "An unexpected error occurred: #{e.message}" }, status: :internal_server_error
+              
+                                end
+            
+                              
+                              else
+                              
+                                render json: { error: "Mikrotik ID, limitation ID, or profile limitation ID not found in the package" }, status: :unprocessable_entity
+            
+                              end
+            
+                              
+            
+                              else
+                                render json: { error: 'Unprocesable entity' }, status: :unprocessable_entity
+                              end
+                            end
+                           
+                        end
+                                      
               end
 
 
@@ -450,7 +505,21 @@ ip_pool = package_params[:ip_pool]
 
     
     def delete
-      package = Package.find_by(id: params[:id])
+
+
+      host = request.headers['X-Subdomain'] 
+
+      if host == 'demo'
+        package = Package.find_by(id: params[:id])
+        if package
+          package.destroy
+          head :no_content
+        else
+          render json: { error: 'package not found' }, status: :not_found
+        end
+      else
+
+  package = Package.find_by(id: params[:id])
       use_radius = ActsAsTenant.current_tenant.router_setting.use_radius
 
 
@@ -578,8 +647,10 @@ ip_pool = package_params[:ip_pool]
         
       end
 
+        
+      end
     
-
+    
       
     end
     

@@ -1,0 +1,19 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  account_id: 1
+  next_billing_date: 2025-03-11 14:14:56
+  payment_status: MyString
+  plan_name: MyString
+  features: MyString
+  renewal_period: MyString
+  last_payment_date: 2025-03-11 14:14:56
+
+two:
+  account_id: 1
+  next_billing_date: 2025-03-11 14:14:56
+  payment_status: MyString
+  plan_name: MyString
+  features: MyString
+  renewal_period: MyString
+  last_payment_date: 2025-03-11 14:14:56

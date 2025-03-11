@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2025_03_10_120623) do
+ActiveRecord::Schema[7.2].define(version: 2025_03_11_111456) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -198,6 +198,19 @@ ActiveRecord::Schema[7.2].define(version: 2025_03_10_120623) do
     t.integer "account_id"
     t.string "description"
     t.string "ip_pool_id"
+  end
+
+  create_table "isp_subscriptions", force: :cascade do |t|
+    t.integer "account_id"
+    t.datetime "next_billing_date"
+    t.string "payment_status"
+    t.string "currency", default: "KES"
+    t.string "plan_name"
+    t.string "features", default: [], array: true
+    t.string "renewal_period", default: "monthly"
+    t.datetime "last_payment_date"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
   end
 
   create_table "nas_routers", force: :cascade do |t|
