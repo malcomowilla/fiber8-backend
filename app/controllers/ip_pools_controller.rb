@@ -63,8 +63,12 @@ end
 
 
   def index
-    @ip_pools = IpPool.all
-    render json: @ip_pools, status: :ok
+   
+    @current_account =ActsAsTenant.current_tenant 
+    ActsAsTenant.with_tenant(@current_account) do
+      @ip_pools = IpPool.all
+      render json: @ip_pools, status: :ok
+    end
   end
 
 
