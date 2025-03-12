@@ -19,6 +19,7 @@ class IpPoolsController < ApplicationController
     @account = Account.find_by(subdomain: host)
     @current_account =ActsAsTenant.current_tenant 
     EmailConfiguration.configure(@current_account, ENV['SYSTEM_ADMIN_EMAIL'])
+    set_current_tenant(@account)
     # EmailSystemAdmin.configure(@current_account, current_system_admin)
   Rails.logger.info "Setting tenant for app#{ActsAsTenant.current_tenant}"
   
