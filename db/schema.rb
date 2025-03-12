@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2025_03_11_111456) do
+ActiveRecord::Schema[7.2].define(version: 2025_03_12_154733) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -197,7 +197,7 @@ ActiveRecord::Schema[7.2].define(version: 2025_03_11_111456) do
     t.string "end_ip"
     t.integer "account_id"
     t.string "description"
-    t.string "ip_pool_id"
+    t.string "ip_pool_id_mikrotik"
   end
 
   create_table "isp_subscriptions", force: :cascade do |t|

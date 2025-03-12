@@ -46,9 +46,9 @@ class IpPoolsController < ApplicationController
         ip_pool_params
       )
 
-      ip_pool_id = fetch_ip_pool
-      if ip_pool_id && @ip_pool.save
-        @ip_pool.update(ip_pool_id: ip_pool_id)
+      ip_pool_id_mikrotik = fetch_ip_pool
+      if ip_pool_id_mikrotik && @ip_pool.save
+        @ip_pool.update(ip_pool_id_mikrotik: ip_pool_id_mikrotik)
         render json: @ip_pool, status: :created
   
       else
