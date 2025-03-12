@@ -14,18 +14,21 @@ class HotspotPackagesController < ApplicationController
 
   def set_tenant
 
-    host = request.headers['X-Subdomain'] 
-    Rails.logger.info("Setting tenant for host: #{host}")
-  
+    host = request.headers['X-Subdomain']
     @account = Account.find_by(subdomain: host)
-    set_current_tenant(@account)
+    @current_account =ActsAsTenant.current_tenant 
+    EmailConfiguration.configure(@current_account, ENV['SYSTEM_ADMIN_EMAIL'])
+    # EmailSystemAdmin.configure(@current_account, current_system_admin)
+  Rails.logger.info "Setting tenant for app#{ActsAsTenant.current_tenant}"
   
-    unless @account
-      render json: { error: 'Invalid tenant' }, status: :not_found
-    end
+    # set_current_tenant(@account)
+  rescue ActiveRecord::RecordNotFound
+    render json: { error: 'Invalid tenant' }, status: :not_found
+  
     
   end
 
+  
   def authenticate_hotspot_package
 
 
@@ -264,7 +267,7 @@ if host === 'demo'
     return
   end
   @hotspot_package = HotspotPackage.new(hotspot_package_params)
-  use_radius = ActsAsTenant.current_tenant.router_setting.use_radius
+  # use_radius = ActsAsTenant.current_tenant.&router_setting&.use_radius
 
 
 
