@@ -548,15 +548,14 @@ def calculate_expiration(package, hotspot_package_created)
 
   # Calculate expiration
   expiration_time = if hotspot_package.validity.present? && hotspot_package.validity_period_units.present?
-    start_time = hotspot_package.valid_from || Time.current
 
     case hotspot_package.validity_period_units.downcase
     when 'days'
-      start_time + hotspot_package.validity.days
+       hotspot_package.validity.days
     when 'hours'
-      start_time + hotspot_package.validity.hours
+       hotspot_package.validity.hours
     when 'minutes'
-      start_time + hotspot_package.validity.minutes
+      hotspot_package.validity.minutes
     else
       nil
     end
@@ -597,15 +596,14 @@ def calculate_expiration_send_to_customer(package)
 
   # Calculate expiration
   expiration_time = if hotspot_package.validity.present? && hotspot_package.validity_period_units.present?
-    start_time = hotspot_package.valid_from || Time.current
 
     case hotspot_package.validity_period_units.downcase
     when 'days'
-      start_time + hotspot_package.validity.days
+       hotspot_package.validity.days
     when 'hours'
-      start_time + hotspot_package.validity.hours
+      hotspot_package.validity.hours
     when 'minutes'
-      start_time + hotspot_package.validity.minutes
+      hotspot_package.validity.minutes
     else
       nil
     end
