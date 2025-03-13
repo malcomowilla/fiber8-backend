@@ -560,8 +560,8 @@ def calculate_expiration(package, hotspot_package_created)
     else
       nil
     end
-  elsif hotspot_package.valid_until.present? && hotspot_package.valid_from.present?
-    hotspot_package.valid_until
+  # elsif hotspot_package.valid_until.present? && hotspot_package.valid_from.present?
+  #   hotspot_package.valid_until
   else
     nil
   end
@@ -609,8 +609,8 @@ def calculate_expiration_send_to_customer(package)
     else
       nil
     end
-  elsif hotspot_package.valid_until.present? && hotspot_package.valid_from.present?
-    hotspot_package.valid_until
+  # elsif hotspot_package.valid_until.present? && hotspot_package.valid_from.present?
+  #   hotspot_package.valid_until
   else
     nil
   end
