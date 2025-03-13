@@ -544,21 +544,24 @@ end
 def calculate_expiration(package, hotspot_package_created)
   hotspot_package = HotspotPackage.find_by(name: package)
 
-  return render json: { error: 'Package not found' }, status: :not_found unless hotspot_package_created
-
+  return render json: { error: 'Package not found' }, status: :not_found unless hotspot_package
+  
   # Calculate expiration
   expiration_time = if hotspot_package.validity.present? && hotspot_package.validity_period_units.present?
-
     case hotspot_package.validity_period_units.downcase
     when 'days'
-       hotspot_package.validity.days
+      Time.current + hotspot_package.validity.days
     when 'hours'
-       hotspot_package.validity.hours
+      Time.current + hotspot_package.validity.hours
     when 'minutes'
-      hotspot_package.validity.minutes
+      Time.current + hotspot_package.validity.minutes
     else
       nil
     end
+
+
+    
+
   # elsif hotspot_package.valid_until.present? && hotspot_package.valid_from.present?
   #   hotspot_package.valid_until
   else
@@ -592,23 +595,25 @@ end
 def calculate_expiration_send_to_customer(package)
   hotspot_package = HotspotPackage.find_by(name: package)
 
-  return render json: { error: 'Package not found' }, status: :not_found unless hotspot_package
+return render json: { error: 'Package not found' }, status: :not_found unless hotspot_package
 
-  # Calculate expiration
-  expiration_time = if hotspot_package.validity.present? && hotspot_package.validity_period_units.present?
+# Calculate expiration
+expiration_time = if hotspot_package.validity.present? && hotspot_package.validity_period_units.present?
+  case hotspot_package.validity_period_units.downcase
+  when 'days'
+    Time.current + hotspot_package.validity.days
+  when 'hours'
+    Time.current + hotspot_package.validity.hours
+  when 'minutes'
+    Time.current + hotspot_package.validity.minutes
+  else
+    nil
+  end
 
-    case hotspot_package.validity_period_units.downcase
-    when 'days'
-       hotspot_package.validity.days
-    when 'hours'
-      hotspot_package.validity.hours
-    when 'minutes'
-      hotspot_package.validity.minutes
-    else
-      nil
-    end
   # elsif hotspot_package.valid_until.present? && hotspot_package.valid_from.present?
   #   hotspot_package.valid_until
+
+
   else
     nil
   end
