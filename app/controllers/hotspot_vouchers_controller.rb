@@ -59,14 +59,14 @@ require 'message_template'
   
 def expired_vouchers
   expired_voucher = HotspotVoucher.where(status: 'expired').count
-  render json: expired_voucher, status: :ok
+  render json: {expired_voucher: expired_voucher}, status: :ok
 end
 
 
 
 def active_vouchers
   active_voucher = HotspotVoucher.where(status: 'active').count
-  render json: active_voucher, status: :ok
+  render json: {active_voucher: active_voucher}, status: :ok
 
 end
 
