@@ -50,8 +50,18 @@ end
 # get '/api/allow_get_hotspot_setting', to: 'hotspot_settings#allow_get_hotspot_setting'
 # get '/allow_get_hotspot_setting', to: 'hotspot_settings#allow_get_hotspot_setting'
  
+get '/api/expired_vouchers', to: 'hotspot_vouchers#expired_vouchers'
+get '/expired_vouchers', to: 'hotspot_vouchers#expired_vouchers'
+
+get '/api/active_vouchers', to: 'hotspot_vouchers#active_vouchers'
+get '/active_vouchers', to: 'hotspot_vouchers#active_vouchers'
+
+get '/total_subscribers', to: 'subscribers#total_subscribers'
+get '/api/total_subscribers', to: 'subscribers#total_subscribers'
+
 get '/api/saved_sms_settings', to: 'sms_settings#saved_sms_settings'
 get '/saved_sms_settings', to: 'sms_settings#saved_sms_settings'
+
 
 get '/get_hotspot_settings', to: 'hotspot_settings#get_hotspot_setting'
 get '/api/get_hotspot_settings', to: 'hotspot_settings#get_hotspot_setting'

@@ -57,7 +57,18 @@ require 'message_template'
 
   # GET /hotspot_vouchers/1 or /hotspot_vouchers/1.json
   
+def expired_vouchers
+  expired_voucher = HotspotVoucher.where(status: 'expired').count
+  render json: expired_voucher, status: :ok
+end
 
+
+
+def active_vouchers
+  active_voucher = HotspotVoucher.where(status: 'active').count
+  render json: active_voucher, status: :ok
+
+end
 
   # POST /hotspot_vouchers or /hotspot_vouchers.json
   def create
