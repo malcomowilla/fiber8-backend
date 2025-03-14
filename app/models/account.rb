@@ -16,6 +16,8 @@ class Account < ApplicationRecord
     has_one :sms_template, dependent: :destroy
     has_one :hotspot_setting, dependent: :destroy
     has_many :ip_pools, dependent: :destroy
+    belongs_to :pp_poe_plan
+    belongs_to :hotspot_plan
     # validates :subdomain, presence: true
     
 end

@@ -1,0 +1,22 @@
+<%= form_with(model: pp_poe_plan) do |form| %>
+  <% if pp_poe_plan.errors.any? %>
+    <div style="color: red">
+      <h2><%= pluralize(pp_poe_plan.errors.count, "error") %> prohibited this pp_poe_plan from being saved:</h2>
+
+      <ul>
+        <% pp_poe_plan.errors.each do |error| %>
+          <li><%= error.full_message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div>
+    <%= form.label :maximum_pppoe_subscribers, style: "display: block" %>
+    <%= form.text_field :maximum_pppoe_subscribers %>
+  </div>
+
+  <div>
+    <%= form.submit %>
+  </div>
+<% end %>
