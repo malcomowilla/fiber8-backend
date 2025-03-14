@@ -1,0 +1,16 @@
+<p style="color: green"><%= notice %></p>
+
+<% content_for :title, "Pp poe plans" %>
+
+<h1>Pp poe plans</h1>
+
+<div id="pp_poe_plans">
+  <% @pp_poe_plans.each do |pp_poe_plan| %>
+    <%= render pp_poe_plan %>
+    <p>
+      <%= link_to "Show this pp poe plan", pp_poe_plan %>
+    </p>
+  <% end %>
+</div>
+
+<%= link_to "New pp poe plan", new_pp_poe_plan_path %>

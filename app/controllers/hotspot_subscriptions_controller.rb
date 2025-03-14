@@ -13,6 +13,34 @@ class HotspotSubscriptionsController < ApplicationController
 
 
 
+# def get_active_hotspot_users
+#   nas_router = NasRouter.find_by(name: params[:router_name]) || NasRouter.find_by(name: ActsAsTenant.current_tenant.router_setting)
+#   return render json: { error: 'Router not found' }, status: :not_found unless nas_router
+
+#   router_ip_address = nas_router.ip_address
+#   router_password = nas_router.password
+#   router_username = nas_router.username
+
+
+
+#   uri = URI("http://#{router_ip_address}/rest/ip/hotspot/active")
+#   request = Net::HTTP::Get.new(uri)
+#   request.basic_auth router_username, router_password
+#   response = Net::HTTP.start(uri.hostname, uri.port) do |http|
+#     http.request(request)
+#   end
+
+#   if response.is_a?(Net::HTTPSuccess) 
+#     json_response = JSON.parse(response.body)
+#     active_user_data = customize_router_data(json_response)
+#     # Rails.logger.info "Active Hotspot Users: #{json_response['user']}"
+#     render json: active_user_data
+#   end
+
+# end
+
+
+
 def get_active_hotspot_users
   nas_router = NasRouter.find_by(name: params[:router_name]) || NasRouter.find_by(name: ActsAsTenant.current_tenant.router_setting)
   return render json: { error: 'Router not found' }, status: :not_found unless nas_router
@@ -20,8 +48,6 @@ def get_active_hotspot_users
   router_ip_address = nas_router.ip_address
   router_password = nas_router.password
   router_username = nas_router.username
-
-
 
   uri = URI("http://#{router_ip_address}/rest/ip/hotspot/active")
   request = Net::HTTP::Get.new(uri)
@@ -33,14 +59,16 @@ def get_active_hotspot_users
   if response.is_a?(Net::HTTPSuccess) 
     json_response = JSON.parse(response.body)
     active_user_data = customize_router_data(json_response)
-    # Rails.logger.info "Active Hotspot Users: #{json_response['user']}"
-    render json: active_user_data
-  end
 
-end
-  # GET /hotspot_subscriptions/1 or /hotspot_subscriptions/1.json
-  def show
+    # Add the count of active users
+    active_user_count = active_user_data.size
+
+    render json: { active_user_count: active_user_count, users: active_user_data }
+  else
+    render json: { error: 'Failed to fetch active users' }, status: :bad_gateway
   end
+end
+
 
   # GET /hotspot_subscriptions/new
   def new

@@ -10,11 +10,11 @@
 
 
 
-SystemAdmin.create(system_admin_phone_number: ENV['SYSTEM_ADMIN_PHONE_NUMBER'],
-  password: ENV['SYSTEM_ADMIN_PASSWORD'],
-  # role: 'system_administrator',
+# SystemAdmin.create(system_admin_phone_number: ENV['SYSTEM_ADMIN_PHONE_NUMBER'],
+#   password: ENV['SYSTEM_ADMIN_PASSWORD'],
+#   # role: 'system_administrator',
   
-  email: ENV['SYSTEM_ADMIN_EMAIL'])
+#   email: ENV['SYSTEM_ADMIN_EMAIL'])
 
 
 
@@ -22,7 +22,65 @@ SystemAdmin.create(system_admin_phone_number: ENV['SYSTEM_ADMIN_PHONE_NUMBER'],
 
 
 
+  # plans = [
+  #   { name: "Pro", features: ["Basic Support", "Up to 10 Devices"], maximum_pppoe_subscribers: 100 },
+  #   { name: "Business", features: ["Priority Support", "Up to 50 Devices", "Analytics"], maximum_pppoe_subscribers: 50 },
+  #   { name: "Enterprise", features: ["24/7 Support", "Unlimited Devices", "Custom Features"], maximum_pppoe_subscribers: 2000 },
+  #   { name: "Basic", features: ["24/7 Support", "Unlimited Devices", "Custom Features"], maximum_pppoe_subscribers: 50 }
 
+  # ]
+  # 
+  #
+  
+  plans = [
+    { name: "Pro", maximum_pppoe_subscribers: 100 },
+    { name: "Standard", maximum_pppoe_subscribers: 180 },
+    { name: "Enterprise", maximum_pppoe_subscribers: 2000 },
+    { name: "Bronze", maximum_pppoe_subscribers: 1000 },
+    { name: "Startup", maximum_pppoe_subscribers: 300 },
+    { name: "Basic",  maximum_pppoe_subscribers: 50 },
+    { name: "Silver",  maximum_pppoe_subscribers: 500 }
+
+
+  ]
+
+
+
+  hotspot_plans = [
+    { name: "Starter", hotspot_subscribers: 50 },
+    { name: "Pro", hotspot_subscribers: 200 },
+    { name: "Gold Hotspot", hotspot_subscribers: 1000 },
+    { name: "Business", hotspot_subscribers: 2000 },
+    { name: "Startup", hotspot_subscribers: 300 },
+    { name: "Silver",  hotspot_subscribers: 500 }
+
+  ]
+  
+
+
+  hotspot_plans.each do |plan|
+  HotspotPlan.create(name: plan[:name], hotspot_subscribers: plan[:hotspot_subscribers])
+
+end
+
+puts "Hotspot Plans have been loaded successfully! 🎯"
+
+  
+
+
+plans.each do |plan|
+  PpPoePlan.create(name: plan[:name], maximum_pppoe_subscribers: plan[:maximum_pppoe_subscribers])
+
+end
+
+puts "Plans have been loaded successfully! 🎯"
+
+
+
+
+
+  
+  
 
 
 

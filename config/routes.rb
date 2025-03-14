@@ -1,4 +1,6 @@
 Rails.application.routes.draw do
+  resources :hotspot_plans
+  resources :pp_poe_plans
   resources :isp_subscriptions
   resources :hotspot_settings
   resources :sms_templates
@@ -43,13 +45,24 @@ scope '/api' do
   resources :hotspot_vouchers
   resources :hotspot_settings
   resources :hotspot_subscriptions
+  resources :pp_poe_plans
+  resources :hotspot_plans
+
+
 
 end
 
 
 # get '/api/allow_get_hotspot_setting', to: 'hotspot_settings#allow_get_hotspot_setting'
 # get '/allow_get_hotspot_setting', to: 'hotspot_settings#allow_get_hotspot_setting'
+get '/api/current_plan', to: 'system_admins#current_plan'
+get '/current_plan', to: 'system_admins#current_plan'
  
+
+patch '/api/update_client/:id', to: 'system_admins#update_client'
+patch '/update_client/:id', to: 'system_admins#update_client'
+
+
 get '/api/expired_vouchers', to: 'hotspot_vouchers#expired_vouchers'
 get '/expired_vouchers', to: 'hotspot_vouchers#expired_vouchers'
 

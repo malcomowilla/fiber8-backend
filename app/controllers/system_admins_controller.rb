@@ -4,6 +4,10 @@ class SystemAdminsController < ApplicationController
   
 before_action :set_system_admin_email_settings
 
+set_current_tenant_through_filter
+
+before_action :set_tenant
+
   # before_action :set_system_admin_email_settings
   def index
     @system_admins = SystemAdmin.all
@@ -11,6 +15,29 @@ before_action :set_system_admin_email_settings
   end
 
 
+
+  def current_plan
+    
+      @current_plan = ActsAsTenant.current_tenant.pp_poe_plan
+      render json: {current_plan: @current_plan.name}
+  end
+
+
+
+
+  def set_tenant
+    host = request.headers['X-Subdomain']
+    @account = Account.find_by(subdomain: host)
+    @current_account= ActsAsTenant.current_tenant 
+    EmailConfiguration.configure(@current_account, ENV['SYSTEM_ADMIN_EMAIL'])
+    # EmailSystemAdmin.configure(@current_account, current_system_admin)
+  
+    # set_current_tenant(@account)
+  rescue ActiveRecord::RecordNotFound
+    render json: { error: 'Invalid tenant' }, status: :not_found
+  
+    
+  end
 
 
 
@@ -367,6 +394,28 @@ end
     )
   
 
+    plan = PpPoePlan.find_by(name: params[:plan]) if params[:plan].present?
+    hotspot_plan = HotspotPlan.find_by(name: params[:hotspot_plan]) if params[:hotspot_plan].present?
+
+    if plan.present?
+      ActsAsTenant.current_tenant.update!(pp_poe_plan_id: plan.id)
+      return render json:{message: 'Plan updated successfully'}, status: :ok
+    else
+      puts "ppoe plan not found! Make sure it exists in the database."
+      return render json: { error: "plan not found!" }, status: :unprocessable_entity
+    end
+
+
+    if hotspot_plan.present?
+      ActsAsTenant.current_tenant.update!(hotspot_plan_id: hotspot_plan.id)
+      return render json:{message: 'Hotspot plan updated successfully'}, status: :ok
+      
+    else
+      puts "hotspot plan not found! Make sure it exists in the database."
+      return render json: { error: "hotspot plan not found!" }, status: :unprocessable_entity
+      
+    end
+
 
     @my_admin.password = generate_secure_password(16)
     @my_admin.password_confirmation = generate_secure_password(16)
@@ -395,7 +444,20 @@ end
 
 
 
-
+def update_client
+  admin = User.find_by(id: params[:id])
+  if admin
+    admin.update(
+      username: params[:username],
+      email: params[:email],
+      phone_number: params[:phone_number],
+      password: params[:password]
+    )
+    render json: admin, status: :ok
+  else
+    render json: { error: "Admin not found!" }, status: :unprocessable_entity
+  end
+end
 
 
 

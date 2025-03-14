@@ -1,0 +1,10 @@
+<p style="color: green"><%= notice %></p>
+
+<%= render @pp_poe_plan %>
+
+<div>
+  <%= link_to "Edit this pp poe plan", edit_pp_poe_plan_path(@pp_poe_plan) %> |
+  <%= link_to "Back to pp poe plans", pp_poe_plans_path %>
+
+  <%= button_to "Destroy this pp poe plan", @pp_poe_plan, method: :delete %>
+</div>

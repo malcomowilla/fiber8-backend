@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2025_03_12_154733) do
+ActiveRecord::Schema[7.2].define(version: 2025_03_14_142430) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -19,6 +19,8 @@ ActiveRecord::Schema[7.2].define(version: 2025_03_12_154733) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.string "domain"
+    t.integer "pp_poe_plan_id"
+    t.integer "hotspot_plan_id"
     t.index ["subdomain"], name: "index_accounts_on_subdomain", unique: true
   end
 
@@ -132,6 +134,13 @@ ActiveRecord::Schema[7.2].define(version: 2025_03_12_154733) do
     t.datetime "valid_from"
     t.datetime "valid_until"
     t.string "weekdays", default: [], array: true
+  end
+
+  create_table "hotspot_plans", force: :cascade do |t|
+    t.string "name"
+    t.string "hotspot_subscribers"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
   end
 
   create_table "hotspot_settings", force: :cascade do |t|
@@ -263,6 +272,13 @@ ActiveRecord::Schema[7.2].define(version: 2025_03_12_154733) do
     t.string "ppoe_profile_id"
   end
 
+  create_table "pp_poe_plans", force: :cascade do |t|
+    t.string "maximum_pppoe_subscribers"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.string "name"
+  end
+
   create_table "prefix_and_digits", force: :cascade do |t|
     t.string "prefix"
     t.integer "minimum_digits"
@@ -380,6 +396,7 @@ ActiveRecord::Schema[7.2].define(version: 2025_03_12_154733) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.integer "account_id"
+    t.string "price"
   end
 
   create_table "support_tickets", force: :cascade do |t|

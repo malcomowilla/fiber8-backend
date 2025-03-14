@@ -1,0 +1,12 @@
+<% content_for :title, "Editing hotspot plan" %>
+
+<h1>Editing hotspot plan</h1>
+
+<%= render "form", hotspot_plan: @hotspot_plan %>
+
+<br>
+
+<div>
+  <%= link_to "Show this hotspot plan", @hotspot_plan %> |
+  <%= link_to "Back to hotspot plans", hotspot_plans_path %>
+</div>

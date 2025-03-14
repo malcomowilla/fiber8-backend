@@ -1,0 +1,10 @@
+<p style="color: green"><%= notice %></p>
+
+<%= render @hotspot_plan %>
+
+<div>
+  <%= link_to "Edit this hotspot plan", edit_hotspot_plan_path(@hotspot_plan) %> |
+  <%= link_to "Back to hotspot plans", hotspot_plans_path %>
+
+  <%= button_to "Destroy this hotspot plan", @hotspot_plan, method: :delete %>
+</div>
