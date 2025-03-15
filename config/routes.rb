@@ -57,6 +57,8 @@ end
 # get '/allow_get_hotspot_setting', to: 'hotspot_settings#allow_get_hotspot_setting'
 get '/api/current_plan', to: 'system_admins#current_plan'
 get '/current_plan', to: 'system_admins#current_plan'
+get '/api/current_hotspot_plan', to: 'system_admins#current_hotspot_plan'
+get '/current_hotspot_plan', to: 'system_admins#current_hotspot_plan'
  
 
 patch '/api/update_client/:id', to: 'system_admins#update_client'

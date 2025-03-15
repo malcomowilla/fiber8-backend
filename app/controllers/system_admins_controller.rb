@@ -18,10 +18,17 @@ before_action :set_tenant
 
   def current_plan
     
-      @current_plan = ActsAsTenant.current_tenant.pp_poe_plan
+      @current_plan = ActsAsTenant.current_tenant&.pp_poe_plan
       render json: {current_plan: @current_plan.name}
   end
 
+
+
+  def current_hotspot_plan
+    
+    @current_hotspot_plan = ActsAsTenant.current_tenant&.hotspot_plan
+    render json: {current_hotspot_plan: @current_hotspot_plan.name}
+end
 
 
 
@@ -453,6 +460,32 @@ def update_client
       phone_number: params[:phone_number],
       password: params[:password]
     )
+    plan = PpPoePlan.find_by(name: params[:plan]) if params[:plan].present?
+    hotspot_plan = HotspotPlan.find_by(name: params[:hotspot_plan]) if params[:hotspot_plan].present?
+    
+
+    if hotspot_plan.present?
+      ActsAsTenant.current_tenant.update!(hotspot_plan_id: hotspot_plan.id)
+      return render json:{message: 'Hotspot plan updated successfully'}, status: :ok
+      
+    else
+      puts "hotspot plan not found! Make sure it exists in the database."
+      return render json: { error: "hotspot plan not found!" }, status: :unprocessable_entity
+      
+    end
+
+
+    
+
+
+    if plan.present?
+      ActsAsTenant.current_tenant.update(pp_poe_plan_id: plan.id)
+      return render json:{message: 'Plan updated successfully'}, status: :ok
+    else
+      puts "ppoe plan not found! Make sure it exists in the database."
+      return render json: { error: "plan not found!" }, status: :unprocessable_entity
+    end
+
     render json: admin, status: :ok
   else
     render json: { error: "Admin not found!" }, status: :unprocessable_entity
