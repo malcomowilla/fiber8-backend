@@ -2,7 +2,7 @@ class SystemAdminsController < ApplicationController
   # before_action :set_system_admin, only: %i[ show edit update destroy ]
 
   
-before_action :set_system_admin_email_settings
+# before_action :set_system_admin_email_settings
 
 set_current_tenant_through_filter
 
@@ -19,7 +19,7 @@ before_action :set_tenant
   def current_plan
     
       @current_plan = ActsAsTenant.current_tenant&.pp_poe_plan
-      render json: {current_plan: @current_plan.name}
+      render json: {current_plan: @current_plan&.name}
   end
 
 
@@ -27,7 +27,7 @@ before_action :set_tenant
   def current_hotspot_plan
     
     @current_hotspot_plan = ActsAsTenant.current_tenant&.hotspot_plan
-    render json: {current_hotspot_plan: @current_hotspot_plan.name}
+    render json: {current_hotspot_plan: @current_hotspot_plan&.name}
 end
 
 
@@ -39,6 +39,7 @@ end
     EmailConfiguration.configure(@current_account, ENV['SYSTEM_ADMIN_EMAIL'])
     # EmailSystemAdmin.configure(@current_account, current_system_admin)
   
+    Rails.logger.info "set_current_tenant #{ActsAsTenant.current_tenant.inspect}"
     # set_current_tenant(@account)
   rescue ActiveRecord::RecordNotFound
     render json: { error: 'Invalid tenant' }, status: :not_found
