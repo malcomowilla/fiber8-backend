@@ -451,6 +451,7 @@ end
 
 
 
+
   def update_client
     admin = User.find_by(id: params[:id])
     
@@ -468,28 +469,26 @@ end
     plan = PpPoePlan.find_by(name: params[:plan]) if params[:plan].present?
     hotspot_plan = HotspotPlan.find_by(name: params[:hotspot_plan]) if params[:hotspot_plan].present?
   
-    if hotspot_plan.nil? && plan.nil?
-      return render json: { error: "Both hotspot plan and pppoe plan not found!" }, status: :unprocessable_entity
+    if params[:plan].present? && plan.nil?
+      return render json: { error: "PPPoE plan not found!" }, status: :unprocessable_entity
+    end
+  
+    if params[:hotspot_plan].present? && hotspot_plan.nil?
+      return render json: { error: "Hotspot plan not found!" }, status: :unprocessable_entity
     end
   
     begin
-      ActsAsTenant.current_tenant.transaction do
-        if hotspot_plan.present?
-          ActsAsTenant.current_tenant.update!(hotspot_plan_id: hotspot_plan.id)
-        end
-  
-        if plan.present?
-          ActsAsTenant.current_tenant.update!(pp_poe_plan_id: plan.id)
-        end
-      end
+      ActsAsTenant.current_tenant.update!(
+        pp_poe_plan_id: plan&.id || ActsAsTenant.current_tenant.pp_poe_plan_id,
+        hotspot_plan_id: hotspot_plan&.id || ActsAsTenant.current_tenant.hotspot_plan_id
+      )
     rescue ActiveRecord::RecordInvalid => e
       return render json: { error: e.message }, status: :unprocessable_entity
     end
   
-    render json: { message: "Plan(s) updated successfully" }, status: :ok
+    render json: { message: "Plans updated successfully" }, status: :ok
   end
   
-
 
 
 
