@@ -466,7 +466,7 @@ def update_client
     
 
     if hotspot_plan.present?
-      ActsAsTenant.current_tenant.update!(hotspot_plan_id: hotspot_plan.id)
+      ActsAsTenant.current_tenant.update(hotspot_plan_id: hotspot_plan.id)
       return render json:{message: 'Hotspot plan updated successfully'}, status: :ok
       
     else
