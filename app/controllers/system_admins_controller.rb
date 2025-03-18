@@ -466,7 +466,7 @@ def update_client
     
 
     if hotspot_plan.present?
-      ActsAsTenant.current_tenant.update(hotspot_plan_id: hotspot_plan.id)
+      ActsAsTenant.current_tenant.update!(hotspot_plan_id: hotspot_plan.id)
       return render json:{message: 'Hotspot plan updated successfully'}, status: :ok
       
     else
@@ -480,7 +480,7 @@ def update_client
 
 
     if plan.present?
-      ActsAsTenant.current_tenant.update(pp_poe_plan_id: plan.id)
+      ActsAsTenant.current_tenant.update!(pp_poe_plan_id: plan.id)
       return render json:{message: 'Plan updated successfully'}, status: :ok
     else
       puts "ppoe plan not found! Make sure it exists in the database."
