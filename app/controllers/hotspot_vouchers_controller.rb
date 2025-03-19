@@ -61,11 +61,11 @@ def make_payment
 
   phone_number = params[:phone_number]
   amount = params[:amount]
-  shortcode = ActsAsTenant.current_tenant.hotspot_mpesa_setting.short_code
+  shortcode = ActsAsTenant.current_tenant&.hotspot_mpesa_setting.short_code
   callback_url = "https://df2a-105-163-1-122.ngrok-free.app/customer_mpesa_stk_payments"
-  passkey = ActsAsTenant.current_tenant.hotspot_mpesa_setting.passkey
-  consumer_key = ActsAsTenant.current_tenant.hotspot_mpesa_setting.consumer_key
-  consumer_secret = ActsAsTenant.current_tenant.hotspot_mpesa_setting.consumer_secret
+  passkey = ActsAsTenant.current_tenant&.hotspot_mpesa_setting.passkey
+  consumer_key = ActsAsTenant.current_tenant&.hotspot_mpesa_setting.consumer_key
+  consumer_secret = ActsAsTenant.current_tenant&.hotspot_mpesa_setting.consumer_secret
 
   
       # if @customer_wallet_payment.save
