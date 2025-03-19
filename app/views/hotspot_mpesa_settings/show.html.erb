@@ -1,0 +1,10 @@
+<p style="color: green"><%= notice %></p>
+
+<%= render @hotspot_mpesa_setting %>
+
+<div>
+  <%= link_to "Edit this hotspot mpesa setting", edit_hotspot_mpesa_setting_path(@hotspot_mpesa_setting) %> |
+  <%= link_to "Back to hotspot mpesa settings", hotspot_mpesa_settings_path %>
+
+  <%= button_to "Destroy this hotspot mpesa setting", @hotspot_mpesa_setting, method: :delete %>
+</div>

@@ -1,4 +1,6 @@
 Rails.application.routes.draw do
+  resources :dial_up_mpesa_settings
+  resources :hotspot_mpesa_settings
   resources :hotspot_plans
   resources :pp_poe_plans
   resources :isp_subscriptions
@@ -33,6 +35,8 @@ Rails.application.routes.draw do
 mount ActionCable.server => '/cable'
 scope '/api' do
   resources :ip_pools
+  resources :dial_up_mpesa_settings
+  resources :hotspot_mpesa_settings
   resources :sms_templates
   resources :support_tickets
   resource :ticket_settings
@@ -52,9 +56,10 @@ scope '/api' do
 
 end
 
-
 # get '/api/allow_get_hotspot_setting', to: 'hotspot_settings#allow_get_hotspot_setting'
 # get '/allow_get_hotspot_setting', to: 'hotspot_settings#allow_get_hotspot_setting'
+get '/api/saved_hotspot_mpesa_settings', to: 'hotspot_mpesa_settings#saved_hotspot_mpesa_settings'
+get '/saved_hotspot_mpesa_settings', to: 'hotspot_mpesa_settings#saved_hotspot_mpesa_settings'
 get '/api/current_plan', to: 'system_admins#current_plan'
 get '/current_plan', to: 'system_admins#current_plan'
 get '/api/current_hotspot_plan', to: 'system_admins#current_hotspot_plan'
@@ -64,6 +69,9 @@ get '/current_hotspot_plan', to: 'system_admins#current_hotspot_plan'
 patch '/api/update_client/:id', to: 'system_admins#update_client'
 patch '/update_client/:id', to: 'system_admins#update_client'
 
+
+post '/api/make_payment', to: 'hotspot_vouchers#make_payment'
+post '/make_payment', to: 'hotspot_vouchers#make_payment'
 
 get '/api/expired_vouchers', to: 'hotspot_vouchers#expired_vouchers'
 get '/expired_vouchers', to: 'hotspot_vouchers#expired_vouchers'

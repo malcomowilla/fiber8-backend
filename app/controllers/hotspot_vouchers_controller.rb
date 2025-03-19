@@ -55,6 +55,40 @@ require 'message_template'
   end
 
 
+
+
+def make_payment
+
+  phone_number = params[:phone_number]
+  amount = params[:amount]
+  shortcode = ActsAsTenant.current_tenant.hotspot_mpesa_setting.short_code
+  callback_url = "https://df2a-105-163-1-122.ngrok-free.app/customer_mpesa_stk_payments"
+  passkey = ActsAsTenant.current_tenant.hotspot_mpesa_setting.passkey
+  consumer_key = ActsAsTenant.current_tenant.hotspot_mpesa_setting.consumer_key
+  consumer_secret = ActsAsTenant.current_tenant.hotspot_mpesa_setting.consumer_secret
+
+  
+      # if @customer_wallet_payment.save
+      #   render :show, status: :created, location: @customer_wallet_payment
+      # else
+      #   render json: @customer_wallet_payment.errors, status: :unprocessable_entity
+      # end
+  
+      hotspot_payment = MpesaService.initiate_stk_push(phone_number, amount,
+       shortcode,  passkey,
+        consumer_key, consumer_secret
+      )
+  
+      if hotspot_payment[:success]
+        render json: {
+          message: 'Please check your phone to complete the payment',
+        }
+      else
+        render json: { error: 'Failed to initiate payment' }, status: :unprocessable_entity
+      end
+end
+
+
   # GET /hotspot_vouchers/1 or /hotspot_vouchers/1.json
   
 def expired_vouchers

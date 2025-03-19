@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2025_03_14_142430) do
+ActiveRecord::Schema[7.2].define(version: 2025_03_18_181732) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -100,6 +100,17 @@ ActiveRecord::Schema[7.2].define(version: 2025_03_14_142430) do
     t.string "logo"
   end
 
+  create_table "dial_up_mpesa_settings", force: :cascade do |t|
+    t.string "account_type"
+    t.string "short_code"
+    t.string "consumer_key"
+    t.string "consumer_secret"
+    t.string "passkey"
+    t.integer "account_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
+
   create_table "email_settings", force: :cascade do |t|
     t.string "smtp_host"
     t.string "smtp_username"
@@ -111,6 +122,17 @@ ActiveRecord::Schema[7.2].define(version: 2025_03_14_142430) do
     t.datetime "updated_at", null: false
     t.integer "account_id"
     t.string "smtp_port"
+  end
+
+  create_table "hotspot_mpesa_settings", force: :cascade do |t|
+    t.string "account_type"
+    t.string "short_code"
+    t.string "consumer_key"
+    t.string "consumer_secret"
+    t.string "passkey"
+    t.integer "account_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
   end
 
   create_table "hotspot_packages", force: :cascade do |t|
