@@ -93,7 +93,7 @@ class MpesaService
       PartyA: formatted_phone_number,    
       PartyB:shortcode ,    
       PhoneNumber:formatted_phone_number,     
-      CallBackURL: "https://aitechs.co.ke/api/customer_mpesa_stk_payments",    
+      CallBackURL: "https://aitechs.co.ke/customer_mpesa_stk_payments",    
       AccountReference:"Mpesa Test",    
       TransactionDesc:"Testing stk push"
     }
