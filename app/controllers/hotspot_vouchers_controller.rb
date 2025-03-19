@@ -433,6 +433,10 @@ def login_with_hotspot_voucher
   return render json: { error: 'Invalid voucher' }, status: :not_found unless @hotspot_voucher
 
 
+      if @hotspot_voucher.expiration.present? && @hotspot_voucher.expiration < Time.current
+      return render json: { error: 'Voucher expired' }, status: :forbidden
+    end
+
   # shared_users =@hotspot_voucher.shared_users.to_i
 
   # # Check current active sessions for this voucher
