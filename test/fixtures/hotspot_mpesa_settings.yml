@@ -1,0 +1,15 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  account_type: MyString
+  short_code: MyString
+  consumer_key: MyString
+  consumer_secret: MyString
+  passkey: MyString
+
+two:
+  account_type: MyString
+  short_code: MyString
+  consumer_key: MyString
+  consumer_secret: MyString
+  passkey: MyString

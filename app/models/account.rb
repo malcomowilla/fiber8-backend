@@ -18,6 +18,8 @@ class Account < ApplicationRecord
     has_many :ip_pools, dependent: :destroy
     belongs_to :pp_poe_plan
     belongs_to :hotspot_plan
+    has_one :hotspot_mpesa_setting, dependent: :destroy
+    has_one :dial_up_mpesa_setting, dependent: :destroy
     # validates :subdomain, presence: true
     
 end

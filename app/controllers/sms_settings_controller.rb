@@ -6,6 +6,9 @@ class SmsSettingsController < ApplicationController
   # 
 
   set_current_tenant_through_filter
+
+
+  
   before_action :set_tenant
   def index
     @sms_settings = SmsSetting.find_by(sms_provider: params[:provider])
