@@ -56,6 +56,9 @@ scope '/api' do
 
 end
 
+
+post '/customer_mpesa_stk_payments', to: 'hotspot_mpesa_settings#customer_mpesa_stk_payments'
+post '/api/customer_mpesa_stk_payments', to: 'hotspot_mpesa_settings#customer_mpesa_stk_payments'
 # get '/api/allow_get_hotspot_setting', to: 'hotspot_settings#allow_get_hotspot_setting'
 # get '/allow_get_hotspot_setting', to: 'hotspot_settings#allow_get_hotspot_setting'
 get '/api/saved_hotspot_mpesa_settings', to: 'hotspot_mpesa_settings#saved_hotspot_mpesa_settings'
