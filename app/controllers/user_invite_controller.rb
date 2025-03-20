@@ -133,7 +133,7 @@ if send_password_via_email == true || send_password_via_email == 'true'
 
   def update
     @my_admin = User.find(params[:id])
-    if @my_admin.update(
+    if @my_admin.update!(
 
       role: params[:role],
       # date_registered: Time.now.strftime('%Y-%m-%d %I:%M:%S %p'),
