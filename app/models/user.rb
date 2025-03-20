@@ -4,12 +4,12 @@ class User < ApplicationRecord
     acts_as_tenant(:account)
     has_many :prefix_and_digits
     has_one :admin_setting, dependent: :destroy
-    has_one :sms_setting, dependent: :destroy
+    # has_one :sms_setting, dependent: :destroy
     has_many :admin_web_authn_credentials, dependent: :destroy
     # before_destroy :delete_admin_setting
 
-    enum :role,  [:super_administrator, :technician,
- :customer_support,  :administrator, :agent]
+#     enum :role,  [:super_administrator, :technician,
+#  :customer_support,  :administrator, :agent]
  
 #  validates :password, presence: true 
 

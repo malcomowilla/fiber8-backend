@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2025_03_18_181732) do
+ActiveRecord::Schema[7.2].define(version: 2025_03_20_153356) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -511,6 +511,13 @@ ActiveRecord::Schema[7.2].define(version: 2025_03_18_181732) do
     t.datetime "updated_at", null: false
   end
 
+  create_table "user_groups", force: :cascade do |t|
+    t.string "name"
+    t.integer "account_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
+
   create_table "users", force: :cascade do |t|
     t.string "email"
     t.datetime "created_at", null: false
@@ -521,7 +528,6 @@ ActiveRecord::Schema[7.2].define(version: 2025_03_18_181732) do
     t.string "phone_number"
     t.string "webauthn_id"
     t.jsonb "webauthn_authenticator_attachment"
-    t.integer "role", default: 0
     t.boolean "locked_account", default: false
     t.datetime "locked_at"
     t.boolean "can_manage_subscriber", default: false
@@ -563,6 +569,7 @@ ActiveRecord::Schema[7.2].define(version: 2025_03_18_181732) do
     t.boolean "can_manage_support_tickets", default: false
     t.boolean "can_read_user_settings", default: false
     t.boolean "can_manage_user_settings", default: false
+    t.string "role"
   end
 
   create_table "zones", force: :cascade do |t|

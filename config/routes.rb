@@ -1,4 +1,5 @@
 Rails.application.routes.draw do
+  resources :user_groups
   resources :dial_up_mpesa_settings
   resources :hotspot_mpesa_settings
   resources :hotspot_plans
@@ -35,6 +36,8 @@ Rails.application.routes.draw do
 mount ActionCable.server => '/cable'
 scope '/api' do
   resources :ip_pools
+  resources :user_groups
+
   resources :dial_up_mpesa_settings
   resources :hotspot_mpesa_settings
   resources :sms_templates
@@ -113,7 +116,9 @@ delete '/delete_user/:id', to: 'user_invite#delete_user'
 get '/get_all_admins', to: 'user_invite#get_all_admins'
 get '/api/get_all_admins', to: 'user_invite#get_all_admins'
 post '/invite_client', to: 'user_invite#invite_users'
-patch '/update_client/:id', to: 'user_invite#update'
+patch '/update_user_admins/:id', to: 'user_invite#update'
+patch '/api/update_user_admins/:id', to: 'user_invite#update'
+
 patch '/api/update_client/:id', to: 'user_invite#update'
 
 post '/api/invite_client', to: 'user_invite#invite_users'

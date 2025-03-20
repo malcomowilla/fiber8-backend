@@ -1,0 +1,82 @@
+class UserGroupsController < ApplicationController
+
+
+
+
+  set_current_tenant_through_filter
+
+  before_action :set_tenant
+
+
+
+
+  def set_tenant
+    host = request.headers['X-Subdomain']
+    @account = Account.find_by(subdomain: host)
+    @current_account= ActsAsTenant.current_tenant 
+    EmailConfiguration.configure(@current_account, ENV['SYSTEM_ADMIN_EMAIL'])
+    # EmailSystemAdmin.configure(@current_account, current_system_admin)
+  
+    # set_current_tenant(@account)
+  rescue ActiveRecord::RecordNotFound
+    render json: { error: 'Invalid tenant' }, status: :not_found
+  
+    
+  end
+
+
+  # GET /user_groups or /user_groups.json
+  def index
+    @user_groups = UserGroup.all
+    render json: @user_groups
+  end
+
+  # GET /user_groups/1 or /user_groups/1.json
+
+
+  # POST /user_groups or /user_groups.json
+  def create
+    @user_group = UserGroup.new(
+      name: params[:name],
+    )
+
+      if @user_group.save
+      render json: @user_group, status: :created
+      else
+        render json: @user_group.errors, status: :unprocessable_entity 
+      end
+    
+  end
+
+  # PATCH/PUT /user_groups/1 or /user_groups/1.json
+  def update
+    @user_group = set_user_group
+      if @user_group.update(name: params[:name])
+         render json: @user_group, status: :ok
+      else
+         render json: @user_group.errors, status: :unprocessable_entity 
+      end
+    
+  end
+
+  # DELETE /user_groups/1 or /user_groups/1.json
+  def destroy
+
+    @user_group = set_user_group
+    @user_group.destroy!
+
+     head :no_content 
+    
+  end
+
+  private
+    # Use callbacks to share common setup or constraints between actions.
+    def set_user_group
+      @user_group = UserGroup.find(params[:id])
+    end
+
+    # Only allow a list of trusted parameters through.
+    def user_group_params
+      params.permit(:name, :account_id)
+    end
+end
