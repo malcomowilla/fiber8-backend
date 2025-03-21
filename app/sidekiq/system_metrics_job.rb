@@ -101,6 +101,11 @@ class SystemMetricsJob
         disk_free_gb = (disk_info.bytes_free.to_f / (1024 * 1024 * 1024)).round(2)
         disk_used_gb = (disk_total_gb - disk_free_gb).round(2) # Used disk space
 
+
+        # uptime_seconds = File.read('/proc/uptime').split.first.to_i
+        # uptime = Time.at(uptime_seconds).utc.strftime("%H:%M:%S") # Convert to HH:MM:SS format
+        
+        uptime = `uptime -p`.strip
         metrics = {
           time: current_time,
           cpu_usage: "#{cpu_usage.round(2)}%",
@@ -110,8 +115,11 @@ class SystemMetricsJob
           disk_total: "#{disk_total_gb} GB",
           disk_free: "#{disk_free_gb} GB",
           disk_used: "#{disk_used_gb} GB", # Added disk used
-          load_average: load_avg
+          load_average: load_avg,
+          uptime: uptime
         }
+
+       
 
         # Log metrics for debugging
         Rails.logger.info "System Metrics: #{metrics}"
@@ -126,6 +134,7 @@ class SystemMetricsJob
           disk_free: metrics[:disk_free],
           disk_used: metrics[:disk_used], # Save disk used
           load_average: metrics[:load_average],
+          uptime: metrics[:uptime],
           account_id: ActsAsTenant.current_tenant.id
         )
         sys.update(
@@ -137,6 +146,7 @@ class SystemMetricsJob
           disk_free: metrics[:disk_free],
           disk_used: metrics[:disk_used], # Save disk used
           load_average: metrics[:load_average],
+          uptime: metrics[:uptime],
           account_id: ActsAsTenant.current_tenant.id
         ) 
 
