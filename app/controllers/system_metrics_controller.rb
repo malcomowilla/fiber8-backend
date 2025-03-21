@@ -27,7 +27,7 @@ class SystemMetricsController < ApplicationController
 
 def system_status
   @tenant = ActsAsTenant.current_tenant
-system_metrics = SystemMetric.where(account_id: @tenant.id).first
+system_metrics = SystemMetric.all
 
     if system_metrics
       # Render the cached data
