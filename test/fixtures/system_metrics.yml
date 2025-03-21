@@ -1,0 +1,17 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  cpu_usage: MyString
+  memory_total: MyString
+  memory_free: MyString
+  disk_total: MyString
+  disk_free: MyString
+  load_average: MyString
+
+two:
+  cpu_usage: MyString
+  memory_total: MyString
+  memory_free: MyString
+  disk_total: MyString
+  disk_free: MyString
+  load_average: MyString

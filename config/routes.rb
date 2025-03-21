@@ -59,6 +59,11 @@ scope '/api' do
 
 end
 
+
+get '/api/system_status', to: 'system_metrics#system_status'
+get '/system_status', to: 'system_metrics#system_status'
+
+
 post '/api/mpesa/', to: 'hotspot_mpesa_settings#customer_mpesa_stk_payments'
 post '/mpesa/', to: 'hotspot_mpesa_settings#customer_mpesa_stk_payments'
 
