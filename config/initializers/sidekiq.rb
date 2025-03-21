@@ -27,7 +27,15 @@ Sidekiq.configure_server do |config|
       'router_ping_job' => {
         'class' => 'RouterPingJob',
         'cron' => '* * * * *' # Run every minute
-      }
+      },
+
+
+      'system_metrics_job' => {
+        'class' => 'SystemMetricsJob',
+        'cron' => '* * * * *' # Run every minute
+      },
+      
+      
     }
 
     Sidekiq.schedule = schedule

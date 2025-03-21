@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2025_03_20_153356) do
+ActiveRecord::Schema[7.2].define(version: 2025_03_21_103138) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -501,6 +501,21 @@ ActiveRecord::Schema[7.2].define(version: 2025_03_20_153356) do
     t.string "system_admin_phone_number"
     t.string "otp"
     t.boolean "use_sms_authentication", default: false
+  end
+
+  create_table "system_metrics", force: :cascade do |t|
+    t.string "cpu_usage"
+    t.string "memory_total"
+    t.string "memory_free"
+    t.string "disk_total"
+    t.string "disk_free"
+    t.string "load_average"
+    t.integer "account_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.string "memory_used"
+    t.string "disk_used"
+    t.string "uptime"
   end
 
   create_table "ticket_settings", force: :cascade do |t|

@@ -216,3 +216,5 @@ gem 'sidekiq-scheduler'
 gem "browser"
 gem 'rqrcode'
 
+gem 'sys-proctable'
+gem 'sys-filesystem'
