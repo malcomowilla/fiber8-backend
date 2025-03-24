@@ -2,6 +2,33 @@ class CompanySettingsController < ApplicationController
   # before_action :set_company_setting, only: %i[ show edit update destroy ]
 
 load_and_authorize_resource except: [:allow_get_company_settings]
+
+set_current_tenant_through_filter
+
+before_action :set_tenant
+
+
+
+
+
+def set_tenant
+
+  host = request.headers['X-Subdomain'] 
+  Rails.logger.info("Setting tenant for host: #{host}")
+
+  @account = Account.find_by(subdomain: host)
+  set_current_tenant(@account)
+
+  unless @account
+    render json: { error: 'Invalid tenant' }, status: :not_found
+  end
+  
+end
+
+
+
+
+
   # GET /company_settings or /company_settings.json
   def index
     # @company_settings = CompanySetting.first

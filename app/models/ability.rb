@@ -20,7 +20,7 @@ class Ability
 
 
     
-    if admin.role == 'super_administrator'
+    if admin.role == 'super_administrator' || admin.role == 'Super Administrator' || admin.role == 'super administrator'  || admin.role == 'Super administrator' || admin.role == 'Super Admin' || admin.role == 'super admin' || admin.role == 'Super admin' || admin.role == 'superadmin' || admin.role == 'Superadmin' || admin.role == 'SUPER ADMINISTRATOR' || admin.role == 'SUPER ADMIN'
       can :manage, :all
       can :read, :all
       

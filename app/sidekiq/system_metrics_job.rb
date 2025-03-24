@@ -75,8 +75,49 @@ class SystemMetricsJob
   queue_as :default
 
   def perform
+
+
+
+
     Account.find_each do |tenant|
       ActsAsTenant.with_tenant(tenant) do
+
+
+
+
+
+        unless RUBY_PLATFORM =~ /linux/
+          Rails.logger.info "SystemMetricsJob skipped: Not running on a linux system."
+          
+          sys = SystemMetric.first_or_initialize(
+            cpu_usage: '0%',
+            memory_total: '0GB',
+            memory_free: '0GB',
+            memory_used: '0GB', # Save memory used
+            disk_total: '0GB',
+            disk_free: '0GB',
+            disk_used: '0GB', # Save disk used
+            load_average: 0,
+            uptime: 0,
+            account_id: ActsAsTenant.current_tenant.id
+          )
+          sys.update(
+            cpu_usage: '0%',
+            memory_total: '0GB',
+            memory_free: '0GB',
+            memory_used: '0GB', # Save memory used
+            disk_total: '0GB',
+            disk_free: '0GB',
+            disk_used: '0GB', # Save disk used
+            load_average: 0,
+            uptime: 0,
+            account_id: ActsAsTenant.current_tenant.id
+          ) 
+          return
+        end
+
+
+
         load_avg = File.read('/proc/loadavg').split[0..2].join(', ')
         mem_info = File.readlines('/proc/meminfo').map { |line| line.split(':').map(&:strip) }.to_h
         disk_info = Sys::Filesystem.stat('/')
