@@ -1097,16 +1097,15 @@ end
 #     RadGroupCheck.create(groupname: name, :"radius_attribute" => 'Auth-Type', op: ':=', value: 'Accept')
 # RadGroupCheck.create(groupname: name, :"radius_attribute" => 'Session-Timeout', op: ':=', value: validity_period) if validity_period
 
-values = [
-  [name, 'Auth-Type', ':=', 'Accept']
-]
+sql = <<-SQL
+  INSERT INTO radgroupcheck (groupname, radius_attribute, op, value)
+  VALUES 
+    ('#{name}', 'Auth-Type', ':=', 'Accept')
+    #{validity_period ? ", ('#{name}', 'Session-Timeout', ':=', '#{validity_period}')" : ""}
+SQL
 
-values << [name, 'Session-Timeout', ':=', validity_period] if validity_period
-
-sql = "INSERT INTO radgroupcheck (groupname, radius_attribute, op, value) VALUES #{values.map { |_| "(?, ?, ?, ?)" }.join(", ")}"
-
-ActiveRecord::Base.connection.exec_insert(sql, "RadGroupCheck Insert", values.flatten)
-
+# Execute the SQL
+ActiveRecord::Base.connection.execute(sql)
 
 
     return name  # Returning profile name as reference
