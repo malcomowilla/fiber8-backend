@@ -1235,11 +1235,17 @@ ActiveRecord::Base.connection.execute(sql)
       download_burst_limit = params[:download_burst_limit]
 
     
-      validity_period = case validity_units
-                        when 'days' then "#{validity * 86400}" # Convert to seconds
-                        when 'hours' then "#{validity * 3600}"
-                        when 'minutes' then "#{validity * 60}"
-                        end
+      validity_period =   if validity_units == 'days'
+        (Time.now + (validity.to_i * 86400)).strftime("%Y-%m-%d %H:%M:%S")  # Convert days to seconds
+      
+        elsif validity_units == 'hours'
+          (Time.now + (validity.to_i * 3600)).strftime("%Y-%m-%d %H:%M:%S")   # Convert hours to seconds
+    
+    
+        elsif validity_units == 'minutes'
+          (Time.now + (validity.to_i * 60)).strftime("%Y-%m-%d %H:%M:%S")    # Convert minutes to seconds
+        
+        end
     
       # Apply to `radreply`
       # RadReply.create(username: name, :"radius_attribute" => 'Session-Timeout', op: ':=', value: validity_period) if validity_period
@@ -1369,30 +1375,43 @@ def fetch_limitation_id_from_mikrotik
   download_burst_limit = params[:download_burst_limit]
 
   # Convert validity time
-  validity_period = case validity_units
-                    when 'days' then "#{validity * 86400}" # Convert to seconds
-                    when 'hours' then "#{validity * 3600}"
-                    when 'minutes' then "#{validity * 60}"
-                    end
+  validity_period =   if validity_units == 'days'
+    (Time.now + (validity.to_i * 86400)).strftime("%Y-%m-%d %H:%M:%S")  # Convert days to seconds
+  
+    elsif validity_units == 'hours'
+      (Time.now + (validity.to_i * 3600)).strftime("%Y-%m-%d %H:%M:%S")   # Convert hours to seconds
+
+
+    elsif validity_units == 'minutes'
+      (Time.now + (validity.to_i * 60)).strftime("%Y-%m-%d %H:%M:%S")    # Convert minutes to seconds
+    
+    end
 
   # Insert into `radgroupreply`
   # RadGroupReply.create(groupname: name, :"radius_attribute" => 'Session-Timeout', op: ':=', value: validity_period) if validity_period
   # RadGroupReply.create(groupname: name, :"radius_attribute" => 'Mikrotik-Rate-Limit', op: ':=', value: "#{upload_limit}M/#{download_limit}M") if upload_limit && download_limit
   # RadGroupReply.create(groupname: name, :"radius_attribute" => 'Mikrotik-Burst-Limit', op: ':=', value: "#{upload_burst_limit}M/#{download_burst_limit}M") if upload_burst_limit && download_burst_limit
 
-  sql = <<-SQL
-  INSERT INTO radgroupreply (groupname, attribute, op, value)
-  VALUES 
-    #{validity_period ? "('#{name}', 'Session-Timeout', ':=', '#{validity_period}')" : nil},
-    #{upload_limit && download_limit ? "('#{name}', 'Mikrotik-Rate-Limit', ':=', '#{upload_limit}M/#{download_limit}M')" : nil},
-    #{upload_burst_limit && download_burst_limit ? "('#{name}', 'Mikrotik-Burst-Limit', ':=', '#{upload_burst_limit}M/#{download_burst_limit}M')" : nil}
-SQL
 
-# Remove nil values and execute SQL if there's anything to insert
-sql.gsub!(/,\s*nil/, '') # Remove trailing nil values
-ActiveRecord::Base.connection.execute(sql) unless sql.include?("nil")
-  record[:attribute] = 'Auth-Type'
-  return name  # Returning limitation name as reference
+
+
+
+
+
+
+
+
+  values = []
+values << "('#{name}', 'Expiration', ':=', '#{validity_period}')" if validity_period
+values << "('#{name}', 'Mikrotik-Rate-Limit', ':=', '#{upload_limit}M/#{download_limit}M')" if upload_limit && download_limit
+values << "('#{name}', 'Mikrotik-Burst-Limit', ':=', '#{upload_burst_limit}M/#{download_burst_limit}M')" if upload_burst_limit && download_burst_limit
+
+if values.any?
+  sql = "INSERT INTO radgroupreply (groupname, attribute, op, value) VALUES #{values.join(', ')}"
+  ActiveRecord::Base.connection.execute(sql)
+end
+
+return name  # Retu
 end
 
 
