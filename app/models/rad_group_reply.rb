@@ -1,5 +1,5 @@
 class RadGroupReply < ApplicationRecord
 
-  self.table_name = 'radgroupcheck'  # Explicitly set the table name
+  self.table_name = 'radgroupreply'  # Explicitly set the table name
 
 end
