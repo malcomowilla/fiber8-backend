@@ -35,12 +35,12 @@ class RadiusSettingsController < ApplicationController
 
 
   def create_nas_settings
-    @nas = Na.first_or_initialize( shortname: params[:shortname], 
-ipaddr: params[:ipaddr], secret: params[:secret], nas_type: "mikrotik")
+    @nas = Na.first_or_initialize(shortname: params[:shortname], 
+    nasname: params[:ipaddr], secret: params[:secret], nas_type: "mikrotik")
 
 @nas.update(
   name: params[:shortname], shortname: params[:shortname], 
-ipaddr: params[:ipaddr], secret: params[:secret], nas_type: "mikrotik"
+  nasname: params[:ipaddr], secret: params[:secret], nas_type: "mikrotik"
 )
 
 
