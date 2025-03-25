@@ -956,8 +956,8 @@ def fetch_profile_limitation_id
   end
 
   name = params[:name]
-  valid_from = format_for_freeradius(params[:valid_from])
-  valid_until = format_for_freeradius(params[:valid_until])
+  valid_from = format_for_mikrotik(params[:valid_from])
+  valid_until = format_for_mikrotik(params[:valid_until])
   weekdays = format_weekdays(params[:weekdays])
 
   # Ensure attributes are updated or created
