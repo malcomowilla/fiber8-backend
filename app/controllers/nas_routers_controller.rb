@@ -82,11 +82,12 @@ end
     
     end
     
-
-
       def update
         nas_router = find_nas_router
           nas_router.update(nas_router_params)
+         
+
+          Rails.logger.info "Updated nas_router: #{na.inspect}"
           render json: nas_router      
 
       end
@@ -116,7 +117,7 @@ end
       # Tenant checking is disabled for all code in this block
       @nas_router = NasRouter.create(nas_router_params)
 
-      if @nas_router
+      if @nas_router 
         render json: @nas_router, status: :created
         # puts  @nas_router
       else

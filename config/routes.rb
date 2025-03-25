@@ -60,6 +60,14 @@ scope '/api' do
 end
 
 
+
+post '/api/radius_settings', to: 'radius_settings#create_nas_settings'
+post '/radius_settings', to: 'radius_settings#create_nas_settings'
+
+get '/radius_settings', to: 'radius_settings#index'
+get '/api/radius_settings', to: 'radius_settings#index'
+
+
 get '/api/system_status', to: 'system_metrics#system_status'
 get '/system_status', to: 'system_metrics#system_status'
 
