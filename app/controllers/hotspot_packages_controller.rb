@@ -962,20 +962,21 @@ def fetch_profile_limitation_id
 
   # Ensure attributes are updated or created
   attributes = [
-    { attribute: 'Session-Timeout', value: valid_until },
-    { attribute: 'Start-Time', value: valid_from },
-    { attribute: 'Weekdays', value: weekdays }
+    { radius_attribute: 'Session-Timeout', value: valid_until },
+    { radius_attribute: 'Start-Time', value: valid_from },
+    { radius_attribute: 'Weekdays', value: weekdays }
+    
   ]
 
   attributes.each do |attr|
     next if attr[:value].blank? # Skip empty values
 
-    existing_entry = RadGroupReply.find_by(groupname: name, attribute: attr[:attribute])
+    existing_entry = RadGroupReply.find_by(groupname: name, radius_attribute: attr[:radius_attribute])
 
     if existing_entry
       existing_entry.update(value: attr[:value])
     else
-      RadGroupReply.create(groupname: name, attribute: attr[:attribute], op: ':=', value: attr[:value])
+      RadGroupReply.create(groupname: name, radius_attribute: attr[:radius_attribute], op: ':=', value: attr[:value])
     end
   end
 
@@ -1093,11 +1094,8 @@ end
                       end
   
     # Insert into `radgroupcheck` for profile conditions
-    record1 = RadGroupCheck.create(groupname: name,  op: ':=', value: 'Accept')
-record2 = RadGroupCheck.create(groupname: name,  op: ':=', value: validity_period) if validity_period
-
-record1[:attribute] = 'Auth-Type' 
-record2[:attribute] = 'Session-Timeout' if validity_period
+    RadGroupCheck.create(groupname: name, :"radius_attribute" => 'Auth-Type', op: ':=', value: 'Accept')
+RadGroupCheck.create(groupname: name, :"radius_attribute" => 'Session-Timeout', op: ':=', value: validity_period) if validity_period
     return name  # Returning profile name as reference
   end
   
@@ -1222,11 +1220,9 @@ record2[:attribute] = 'Session-Timeout' if validity_period
                         end
     
       # Apply to `radreply`
-      record1 = RadReply.create(username: name,  op: ':=', value: validity_period) if validity_period
-      record2 =RadReply.create(username: name, op: ':=', value: "#{upload_limit}M/#{download_limit}M") if upload_limit && download_limit
+      RadReply.create(username: name, :"radius_attribute" => 'Session-Timeout', op: ':=', value: validity_period) if validity_period
+      RadReply.create(username: name, :"radius_attribute" => 'Mikrotik-Rate-Limit', op: ':=', value: "#{upload_limit}M/#{download_limit}M") if upload_limit && download_limit
     
-      record1[:attribute] = 'Session-Timeout' if validity_period
-      record2[:attribute] = 'Mikrotik-Rate-Limit' if upload_limit && download_limit
       return name  # Returning username as reference
     end
     
@@ -1339,15 +1335,12 @@ def fetch_limitation_id_from_mikrotik
                     end
 
   # Insert into `radgroupreply`
-  record1 = RadGroupReply.create(groupname: name,  op: ':=', value: validity_period) if validity_period
-  record2 =RadGroupReply.create(groupname: name, :"attribute" => 'Mikrotik-Rate-Limit', op: ':=', value: "#{upload_limit}M/#{download_limit}M") if upload_limit && download_limit
-  record3 =  RadGroupReply.create(groupname: name, :"attribute" => 'Mikrotik-Burst-Limit', op: ':=', value: "#{upload_burst_limit}M/#{download_burst_limit}M") if upload_burst_limit && download_burst_limit
+  RadGroupReply.create(groupname: name, :"radius_attribute" => 'Session-Timeout', op: ':=', value: validity_period) if validity_period
+  RadGroupReply.create(groupname: name, :"radius_attribute" => 'Mikrotik-Rate-Limit', op: ':=', value: "#{upload_limit}M/#{download_limit}M") if upload_limit && download_limit
+  RadGroupReply.create(groupname: name, :"radius_attribute" => 'Mikrotik-Burst-Limit', op: ':=', value: "#{upload_burst_limit}M/#{download_burst_limit}M") if upload_burst_limit && download_burst_limit
 
 
-  record1[:attribute] = 'Session-Timeout' if validity_period
-  record2[:attribute] = 'Mikrotik-Rate-Limit' if upload_limit && download_limit
-  record3[:attribute] = 'Mikrotik-Burst-Limit' if upload_burst_limit && download_burst_limit
-
+  record[:attribute] = 'Auth-Type'
   return name  # Returning limitation name as reference
 end
 

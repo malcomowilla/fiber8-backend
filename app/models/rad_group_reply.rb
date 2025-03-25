@@ -9,4 +9,6 @@ class RadGroupReply < ApplicationRecord
   #   self[:attribute] = val
   # end
 
+  alias_attribute :radius_attribute, :attribute
+
 end
