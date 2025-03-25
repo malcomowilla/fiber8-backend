@@ -1,0 +1,4 @@
+class RadGroupReply < ApplicationRecord
+
+  
+end

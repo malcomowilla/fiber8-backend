@@ -864,79 +864,124 @@ end
 
 
 
-  def fetch_profile_limitation_id
+#   def fetch_profile_limitation_id
   
 
-    # router_name = session[:router_name]
-    router_name = params[:router_name]
+#     # router_name = session[:router_name]
+#     router_name = params[:router_name]
   
-          nas_router = NasRouter.find_by(name: router_name)
-        if nas_router
-          router_ip_address = nas_router.ip_address
-            router_password = nas_router.password
-           router_username = nas_router.username
+#           nas_router = NasRouter.find_by(name: router_name)
+#         if nas_router
+#           router_ip_address = nas_router.ip_address
+#             router_password = nas_router.password
+#            router_username = nas_router.username
         
-        else
+#         else
         
-          puts 'router not found'
-        end
+#           puts 'router not found'
+#         end
   
-        name = params[:name]
+#         name = params[:name]
   
 
-#         {
-#   "comment": "any",
-#   "copy-from": "any",
-#   "from-time": "any",
-#   "limitation": "any",
-#   "profile": "any",
-#   "till-time": "any",
-#   "weekdays": "any",
-#   ".proplist": "any",
-#   ".query": "array"
-# }
+# #         {
+# #   "comment": "any",
+# #   "copy-from": "any",
+# #   "from-time": "any",
+# #   "limitation": "any",
+# #   "profile": "any",
+# #   "till-time": "any",
+# #   "weekdays": "any",
+# #   ".proplist": "any",
+# #   ".query": "array"
+# # }
 
-Rails.logger.info("valid_from: #{format_for_mikrotik(params[:valid_from])}")
-Rails.logger.info("valid_until: #{format_for_mikrotik(params[:valid_until])}")
-Rails.logger.info("weekdays: #{format_weekdays(params[:weekdays])}")
-    user1 = router_username
-    password = router_password
+# Rails.logger.info("valid_from: #{format_for_mikrotik(params[:valid_from])}")
+# Rails.logger.info("valid_until: #{format_for_mikrotik(params[:valid_until])}")
+# Rails.logger.info("weekdays: #{format_weekdays(params[:weekdays])}")
+#     user1 = router_username
+#     password = router_password
 
 
-    request_body3 = {
-  #    "from-time": format_for_mikrotik(params[:valid_from]),
-  # "till-time": format_for_mikrotik(params[:valid_until]),
-  # "weekdays": 'monday',
-    profile:  name,
-    limitation: name,
-    # weekdays: format_weekdays(params[:weekdays]) 
-    }
-    request_body3["from-time"] = format_for_mikrotik(params[:valid_from]) if params[:valid_from].present?
-request_body3["till-time"] = format_for_mikrotik(params[:valid_until]) if params[:valid_until].present?
-request_body3["weekdays"] = format_weekdays(params[:weekdays]) if params[:weekdays].present? 
+#     request_body3 = {
+#   #    "from-time": format_for_mikrotik(params[:valid_from]),
+#   # "till-time": format_for_mikrotik(params[:valid_until]),
+#   # "weekdays": 'monday',
+#     profile:  name,
+#     limitation: name,
+#     # weekdays: format_weekdays(params[:weekdays]) 
+#     }
+#     request_body3["from-time"] = format_for_mikrotik(params[:valid_from]) if params[:valid_from].present?
+# request_body3["till-time"] = format_for_mikrotik(params[:valid_until]) if params[:valid_until].present?
+# request_body3["weekdays"] = format_weekdays(params[:weekdays]) if params[:weekdays].present? 
     
     
-    uri = URI("http://#{router_ip_address}/rest/user-manager/profile-limitation/add")
-    request = Net::HTTP::Post.new(uri)
-    request.basic_auth user1, password
-    request.body = request_body3.to_json
+#     uri = URI("http://#{router_ip_address}/rest/user-manager/profile-limitation/add")
+#     request = Net::HTTP::Post.new(uri)
+#     request.basic_auth user1, password
+#     request.body = request_body3.to_json
     
-    request['Content-Type'] = 'application/json'
+#     request['Content-Type'] = 'application/json'
     
-    response = Net::HTTP.start(uri.hostname, uri.port) do |http|
-      http.request(request)
-    end
+#     response = Net::HTTP.start(uri.hostname, uri.port) do |http|
+#       http.request(request)
+#     end
     
-    if response.is_a?(Net::HTTPSuccess)
-      data = JSON.parse(response.body)
-      return data['ret']
-    else
-      puts "Failed to post profile limitation: #{response.code} - #{response.message}"
-    end
+#     if response.is_a?(Net::HTTPSuccess)
+#       data = JSON.parse(response.body)
+#       return data['ret']
+#     else
+#       puts "Failed to post profile limitation: #{response.code} - #{response.message}"
+#     end
         
     
   
+#   end
+
+
+
+
+
+
+
+
+
+def fetch_profile_limitation_id
+  router_name = params[:router_name]
+  nas_router = NasRouter.find_by(name: router_name)
+
+  unless nas_router
+    Rails.logger.error "Router not found: #{router_name}"
+    return nil
   end
+
+  name = params[:name]
+  valid_from = format_for_freeradius(params[:valid_from])
+  valid_until = format_for_freeradius(params[:valid_until])
+  weekdays = format_weekdays(params[:weekdays])
+
+  # Ensure attributes are updated or created
+  attributes = [
+    { attribute: 'Session-Timeout', value: valid_until },
+    { attribute: 'Start-Time', value: valid_from },
+    { attribute: 'Weekdays', value: weekdays }
+  ]
+
+  attributes.each do |attr|
+    next if attr[:value].blank? # Skip empty values
+
+    existing_entry = RadGroupReply.find_by(groupname: name, attribute: attr[:attribute])
+
+    if existing_entry
+      existing_entry.update(value: attr[:value])
+    else
+      RadGroupReply.create(groupname: name, attribute: attr[:attribute], op: ':=', value: attr[:value])
+    end
+  end
+
+  Rails.logger.info "Profile limitation updated in FreeRADIUS"
+end
+
 
 
   def format_weekdays(weekdays)
@@ -958,274 +1003,344 @@ request_body3["weekdays"] = format_weekdays(params[:weekdays]) if params[:weekda
   
 
 
-   def fetch_profile_id_from_mikrotik
+  #  def fetch_profile_id_from_mikrotik
         
-        # router_name = session[:router_name]
-  router_name = params[:router_name]
-        nas_router = NasRouter.find_by(name: router_name)
-      if nas_router
-        router_ip_address = nas_router.ip_address
-          router_password = nas_router.password
-         router_username = nas_router.username
+  #       # router_name = session[:router_name]
+  # router_name = params[:router_name]
+  #       nas_router = NasRouter.find_by(name: router_name)
+  #     if nas_router
+  #       router_ip_address = nas_router.ip_address
+  #         router_password = nas_router.password
+  #        router_username = nas_router.username
       
-      else
+  #     else
       
-        puts 'router not found'
-      end
+  #       puts 'router not found'
+  #     end
     
   
  
+  #   name = params[:name]
+     
+  #     validity = params[:validity]
+  #     validity_period_units = params[:validity_period_units]
+  #     price =  params[:price]
+    
+  
+    
+  #  validity_period =   if validity_period_units == 'days'
+  #   "#{validity}d 00:00:00"
+  
+  #   elsif validity_period_units == 'hours'
+  #      "#{validity}:00:00"
+
+
+  #   elsif validity_period_units == 'minutes'
+  #     "00:#{validity}:00"
+    
+  #   end
+  
+    
+  
+    
+  #   request_body1={
+  #     name: name,
+  #   validity: validity_period ,
+  #   price: price
+  #   }
+    
+  
+  #   # request_body1["price"] = price if price.present?
+  #   # request_body1["validity"] = validity_period if validity_period.present?
+  #   Rails.logger.info "request_body1: #{request_body1}"
+
+  
+  # uri = URI("http://#{router_ip_address}/rest/user-manager/profile/add")
+  # request = Net::HTTP::Post.new(uri)
+  
+  # request.basic_auth router_username, router_password
+  # request.body = request_body1.to_json
+  
+  # request['Content-Type'] = 'application/json'
+  
+  #   response = Net::HTTP.start(uri.hostname, uri.port) do |http|
+  #     http.request(request)
+  #   end
+  
+  #   if response.is_a?(Net::HTTPSuccess)
+  #     data = JSON.parse(response.body)
+  #     return data['ret']
+     
+
+  #   else
+  #     puts "Failed to profile: #{response.code} - #{response.message}"
+  #   end
+  
+
+  #       end
+
+  def fetch_profile_id_from_mikrotik
     name = params[:name]
-     
-      validity = params[:validity]
-      validity_period_units = params[:validity_period_units]
-      price =  params[:price]
-    
+    validity = params[:validity]
+    validity_units = params[:validity_period_units]
+    price = params[:price]
   
-    
-   validity_period =   if validity_period_units == 'days'
-    "#{validity}d 00:00:00"
+    # Convert validity to FreeRADIUS time format
+    validity_period = case validity_units
+                      when 'days' then "#{validity * 86400}" # Convert to seconds
+                      when 'hours' then "#{validity * 3600}"
+                      when 'minutes' then "#{validity * 60}"
+                      end
   
-    elsif validity_period_units == 'hours'
-       "#{validity}:00:00"
-
-
-    elsif validity_period_units == 'minutes'
-      "00:#{validity}:00"
-    
-    end
+    # Insert into `radgroupcheck` for profile conditions
+    RadGroupCheck.create(groupname: name, attribute: 'Auth-Type', op: ':=', value: 'Accept')
+    RadGroupCheck.create(groupname: name, attribute: 'Session-Timeout', op: ':=', value: validity_period) if validity_period
   
-    
-  
-    
-    request_body1={
-      name: name,
-    validity: validity_period ,
-    price: price
-    }
-    
-  
-    # request_body1["price"] = price if price.present?
-    # request_body1["validity"] = validity_period if validity_period.present?
-    Rails.logger.info "request_body1: #{request_body1}"
-
-  
-  uri = URI("http://#{router_ip_address}/rest/user-manager/profile/add")
-  request = Net::HTTP::Post.new(uri)
-  
-  request.basic_auth router_username, router_password
-  request.body = request_body1.to_json
-  
-  request['Content-Type'] = 'application/json'
-  
-    response = Net::HTTP.start(uri.hostname, uri.port) do |http|
-      http.request(request)
-    end
-  
-    if response.is_a?(Net::HTTPSuccess)
-      data = JSON.parse(response.body)
-      return data['ret']
-     
-
-    else
-      puts "Failed to profile: #{response.code} - #{response.message}"
-    end
+    return name  # Returning profile name as reference
+  end
   
 
-        end
-
-
-
-        def fetch_user_profile_id_from_mikrotik
-          # /ip/hotspot/user/profile/add
-          # router_name = session[:router_name]
-          router_name = params[:router_name]
-          validity = params[:validity]
-          nas_router = NasRouter.find_by(name: router_name)
-        if nas_router
-          router_ip_address = nas_router.ip_address
-            router_password = nas_router.password
-           router_username = nas_router.username
+    #     def fetch_user_profile_id_from_mikrotik
+    #       # /ip/hotspot/user/profile/add
+    #       # router_name = session[:router_name]
+    #       router_name = params[:router_name]
+    #       validity = params[:validity]
+    #       nas_router = NasRouter.find_by(name: router_name)
+    #     if nas_router
+    #       router_ip_address = nas_router.ip_address
+    #         router_password = nas_router.password
+    #        router_username = nas_router.username
         
-        else
+    #     else
         
-          puts 'router not found'
-        end
-        validity_period_units = params[:validity_period_units]
+    #       puts 'router not found'
+    #     end
+    #     validity_period_units = params[:validity_period_units]
 
-        validity_period =   if validity_period_units == 'days'
-          "#{validity}d 00:00:00"
+    #     validity_period =   if validity_period_units == 'days'
+    #       "#{validity}d 00:00:00"
         
-          elsif validity_period_units == 'hours'
-             "#{validity}:00:00"
-              elsif validity_period_units == 'minutes'
-    "00:#{validity}:00"
+    #       elsif validity_period_units == 'hours'
+    #          "#{validity}:00:00"
+    #           elsif validity_period_units == 'minutes'
+    # "00:#{validity}:00"
           
-          end
+    #       end
 
 
-          download_limit = params[:download_limit] 
-          upload_limit = params[:upload_limit] 
+    #       download_limit = params[:download_limit] 
+    #       upload_limit = params[:upload_limit] 
 
 
 
           
-        name = params[:name]
-        request_body2 = {
-          # "address-list": "any",
-          # "address-pool": "any",
+    #     name = params[:name]
+    #     request_body2 = {
+    #       # "address-list": "any",
+    #       # "address-pool": "any",
         
           
-          "name": "#{name}",
+    #       "name": "#{name}",
          
-          "rate-limit": "#{upload_limit}M/#{download_limit}M",
-          "session-timeout": "#{validity_period}",
-          # "shared-users": "any",
+    #       "rate-limit": "#{upload_limit}M/#{download_limit}M",
+    #       "session-timeout": "#{validity_period}",
+    #       # "shared-users": "any",
          
         
       
-      }
+    #   }
 
 
-      request_body = {
-        # "address-list": "any",
-        # "address-pool": "any",
+    #   request_body = {
+    #     # "address-list": "any",
+    #     # "address-pool": "any",
       
         
-        "name": "#{name}",
+    #     "name": "#{name}",
        
-        "session-timeout": "#{validity_period}",
-        # "shared-users": "any",
+    #     "session-timeout": "#{validity_period}",
+    #     # "shared-users": "any",
        
       
     
-    }
+    # }
     
-      # request_body2.to_json
-    uri = URI("http://#{router_ip_address}/rest/ip/hotspot/user/profile/add")
-    request = Net::HTTP::Post.new(uri)
+    #   # request_body2.to_json
+    # uri = URI("http://#{router_ip_address}/rest/ip/hotspot/user/profile/add")
+    # request = Net::HTTP::Post.new(uri)
     
-    request.basic_auth router_username, router_password
-    request.body =   if params[:download_limit].present? && params[:upload_limit].present?
-      request_body2.to_json
+    # request.basic_auth router_username, router_password
+    # request.body =   if params[:download_limit].present? && params[:upload_limit].present?
+    #   request_body2.to_json
 
    
 
-     else
-       request_body.to_json
-     end
+    #  else
+    #    request_body.to_json
+    #  end
     
 
-    request['Content-Type'] = 'application/json'
+    # request['Content-Type'] = 'application/json'
     
-    response = Net::HTTP.start(uri.hostname, uri.port) do |http|
-      http.request(request)
+    # response = Net::HTTP.start(uri.hostname, uri.port) do |http|
+    #   http.request(request)
+    # end
+    
+    # if response.is_a?(Net::HTTPSuccess)
+    #   data = JSON.parse(response.body)
+    #         return data['ret']
+  
+    # else
+    #   puts "Failed to fetch user profile id : #{response.code} - #{response.message}"
+    # end
+
+
+    #     end
+
+
+
+
+
+
+
+
+
+
+    def fetch_user_profile_id_from_mikrotik
+      name = params[:name]
+      validity = params[:validity]
+      validity_units = params[:validity_period_units]
+      upload_limit = params[:upload_limit]
+      download_limit = params[:download_limit]
+    
+      validity_period = case validity_units
+                        when 'days' then "#{validity * 86400}" # Convert to seconds
+                        when 'hours' then "#{validity * 3600}"
+                        when 'minutes' then "#{validity * 60}"
+                        end
+    
+      # Apply to `radreply`
+      RadReply.create(username: name, attribute: 'Session-Timeout', op: ':=', value: validity_period) if validity_period
+      RadReply.create(username: name, attribute: 'Mikrotik-Rate-Limit', op: ':=', value: "#{upload_limit}M/#{download_limit}M") if upload_limit && download_limit
+    
+      return name  # Returning username as reference
     end
     
-    if response.is_a?(Net::HTTPSuccess)
-      data = JSON.parse(response.body)
-            return data['ret']
+
+
+
+
+
+#         def fetch_limitation_id_from_mikrotik
   
-    else
-      puts "Failed to fetch user profile id : #{response.code} - #{response.message}"
-    end
-
-
-        end
-
-
-
-
-
-
-
-
-        def fetch_limitation_id_from_mikrotik
-  
-          router_name = params[:router_name]
+#           router_name = params[:router_name]
         
-                nas_router = NasRouter.find_by(name: router_name)
-              if nas_router
-                router_ip_address = nas_router.ip_address
-                  router_password = nas_router.password
-                 router_username = nas_router.username
+#                 nas_router = NasRouter.find_by(name: router_name)
+#               if nas_router
+#                 router_ip_address = nas_router.ip_address
+#                   router_password = nas_router.password
+#                  router_username = nas_router.username
               
-              else
+#               else
               
-                puts 'router not found'
-              end
+#                 puts 'router not found'
+#               end
             
           
             
             
-           download_limit = params[:download_limit] if params[:download_limit].present?
-              upload_limit = params[:upload_limit] if params[:upload_limit].present?
+#            download_limit = params[:download_limit] if params[:download_limit].present?
+#               upload_limit = params[:upload_limit] if params[:upload_limit].present?
            
-            upload_burst_limit = params[:upload_burst_limit]
-            download_burst_limit = params[:download_burst_limit]
-                validity = params[:validity]
-                validity_period_units = params[:validity_period_units]
-            name = params[:name]
+#             upload_burst_limit = params[:upload_burst_limit]
+#             download_burst_limit = params[:download_burst_limit]
+#                 validity = params[:validity]
+#                 validity_period_units = params[:validity_period_units]
+#             name = params[:name]
         
             
-           validity_period =   if validity_period_units == 'days'
-            "#{validity}d 00:00:00"
+#            validity_period =   if validity_period_units == 'days'
+#             "#{validity}d 00:00:00"
           
-            elsif validity_period_units == 'hours'
-               "#{validity}:00:00"
-                elsif validity_period_units == 'minutes'
-      "00:#{validity}:00"
+#             elsif validity_period_units == 'hours'
+#                "#{validity}:00:00"
+#                 elsif validity_period_units == 'minutes'
+#       "00:#{validity}:00"
             
-            end
+#             end
           
             
           
-            request_body2 = {
+#             request_body2 = {
               
-              # "download-limit" => download_limit,
-              # "upload-limit" => upload_limit,
-          "name" => name,
-          # "rate-limit-rx" => "#{upload_limit}M",
-          # "rate-limit-tx" => "#{download_limit}M",
-          # "rate-limit-burst-rx" => "#{upload_burst_limit}M",
-          # "rate-limit-burst-tx" => "#{download_burst_limit}M",
-          # "uptime-limit" => validity_period
-            }
+#               # "download-limit" => download_limit,
+#               # "upload-limit" => upload_limit,
+#           "name" => name,
+#           # "rate-limit-rx" => "#{upload_limit}M",
+#           # "rate-limit-tx" => "#{download_limit}M",
+#           # "rate-limit-burst-rx" => "#{upload_burst_limit}M",
+#           # "rate-limit-burst-tx" => "#{download_burst_limit}M",
+#           # "uptime-limit" => validity_period
+#             }
 
-            request_body2["uptime-limit"] = "#{validity_period}" if validity_period.present?
+#             request_body2["uptime-limit"] = "#{validity_period}" if validity_period.present?
  
-            request_body2["rate-limit-tx"] = "#{download_limit}M" if download_limit.present?
-            request_body2["rate-limit-rx"] = "#{upload_limit}M" if upload_limit.present?
-            request_body2["rate-limit-burst-tx"] = "#{download_burst_limit}M" if download_burst_limit.present?
-            request_body2["rate-limit-burst-rx"] = "#{upload_burst_limit}M" if upload_burst_limit.present?
+#             request_body2["rate-limit-tx"] = "#{download_limit}M" if download_limit.present?
+#             request_body2["rate-limit-rx"] = "#{upload_limit}M" if upload_limit.present?
+#             request_body2["rate-limit-burst-tx"] = "#{download_burst_limit}M" if download_burst_limit.present?
+#             request_body2["rate-limit-burst-rx"] = "#{upload_burst_limit}M" if upload_burst_limit.present?
 
 
-Rails.logger.info "request_body2: #{request_body2}"
+# Rails.logger.info "request_body2: #{request_body2}"
           
-          uri = URI("http://#{router_ip_address}/rest/user-manager/limitation/add")
-          request = Net::HTTP::Post.new(uri)
+#           uri = URI("http://#{router_ip_address}/rest/user-manager/limitation/add")
+#           request = Net::HTTP::Post.new(uri)
           
-          request.basic_auth router_username, router_password
-          request.body = request_body2.to_json
+#           request.basic_auth router_username, router_password
+#           request.body = request_body2.to_json
           
-          request['Content-Type'] = 'application/json'
+#           request['Content-Type'] = 'application/json'
           
-          response = Net::HTTP.start(uri.hostname, uri.port) do |http|
-            http.request(request)
-          end
+#           response = Net::HTTP.start(uri.hostname, uri.port) do |http|
+#             http.request(request)
+#           end
           
-          if response.is_a?(Net::HTTPSuccess)
-            data = JSON.parse(response.body)
-                  return data['ret']
+#           if response.is_a?(Net::HTTPSuccess)
+#             data = JSON.parse(response.body)
+#                   return data['ret']
         
-          else
-            puts "Failed to post limitation_id : #{response.code} - #{response.message}"
-          end
+#           else
+#             puts "Failed to post limitation_id : #{response.code} - #{response.message}"
+#           end
               
           
-        end
+#         end
 
 
+
+def fetch_limitation_id_from_mikrotik
+  name = params[:name]
+  validity = params[:validity]
+  validity_units = params[:validity_period_units]
+  upload_limit = params[:upload_limit]
+  download_limit = params[:download_limit]
+  upload_burst_limit = params[:upload_burst_limit]
+  download_burst_limit = params[:download_burst_limit]
+
+  # Convert validity time
+  validity_period = case validity_units
+                    when 'days' then "#{validity * 86400}" # Convert to seconds
+                    when 'hours' then "#{validity * 3600}"
+                    when 'minutes' then "#{validity * 60}"
+                    end
+
+  # Insert into `radgroupreply`
+  RadGroupReply.create(groupname: name, attribute: 'Session-Timeout', op: ':=', value: validity_period) if validity_period
+  RadGroupReply.create(groupname: name, attribute: 'Mikrotik-Rate-Limit', op: ':=', value: "#{upload_limit}M/#{download_limit}M") if upload_limit && download_limit
+  RadGroupReply.create(groupname: name, attribute: 'Mikrotik-Burst-Limit', op: ':=', value: "#{upload_burst_limit}M/#{download_burst_limit}M") if upload_burst_limit && download_burst_limit
+
+  return name  # Returning limitation name as reference
+end
 
 
 
