@@ -1,4 +1,4 @@
-class NaSerializer < ActiveModel::Serializer
+class NasSerializer < ActiveModel::Serializer
   attributes :id, :shortname, :nasname, :ipaddr, :secret
   def ipaddr
     
