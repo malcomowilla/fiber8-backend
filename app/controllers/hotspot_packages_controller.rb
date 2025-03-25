@@ -1089,14 +1089,14 @@ end
     # Convert validity to FreeRADIUS time format
    
    validity_period =   if validity_units == 'days'
-    (Time.now + (validity * 86400)).strftime("%Y-%m-%d %H:%M:%S")  # Convert days to seconds
+    (Time.now + (validity.to_i * 86400)).strftime("%Y-%m-%d %H:%M:%S")  # Convert days to seconds
   
     elsif validity_units == 'hours'
-      (Time.now + (validity * 3600)).strftime("%Y-%m-%d %H:%M:%S")   # Convert hours to seconds
+      (Time.now + (validity.to_i * 3600)).strftime("%Y-%m-%d %H:%M:%S")   # Convert hours to seconds
 
 
     elsif validity_units == 'minutes'
-      (Time.now + (validity * 60)).strftime("%Y-%m-%d %H:%M:%S")    # Convert minutes to seconds
+      (Time.now + (validity.to_ * 60)).strftime("%Y-%m-%d %H:%M:%S")    # Convert minutes to seconds
     
     end
   
