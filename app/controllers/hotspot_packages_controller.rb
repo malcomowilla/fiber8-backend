@@ -1220,9 +1220,28 @@ RadGroupCheck.create(groupname: name, :"radius_attribute" => 'Session-Timeout', 
                         end
     
       # Apply to `radreply`
-      RadReply.create(username: name, :"radius_attribute" => 'Session-Timeout', op: ':=', value: validity_period) if validity_period
-      RadReply.create(username: name, :"radius_attribute" => 'Mikrotik-Rate-Limit', op: ':=', value: "#{upload_limit}M/#{download_limit}M") if upload_limit && download_limit
-    
+      # RadReply.create(username: name, :"radius_attribute" => 'Session-Timeout', op: ':=', value: validity_period) if validity_period
+      # RadReply.create(username: name, :"radius_attribute" => 'Mikrotik-Rate-Limit', op: ':=', value: "#{upload_limit}M/#{download_limit}M") if upload_limit && download_limit
+      # ActiveRecord::Base.connection.execute("INSERT INTO radreply (username, radius_attribute, op, value) VALUES ('#{name}', 'Session-Timeout', ':=', '#{validity_period}')")
+      # ActiveRecord::Base.connection.execute("INSERT INTO radreply (username, radius_attribute, op, value) VALUES ('#{name}', 'Mikrotik-Rate-Limit', ':=', '#{upload_limit}M/#{download_limit}M')")
+
+      sql_statements = []
+
+      if validity_period
+        sql_statements << "INSERT INTO radgroupreply (groupname, radius_attribute, op, value) VALUES ('#{name}', 'Session-Timeout', ':=', '#{validity_period}');"
+      end
+      
+      if upload_limit && download_limit
+        sql_statements << "INSERT INTO radgroupreply (groupname, radius_attribute, op, value) VALUES ('#{name}', 'Mikrotik-Rate-Limit', ':=', '#{upload_limit}M/#{download_limit}M');"
+      end
+      
+      if upload_burst_limit && download_burst_limit
+        sql_statements << "INSERT INTO radgroupreply (groupname, radius_attribute, op, value) VALUES ('#{name}', 'Mikrotik-Burst-Limit', ':=', '#{upload_burst_limit}M/#{download_burst_limit}M');"
+      end
+      
+      sql_statements.each do |sql|
+        ActiveRecord::Base.connection.execute(sql)
+      end
       return name  # Returning username as reference
     end
     
@@ -1335,11 +1354,21 @@ def fetch_limitation_id_from_mikrotik
                     end
 
   # Insert into `radgroupreply`
-  RadGroupReply.create(groupname: name, :"radius_attribute" => 'Session-Timeout', op: ':=', value: validity_period) if validity_period
-  RadGroupReply.create(groupname: name, :"radius_attribute" => 'Mikrotik-Rate-Limit', op: ':=', value: "#{upload_limit}M/#{download_limit}M") if upload_limit && download_limit
-  RadGroupReply.create(groupname: name, :"radius_attribute" => 'Mikrotik-Burst-Limit', op: ':=', value: "#{upload_burst_limit}M/#{download_burst_limit}M") if upload_burst_limit && download_burst_limit
+  # RadGroupReply.create(groupname: name, :"radius_attribute" => 'Session-Timeout', op: ':=', value: validity_period) if validity_period
+  # RadGroupReply.create(groupname: name, :"radius_attribute" => 'Mikrotik-Rate-Limit', op: ':=', value: "#{upload_limit}M/#{download_limit}M") if upload_limit && download_limit
+  # RadGroupReply.create(groupname: name, :"radius_attribute" => 'Mikrotik-Burst-Limit', op: ':=', value: "#{upload_burst_limit}M/#{download_burst_limit}M") if upload_burst_limit && download_burst_limit
 
+  sql = <<-SQL
+  INSERT INTO radgroupreply (groupname, radius_attribute, op, value)
+  VALUES 
+    #{validity_period ? "('#{name}', 'Session-Timeout', ':=', '#{validity_period}')" : nil},
+    #{upload_limit && download_limit ? "('#{name}', 'Mikrotik-Rate-Limit', ':=', '#{upload_limit}M/#{download_limit}M')" : nil},
+    #{upload_burst_limit && download_burst_limit ? "('#{name}', 'Mikrotik-Burst-Limit', ':=', '#{upload_burst_limit}M/#{download_burst_limit}M')" : nil}
+SQL
 
+# Remove nil values and execute SQL if there's anything to insert
+sql.gsub!(/,\s*nil/, '') # Remove trailing nil values
+ActiveRecord::Base.connection.execute(sql) unless sql.include?("nil")
   record[:attribute] = 'Auth-Type'
   return name  # Returning limitation name as reference
 end
