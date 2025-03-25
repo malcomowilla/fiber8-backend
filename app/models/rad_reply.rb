@@ -8,4 +8,7 @@ class RadReply < ApplicationRecord
   # def attribute=(val)
   #   self[:attribute] = val
   # end
+  # 
+  alias_attribute :radius_attribute, :attribute
+
 end
