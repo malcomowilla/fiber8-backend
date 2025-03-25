@@ -1096,7 +1096,7 @@ end
 
 
     elsif validity_units == 'minutes'
-      (Time.now + (validity.to_ * 60)).strftime("%Y-%m-%d %H:%M:%S")    # Convert minutes to seconds
+      (Time.now + (validity.to_i * 60)).strftime("%Y-%m-%d %H:%M:%S")    # Convert minutes to seconds
     
     end
   
