@@ -1094,8 +1094,8 @@ end
                       end
   
     # Insert into `radgroupcheck` for profile conditions
-    RadGroupCheck.create(groupname: name, :"radius_attribute" => 'Auth-Type', op: ':=', value: 'Accept')
-RadGroupCheck.create(groupname: name, :"radius_attribute" => 'Session-Timeout', op: ':=', value: validity_period) if validity_period
+#     RadGroupCheck.create(groupname: name,  op: ':=', value: 'Accept')
+# RadGroupCheck.create(groupname: name, op: ':=', value: validity_period) if validity_period
     return name  # Returning profile name as reference
   end
   
