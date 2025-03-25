@@ -39,8 +39,8 @@ class RadiusSettingsController < ApplicationController
     nasname: params[:ipaddr], secret: params[:secret] )
 
 @nas.update(
-  name: params[:shortname], shortname: params[:shortname], 
-  nasname: params[:ipaddr], secret: params[:secret]
+ shortname: params[:shortname], 
+    nasname: params[:ipaddr], secret: params[:secret]
 )
 
 
