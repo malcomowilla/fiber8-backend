@@ -1,0 +1,2 @@
+class RadGroupCheck < ApplicationRecord
+end
