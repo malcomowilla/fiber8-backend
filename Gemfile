@@ -218,3 +218,4 @@ gem 'rqrcode'
 
 gem 'sys-proctable'
 gem 'sys-filesystem'
+gem 'safe_attributes'
