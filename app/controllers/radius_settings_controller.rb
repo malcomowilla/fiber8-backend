@@ -29,7 +29,7 @@ class RadiusSettingsController < ApplicationController
   def index
     
     @nas = Na.all
-    render json: @nas
+    render json: @nas, each_serializer: NasSerializer
   end
 
 
