@@ -1087,11 +1087,18 @@ end
     price = params[:price]
   
     # Convert validity to FreeRADIUS time format
-    validity_period = case validity_units
-                      when 'days' then "#{validity * 86400}" # Convert to seconds
-                      when 'hours' then "#{validity * 3600}"
-                      when 'minutes' then "#{validity * 60}"
-                      end
+   
+   validity_period =   if validity_units == 'days'
+    (Time.now + (validity * 86400)).strftime("%Y-%m-%d %H:%M:%S")  # Convert days to seconds
+  
+    elsif validity_units == 'hours'
+      (Time.now + (validity * 3600)).strftime("%Y-%m-%d %H:%M:%S")   # Convert hours to seconds
+
+
+    elsif validity_units == 'minutes'
+      (Time.now + (validity * 60)).strftime("%Y-%m-%d %H:%M:%S")    # Convert minutes to seconds
+    
+    end
   
     # Insert into `radgroupcheck` for profile conditions
 #     RadGroupCheck.create(groupname: name, :"radius_attribute" => 'Auth-Type', op: ':=', value: 'Accept')
@@ -1101,7 +1108,7 @@ sql = <<-SQL
   INSERT INTO radgroupcheck (groupname, radius_attribute, op, value)
   VALUES 
     ('#{name}', 'Auth-Type', ':=', 'Accept')
-    #{validity_period ? ", ('#{name}', 'Session-Timeout', ':=', '#{validity_period}')" : ""}
+    #{validity_period ? ", ('#{name}', 'Expiration', ':=', '#{validity_period}')" : ""}
 SQL
 
 # Execute the SQL
