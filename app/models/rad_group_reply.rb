@@ -9,6 +9,7 @@ class RadGroupReply < ApplicationRecord
   #   self[:attribute] = val
   # end
 
-  alias_attribute :radius_attribute, :attribute
+  # alias_attribute :radius_attribute, :attribute
+  default_scope { select('radcheck.*, attribute AS radius_attribute') }
 
 end
