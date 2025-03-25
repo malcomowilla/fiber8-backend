@@ -1,0 +1,2 @@
+module RadiusSettingsHelper
+end
