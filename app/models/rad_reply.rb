@@ -1,0 +1,2 @@
+class RadReply < ApplicationRecord
+end
