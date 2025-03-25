@@ -1,5 +1,5 @@
 class NaSerializer < ActiveModel::Serializer
-  attributes :id, :name, :shortname, :nasname, :ipaddr, :secret, :nas_type
+  attributes :id, :shortname, :nasname, :ipaddr, :secret
   def ipaddr
     
     object.nasname 
