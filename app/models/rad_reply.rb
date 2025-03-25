@@ -10,6 +10,6 @@ class RadReply < ApplicationRecord
   # end
   # 
   # alias_attribute :radius_attribute, :attribute
-  default_scope { select('radcheck.*, attribute AS radius_attribute') }
+  # default_scope { select('radcheck.*, attribute AS radius_attribute') }
 
 end
