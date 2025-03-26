@@ -961,28 +961,12 @@ def fetch_profile_limitation_id
   weekdays = format_weekdays(params[:weekdays])
 
   # Ensure attributes are updated or created
-  attributes = [
-    { attribute: 'Expiration', value: valid_until },
-    {attribute: 'Start-Time', value: valid_from },
-    { attribute: 'Weekdays', value: weekdays }
-    
-  ]
-attributes.each do |attr|
-  next if attr[:value].blank? # Skip empty values
+  RadGroupReply.create(groupname: name, Arel.sql('"attribute"') => "Expiration", op: ':=', "value" => valid_until) if valid_until
 
-  existing_entry = RadGroupReply.find_by(groupname: name, attribute: attr[:attribute])
+RadGroupReply.create(groupname: name, Arel.sql('"attribute"') => "Start-Time", op: ':=', "value" => valid_from) if valid_from
 
-  if existing_entry
-    existing_entry.update(self[:value] => attr[:value])  # Use self[:value] to avoid conflicts
-  else
-    RadGroupReply.create(
-      groupname: name,
-      self[:attribute] => attr[:attribute],  # Bypass reserved keyword conflict
-      op: ':=',
-      self[:value] => attr[:value]
-    )
-  end
-end
+RadGroupReply.create(groupname: name, Arel.sql('"attribute"') => "Weekdays", op: ':=', "value" => weekdays) if weekdays
+
 
   Rails.logger.info "Profile limitation updated in FreeRADIUS"
 end
@@ -1105,8 +1089,8 @@ end
     end
   
     # Insert into `radgroupcheck` for profile conditions
-    RadGroupCheck.create(groupname: name, "radius_attribute" => 'Auth-Type', op: ':=', value: 'Accept')
-RadGroupCheck.create(groupname: name, "radius_attribute" => 'Session-Timeout', op: ':=', value: validity_period) if validity_period
+    RadGroupCheck.create(groupname: name, Arel.sql('"attribute"') => 'Auth-Type', op: ':=', value: 'Accept')
+RadGroupCheck.create(groupname: name, Arel.sql('"attribute"') => 'Session-Timeout', op: ':=', value: validity_period) if validity_period
 
 # sql = <<-SQL
 #   INSERT INTO radgroupcheck (groupname, attribute, op, value)
@@ -1278,9 +1262,9 @@ RadGroupCheck.create(groupname: name, "radius_attribute" => 'Session-Timeout', o
       #   ActiveRecord::Base.connection.execute(sql)
       # end
 
-      RadReply.create(username: name, 'attribute' => 'Expiration', op: ':=', value: validity_period) if validity_period
+      RadReply.create(username: name, Arel.sql('"attribute"') => 'Expiration', op: ':=', value: validity_period) if validity_period
 
-RadReply.create(username: name, 'attribute' => 'Mikrotik-Rate-Limit', op: ':=', value: "#{upload_limit}M/#{download_limit}M") if upload_limit && download_limit
+RadReply.create(username: name, Arel.sql('"attribute"') => 'Mikrotik-Rate-Limit', op: ':=', value: "#{upload_limit}M/#{download_limit}M") if upload_limit && download_limit
 
       return name  # Returning username as reference
     end
