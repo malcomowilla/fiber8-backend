@@ -306,7 +306,7 @@ end
   
 ActiveRecord::Base.connection.execute("
 INSERT INTO radcheck (username, attribute, op, value) 
-SELECT '#{hotspot_voucher}', 'Cleartext-Password', ':=', ''
+SELECT '#{hotspot_voucher}', 'Cleartext-Password', ':=', '#{hotspot_voucher}'
 WHERE NOT EXISTS (
   SELECT 1 FROM radcheck WHERE username = '#{hotspot_voucher}' AND attribute = 'Cleartext-Password'
 )
@@ -631,7 +631,7 @@ router_name = params[:router_name]
 
 
   # Log in the device using SSH
-  command = "/ip hotspot active  login user=#{params[:voucher]} password='' ip=#{params[:ip]}"
+  command = "/ip hotspot active login user=#{params[:voucher]} password='#{params[:voucher]}' ip=#{params[:ip]}"
 
   begin
     Net::SSH.start(router_ip_address,  router_username, password: router_password, verify_host_key: :never) do |ssh|
