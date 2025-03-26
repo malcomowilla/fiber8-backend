@@ -1436,14 +1436,14 @@ def fetch_limitation_id_from_mikrotik
 
   # Convert validity time
   validity_period =   if validity_units == 'days'
-    (Time.now + (validity.to_i * 86400)).strftime("%Y-%m-%d %H:%M:%S")  # Convert days to seconds
+    (Time.now + (validity.to_i * 86400)).strftime("%d %b %Y %H:%M:%S")  # Convert days to seconds
   
     elsif validity_units == 'hours'
-      (Time.now + (validity.to_i * 3600)).strftime("%Y-%m-%d %H:%M:%S")   # Convert hours to seconds
+      (Time.now + (validity.to_i * 3600)).strftime("%d %b %Y %H:%M:%S")   # Convert hours to seconds
 
 
     elsif validity_units == 'minutes'
-      (Time.now + (validity.to_i * 60)).strftime("%Y-%m-%d %H:%M:%S")    # Convert minutes to seconds
+      (Time.now + (validity.to_i * 60)).strftime("%d %b %Y %H:%M:%S")    # Convert minutes to seconds
     
     end
 
@@ -1518,7 +1518,7 @@ def update_freeradius_policies(package)
 
       ActiveRecord::Base.connection.execute(<<-SQL)
         INSERT INTO radgroupcheck (groupname, attribute, op, value)
-        VALUES ('#{group_name}', 'Wk-Day', ':=', '#{days_string}')
+        VALUES ('#{group_name}', 'Day-Of-Week', ':=', '#{days_string}')
       SQL
     else
       # If no weekdays are set, remove any existing restriction
