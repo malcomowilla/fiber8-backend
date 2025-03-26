@@ -1486,16 +1486,10 @@ end
 
 
 def update_freeradius_policies(package)
-  group_name = "hotspot_#{package.id}" # Unique group for each package
+  group_name = "#{package.name}" # Unique group for each package
   now = Time.now.strftime("%Y-%m-%d %H:%M:%S")
 
   ActiveRecord::Base.transaction do
-    # Ensure group exists in Radgroupcheck
-    ActiveRecord::Base.connection.execute(<<-SQL)
-      INSERT INTO radgroupcheck (groupname, attribute, op, value)
-      VALUES ('#{group_name}', 'Auth-Type', ':=', 'Accept')
-    SQL
-
     # Set speed limits in Radgroupreply
     ActiveRecord::Base.connection.execute(<<-SQL)
       INSERT INTO radgroupreply (groupname, attribute, op, value)
@@ -1512,8 +1506,8 @@ def update_freeradius_policies(package)
 
       if expiration_time
         ActiveRecord::Base.connection.execute(<<-SQL)
-          INSERT INTO radcheck (username, attribute, op, value)
-          VALUES ('#{package.name}', 'Expiration', ':=', '#{expiration_time}')
+          INSERT INTO radgroupcheck (groupname, attribute, op, value)
+          VALUES ('#{group_name}', 'Expiration', ':=', '#{expiration_time}')
         SQL
       end
     end
@@ -1532,14 +1526,9 @@ def update_freeradius_policies(package)
         DELETE FROM radgroupcheck WHERE groupname = '#{group_name}' AND attribute = 'Wk-Day';
       SQL
     end
-
-    # Assign users to the group in radusergroup
-    ActiveRecord::Base.connection.execute(<<-SQL)
-      INSERT INTO radusergroup (username, groupname)
-      VALUES ('#{package.name}', '#{group_name}')
-    SQL
   end
 end
+
 
 
 
