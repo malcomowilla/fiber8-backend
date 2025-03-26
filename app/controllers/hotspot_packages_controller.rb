@@ -1494,16 +1494,14 @@ def update_freeradius_policies(package)
     ActiveRecord::Base.connection.execute(<<-SQL)
       INSERT INTO radgroupcheck (groupname, attribute, op, value)
       VALUES ('#{group_name}', 'Auth-Type', ':=', 'Accept')
-      ON CONFLICT (groupname, attribute) DO UPDATE 
-      SET value = EXCLUDED.value;
+      ON CONFLICT DO NOTHING;
     SQL
 
     # Set speed limits in Radgroupreply
     ActiveRecord::Base.connection.execute(<<-SQL)
       INSERT INTO radgroupreply (groupname, attribute, op, value)
       VALUES ('#{group_name}', 'Mikrotik-Rate-Limit', ':=', '#{package.upload_limit}/#{package.download_limit}')
-      ON CONFLICT (groupname, attribute) DO UPDATE 
-      SET value = EXCLUDED.value;
+      ON CONFLICT DO NOTHING;
     SQL
 
     # Handle validity and expiration
@@ -1518,8 +1516,7 @@ def update_freeradius_policies(package)
         ActiveRecord::Base.connection.execute(<<-SQL)
           INSERT INTO radcheck (username, attribute, op, value)
           VALUES ('#{package.name}', 'Expiration', ':=', '#{expiration_time}')
-          ON CONFLICT (username, attribute) DO UPDATE 
-          SET value = EXCLUDED.value;
+          ON CONFLICT DO NOTHING;
         SQL
       end
     end
@@ -1531,8 +1528,7 @@ def update_freeradius_policies(package)
       ActiveRecord::Base.connection.execute(<<-SQL)
         INSERT INTO radgroupcheck (groupname, attribute, op, value)
         VALUES ('#{group_name}', 'Wk-Day', ':=', '#{days_string}')
-        ON CONFLICT (groupname, attribute) DO UPDATE 
-        SET value = EXCLUDED.value;
+        ON CONFLICT DO NOTHING;
       SQL
     else
       # If no weekdays are set, remove any existing restriction
@@ -1545,8 +1541,7 @@ def update_freeradius_policies(package)
     ActiveRecord::Base.connection.execute(<<-SQL)
       INSERT INTO radusergroup (username, groupname)
       VALUES ('#{package.name}', '#{group_name}')
-      ON CONFLICT (username) DO UPDATE 
-      SET groupname = EXCLUDED.groupname;
+      ON CONFLICT DO NOTHING;
     SQL
   end
 end
