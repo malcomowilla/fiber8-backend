@@ -962,9 +962,9 @@ def fetch_profile_limitation_id
 
   # Ensure attributes are updated or created
   attributes = [
-    { radius_attribute: 'Expiration', value: valid_until },
-    { radius_attribute: 'Start-Time', value: valid_from },
-    { radius_attribute: 'Weekdays', value: weekdays }
+    { attribute: 'Expiration', value: valid_until },
+    { attribute: 'Start-Time', value: valid_from },
+    { attribute: 'Weekdays', value: weekdays }
   ]
   
   attributes.each do |attr|
@@ -972,8 +972,8 @@ def fetch_profile_limitation_id
   
     # Use raw SQL to insert the records one by one
     sql = <<-SQL
-      INSERT INTO radgroupreply (groupname, radius_attribute, op, value)
-      VALUES ('#{name}', '#{attr[:radius_attribute]}', ':=', '#{attr[:value]}')
+      INSERT INTO radgroupreply (groupname, attribute, op, value)
+      VALUES ('#{name}', '#{attr[:attribute]}', ':=', '#{attr[:value]}')
     SQL
   
     ActiveRecord::Base.connection.execute(sql)
