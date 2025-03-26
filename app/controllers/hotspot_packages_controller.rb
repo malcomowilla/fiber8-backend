@@ -1105,8 +1105,8 @@ end
     end
   
     # Insert into `radgroupcheck` for profile conditions
-#     RadGroupCheck.create(groupname: name, :"radius_attribute" => 'Auth-Type', op: ':=', value: 'Accept')
-# RadGroupCheck.create(groupname: name, :"radius_attribute" => 'Session-Timeout', op: ':=', value: validity_period) if validity_period
+    RadGroupCheck.create(groupname: name, "radius_attribute" => 'Auth-Type', op: ':=', value: 'Accept')
+RadGroupCheck.create(groupname: name, "radius_attribute" => 'Session-Timeout', op: ':=', value: validity_period) if validity_period
 
 # sql = <<-SQL
 #   INSERT INTO radgroupcheck (groupname, attribute, op, value)
@@ -1117,21 +1117,7 @@ end
 
 # # Execute the SQL
 # ActiveRecord::Base.connection.execute(sql)
-RadGroupCheck.create(
-  groupname: name,
-  self[:attribute] => 'Auth-Type',
-  op: ':=',
-  self[:value] => 'Accept'
-)
 
-if validity_period
-  RadGroupCheck.create(
-    groupname: name,
-    self[:attribute] => 'Expiration',
-    op: ':=',
-    self[:value] => validity_period
-  )
-end
 
 
     return name  # Returning profile name as reference
@@ -1292,9 +1278,9 @@ end
       #   ActiveRecord::Base.connection.execute(sql)
       # end
 
-      RadReply.create(username: name, self[:attribute] => 'Expiration', op: ':=', value: validity_period) if validity_period
+      RadReply.create(username: name, 'attribute' => 'Expiration', op: ':=', value: validity_period) if validity_period
 
-RadReply.create(username: name, self[:attribute] => 'Mikrotik-Rate-Limit', op: ':=', value: "#{upload_limit}M/#{download_limit}M") if upload_limit && download_limit
+RadReply.create(username: name, 'attribute' => 'Mikrotik-Rate-Limit', op: ':=', value: "#{upload_limit}M/#{download_limit}M") if upload_limit && download_limit
 
       return name  # Returning username as reference
     end
