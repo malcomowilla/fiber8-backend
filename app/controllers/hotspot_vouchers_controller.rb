@@ -304,6 +304,10 @@ end
   VALUES ('#{hotspot_voucher.voucher}', 'Simultaneous-Use', ':=', '#{hotspot_voucher.shared_users}')
 ")
   
+ActiveRecord::Base.connection.execute("
+INSERT INTO radusergroup (username, groupname, priority) 
+VALUES ('#{hotspot_voucher.voucher}', '#{hotspot_voucher.package}', 1)
+")
   
   end
   
