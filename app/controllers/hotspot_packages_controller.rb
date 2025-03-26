@@ -962,22 +962,23 @@ def fetch_profile_limitation_id
 
   # Ensure attributes are updated or created
   attributes = [
-    { attribute: 'Expiration', value: valid_until },
-    { attribute: 'Start-Time', value: valid_from },
-    { attribute: 'Weekdays', value: weekdays }
-  ]
-  
-  attributes.each do |attr|
-    next if attr[:value].blank? # Skip empty values
-  
-    # Use raw SQL to insert the records one by one
-    sql = <<-SQL
-      INSERT INTO radgroupreply (groupname, attribute, op, value)
-      VALUES ('#{name}', '#{attr[:attribute]}', ':=', '#{attr[:value]}')
-    SQL
-  
-    ActiveRecord::Base.connection.execute(sql)
-  end
+  { attribute: 'Expiration', value: valid_until },
+  { attribute: 'Start-Time', value: valid_from },
+  { attribute: 'Weekdays', value: weekdays }
+]
+
+attributes.each do |attr|
+  next if attr[:value].blank? # Skip empty values
+
+  # Use raw SQL to insert the records one by one
+  sql = <<-SQL
+    INSERT INTO radgroupreply (groupname, attribute, op, value)
+    VALUES ('#{name}', '#{attr[:attribute]}', ':=', '#{attr[:value]}')
+    ON CONFLICT (groupname, attribute) DO NOTHING
+  SQL
+
+  ActiveRecord::Base.connection.execute(sql)
+end
 
   Rails.logger.info "Profile limitation updated in FreeRADIUS"
 end
@@ -1255,20 +1256,35 @@ ActiveRecord::Base.connection.execute(sql)
       sql_statements = []
 
       if validity_period
-        sql_statements << "INSERT INTO radgroupreply (groupname, attribute, op, value) VALUES ('#{name}', 'Session-Timeout', ':=', '#{validity_period}');"
+        sql_statements << <<-SQL
+          INSERT INTO radgroupreply (groupname, attribute, op, value) 
+          VALUES ('#{name}', 'Session-Timeout', ':=', '#{validity_period}')
+          ON CONFLICT (groupname, attribute) DO NOTHING;
+        SQL
       end
       
       if upload_limit && download_limit
-        sql_statements << "INSERT INTO radgroupreply (groupname, attribute, op, value) VALUES ('#{name}', 'Mikrotik-Rate-Limit', ':=', '#{upload_limit}M/#{download_limit}M');"
+        sql_statements << <<-SQL
+          INSERT INTO radgroupreply (groupname, attribute, op, value) 
+          VALUES ('#{name}', 'Mikrotik-Rate-Limit', ':=', '#{upload_limit}M/#{download_limit}M')
+          ON CONFLICT (groupname, attribute) DO NOTHING;
+        SQL
       end
       
       if upload_burst_limit && download_burst_limit
-        sql_statements << "INSERT INTO radgroupreply (groupname, attribute, op, value) VALUES ('#{name}', 'Mikrotik-Burst-Limit', ':=', '#{upload_burst_limit}M/#{download_burst_limit}M');"
+        sql_statements << <<-SQL
+          INSERT INTO radgroupreply (groupname, attribute, op, value) 
+          VALUES ('#{name}', 'Mikrotik-Burst-Limit', ':=', '#{upload_burst_limit}M/#{download_burst_limit}M')
+          ON CONFLICT (groupname, attribute) DO NOTHING;
+        SQL
       end
       
+      # Execute all SQL statements at once
       sql_statements.each do |sql|
         ActiveRecord::Base.connection.execute(sql)
       end
+
+
       return name  # Returning username as reference
     end
     
@@ -1399,16 +1415,19 @@ def fetch_limitation_id_from_mikrotik
 
 
 
-
   values = []
-values << "('#{name}', 'Expiration', ':=', '#{validity_period}')" if validity_period
-values << "('#{name}', 'Mikrotik-Rate-Limit', ':=', '#{upload_limit}M/#{download_limit}M')" if upload_limit && download_limit
-values << "('#{name}', 'Mikrotik-Burst-Limit', ':=', '#{upload_burst_limit}M/#{download_burst_limit}M')" if upload_burst_limit && download_burst_limit
-
-if values.any?
-  sql = "INSERT INTO radgroupreply (groupname, attribute, op, value) VALUES #{values.join(', ')}"
-  ActiveRecord::Base.connection.execute(sql)
-end
+  values << "('#{name}', 'Expiration', ':=', '#{validity_period}')" if validity_period
+  values << "('#{name}', 'Mikrotik-Rate-Limit', ':=', '#{upload_limit}M/#{download_limit}M')" if upload_limit && download_limit
+  values << "('#{name}', 'Mikrotik-Burst-Limit', ':=', '#{upload_burst_limit}M/#{download_burst_limit}M')" if upload_burst_limit && download_burst_limit
+  
+  if values.any?
+    sql = <<-SQL
+      INSERT INTO radgroupreply (groupname, attribute, op, value)
+      VALUES #{values.join(', ')}
+      ON CONFLICT (groupname, attribute) DO NOTHING;
+    SQL
+    ActiveRecord::Base.connection.execute(sql)
+  end
 
 return name  # Retu
 end
