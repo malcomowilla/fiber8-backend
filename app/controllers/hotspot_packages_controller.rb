@@ -1499,10 +1499,10 @@ def update_freeradius_policies(package)
     # Handle validity and expiration
     if package.validity.present? && package.validity_period_units.present?
       expiration_time = case package.validity_period_units
-                        when 'days' then Time.now + (package.validity.to_i * 86400)
-                        when 'hours' then Time.now + (package.validity.to_i * 3600)
-                        when 'minutes' then Time.now + (package.validity.to_i * 60)
-                        end&.strftime("%Y-%m-%d %H:%M:%S")
+      when 'days' then Time.now + (package.validity.to_i * 86400)
+      when 'hours' then Time.now + (package.validity.to_i * 3600)
+      when 'minutes' then Time.now + (package.validity.to_i * 60)
+      end&.strftime("%d %b %Y %H:%M:%S")  # ✅ Correct format for FreeRADIUS
 
       if expiration_time
         ActiveRecord::Base.connection.execute(<<-SQL)
