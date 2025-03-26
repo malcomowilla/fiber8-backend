@@ -245,10 +245,10 @@ end
       # user_profile_id = get_user_profile_id_from_mikrotik(@hotspot_voucher.voucher)
       # calculate_expiration(package, hotspot_package_created)
       create_voucher_radcheck(@hotspot_voucher)
-      @hotspot_voucher.update(
-        user_manager_user_id: user_manager_user_id,
-          user_profile_id: user_profile_id,
-      )
+      # @hotspot_voucher.update(
+      #   user_manager_user_id: user_manager_user_id,
+      #     user_profile_id: user_profile_id,
+      # )
       calculate_expiration(params[:package], @hotspot_voucher)
         if @hotspot_voucher.save
   
