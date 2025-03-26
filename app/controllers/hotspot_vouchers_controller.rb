@@ -244,7 +244,7 @@ end
       # user_manager_user_id = get_user_manager_user_id(@hotspot_voucher.voucher)
       # user_profile_id = get_user_profile_id_from_mikrotik(@hotspot_voucher.voucher)
       # calculate_expiration(package, hotspot_package_created)
-      create_voucher_radcheck(@hotspot_voucher)
+      create_voucher_radcheck(@hotspot_voucher.voucher, @hotspot_voucher.package, @hotspot_voucher.shared_users)
       # @hotspot_voucher.update(
       #   user_manager_user_id: user_manager_user_id,
       #     user_profile_id: user_profile_id,
@@ -292,21 +292,37 @@ end
 
   end
 
-  def create_voucher_radcheck(hotspot_voucher)
+  def create_voucher_radcheck(hotspot_voucher, package, shared_users)
   
-    ActiveRecord::Base.connection.execute("
-    INSERT INTO radcheck (username, attribute, op, value) 
-    VALUES ('#{hotspot_voucher.voucher}', 'Cleartext-Password', ':=', '')
-  ")
+#     ActiveRecord::Base.connection.execute("
+#     INSERT INTO radcheck (username, attribute, op, value) 
+#     VALUES ('#{hotspot_voucher.voucher}', 'Cleartext-Password', ':=', '')
+#   ")
   
-  ActiveRecord::Base.connection.execute("
-  INSERT INTO radcheck (username, attribute, op, value) 
-  VALUES ('#{hotspot_voucher.voucher}', 'Simultaneous-Use', ':=', '#{hotspot_voucher.shared_users}')
-")
+#   ActiveRecord::Base.connection.execute("
+#   INSERT INTO radcheck (username, attribute, op, value) 
+#   VALUES ('#{hotspot_voucher}', 'Simultaneous-Use', ':=', '#{hotspot_voucher.shared_users}')
+# ")
   
 ActiveRecord::Base.connection.execute("
+INSERT INTO radcheck (username, attribute, op, value) 
+SELECT '#{hotspot_voucher}', 'Cleartext-Password', ':=', ''
+WHERE NOT EXISTS (
+  SELECT 1 FROM radcheck WHERE username = '#{hotspot_voucher}' AND attribute = 'Cleartext-Password'
+)
+")
+
+ActiveRecord::Base.connection.execute("
+INSERT INTO radcheck (username, attribute, op, value) 
+SELECT '#{hotspot_voucher}', 'Simultaneous-Use', ':=', '#{shared_users}'
+WHERE NOT EXISTS (
+  SELECT 1 FROM radcheck WHERE username = '#{hotspot_voucher}' AND attribute = 'Simultaneous-Use'
+)
+")
+
+ActiveRecord::Base.connection.execute("
 INSERT INTO radusergroup (username, groupname, priority) 
-VALUES ('#{hotspot_voucher.voucher}', '#{hotspot_voucher.package}', 1)
+VALUES ('#{hotspot_voucher}', '#{package}', 1)
 ")
   
   end
@@ -547,12 +563,12 @@ def login_with_hotspot_voucher
 
   # Find the voucher in the database
   @hotspot_voucher = HotspotVoucher.find_by(voucher: params[:voucher])
-  # return render json: { error: 'Invalid voucher' }, status: :not_found unless @hotspot_voucher
+  return render json: { error: 'Invalid voucher' }, status: :not_found unless @hotspot_voucher
 
 
-    #   if @hotspot_voucher.expiration.present? && @hotspot_voucher.expiration < Time.current
-    #   return render json: { error: 'Voucher expired' }, status: :forbidden
-    # end
+      if @hotspot_voucher.expiration.present? && @hotspot_voucher.expiration < Time.current
+      return render json: { error: 'Voucher expired' }, status: :forbidden
+    end
 
   # shared_users =@hotspot_voucher.shared_users.to_i
 
