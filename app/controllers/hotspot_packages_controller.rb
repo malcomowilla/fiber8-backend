@@ -228,15 +228,152 @@ end
   end
   
   # POS T /hotspot_packages or /hotspot_packages.json
-  def create
+#   def create
 
 
-    host = request.headers['X-Subdomain'] 
+#     host = request.headers['X-Subdomain'] 
 
 
-if host === 'demo'
+# if host === 'demo'
   
 
+
+     
+#   if HotspotPackage.exists?(name: params[:name])
+#     render json: { error: "ip pool already exists" }, status: :unprocessable_entity
+#     return
+    
+#   end
+  
+
+  
+#   if params[:name].blank?
+#     render json: { error: "package name is required" }, status: :unprocessable_entity
+#     return
+#   end
+  
+#   # if params[:download_limit].blank?
+#   #   render json: { error: "download limit is required" }, status: :unprocessable_entity
+#   #   return
+#   # end
+  
+#   # if params[:upload_limit].blank?
+#   #   render json: { error: "upload limit is required" }, status: :unprocessable_entity
+#   #   return
+#   # end
+  
+#   if params[:price].blank?
+#     render json: { error: "price is required" }, status: :unprocessable_entity
+#     return
+#   end
+#   @hotspot_package = HotspotPackage.new(hotspot_package_params)
+#   # use_radius = ActsAsTenant.current_tenant.&router_setting&.use_radius
+
+
+
+#     if @hotspot_package.save
+    
+           
+#         render json: @hotspot_package, status: :created
+#     else
+#    render json: @hotspot_package.errors, status: :unprocessable_entity
+#     end
+
+
+
+  
+  
+# else
+       
+#   if HotspotPackage.exists?(name: params[:name])
+#     render json: { error: "ip pool already exists" }, status: :unprocessable_entity
+#     return
+    
+#   end
+  
+
+  
+#   if params[:name].blank?
+#     render json: { error: "package name is required" }, status: :unprocessable_entity
+#     return
+#   end
+  
+#   # if params[:download_limit].blank?
+#   #   render json: { error: "download limit is required" }, status: :unprocessable_entity
+#   #   return
+#   # end
+  
+#   # if params[:upload_limit].blank?
+#   #   render json: { error: "upload limit is required" }, status: :unprocessable_entity
+#   #   return
+#   # end
+  
+#   if params[:price].blank?
+#     render json: { error: "price is required" }, status: :unprocessable_entity
+#     return
+#   end
+#   @hotspot_package = HotspotPackage.new(hotspot_package_params)
+#   use_radius = ActsAsTenant.current_tenant.router_setting.use_radius
+
+#   if !use_radius
+
+
+#     if @hotspot_package.save
+#       # profile_id= fetch_profile_id_from_mikrotik
+#       # limitation_id = fetch_limitation_id_from_mikrotik
+#       # profile_limitation_id =  fetch_profile_limitation_id
+#       user_profile_id = fetch_user_profile_id_from_mikrotik  
+      
+#       # if profile_id && limitation_id && profile_limitation_id && user_profile_id
+
+#       if user_profile_id
+#         # @hotspot_package.update(limitation_id: limitation_id,
+#         #  profile_limitation_id: profile_limitation_id, profile_id: profile_id,user_profile_id: user_profile_id)
+
+#         @hotspot_package.update(user_profile_id: user_profile_id)
+#         render json: @hotspot_package, status: :created
+#       else
+#         render json: { error: 'Failed to obtain the  ids from mikrotik' }, status: :unprocessable_entity
+#       end
+        
+#         # render json: @hotspot_package, status: :created
+#     else
+#    render json: @hotspot_package.errors, status: :unprocessable_entity
+#     end
+
+#   else
+
+  
+#     if @hotspot_package.save
+#       profile_id= fetch_profile_id_from_mikrotik
+#       limitation_id = fetch_limitation_id_from_mikrotik
+#       profile_limitation_id =  fetch_profile_limitation_id
+      
+#       if profile_id && limitation_id && profile_limitation_id 
+
+#         @hotspot_package.update(limitation_id: limitation_id,
+#          profile_limitation_id: profile_limitation_id, profile_id: profile_id)
+
+#         render json: @hotspot_package, status: :created
+#       else
+#         render json: { error: 'Failed to obtain the  ids from mikrotik' }, status: :unprocessable_entity
+#       end
+        
+#         # render json: @hotspot_package, status: :created
+#     else
+#    render json: @hotspot_package.errors, status: :unprocessable_entity
+#     end
+
+#   end
+# end
+
+ 
+#   end
+
+
+
+def create
+  
 
      
   if HotspotPackage.exists?(name: params[:name])
@@ -269,7 +406,7 @@ if host === 'demo'
   @hotspot_package = HotspotPackage.new(hotspot_package_params)
   # use_radius = ActsAsTenant.current_tenant.&router_setting&.use_radius
 
-
+  update_freeradius_policies(@hotspot_package)
 
     if @hotspot_package.save
     
@@ -278,100 +415,8 @@ if host === 'demo'
     else
    render json: @hotspot_package.errors, status: :unprocessable_entity
     end
-
-
-
-  
-  
-else
-       
-  if HotspotPackage.exists?(name: params[:name])
-    render json: { error: "ip pool already exists" }, status: :unprocessable_entity
-    return
     
-  end
-  
-
-  
-  if params[:name].blank?
-    render json: { error: "package name is required" }, status: :unprocessable_entity
-    return
-  end
-  
-  # if params[:download_limit].blank?
-  #   render json: { error: "download limit is required" }, status: :unprocessable_entity
-  #   return
-  # end
-  
-  # if params[:upload_limit].blank?
-  #   render json: { error: "upload limit is required" }, status: :unprocessable_entity
-  #   return
-  # end
-  
-  if params[:price].blank?
-    render json: { error: "price is required" }, status: :unprocessable_entity
-    return
-  end
-  @hotspot_package = HotspotPackage.new(hotspot_package_params)
-  use_radius = ActsAsTenant.current_tenant.router_setting.use_radius
-
-  if !use_radius
-
-
-    if @hotspot_package.save
-      # profile_id= fetch_profile_id_from_mikrotik
-      # limitation_id = fetch_limitation_id_from_mikrotik
-      # profile_limitation_id =  fetch_profile_limitation_id
-      user_profile_id = fetch_user_profile_id_from_mikrotik  
-      
-      # if profile_id && limitation_id && profile_limitation_id && user_profile_id
-
-      if user_profile_id
-        # @hotspot_package.update(limitation_id: limitation_id,
-        #  profile_limitation_id: profile_limitation_id, profile_id: profile_id,user_profile_id: user_profile_id)
-
-        @hotspot_package.update(user_profile_id: user_profile_id)
-        render json: @hotspot_package, status: :created
-      else
-        render json: { error: 'Failed to obtain the  ids from mikrotik' }, status: :unprocessable_entity
-      end
-        
-        # render json: @hotspot_package, status: :created
-    else
-   render json: @hotspot_package.errors, status: :unprocessable_entity
-    end
-
-  else
-
-  
-    if @hotspot_package.save
-      profile_id= fetch_profile_id_from_mikrotik
-      limitation_id = fetch_limitation_id_from_mikrotik
-      profile_limitation_id =  fetch_profile_limitation_id
-      
-      if profile_id && limitation_id && profile_limitation_id 
-
-        @hotspot_package.update(limitation_id: limitation_id,
-         profile_limitation_id: profile_limitation_id, profile_id: profile_id)
-
-        render json: @hotspot_package, status: :created
-      else
-        render json: { error: 'Failed to obtain the  ids from mikrotik' }, status: :unprocessable_entity
-      end
-        
-        # render json: @hotspot_package, status: :created
-    else
-   render json: @hotspot_package.errors, status: :unprocessable_entity
-    end
-
-  end
 end
-
- 
-  end
-
-
-
 
 
 
@@ -1431,6 +1476,78 @@ def fetch_limitation_id_from_mikrotik
 
 return name  # Retu
 end
+
+
+
+
+
+
+
+
+
+
+
+def update_freeradius_policies(package)
+  group_name = "hotspot_#{package.id}" # Unique group for each package
+  now = Time.now.strftime("%Y-%m-%d %H:%M:%S")
+
+  ActiveRecord::Base.transaction do
+    # Ensure group exists in Radgroupcheck
+    ActiveRecord::Base.connection.execute(<<-SQL)
+      INSERT INTO radgroupcheck (groupname, attribute, op, value)
+      VALUES ('#{group_name}', 'Auth-Type', ':=', 'Accept')
+      ON DUPLICATE KEY UPDATE value = 'Accept';
+    SQL
+
+    # Set speed limits in Radgroupreply
+    ActiveRecord::Base.connection.execute(<<-SQL)
+      INSERT INTO radgroupreply (groupname, attribute, op, value)
+      VALUES ('#{group_name}', 'Mikrotik-Rate-Limit', ':=', '#{package.upload_limit}/#{package.download_limit}')
+      ON DUPLICATE KEY UPDATE value = '#{package.upload_limit}/#{package.download_limit}';
+    SQL
+
+    # Handle validity and expiration
+    if package.validity.present? && package.validity_units.present?
+      expiration_time = case package.validity_units
+                        when 'days' then Time.now + (package.validity.to_i * 86400)
+                        when 'hours' then Time.now + (package.validity.to_i * 3600)
+                        when 'minutes' then Time.now + (package.validity.to_i * 60)
+                        end&.strftime("%Y-%m-%d %H:%M:%S")
+
+      if expiration_time
+        ActiveRecord::Base.connection.execute(<<-SQL)
+          INSERT INTO radcheck (username, attribute, op, value)
+          VALUES ('#{package.name}', 'Expiration', ':=', '#{expiration_time}')
+          ON DUPLICATE KEY UPDATE value = '#{expiration_time}';
+        SQL
+      end
+    end
+
+    # Handle weekdays restrictions
+    if package.weekdays.present?
+      days_string = package.weekdays.map { |day| day[0..2] }.join(",")
+
+      ActiveRecord::Base.connection.execute(<<-SQL)
+        INSERT INTO radgroupcheck (groupname, attribute, op, value)
+        VALUES ('#{group_name}', 'Wk-Day', ':=', '#{days_string}')
+        ON DUPLICATE KEY UPDATE value = '#{days_string}';
+      SQL
+    else
+      # If no weekdays are set, remove any existing restriction
+      ActiveRecord::Base.connection.execute(<<-SQL)
+        DELETE FROM radgroupcheck WHERE groupname = '#{group_name}' AND attribute = 'Wk-Day';
+      SQL
+    end
+
+    # Assign users to the group in radusergroup
+    ActiveRecord::Base.connection.execute(<<-SQL)
+      INSERT INTO radusergroup (username, groupname)
+      VALUES ('#{package.name}', '#{group_name}')
+      ON DUPLICATE KEY UPDATE groupname = '#{group_name}';
+    SQL
+  end
+end
+
 
 
 
