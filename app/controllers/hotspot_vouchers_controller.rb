@@ -105,6 +105,104 @@ def active_vouchers
 end
 
   # POST /hotspot_vouchers or /hotspot_vouchers.json
+  # def create
+
+  #   host = request.headers['X-Subdomain'] 
+  #   if host === 'demo'
+
+  # if params[:package].blank?
+  #   render json: { error: "hotspot package is required" }, status: :unprocessable_entity
+  #   return
+  # end
+
+  #     @hotspot_voucher = HotspotVoucher.new(
+  #     package: params[:package],
+  #     shared_users: params[:shared_users],
+  #     phone: params[:phone],
+  #     voucher: generate_voucher_code
+  #   )
+  #   render json: @hotspot_voucher, status: :created
+
+
+   
+  #   else
+
+
+  #     use_radius = ActsAsTenant.current_tenant.router_setting.use_radius
+
+  #     if params[:package].blank?
+  #       render json: { error: "hotspot package is required" }, status: :unprocessable_entity
+  #       return
+  #     end
+  
+  #       if use_radius == true
+  #     @hotspot_voucher = HotspotVoucher.new(
+  #       package: params[:package],
+  #       shared_users: params[:shared_users],
+  #       phone: params[:phone],
+  #       voucher: generate_voucher_code
+  #     )
+  
+  #     user_manager_user_id = get_user_manager_user_id(@hotspot_voucher.voucher)
+  #     user_profile_id = get_user_profile_id_from_mikrotik(@hotspot_voucher.voucher)
+  # if user_manager_user_id && user_profile_id
+  #     # calculate_expiration(package, hotspot_package_created)
+  #     @hotspot_voucher.update(
+  #       user_manager_user_id: user_manager_user_id,
+  #         user_profile_id: user_profile_id,
+  #     )
+  #     calculate_expiration(params[:package], @hotspot_voucher)
+  #       if @hotspot_voucher.save
+  
+         
+  
+  
+  #         if params[:phone].present?
+  #            voucher_expiration = calculate_expiration_send_to_customer(params[:package])
+  
+  #            if params[:selected_provider] == "SMS leopard"
+  #              send_voucher(params[:phone], @hotspot_voucher.voucher,
+  #              voucher_expiration
+  #              )
+               
+  #            elsif  params[:selected_provider] == "TextSms"
+  #              send_voucher_text_sms(params[:phone], @hotspot_voucher.voucher,
+  #              voucher_expiration
+  #              )
+               
+  #            end
+  #         # send_voucher(params[:phone], @hotspot_voucher.voucher,
+  #         # voucher_expiration
+  #         # )
+  
+  #         end
+          
+          
+  
+  
+  #         render json: @hotspot_voucher, status: :created
+  #       else
+  #         render json: @hotspot_voucher.errors, status: :unprocessable_entity 
+  #       end
+  #     else
+  #       Rails.logger.info "Failed to obtain the   user manager user id from mikrotik"
+  #       # render json: { error: 'Failed to obtain the   usermanager user id from mikrotik' }, status: :unprocessable_entity
+  #     end
+  
+  #     else
+  # puts 'testt123'
+  #     end
+
+  #   end
+
+  # end
+
+
+
+
+
+
+
   def create
 
     host = request.headers['X-Subdomain'] 
@@ -143,10 +241,10 @@ end
         voucher: generate_voucher_code
       )
   
-      user_manager_user_id = get_user_manager_user_id(@hotspot_voucher.voucher)
-      user_profile_id = get_user_profile_id_from_mikrotik(@hotspot_voucher.voucher)
-  if user_manager_user_id && user_profile_id
+      # user_manager_user_id = get_user_manager_user_id(@hotspot_voucher.voucher)
+      # user_profile_id = get_user_profile_id_from_mikrotik(@hotspot_voucher.voucher)
       # calculate_expiration(package, hotspot_package_created)
+      create_voucher_radcheck(@hotspot_voucher)
       @hotspot_voucher.update(
         user_manager_user_id: user_manager_user_id,
           user_profile_id: user_profile_id,
@@ -184,10 +282,7 @@ end
         else
           render json: @hotspot_voucher.errors, status: :unprocessable_entity 
         end
-      else
-        Rails.logger.info "Failed to obtain the   user manager user id from mikrotik"
-        # render json: { error: 'Failed to obtain the   usermanager user id from mikrotik' }, status: :unprocessable_entity
-      end
+     
   
       else
   puts 'testt123'
@@ -197,7 +292,21 @@ end
 
   end
 
-
+  def create_voucher_radcheck(hotspot_voucher)
+  
+    ActiveRecord::Base.connection.execute("
+    INSERT INTO radcheck (username, attribute, op, value) 
+    VALUES ('#{hotspot_voucher.voucher}', 'Cleartext-Password', ':=', '')
+  ")
+  
+  ActiveRecord::Base.connection.execute("
+  INSERT INTO radcheck (username, attribute, op, value) 
+  VALUES ('#{hotspot_voucher.voucher}', 'Simultaneous-Use', ':=', '#{hotspot_voucher.shared_users}')
+")
+  
+  
+  end
+  
 
 
   # PATCH/PUT /hotspot_vouchers/1 or /hotspot_vouchers/1.json
@@ -271,6 +380,10 @@ router_ip_address = nas_router.ip_address
   end
 
 
+
+
+
+ 
 
 
 
