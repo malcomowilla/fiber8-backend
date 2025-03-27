@@ -315,9 +315,9 @@ end
 # INSERT INTO radusergroup (username, groupname, priority) 
 # VALUES ('#{hotspot_voucher}', '#{package}', 1)
 # ")
-Radcheck.create(username: hotspot_voucher, radiusattribute: 'Cleartext-Password', op: ':=', value: '')  
-Radcheck.create(username: hotspot_voucher, radiusattribute: 'Simultaneous-Use', op: ':=', value: shared_users.to_s)  
-Radusergroup.create(username: hotspot_voucher, groupname: package, priority: 1)  
+RadCheck.create(username: hotspot_voucher, radiusattribute: 'Cleartext-Password', op: ':=', value: '')  
+RadCheck.create(username: hotspot_voucher, radiusattribute: 'Simultaneous-Use', op: ':=', value: shared_users.to_s)  
+RadUserGroup.create(username: hotspot_voucher, groupname: package, priority: 1)  
 
   
   end
