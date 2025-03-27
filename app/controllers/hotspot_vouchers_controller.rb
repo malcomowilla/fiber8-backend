@@ -294,36 +294,31 @@ end
 
   def create_voucher_radcheck(hotspot_voucher, package, shared_users)
   
-#     ActiveRecord::Base.connection.execute("
-#     INSERT INTO radcheck (username, attribute, op, value) 
-#     VALUES ('#{hotspot_voucher.voucher}', 'Cleartext-Password', ':=', '')
-#   ")
   
-#   ActiveRecord::Base.connection.execute("
-#   INSERT INTO radcheck (username, attribute, op, value) 
-#   VALUES ('#{hotspot_voucher}', 'Simultaneous-Use', ':=', '#{hotspot_voucher.shared_users}')
+# ActiveRecord::Base.connection.execute("
+# INSERT INTO radcheck (username, radiusattribute, op, value) 
+# SELECT '#{hotspot_voucher}', 'Cleartext-Password', ':=', '#{hotspot_voucher}'
+# WHERE NOT EXISTS (
+#   SELECT 1 FROM radcheck WHERE username = '#{hotspot_voucher}' AND radiusattribute = 'Cleartext-Password'
+# )
 # ")
-  
-ActiveRecord::Base.connection.execute("
-INSERT INTO radcheck (username, radiusattribute, op, value) 
-SELECT '#{hotspot_voucher}', 'Cleartext-Password', ':=', '#{hotspot_voucher}'
-WHERE NOT EXISTS (
-  SELECT 1 FROM radcheck WHERE username = '#{hotspot_voucher}' AND radiusattribute = 'Cleartext-Password'
-)
-")
 
-ActiveRecord::Base.connection.execute("
-INSERT INTO radcheck (username, radiusattribute, op, value) 
-SELECT '#{hotspot_voucher}', 'Simultaneous-Use', ':=', '#{shared_users}'
-WHERE NOT EXISTS (
-  SELECT 1 FROM radcheck WHERE username = '#{hotspot_voucher}' AND radiusattribute = 'Simultaneous-Use'
-)
-")
+# ActiveRecord::Base.connection.execute("
+# INSERT INTO radcheck (username, radiusattribute, op, value) 
+# SELECT '#{hotspot_voucher}', 'Simultaneous-Use', ':=', '#{shared_users}'
+# WHERE NOT EXISTS (
+#   SELECT 1 FROM radcheck WHERE username = '#{hotspot_voucher}' AND radiusattribute = 'Simultaneous-Use'
+# )
+# ")
 
-ActiveRecord::Base.connection.execute("
-INSERT INTO radusergroup (username, groupname, priority) 
-VALUES ('#{hotspot_voucher}', '#{package}', 1)
-")
+# ActiveRecord::Base.connection.execute("
+# INSERT INTO radusergroup (username, groupname, priority) 
+# VALUES ('#{hotspot_voucher}', '#{package}', 1)
+# ")
+Radcheck.create(username: hotspot_voucher, radiusattribute: 'Cleartext-Password', op: ':=', value: '')  
+Radcheck.create(username: hotspot_voucher, radiusattribute: 'Simultaneous-Use', op: ':=', value: shared_users.to_s)  
+Radusergroup.create(username: hotspot_voucher, groupname: package, priority: 1)  
+
   
   end
   
