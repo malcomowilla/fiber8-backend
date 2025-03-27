@@ -1565,7 +1565,7 @@ ActiveRecord::Base.transaction do
 
 
 
-    if if package.validity.present? && package.validity_period_units.present?
+    if package.validity.present? && package.validity_period_units.present?
       RadGroupCheck.create!(
         groupname: group_name,
         radiusattribute: 'Expiration',
