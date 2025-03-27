@@ -1,5 +1,6 @@
 class RadGroupCheck < ApplicationRecord
   self.table_name = 'radgroupcheck'  # Explicitly set the table name
+  acts_as_tenant(:account)
 
 
   # def attribute
