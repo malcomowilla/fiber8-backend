@@ -1547,22 +1547,21 @@ ActiveRecord::Base.transaction do
   )
 
   # Handle validity and expiration
-  if package.validity.present? && package.validity_period_units.present?
-    
+  
 
 
 
-    expiration_time = if package.validity.present? && package.validity_period_units.present?
-      case package.validity_period_units.downcase
-      when 'days'
-        Time.current + package.validity.days.strftime("%d %b %Y %H:%M:%S")
-      when 'hours'
-        Time.current + package.validity.hours.strftime("%d %b %Y %H:%M:%S")
-      when 'minutes'
-        Time.current + package.validity.minutes.strftime("%d %b %Y %H:%M:%S")
-      else
-        nil
-      end
+  expiration_time = if package.validity.present? && package.validity_period_units.present?
+    case package.validity_period_units.downcase
+    when 'days'
+      Time.current + package.validity.days.strftime("%d %b %Y %H:%M:%S")
+    when 'hours'
+      Time.current + package.validity.hours.strftime("%d %b %Y %H:%M:%S")
+    when 'minutes'
+      Time.current + package.validity.minutes.strftime("%d %b %Y %H:%M:%S")
+    else
+      nil
+    end
 
 
 
