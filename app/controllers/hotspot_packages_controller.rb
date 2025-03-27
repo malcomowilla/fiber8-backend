@@ -1539,7 +1539,7 @@ now = Time.current
 
 ActiveRecord::Base.transaction do
   # Set speed limits in Radgroupreply
-  Radgroupreply.create!(
+  RadGroupReply.create!(
     groupname: group_name,
     radiusattribute: 'Mikrotik-Rate-Limit',
     op: ':=',
@@ -1555,7 +1555,7 @@ ActiveRecord::Base.transaction do
                       end&.strftime("%d %b %Y %H:%M:%S")  # ✅ Correct format for FreeRADIUS
 
     if expiration_time
-      Radgroupcheck.create!(
+      RadGroupCheck.create!(
         groupname: group_name,
         radiusattribute: 'Expiration',
         op: ':=',
@@ -1568,7 +1568,7 @@ ActiveRecord::Base.transaction do
   if package.weekdays.present?
     days_string = package.weekdays.map { |day| day[0..2] }.join(",")
 
-    Radgroupcheck.create!(
+    RadGroupCheck.create!(
       groupname: group_name,
       radiusattribute: 'Day-Of-Week',
       op: ':=',
@@ -1576,7 +1576,7 @@ ActiveRecord::Base.transaction do
     )
   else
     # If no weekdays are set, remove any existing restriction
-    Radgroupcheck.where(groupname: group_name, radiusattribute: 'Wk-Day').destroy_all
+    RadGroupCheck.where(groupname: group_name, radiusattribute: 'Wk-Day').destroy_all
   end
 end
 
