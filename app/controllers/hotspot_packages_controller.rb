@@ -1561,7 +1561,6 @@ ActiveRecord::Base.transaction do
     else
       nil
     end
-  end
 
 
 
