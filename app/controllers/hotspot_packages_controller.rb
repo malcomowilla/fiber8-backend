@@ -1548,11 +1548,13 @@ ActiveRecord::Base.transaction do
 
   # Handle validity and expiration
   if package.validity.present? && package.validity_period_units.present?
-        expiration_time = case package.validity_period_units
-      when 'days' then Time.now + (package.validity.to_i * 86400)
-      when 'hours' then Time.now + (package.validity.to_i * 3600)
-      when 'minutes' then Time.now + (package.validity.to_i * 60)
-      end&.strftime("%d %b %Y %H:%M:%S")  # ✅ Correct format for FreeRADIUS
+    expiration_time = case package.validity_period_units
+    when 'days' then Time.current + package.validity.to_i.days
+    when 'hours' then Time.current + package.validity.to_i.hours
+    when 'minutes' then Time.current + package.validity.to_i.minutes
+    end&.strftime("%d %b %Y %H:%M:%S")
+
+
     if expiration_time
       RadGroupCheck.create!(
         groupname: group_name,
