@@ -626,7 +626,7 @@ router_name = params[:router_name]
 
 
   # Log in the device using SSH
-  command = "/ip hotspot active login user=#{params[:voucher]} password='#{params[:voucher]}' ip=#{params[:ip]}"
+  command = "/ip hotspot active login user=#{params[:voucher]} password=#{params[:voucher]} ip=#{params[:ip]}"
   # command = "/ip hotspot active login user=#{params[:voucher]} ip=#{params[:ip]}"
 
   begin
