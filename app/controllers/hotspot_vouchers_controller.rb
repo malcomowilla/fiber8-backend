@@ -305,18 +305,18 @@ end
 # ")
   
 ActiveRecord::Base.connection.execute("
-INSERT INTO radcheck (username, radius_attribute, op, value) 
+INSERT INTO radcheck (username, radiusattribute, op, value) 
 SELECT '#{hotspot_voucher}', 'Cleartext-Password', ':=', '#{hotspot_voucher}'
 WHERE NOT EXISTS (
-  SELECT 1 FROM radcheck WHERE username = '#{hotspot_voucher}' AND radius_attribute = 'Cleartext-Password'
+  SELECT 1 FROM radcheck WHERE username = '#{hotspot_voucher}' AND radiusattribute = 'Cleartext-Password'
 )
 ")
 
 ActiveRecord::Base.connection.execute("
-INSERT INTO radcheck (username, radius_attribute, op, value) 
+INSERT INTO radcheck (username, radiusattribute, op, value) 
 SELECT '#{hotspot_voucher}', 'Simultaneous-Use', ':=', '#{shared_users}'
 WHERE NOT EXISTS (
-  SELECT 1 FROM radcheck WHERE username = '#{hotspot_voucher}' AND radius_attribute = 'Simultaneous-Use'
+  SELECT 1 FROM radcheck WHERE username = '#{hotspot_voucher}' AND radiusattribute = 'Simultaneous-Use'
 )
 ")
 
