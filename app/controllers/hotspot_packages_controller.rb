@@ -1486,50 +1486,100 @@ end
 
 
 def update_freeradius_policies(package)
-  group_name = "#{package.name}" # Unique group for each package
-  now = Time.now.strftime("%Y-%m-%d %H:%M:%S")
+  # group_name = "#{package.name}" # Unique group for each package
+  # now = Time.now.strftime("%Y-%m-%d %H:%M:%S")
 
-  ActiveRecord::Base.transaction do
-    # Set speed limits in Radgroupreply
-    ActiveRecord::Base.connection.execute(<<-SQL)
-      INSERT INTO radgroupreply (groupname, radiusattribute, op, value)
-      VALUES ('#{group_name}', 'Mikrotik-Rate-Limit', ':=', '#{package.upload_limit}/#{package.download_limit}')
-    SQL
+  # ActiveRecord::Base.transaction do
+  #   # Set speed limits in Radgroupreply
+  #   ActiveRecord::Base.connection.execute(<<-SQL)
+  #     INSERT INTO radgroupreply (groupname, radiusattribute, op, value)
+  #     VALUES ('#{group_name}', 'Mikrotik-Rate-Limit', ':=', '#{package.upload_limit}/#{package.download_limit}')
+  #   SQL
 
-    # Handle validity and expiration
-    if package.validity.present? && package.validity_period_units.present?
-      expiration_time = case package.validity_period_units
-      when 'days' then Time.now + (package.validity.to_i * 86400)
-      when 'hours' then Time.now + (package.validity.to_i * 3600)
-      when 'minutes' then Time.now + (package.validity.to_i * 60)
-      end&.strftime("%d %b %Y %H:%M:%S")  # ✅ Correct format for FreeRADIUS
+  #   # Handle validity and expiration
+  #   if package.validity.present? && package.validity_period_units.present?
+  #     expiration_time = case package.validity_period_units
+  #     when 'days' then Time.now + (package.validity.to_i * 86400)
+  #     when 'hours' then Time.now + (package.validity.to_i * 3600)
+  #     when 'minutes' then Time.now + (package.validity.to_i * 60)
+  #     end&.strftime("%d %b %Y %H:%M:%S")  # ✅ Correct format for FreeRADIUS
 
-      if expiration_time
-        ActiveRecord::Base.connection.execute(<<-SQL)
-          INSERT INTO radgroupcheck (groupname, radiusattribute, op, value)
-          VALUES ('#{group_name}', 'Expiration', ':=', '#{expiration_time}')
-        SQL
-      end
-    end
-    # radiusattribute
-    # Handle weekdays restrictions
-    # 
-    #rename_column :radcheck, :radius_attribute, :radiusattribute
+  #     if expiration_time
+  #       ActiveRecord::Base.connection.execute(<<-SQL)
+  #         INSERT INTO radgroupcheck (groupname, radiusattribute, op, value)
+  #         VALUES ('#{group_name}', 'Expiration', ':=', '#{expiration_time}')
+  #       SQL
+  #     end
+  #   end
+  #   # radiusattribute
+  #   # Handle weekdays restrictions
+  #   # 
+  #   #rename_column :radcheck, :radius_attribute, :radiusattribute
 
-    if package.weekdays.present?
-      days_string = package.weekdays.map { |day| day[0..2] }.join(",")
+  #   if package.weekdays.present?
+  #     days_string = package.weekdays.map { |day| day[0..2] }.join(",")
 
-      ActiveRecord::Base.connection.execute(<<-SQL)
-        INSERT INTO radgroupcheck (groupname, radiusattribute, op, value)
-        VALUES ('#{group_name}', 'Day-Of-Week', ':=', '#{days_string}')
-      SQL
-    else
-      # If no weekdays are set, remove any existing restriction
-      ActiveRecord::Base.connection.execute(<<-SQL)
-        DELETE FROM radgroupcheck WHERE groupname = '#{group_name}' AND radiusattribute = 'Wk-Day';
-      SQL
+  #     ActiveRecord::Base.connection.execute(<<-SQL)
+  #       INSERT INTO radgroupcheck (groupname, radiusattribute, op, value)
+  #       VALUES ('#{group_name}', 'Day-Of-Week', ':=', '#{days_string}')
+  #     SQL
+  #   else
+  #     # If no weekdays are set, remove any existing restriction
+  #     ActiveRecord::Base.connection.execute(<<-SQL)
+  #       DELETE FROM radgroupcheck WHERE groupname = '#{group_name}' AND radiusattribute = 'Wk-Day';
+  #     SQL
+  #   end
+  # end
+  # 
+
+
+
+  group_name = package.name # Unique group for each package
+now = Time.current
+
+ActiveRecord::Base.transaction do
+  # Set speed limits in Radgroupreply
+  Radgroupreply.create!(
+    groupname: group_name,
+    radiusattribute: 'Mikrotik-Rate-Limit',
+    op: ':=',
+    value: "#{package.upload_limit}/#{package.download_limit}"
+  )
+
+  # Handle validity and expiration
+  if package.validity.present? && package.validity_period_units.present?
+    expiration_time = case package.validity_period_units
+                      when 'days' then now + package.validity.to_i.days
+                      when 'hours' then now + package.validity.to_i.hours
+                      when 'minutes' then now + package.validity.to_i.minutes
+                      end&.strftime("%d %b %Y %H:%M:%S")  # ✅ Correct format for FreeRADIUS
+
+    if expiration_time
+      Radgroupcheck.create!(
+        groupname: group_name,
+        radiusattribute: 'Expiration',
+        op: ':=',
+        value: expiration_time
+      )
     end
   end
+
+  # Handle weekdays restrictions
+  if package.weekdays.present?
+    days_string = package.weekdays.map { |day| day[0..2] }.join(",")
+
+    Radgroupcheck.create!(
+      groupname: group_name,
+      radiusattribute: 'Day-Of-Week',
+      op: ':=',
+      value: days_string
+    )
+  else
+    # If no weekdays are set, remove any existing restriction
+    Radgroupcheck.where(groupname: group_name, radiusattribute: 'Wk-Day').destroy_all
+  end
+end
+
 end
 
 

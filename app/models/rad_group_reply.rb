@@ -1,4 +1,5 @@
 class RadGroupReply < ApplicationRecord
+  acts_as_tenant(:account)
 
   self.table_name = 'radgroupreply'  # Explicitly set the table name
   # def attribute

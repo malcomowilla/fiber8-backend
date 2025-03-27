@@ -1,5 +1,6 @@
 class RadReply < ApplicationRecord
   self.table_name = 'radreply'  # Explicitly set the table name
+  acts_as_tenant(:account)
 
   # def attribute
   #   self[:attribute]  # Access the database column directly
