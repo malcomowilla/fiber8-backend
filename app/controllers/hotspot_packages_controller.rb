@@ -1492,7 +1492,7 @@ def update_freeradius_policies(package)
   ActiveRecord::Base.transaction do
     # Set speed limits in Radgroupreply
     ActiveRecord::Base.connection.execute(<<-SQL)
-      INSERT INTO radgroupreply (groupname, attribute, op, value)
+      INSERT INTO radgroupreply (groupname, radius_attribute, op, value)
       VALUES ('#{group_name}', 'Mikrotik-Rate-Limit', ':=', '#{package.upload_limit}/#{package.download_limit}')
     SQL
 
@@ -1506,7 +1506,7 @@ def update_freeradius_policies(package)
 
       if expiration_time
         ActiveRecord::Base.connection.execute(<<-SQL)
-          INSERT INTO radgroupcheck (groupname, attribute, op, value)
+          INSERT INTO radgroupcheck (groupname, radius_attribute, op, value)
           VALUES ('#{group_name}', 'Expiration', ':=', '#{expiration_time}')
         SQL
       end
@@ -1517,13 +1517,13 @@ def update_freeradius_policies(package)
       days_string = package.weekdays.map { |day| day[0..2] }.join(",")
 
       ActiveRecord::Base.connection.execute(<<-SQL)
-        INSERT INTO radgroupcheck (groupname, attribute, op, value)
+        INSERT INTO radgroupcheck (groupname, radius_attribute, op, value)
         VALUES ('#{group_name}', 'Day-Of-Week', ':=', '#{days_string}')
       SQL
     else
       # If no weekdays are set, remove any existing restriction
       ActiveRecord::Base.connection.execute(<<-SQL)
-        DELETE FROM radgroupcheck WHERE groupname = '#{group_name}' AND attribute = 'Wk-Day';
+        DELETE FROM radgroupcheck WHERE groupname = '#{group_name}' AND radius_attribute = 'Wk-Day';
       SQL
     end
   end
