@@ -1543,7 +1543,7 @@ ActiveRecord::Base.transaction do
     groupname: group_name,
     radiusattribute: 'Mikrotik-Rate-Limit',
     op: ':=',
-    value: "#{package.upload_limit}/#{package.download_limit}"
+    value: "#{package.upload_limit}M/#{package.download_limit}M"
   )
 
   # Handle validity and expiration
