@@ -343,59 +343,79 @@ RadUserGroup.create(username: hotspot_voucher, groupname: package, priority: 1)
 
 
   # DELETE /hotspot_vouchers/1 or /hotspot_vouchers/1.json
-  def destroy
-    @hotspot_voucher = set_hotspot_voucher
-    # @hotspot_voucher.destroy!
+#   def destroy
+#     @hotspot_voucher = set_hotspot_voucher
+#     # @hotspot_voucher.destroy!
 
-    #   head :no_content 
+#     #   head :no_content 
 
-    use_radius = ActsAsTenant.current_tenant.router_setting.use_radius
+#     use_radius = ActsAsTenant.current_tenant.router_setting.use_radius
 
-return render json: { error: 'Voucher not found ' }, status: :not_found unless @hotspot_voucher
-router_name = params[:router_name]
-nas_router = NasRouter.find_by(name: router_name)
-return render json: { error: 'router not found' }, status: :not_found unless nas_router
-router_ip_address = nas_router.ip_address
-          router_password = nas_router.password
-          router_username = nas_router.username
+# return render json: { error: 'Voucher not found ' }, status: :not_found unless @hotspot_voucher
+# router_name = params[:router_name]
+# nas_router = NasRouter.find_by(name: router_name)
+# return render json: { error: 'router not found' }, status: :not_found unless nas_router
+# router_ip_address = nas_router.ip_address
+#           router_password = nas_router.password
+#           router_username = nas_router.username
 
-    if use_radius
-      user_manager_user_id = @hotspot_voucher.user_manager_user_id
-      user_profile_id = @hotspot_voucher.user_profile_id
+#     if use_radius
+#       user_manager_user_id = @hotspot_voucher.user_manager_user_id
+#       user_profile_id = @hotspot_voucher.user_profile_id
 
-      return render json: { error: 'user_manager_user_id not found'}, status: :not_found unless user_manager_user_id
-      return render json: { error: 'user_profile_id not found'}, status: :not_found unless user_profile_id
-      uri = URI("http://#{router_ip_address}/rest/user-manager/user/#{user_manager_user_id}")
-      uri2 = URI("http://#{router_ip_address}/rest/user-manager/user-profile/#{user_profile_id}")
+#       return render json: { error: 'user_manager_user_id not found'}, status: :not_found unless user_manager_user_id
+#       return render json: { error: 'user_profile_id not found'}, status: :not_found unless user_profile_id
+#       uri = URI("http://#{router_ip_address}/rest/user-manager/user/#{user_manager_user_id}")
+#       uri2 = URI("http://#{router_ip_address}/rest/user-manager/user-profile/#{user_profile_id}")
 
-      request = Net::HTTP::Delete.new(uri)
-          request2 = Net::HTTP::Delete.new(uri2)
+#       request = Net::HTTP::Delete.new(uri)
+#           request2 = Net::HTTP::Delete.new(uri2)
 
-          request.basic_auth router_username, router_password
-          request2.basic_auth router_username, router_password
+#           request.basic_auth router_username, router_password
+#           request2.basic_auth router_username, router_password
 
-          response = Net::HTTP.start(uri.hostname, uri.port) { |http| http.request(request) }
-          response2 = Net::HTTP.start(uri2.hostname, uri2.port) { |http| http.request(request2) }
+#           response = Net::HTTP.start(uri.hostname, uri.port) { |http| http.request(request) }
+#           response2 = Net::HTTP.start(uri2.hostname, uri2.port) { |http| http.request(request2) }
 
-          if response.is_a?(Net::HTTPSuccess) && response2.is_a?(Net::HTTPSuccess)
-            @hotspot_voucher.destroy!
-            # head :no_content
-            render json: { message: 'Voucher deleted successfully' }, status: :ok
-          else
-            Rails.logger.info "Failed to delete user from mikrotik  : #{response.code} - #{response.message}"
-            Rails.logger.info "Failed to delete user profile from mikrotik  : #{response2.code} - #{response2.message}"
+#           if response.is_a?(Net::HTTPSuccess) && response2.is_a?(Net::HTTPSuccess)
+#             @hotspot_voucher.destroy!
+#             # head :no_content
+#             render json: { message: 'Voucher deleted successfully' }, status: :ok
+#           else
+#             Rails.logger.info "Failed to delete user from mikrotik  : #{response.code} - #{response.message}"
+#             Rails.logger.info "Failed to delete user profile from mikrotik  : #{response2.code} - #{response2.message}"
 
-            render json: { error: 'Failed to delete voucher' }, status: :unprocessable_entity
-          end
+#             render json: { error: 'Failed to delete voucher' }, status: :unprocessable_entity
+#           end
    
-    else
-      Rails.logger.info "not using radius"
-    end
+#     else
+#       Rails.logger.info "not using radius"
+#     end
     
+#   end
+
+
+
+def destroy
+  @hotspot_voucher = set_hotspot_voucher
+
+  if @hotspot_voucher.nil?
+    return render json: { error: "Hotspot voucher not found" }, status: :not_found
   end
 
+  ActiveRecord::Base.transaction do
+    # ✅ Delete FreeRADIUS records first
+    RadCheck.where(username: @hotspot_voucher.voucher).destroy_all
+    RadUserGroup.where(username: @hotspot_voucher.voucher).destroy_all
 
+    # ✅ Delete the HotspotVoucher record
+    @hotspot_voucher.destroy!
 
+    render json: { message: "Hotspot voucher deleted successfully" }, status: :ok
+  end
+rescue => e
+  render json: { error: "Failed to delete voucher: #{e.message}" }, status: :unprocessable_entity
+end
 
 
  
