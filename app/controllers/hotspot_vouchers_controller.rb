@@ -241,6 +241,8 @@ end
         voucher: generate_voucher_code
       )
   
+
+      return render json: { error: "hotspot package required" }, status: :unprocessable_entity unless @hotspot_voucher.package.nil?
       # user_manager_user_id = get_user_manager_user_id(@hotspot_voucher.voucher)
       # user_profile_id = get_user_profile_id_from_mikrotik(@hotspot_voucher.voucher)
       # calculate_expiration(package, hotspot_package_created)
