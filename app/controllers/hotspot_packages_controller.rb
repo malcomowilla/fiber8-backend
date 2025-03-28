@@ -1480,8 +1480,8 @@ def update_freeradius_policies(package)
 
   ActiveRecord::Base.transaction do
     # ✅ Update or create speed limits in Radgroupreply
-    rad_reply = RadGroupReply.find_or_initialize_by(groupname: group_name, radiusattribute: 'Mikrotik-Rate-Limit')
-    rad_reply.update!(op: ':=', value: "#{package.upload_limit}M/#{package.download_limit}M")
+    rad_reply = RadGroupReply.find_or_initialize_by(groupname: group_name, radiusattribute: 'Rate-Limit')
+    rad_reply.update!(op: ':=', value: "#{package.upload_limit}/#{package.download_limit}")
 
     # ✅ Handle validity and expiration
     if package.validity.present? && package.validity_period_units.present?
