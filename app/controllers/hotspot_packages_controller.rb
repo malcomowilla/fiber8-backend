@@ -422,110 +422,110 @@ end
 
 
   # PATCH/PUT /hotspot_packages/1 or /hotspot_packages/1.json
-  def update
+#   def update
    
       
-      host = request.headers['X-Subdomain'] 
+#       host = request.headers['X-Subdomain'] 
 
       
-      if host == 'demo'
-        @hotspot_package = HotspotPackage.find(params[:id])
+#       if host == 'demo'
+#         @hotspot_package = HotspotPackage.find(params[:id])
         
 
-        if  @hotspot_package
-          @hotspot_package.update(hotspot_package_params)
-        render json: @hotspot_package
-        else
+#         if  @hotspot_package
+#           @hotspot_package.update(hotspot_package_params)
+#         render json: @hotspot_package
+#         else
           
-          render json: { error: 'Hotspot package not found' }, status: :not_found
-        end
-      else
+#           render json: { error: 'Hotspot package not found' }, status: :not_found
+#         end
+#       else
 
 
-      use_radius = ActsAsTenant.current_tenant.router_setting.use_radius
-      @hotspot_package = set_hotspot_package
+#       use_radius = ActsAsTenant.current_tenant.router_setting.use_radius
+#       @hotspot_package = set_hotspot_package
 
 
-if  use_radius == true
+# if  use_radius == true
 
-      if @hotspot_package
-        router_name = params[:router_name]
-      nas_router = NasRouter.find_by(name: router_name)
-      if nas_router
-        router_ip_address = nas_router.ip_address
-        router_password = nas_router.password
-        router_username = nas_router.username
-      else
-        puts 'router not found'
-      end
-
-
+#       if @hotspot_package
+#         router_name = params[:router_name]
+#       nas_router = NasRouter.find_by(name: router_name)
+#       if nas_router
+#         router_ip_address = nas_router.ip_address
+#         router_password = nas_router.password
+#         router_username = nas_router.username
+#       else
+#         puts 'router not found'
+#       end
 
 
 
-      profile_id =  @hotspot_package.profile_id
-      limitation_id =  @hotspot_package.limitation_id
-      # user_profile_id =  @hotspot_package.user_profile_id
 
-      if profile_id.present? && limitation_id.present?
-      # if user_profile_id.present?
+
+#       profile_id =  @hotspot_package.profile_id
+#       limitation_id =  @hotspot_package.limitation_id
+#       # user_profile_id =  @hotspot_package.user_profile_id
+
+#       if profile_id.present? && limitation_id.present?
+#       # if user_profile_id.present?
         
-        download_limit = params[:download_limit]
-        upload_limit = params[:upload_limit]
+#         download_limit = params[:download_limit]
+#         upload_limit = params[:upload_limit]
     
-      upload_burst_limit = params[:upload_burst_limit]
-      download_burst_limit = params[:download_burst_limit]
-          validity = params[:validity]
+#       upload_burst_limit = params[:upload_burst_limit]
+#       download_burst_limit = params[:download_burst_limit]
+#           validity = params[:validity]
               
-    price =  params[:price]
+#     price =  params[:price]
   
-          validity_period_units = params[:validity_period_units]
-      name = params[:name]
+#           validity_period_units = params[:validity_period_units]
+#       name = params[:name]
   
       
-    validity_period  =   if validity_period_units == 'days'
-      "#{validity}d 00:00:00"
+#     validity_period  =   if validity_period_units == 'days'
+#       "#{validity}d 00:00:00"
     
-      elsif validity_period_units == 'hours'
-        "#{validity}:00:00"
+#       elsif validity_period_units == 'hours'
+#         "#{validity}:00:00"
 
-         elsif validity_period_units == 'minutes'
-      "00:#{validity}:00"
+#          elsif validity_period_units == 'minutes'
+#       "00:#{validity}:00"
       
-      end
+#       end
 
 
 
 
-        req_body={
-          "name" => name,
+#         req_body={
+#           "name" => name,
 
-          :price => price,
-          :validity => validity_period
+#           :price => price,
+#           :validity => validity_period
 
-        }
+#         }
 
 
           
   
 
-                req_body2 = {
+#                 req_body2 = {
       
-                # "download-limit" => download_limit,
-                # "upload-limit" => upload_limit,
-            "name" => name,
-            # "rate-limit-rx" => "#{upload_limit}M",
-            # "rate-limit-tx" => "#{download_limit}M",
-            # "rate-limit-burst-rx" => "#{upload_burst_limit}M",
-            # "rate-limit-burst-tx" => "#{download_burst_limit}M",
-            # "uptime-limit" => validity_period
-              }
+#                 # "download-limit" => download_limit,
+#                 # "upload-limit" => upload_limit,
+#             "name" => name,
+#             # "rate-limit-rx" => "#{upload_limit}M",
+#             # "rate-limit-tx" => "#{download_limit}M",
+#             # "rate-limit-burst-rx" => "#{upload_burst_limit}M",
+#             # "rate-limit-burst-tx" => "#{download_burst_limit}M",
+#             # "uptime-limit" => validity_period
+#               }
 
-              req_body2["rate-limit-rx"] = "#{upload_limit}M" if upload_limit.present?
-              req_body2["rate-limit-tx"] = "#{download_limit}M" if download_limit.present?
-              req_body2["rate-limit-burst-rx"] = "#{upload_burst_limit}M" if upload_burst_limit.present?
-              req_body2["rate-limit-burst-tx"] = "#{download_burst_limit}M" if download_burst_limit.present?
-              req_body2["uptime-limit"] = "#{validity_period}" if validity_period.present?
+#               req_body2["rate-limit-rx"] = "#{upload_limit}M" if upload_limit.present?
+#               req_body2["rate-limit-tx"] = "#{download_limit}M" if download_limit.present?
+#               req_body2["rate-limit-burst-rx"] = "#{upload_burst_limit}M" if upload_burst_limit.present?
+#               req_body2["rate-limit-burst-tx"] = "#{download_burst_limit}M" if download_burst_limit.present?
+#               req_body2["uptime-limit"] = "#{validity_period}" if validity_period.present?
                   
                
 
@@ -534,375 +534,412 @@ if  use_radius == true
 
              
 
-                # /ip/hotspot/user/profile/add
-                uri = URI("http://#{router_ip_address}/rest/user-manager/profile/#{profile_id}") 
-                uri2 = URI("http://#{router_ip_address}/rest/user-manager/limitation/#{limitation_id}") 
+#                 # /ip/hotspot/user/profile/add
+#                 uri = URI("http://#{router_ip_address}/rest/user-manager/profile/#{profile_id}") 
+#                 uri2 = URI("http://#{router_ip_address}/rest/user-manager/limitation/#{limitation_id}") 
 
 
-                # uri3 = URI("http://#{router_ip_address}/rest/ip/hotspot/user/profile/#{user_profile_id}")
+#                 # uri3 = URI("http://#{router_ip_address}/rest/ip/hotspot/user/profile/#{user_profile_id}")
 
 
-                req = Net::HTTP::Patch.new(uri)
-                req2 = Net::HTTP::Patch.new(uri2)
-                  #  req3 = Net::HTTP::Patch.new(uri3)
+#                 req = Net::HTTP::Patch.new(uri)
+#                 req2 = Net::HTTP::Patch.new(uri2)
+#                   #  req3 = Net::HTTP::Patch.new(uri3)
 
-                    req.basic_auth router_username, router_password
-                    req2.basic_auth router_username, router_password
-                  #  req3.basic_auth router_username, router_password
+#                     req.basic_auth router_username, router_password
+#                     req2.basic_auth router_username, router_password
+#                   #  req3.basic_auth router_username, router_password
 
-                    req['Content-Type'] = 'application/json'
-                    req2['Content-Type'] = 'application/json'
-                    # req3['Content-Type'] = 'application/json'
+#                     req['Content-Type'] = 'application/json'
+#                     req2['Content-Type'] = 'application/json'
+#                     # req3['Content-Type'] = 'application/json'
 
-          req.body = req_body.to_json
-          req2.body = req_body2.to_json
-          # req3.body = req_body3.to_json
-
-          
-          response = Net::HTTP.start(uri.hostname, uri.port){|http| http.request(req)}
-          response2 = Net::HTTP.start(uri2.hostname, uri2.port){|http| http.request(req2)} 
-
-          if response.is_a?(Net::HTTPSuccess) && response2.is_a?(Net::HTTPSuccess)
+#           req.body = req_body.to_json
+#           req2.body = req_body2.to_json
+#           # req3.body = req_body3.to_json
 
           
+#           response = Net::HTTP.start(uri.hostname, uri.port){|http| http.request(req)}
+#           response2 = Net::HTTP.start(uri2.hostname, uri2.port){|http| http.request(req2)} 
 
-    request_body3 = {
-      #    "from-time": format_for_mikrotik(params[:valid_from]),
-      # "till-time": format_for_mikrotik(params[:valid_until]),
-      # "weekdays": 'monday',
-        profile:  name,
-        limitation: name,
-        # weekdays: format_weekdays(params[:weekdays]) 
-        }
-        request_body3["from-time"] = format_for_mikrotik(params[:valid_from]) if params[:valid_from].present?
-    request_body3["till-time"] = format_for_mikrotik(params[:valid_until]) if params[:valid_until].present?
-    request_body3["weekdays"] = format_weekdays(params[:weekdays]) if params[:weekdays].present? 
-        
-        
-        uri = URI("http://#{router_ip_address}/rest/user-manager/profile-limitation/#{@hotspot_package.profile_limitation_id}")
-        request3 = Net::HTTP::Patch.new(uri)
-        request3.basic_auth router_username, router_password
-        request3.body = request_body3.to_json
-        
-        request3['Content-Type'] = 'application/json'
-        
-        response3 = Net::HTTP.start(uri.hostname, uri.port) do |http|
-          http.request(request3)
-        end
-        
-        if response3.is_a?(Net::HTTPSuccess)
-          @hotspot_package.update(hotspot_package_params)
-          render json: @hotspot_package
-          # data = JSON.parse(response.body)
-          # return data['ret']
-        else
-          puts "Failed to update profile limitation: #{response3.code} - #{response3.message}"
-        end
+#           if response.is_a?(Net::HTTPSuccess) && response2.is_a?(Net::HTTPSuccess)
+
           
-        else
-          puts "Failed to update profile:#{response.code} - #{response.message}"
-          puts "Failed to update limitation:#{response2.code} - #{response2.message}"
 
-          render json: { error: "Failed to update package" }, status: :unprocessable_entity
+#     request_body3 = {
+#       #    "from-time": format_for_mikrotik(params[:valid_from]),
+#       # "till-time": format_for_mikrotik(params[:valid_until]),
+#       # "weekdays": 'monday',
+#         profile:  name,
+#         limitation: name,
+#         # weekdays: format_weekdays(params[:weekdays]) 
+#         }
+#         request_body3["from-time"] = format_for_mikrotik(params[:valid_from]) if params[:valid_from].present?
+#     request_body3["till-time"] = format_for_mikrotik(params[:valid_until]) if params[:valid_until].present?
+#     request_body3["weekdays"] = format_weekdays(params[:weekdays]) if params[:weekdays].present? 
+        
+        
+#         uri = URI("http://#{router_ip_address}/rest/user-manager/profile-limitation/#{@hotspot_package.profile_limitation_id}")
+#         request3 = Net::HTTP::Patch.new(uri)
+#         request3.basic_auth router_username, router_password
+#         request3.body = request_body3.to_json
+        
+#         request3['Content-Type'] = 'application/json'
+        
+#         response3 = Net::HTTP.start(uri.hostname, uri.port) do |http|
+#           http.request(request3)
+#         end
+        
+#         if response3.is_a?(Net::HTTPSuccess)
+#           @hotspot_package.update(hotspot_package_params)
+#           render json: @hotspot_package
+#           # data = JSON.parse(response.body)
+#           # return data['ret']
+#         else
+#           puts "Failed to update profile limitation: #{response3.code} - #{response3.message}"
+#         end
+          
+#         else
+#           puts "Failed to update profile:#{response.code} - #{response.message}"
+#           puts "Failed to update limitation:#{response2.code} - #{response2.message}"
 
-        end
+#           render json: { error: "Failed to update package" }, status: :unprocessable_entity
+
+#         end
       
         
-      else
+#       else
       
-        render json: { error: "limitation ID, or profile ID not found in the package" }, status: :unprocessable_entity
+#         render json: { error: "limitation ID, or profile ID not found in the package" }, status: :unprocessable_entity
 
-      end
-      else
-        render json: { error: 'Unprocesable entity' }, status: :unprocessable_entity
-      end
+#       end
+#       else
+#         render json: { error: 'Unprocesable entity' }, status: :unprocessable_entity
+#       end
 
-    else
-
-
-      if @hotspot_package
-        router_name = params[:router_name]
-      nas_router = NasRouter.find_by(name: router_name)
-      if nas_router
-        router_ip_address = nas_router.ip_address
-        router_password = nas_router.password
-        router_username = nas_router.username
-      else
-        puts 'router not found'
-      end
+#     else
 
 
+#       if @hotspot_package
+#         router_name = params[:router_name]
+#       nas_router = NasRouter.find_by(name: router_name)
+#       if nas_router
+#         router_ip_address = nas_router.ip_address
+#         router_password = nas_router.password
+#         router_username = nas_router.username
+#       else
+#         puts 'router not found'
+#       end
 
 
 
-      profile_id =  @hotspot_package.profile_id
-      limitation_id =  @hotspot_package.limitation_id
-      user_profile_id =  @hotspot_package.user_profile_id
 
-      # if profile_id.present? && limitation_id.present?
-      if user_profile_id.present?
+
+#       profile_id =  @hotspot_package.profile_id
+#       limitation_id =  @hotspot_package.limitation_id
+#       user_profile_id =  @hotspot_package.user_profile_id
+
+#       # if profile_id.present? && limitation_id.present?
+#       if user_profile_id.present?
         
-        download_limit = params[:download_limit]
-        upload_limit = params[:upload_limit]
+#         download_limit = params[:download_limit]
+#         upload_limit = params[:upload_limit]
     
-      upload_burst_limit = params[:upload_burst_limit]
-      download_burst_limit = params[:download_burst_limit]
-          validity = params[:validity]
+#       upload_burst_limit = params[:upload_burst_limit]
+#       download_burst_limit = params[:download_burst_limit]
+#           validity = params[:validity]
               
-    price =  params[:price]
+#     price =  params[:price]
   
-          validity_period_units = params[:validity_period_units]
-      name = params[:name]
+#           validity_period_units = params[:validity_period_units]
+#       name = params[:name]
   
       
-    validity_period  =   if validity_period_units == 'days'
-      "#{validity}d 00:00:00"
+#     validity_period  =   if validity_period_units == 'days'
+#       "#{validity}d 00:00:00"
     
-      elsif validity_period_units == 'hours'
-        "#{validity}:00:00"
+#       elsif validity_period_units == 'hours'
+#         "#{validity}:00:00"
 
-         elsif validity_period_units == 'minutes'
-      "00:#{validity}:00"
+#          elsif validity_period_units == 'minutes'
+#       "00:#{validity}:00"
       
-      end
+#       end
 
 
 
 
           
     
-                req_body2 = {
+#                 req_body2 = {
                   
-                  # "download-limit" => download_limit,
-                  # "upload-limit" => upload_limit,
-              "name" => name,
-              # "rate-limit-rx" => "#{upload_limit}M",
-              # "rate-limit-tx" => "#{download_limit}M",
-              # "rate-limit-burst-rx" => "#{upload_burst_limit}M",
-              # "rate-limit-burst-tx" => "#{download_burst_limit}M",
-              "uptime-limit" => validity_period
-                }
+#                   # "download-limit" => download_limit,
+#                   # "upload-limit" => upload_limit,
+#               "name" => name,
+#               # "rate-limit-rx" => "#{upload_limit}M",
+#               # "rate-limit-tx" => "#{download_limit}M",
+#               # "rate-limit-burst-rx" => "#{upload_burst_limit}M",
+#               # "rate-limit-burst-tx" => "#{download_burst_limit}M",
+#               "uptime-limit" => validity_period
+#                 }
 
 
 
 
-              req_body4 = {
-                # "address-list": "any",
-                # "address-pool": "any",
+#               req_body4 = {
+#                 # "address-list": "any",
+#                 # "address-pool": "any",
               
                 
-                "name": "#{name}",
-                "rate-limit": "#{upload_limit}M/#{download_limit}M",
-                "session-timeout": "#{validity_period}",
-                # "shared-users": "any",
+#                 "name": "#{name}",
+#                 "rate-limit": "#{upload_limit}M/#{download_limit}M",
+#                 "session-timeout": "#{validity_period}",
+#                 # "shared-users": "any",
                
               
             
-            }
+#             }
 
-                # /ip/hotspot/user/profile/add
-                # uri = URI("http://#{router_ip_address}/rest/user-manager/profile/#{profile_id}") 
-                # uri2 = URI("http://#{router_ip_address}/rest/user-manager/limitation/#{limitation_id}") 
-
-
-                uri3 = URI("http://#{router_ip_address}/rest/ip/hotspot/user/profile/#{user_profile_id}")
+#                 # /ip/hotspot/user/profile/add
+#                 # uri = URI("http://#{router_ip_address}/rest/user-manager/profile/#{profile_id}") 
+#                 # uri2 = URI("http://#{router_ip_address}/rest/user-manager/limitation/#{limitation_id}") 
 
 
-                # req = Net::HTTP::Patch.new(uri)
-                # req2 = Net::HTTP::Patch.new(uri2)
-                   req3 = Net::HTTP::Patch.new(uri3)
+#                 uri3 = URI("http://#{router_ip_address}/rest/ip/hotspot/user/profile/#{user_profile_id}")
 
-                    # req.basic_auth router_username, router_password
-                    # req2.basic_auth router_username, router_password
-                   req3.basic_auth router_username, router_password
 
-                    # req['Content-Type'] = 'application/json'
-                    # req2['Content-Type'] = 'application/json'
-                    req3['Content-Type'] = 'application/json'
+#                 # req = Net::HTTP::Patch.new(uri)
+#                 # req2 = Net::HTTP::Patch.new(uri2)
+#                    req3 = Net::HTTP::Patch.new(uri3)
 
-          # req.body = req_body.to_json
-          # req2.body = req_body2.to_json
-          req3.body = req_body4.to_json
+#                     # req.basic_auth router_username, router_password
+#                     # req2.basic_auth router_username, router_password
+#                    req3.basic_auth router_username, router_password
 
-          # req2.body =   if params[:download_limit].present? && params[:upload_limit].present?
+#                     # req['Content-Type'] = 'application/json'
+#                     # req2['Content-Type'] = 'application/json'
+#                     req3['Content-Type'] = 'application/json'
+
+#           # req.body = req_body.to_json
+#           # req2.body = req_body2.to_json
+#           req3.body = req_body4.to_json
+
+#           # req2.body =   if params[:download_limit].present? && params[:upload_limit].present?
                  
 
-          # response = Net::HTTP.start(uri.hostname, uri.port){|http| http.request(req)}
-          # response2 = Net::HTTP.start(uri2.hostname, uri2.port){|http| http.request(req2)} 
-          response3 = Net::HTTP.start(uri3.hostname, uri3.port){|http| http.request(req3)}
+#           # response = Net::HTTP.start(uri.hostname, uri.port){|http| http.request(req)}
+#           # response2 = Net::HTTP.start(uri2.hostname, uri2.port){|http| http.request(req2)} 
+#           response3 = Net::HTTP.start(uri3.hostname, uri3.port){|http| http.request(req3)}
 
-          if response.is_a?(Net::HTTPSuccess) && response2.is_a?(Net::HTTPSuccess) && response3.is_a?(Net::HTTPSuccess)
+#           if response.is_a?(Net::HTTPSuccess) && response2.is_a?(Net::HTTPSuccess) && response3.is_a?(Net::HTTPSuccess)
 
-        # if response3.is_a?(Net::HTTPSuccess)
-          @hotspot_package.update(hotspot_package_params)
-          render json: @hotspot_package
-        else
-          puts "Failed to update profile  : #{response.code} - #{response.message}"
-          puts "Failed to update limitation : #{response2.code} - #{response2.message}"
+#         # if response3.is_a?(Net::HTTPSuccess)
+#           @hotspot_package.update(hotspot_package_params)
+#           render json: @hotspot_package
+#         else
+#           puts "Failed to update profile  : #{response.code} - #{response.message}"
+#           puts "Failed to update limitation : #{response2.code} - #{response2.message}"
 
-          render json: { error: "Failed to update package" }, status: :unprocessable_entity
+#           render json: { error: "Failed to update package" }, status: :unprocessable_entity
 
-        end
+#         end
       
         
-      else
+#       else
       
-        render json: { error: "user profile id not found in the package" }, status: :unprocessable_entity
+#         render json: { error: "user profile id not found in the package" }, status: :unprocessable_entity
 
-      end
-      else
-        render json: { error: 'Unprocesable entity' }, status: :unprocessable_entity
-      end
+#       end
+#       else
+#         render json: { error: 'Unprocesable entity' }, status: :unprocessable_entity
+#       end
 
     
-    end
+#     end
 
         
-      end
+#       end
       
     
+#   end
+
+def update
+  
+  @hotspot_package = set_hotspot_package
+
+  if @hotspot_package
+    update_freeradius_policies(@hotspot_package)
+    @hotspot_package.update(hotspot_package_params)
+    render json: @hotspot_package
+  else
+    render json: { error: 'hotspot package not found' }, status: :not_found
   end
 
 
+end
+  
 
 
 
   # DELETE /hotspot_packages/1 or /hotspot_packages/1.json
-  def destroy
+#   def destroy
 
 
-    host = request.headers['X-Subdomain'] 
-    if host === 'demo'
-      @hotspot_package = set_hotspot_package
-      @hotspot_package.destroy!
-      render json: { message: "Package deleted successfully" }
+#     host = request.headers['X-Subdomain'] 
+#     if host === 'demo'
+#       @hotspot_package = set_hotspot_package
+#       @hotspot_package.destroy!
+#       render json: { message: "Package deleted successfully" }
       
-    else
+#     else
 
-      use_radius = ActsAsTenant.current_tenant.router_setting.use_radius
-    if use_radius == false
-    #    head :no_content 
-    @hotspot_package = set_hotspot_package
-       if @hotspot_package
-        router_name = params[:router_name]
-        nas_router = NasRouter.find_by(name: router_name)
-        if nas_router
-          router_ip_address = nas_router.ip_address
-          router_password = nas_router.password
-          router_username = nas_router.username
-        else
-          puts 'router not found'
-        end
+#       use_radius = ActsAsTenant.current_tenant.router_setting.use_radius
+#     if use_radius == false
+#     #    head :no_content 
+#     @hotspot_package = set_hotspot_package
+#        if @hotspot_package
+#         router_name = params[:router_name]
+#         nas_router = NasRouter.find_by(name: router_name)
+#         if nas_router
+#           router_ip_address = nas_router.ip_address
+#           router_password = nas_router.password
+#           router_username = nas_router.username
+#         else
+#           puts 'router not found'
+#         end
     
-       user_profile_id = @hotspot_package.user_profile_id
+#        user_profile_id = @hotspot_package.user_profile_id
 
-        if user_profile_id.present?
-          uri = URI("http://#{router_ip_address}/rest/user-manager/profile/#{profile_id}")
-          uri2 = URI("http://#{router_ip_address}/rest/user-manager/limitation/#{limitation_id}")
+#         if user_profile_id.present?
+#           uri = URI("http://#{router_ip_address}/rest/user-manager/profile/#{profile_id}")
+#           uri2 = URI("http://#{router_ip_address}/rest/user-manager/limitation/#{limitation_id}")
           
     
-          request = Net::HTTP::Delete.new(uri)
-          request2 = Net::HTTP::Delete.new(uri2)
+#           request = Net::HTTP::Delete.new(uri)
+#           request2 = Net::HTTP::Delete.new(uri2)
     
-          request.basic_auth router_username, router_password
-          request2.basic_auth router_username, router_password
+#           request.basic_auth router_username, router_password
+#           request2.basic_auth router_username, router_password
     
-          response = Net::HTTP.start(uri.hostname, uri.port) { |http| http.request(request) }
-          response2 = Net::HTTP.start(uri2.hostname, uri2.port) { |http| http.request(request2) }
+#           response = Net::HTTP.start(uri.hostname, uri.port) { |http| http.request(request) }
+#           response2 = Net::HTTP.start(uri2.hostname, uri2.port) { |http| http.request(request2) }
     
-          if  response2.is_a?(Net::HTTPSuccess) && response.is_a?(Net::HTTPSuccess) && response4.is_a?(Net::HTTPSuccess)
-            @hotspot_package.destroy!
-            head :no_content
-          else
-            render json: { error: "Failed to delete profile, limitation, and profile limitation from Mikrotik" }, status: :unprocessable_entity
-          end
-        else
-          render json: { error: "Mikrotik ID, limitation ID, or profile limitation ID not found in the package" }, status: :unprocessable_entity
-        end
+#           if  response2.is_a?(Net::HTTPSuccess) && response.is_a?(Net::HTTPSuccess) && response4.is_a?(Net::HTTPSuccess)
+#             @hotspot_package.destroy!
+#             head :no_content
+#           else
+#             render json: { error: "Failed to delete profile, limitation, and profile limitation from Mikrotik" }, status: :unprocessable_entity
+#           end
+#         else
+#           render json: { error: "Mikrotik ID, limitation ID, or profile limitation ID not found in the package" }, status: :unprocessable_entity
+#         end
 
 
-      else
-        render json: { error: "Package not found" }, status: :not_found
-      end
+#       else
+#         render json: { error: "Package not found" }, status: :not_found
+#       end
 
 
-    elsif use_radius == true
+#     elsif use_radius == true
 
 
- #    head :no_content 
- @hotspot_package = set_hotspot_package
- if @hotspot_package
-  router_name = params[:router_name]
-  nas_router = NasRouter.find_by(name: router_name)
-  if nas_router
-    router_ip_address = nas_router.ip_address
-    router_password = nas_router.password
-    router_username = nas_router.username
-  else
-    puts 'router not found'
-  end
+#  #    head :no_content 
+#  @hotspot_package = set_hotspot_package
+#  if @hotspot_package
+#   router_name = params[:router_name]
+#   nas_router = NasRouter.find_by(name: router_name)
+#   if nas_router
+#     router_ip_address = nas_router.ip_address
+#     router_password = nas_router.password
+#     router_username = nas_router.username
+#   else
+#     puts 'router not found'
+#   end
 
 
   
 
-  profile_limitation_id = @hotspot_package.profile_limitation_id
-  limitation_id = @hotspot_package.limitation_id
-  profile_id = @hotspot_package.profile_id
+#   profile_limitation_id = @hotspot_package.profile_limitation_id
+#   limitation_id = @hotspot_package.limitation_id
+#   profile_id = @hotspot_package.profile_id
 
-  if profile_id.present?  && limitation_id.present? && profile_limitation_id.present? 
+#   if profile_id.present?  && limitation_id.present? && profile_limitation_id.present? 
 
-    uri = URI("http://#{router_ip_address}/rest/user-manager/profile/#{profile_id}")
-    uri2 = URI("http://#{router_ip_address}/rest/user-manager/limitation/#{limitation_id}")
+#     uri = URI("http://#{router_ip_address}/rest/user-manager/profile/#{profile_id}")
+#     uri2 = URI("http://#{router_ip_address}/rest/user-manager/limitation/#{limitation_id}")
     
 
-    request = Net::HTTP::Delete.new(uri)
-    request2 = Net::HTTP::Delete.new(uri2)
+#     request = Net::HTTP::Delete.new(uri)
+#     request2 = Net::HTTP::Delete.new(uri2)
 
-    request.basic_auth router_username, router_password
-    request2.basic_auth router_username, router_password
+#     request.basic_auth router_username, router_password
+#     request2.basic_auth router_username, router_password
 
-    response = Net::HTTP.start(uri.hostname, uri.port) { |http| http.request(request) }
-    response2 = Net::HTTP.start(uri2.hostname, uri2.port) { |http| http.request(request2) }
+#     response = Net::HTTP.start(uri.hostname, uri.port) { |http| http.request(request) }
+#     response2 = Net::HTTP.start(uri2.hostname, uri2.port) { |http| http.request(request2) }
 
-    if  response2.is_a?(Net::HTTPSuccess) && response.is_a?(Net::HTTPSuccess) 
-      @hotspot_package.destroy
-      head :no_content
-    else
-      render json: { error: "Failed to delete profile, limitation, and profile limitation from Mikrotik" }, status: :unprocessable_entity
-    end
-  else
-    render json: { error: "Mikrotik ID, limitation ID, or profile limitation ID not found in the package" }, status: :unprocessable_entity
+#     if  response2.is_a?(Net::HTTPSuccess) && response.is_a?(Net::HTTPSuccess) 
+#       @hotspot_package.destroy
+#       head :no_content
+#     else
+#       render json: { error: "Failed to delete profile, limitation, and profile limitation from Mikrotik" }, status: :unprocessable_entity
+#     end
+#   else
+#     render json: { error: "Mikrotik ID, limitation ID, or profile limitation ID not found in the package" }, status: :unprocessable_entity
+#   end
+
+
+#   profile_limitation_id = @hotspot_package.profile_limitation_id
+
+#   uri3 = URI("http://#{router_ip_address}/rest/user-manager/profile-limitation/#{profile_limitation_id}")
+#   request3 = Net::HTTP::Delete.new(uri3)
+
+#   request3.basic_auth router_username, router_password
+
+#   response3 = Net::HTTP.start(uri3.hostname, uri3.port) { |http| http.request(request3) }
+
+#   if response3.is_a?(Net::HTTPSuccess)
+#     puts 'profile limitation deleted'
+#   else
+#     "failed  to delete #{response4.code} - #{response4.message}"
+#   end
+# else
+#   render json: { error: "Package not found" }, status: :not_found
+# end
+
+
+
+# end 
+#     end
+
+# end
+
+
+
+
+
+def destroy
+  @hotspot_package = HotspotPackage.find_by(id: params[:id])
+
+  if @hotspot_package.nil?
+    return render json: { error: "Hotspot package not found" }, status: :not_found
   end
 
+  group_name = @hotspot_package.name # Get the group name before deletion
 
-  profile_limitation_id = @hotspot_package.profile_limitation_id
+  ActiveRecord::Base.transaction do
+    # ✅ Delete related FreeRADIUS records
+    RadGroupReply.where(groupname: group_name).destroy_all
+    RadGroupCheck.where(groupname: group_name).destroy_all
 
-  uri3 = URI("http://#{router_ip_address}/rest/user-manager/profile-limitation/#{profile_limitation_id}")
-  request3 = Net::HTTP::Delete.new(uri3)
-
-  request3.basic_auth router_username, router_password
-
-  response3 = Net::HTTP.start(uri3.hostname, uri3.port) { |http| http.request(request3) }
-
-  if response3.is_a?(Net::HTTPSuccess)
-    puts 'profile limitation deleted'
-  else
-    "failed  to delete #{response4.code} - #{response4.message}"
+    # ✅ Delete the HotspotPackage
+    @hotspot_package.destroy!
   end
-else
-  render json: { error: "Package not found" }, status: :not_found
+
+  render json: { message: "Hotspot package deleted successfully" }, status: :ok
+rescue => e
+  render json: { error: "Failed to delete hotspot package: #{e.message}" }, status: :unprocessable_entity
 end
-
-
-
-end 
-    end
-
-end
-
-
-
-
 
 
   private
@@ -1125,45 +1162,7 @@ end
 
   #       end
 
-  def fetch_profile_id_from_mikrotik
-    name = params[:name]
-    validity = params[:validity]
-    validity_units = params[:validity_period_units]
-    price = params[:price]
   
-    # Convert validity to FreeRADIUS time format
-   
-   validity_period =   if validity_units == 'days'
-    (Time.now + (validity.to_i * 86400)).strftime("%Y-%m-%d %H:%M:%S")  # Convert days to seconds
-  
-    elsif validity_units == 'hours'
-      (Time.now + (validity.to_i * 3600)).strftime("%Y-%m-%d %H:%M:%S")   # Convert hours to seconds
-
-
-    elsif validity_units == 'minutes'
-      (Time.now + (validity.to_i * 60)).strftime("%Y-%m-%d %H:%M:%S")    # Convert minutes to seconds
-    
-    end
-  
-    # Insert into `radgroupcheck` for profile conditions
-#     RadGroupCheck.create(groupname: name, :"radius_attribute" => 'Auth-Type', op: ':=', value: 'Accept')
-# RadGroupCheck.create(groupname: name, :"radius_attribute" => 'Session-Timeout', op: ':=', value: validity_period) if validity_period
-
-sql = <<-SQL
-  INSERT INTO radgroupcheck (groupname, attribute, op, value)
-  VALUES 
-    ('#{name}', 'Auth-Type', ':=', 'Accept')
-    #{validity_period ? ", ('#{name}', 'Expiration', ':=', '#{validity_period}')" : ""}
-SQL
-
-# Execute the SQL
-ActiveRecord::Base.connection.execute(sql)
-
-
-    return name  # Returning profile name as reference
-  end
-  
-
     #     def fetch_user_profile_id_from_mikrotik
     #       # /ip/hotspot/user/profile/add
     #       # router_name = session[:router_name]
@@ -1270,68 +1269,6 @@ ActiveRecord::Base.connection.execute(sql)
 
 
 
-    def fetch_user_profile_id_from_mikrotik
-      name = params[:name]
-      validity = params[:validity]
-      validity_units = params[:validity_period_units]
-      upload_limit = params[:upload_limit]
-      download_limit = params[:download_limit]
-      upload_burst_limit = params[:upload_burst_limit]
-      download_burst_limit = params[:download_burst_limit]
-
-    
-      validity_period =   if validity_units == 'days'
-        (Time.now + (validity.to_i * 86400)).strftime("%Y-%m-%d %H:%M:%S")  # Convert days to seconds
-      
-        elsif validity_units == 'hours'
-          (Time.now + (validity.to_i * 3600)).strftime("%Y-%m-%d %H:%M:%S")   # Convert hours to seconds
-    
-    
-        elsif validity_units == 'minutes'
-          (Time.now + (validity.to_i * 60)).strftime("%Y-%m-%d %H:%M:%S")    # Convert minutes to seconds
-        
-        end
-    
-      # Apply to `radreply`
-      # RadReply.create(username: name, :"radius_attribute" => 'Session-Timeout', op: ':=', value: validity_period) if validity_period
-      # RadReply.create(username: name, :"radius_attribute" => 'Mikrotik-Rate-Limit', op: ':=', value: "#{upload_limit}M/#{download_limit}M") if upload_limit && download_limit
-      # ActiveRecord::Base.connection.execute("INSERT INTO radreply (username, radius_attribute, op, value) VALUES ('#{name}', 'Session-Timeout', ':=', '#{validity_period}')")
-      # ActiveRecord::Base.connection.execute("INSERT INTO radreply (username, radius_attribute, op, value) VALUES ('#{name}', 'Mikrotik-Rate-Limit', ':=', '#{upload_limit}M/#{download_limit}M')")
-
-      sql_statements = []
-
-      if validity_period
-        sql_statements << <<-SQL
-          INSERT INTO radgroupreply (groupname, attribute, op, value) 
-          VALUES ('#{name}', 'Session-Timeout', ':=', '#{validity_period}')
-          ON CONFLICT (groupname, attribute) DO NOTHING;
-        SQL
-      end
-      
-      if upload_limit && download_limit
-        sql_statements << <<-SQL
-          INSERT INTO radgroupreply (groupname, attribute, op, value) 
-          VALUES ('#{name}', 'Mikrotik-Rate-Limit', ':=', '#{upload_limit}M/#{download_limit}M')
-          ON CONFLICT (groupname, attribute) DO NOTHING;
-        SQL
-      end
-      
-      if upload_burst_limit && download_burst_limit
-        sql_statements << <<-SQL
-          INSERT INTO radgroupreply (groupname, attribute, op, value) 
-          VALUES ('#{name}', 'Mikrotik-Burst-Limit', ':=', '#{upload_burst_limit}M/#{download_burst_limit}M')
-          ON CONFLICT (groupname, attribute) DO NOTHING;
-        SQL
-      end
-      
-      # Execute all SQL statements at once
-      sql_statements.each do |sql|
-        ActiveRecord::Base.connection.execute(sql)
-      end
-
-
-      return name  # Returning username as reference
-    end
     
 
 
@@ -1425,32 +1362,6 @@ ActiveRecord::Base.connection.execute(sql)
 
 
 
-def fetch_limitation_id_from_mikrotik
-  name = params[:name]
-  validity = params[:validity]
-  validity_units = params[:validity_period_units]
-  upload_limit = params[:upload_limit]
-  download_limit = params[:download_limit]
-  upload_burst_limit = params[:upload_burst_limit]
-  download_burst_limit = params[:download_burst_limit]
-
-  # Convert validity time
-  validity_period =   if validity_units == 'days'
-    (Time.now + (validity.to_i * 86400)).strftime("%d %b %Y %H:%M:%S")  # Convert days to seconds
-  
-    elsif validity_units == 'hours'
-      (Time.now + (validity.to_i * 3600)).strftime("%d %b %Y %H:%M:%S")   # Convert hours to seconds
-
-
-    elsif validity_units == 'minutes'
-      (Time.now + (validity.to_i * 60)).strftime("%d %b %Y %H:%M:%S")    # Convert minutes to seconds
-    
-    end
-
-  # Insert into `radgroupreply`
-  # RadGroupReply.create(groupname: name, :"radius_attribute" => 'Session-Timeout', op: ':=', value: validity_period) if validity_period
-  # RadGroupReply.create(groupname: name, :"radius_attribute" => 'Mikrotik-Rate-Limit', op: ':=', value: "#{upload_limit}M/#{download_limit}M") if upload_limit && download_limit
-  # RadGroupReply.create(groupname: name, :"radius_attribute" => 'Mikrotik-Burst-Limit', op: ':=', value: "#{upload_burst_limit}M/#{download_burst_limit}M") if upload_burst_limit && download_burst_limit
 
 
 
@@ -1460,24 +1371,103 @@ def fetch_limitation_id_from_mikrotik
 
 
 
-  values = []
-  values << "('#{name}', 'Expiration', ':=', '#{validity_period}')" if validity_period
-  values << "('#{name}', 'Mikrotik-Rate-Limit', ':=', '#{upload_limit}M/#{download_limit}M')" if upload_limit && download_limit
-  values << "('#{name}', 'Mikrotik-Burst-Limit', ':=', '#{upload_burst_limit}M/#{download_burst_limit}M')" if upload_burst_limit && download_burst_limit
-  
-  if values.any?
-    sql = <<-SQL
-      INSERT INTO radgroupreply (groupname, attribute, op, value)
-      VALUES #{values.join(', ')}
-      ON CONFLICT (groupname, attribute) DO NOTHING;
-    SQL
-    ActiveRecord::Base.connection.execute(sql)
-  end
+# def update_freeradius_policies(package)
+#   # group_name = "#{package.name}" # Unique group for each package
+#   # now = Time.now.strftime("%Y-%m-%d %H:%M:%S")
 
-return name  # Retu
-end
+#   # ActiveRecord::Base.transaction do
+#   #   # Set speed limits in Radgroupreply
+#   #   ActiveRecord::Base.connection.execute(<<-SQL)
+#   #     INSERT INTO radgroupreply (groupname, radiusattribute, op, value)
+#   #     VALUES ('#{group_name}', 'Mikrotik-Rate-Limit', ':=', '#{package.upload_limit}/#{package.download_limit}')
+#   #   SQL
+
+#   #   # Handle validity and expiration
+#   #   if package.validity.present? && package.validity_period_units.present?
+#   #     expiration_time = case package.validity_period_units
+#   #     when 'days' then Time.now + (package.validity.to_i * 86400)
+#   #     when 'hours' then Time.now + (package.validity.to_i * 3600)
+#   #     when 'minutes' then Time.now + (package.validity.to_i * 60)
+#   #     end&.strftime("%d %b %Y %H:%M:%S")  # ✅ Correct format for FreeRADIUS
+
+#   #     if expiration_time
+#   #       ActiveRecord::Base.connection.execute(<<-SQL)
+#   #         INSERT INTO radgroupcheck (groupname, radiusattribute, op, value)
+#   #         VALUES ('#{group_name}', 'Expiration', ':=', '#{expiration_time}')
+#   #       SQL
+#   #     end
+#   #   end
+#   #   # radiusattribute
+#   #   # Handle weekdays restrictions
+#   #   # 
+#   #   #rename_column :radcheck, :radius_attribute, :radiusattribute
+
+#   #   if package.weekdays.present?
+#   #     days_string = package.weekdays.map { |day| day[0..2] }.join(",")
+
+#   #     ActiveRecord::Base.connection.execute(<<-SQL)
+#   #       INSERT INTO radgroupcheck (groupname, radiusattribute, op, value)
+#   #       VALUES ('#{group_name}', 'Day-Of-Week', ':=', '#{days_string}')
+#   #     SQL
+#   #   else
+#   #     # If no weekdays are set, remove any existing restriction
+#   #     ActiveRecord::Base.connection.execute(<<-SQL)
+#   #       DELETE FROM radgroupcheck WHERE groupname = '#{group_name}' AND radiusattribute = 'Wk-Day';
+#   #     SQL
+#   #   end
+#   # end
+#   # 
 
 
+
+#   group_name = package.name # Unique group for each package
+# now = Time.current
+
+# ActiveRecord::Base.transaction do
+#   # Set speed limits in Radgroupreply
+#   RadGroupReply.create!(
+#     groupname: group_name,
+#     radiusattribute: 'Mikrotik-Rate-Limit',
+#     op: ':=',
+#     value: "#{package.upload_limit}M/#{package.download_limit}M"
+#   )
+
+#   # Handle validity and expiration
+#   if package.validity.present? && package.validity_period_units.present?
+#       expiration_time = case package.validity_period_units
+# when 'days' then Time.current + package.validity.days
+# when 'hours' then Time.current + package.validity.hours
+# when 'minutes' then Time.current= + package.validity.minutes
+# end&.strftime("%d %b %Y %H:%M:%S")
+
+
+#     if expiration_time
+#       RadGroupCheck.create!(
+#         groupname: group_name,
+#         radiusattribute: 'Expiration',
+#         op: ':=',
+#         value: expiration_time
+#       )
+#     end
+#   end
+
+#   # Handle weekdays restrictions
+#   if package.weekdays.present?
+#     days_string = package.weekdays.map { |day| day[0..2] }.join(",")
+
+#     RadGroupCheck.create!(
+#       groupname: group_name,
+#       radiusattribute: 'Day-Of-Week',
+#       op: ':=',
+#       value: days_string
+#     )
+#   else
+#     # If no weekdays are set, remove any existing restriction
+#     RadGroupCheck.where(groupname: group_name, radiusattribute: 'Wk-Day').destroy_all
+#   end
+# end
+
+# end
 
 
 
@@ -1486,105 +1476,42 @@ end
 
 
 def update_freeradius_policies(package)
-  # group_name = "#{package.name}" # Unique group for each package
-  # now = Time.now.strftime("%Y-%m-%d %H:%M:%S")
-
-  # ActiveRecord::Base.transaction do
-  #   # Set speed limits in Radgroupreply
-  #   ActiveRecord::Base.connection.execute(<<-SQL)
-  #     INSERT INTO radgroupreply (groupname, radiusattribute, op, value)
-  #     VALUES ('#{group_name}', 'Mikrotik-Rate-Limit', ':=', '#{package.upload_limit}/#{package.download_limit}')
-  #   SQL
-
-  #   # Handle validity and expiration
-  #   if package.validity.present? && package.validity_period_units.present?
-  #     expiration_time = case package.validity_period_units
-  #     when 'days' then Time.now + (package.validity.to_i * 86400)
-  #     when 'hours' then Time.now + (package.validity.to_i * 3600)
-  #     when 'minutes' then Time.now + (package.validity.to_i * 60)
-  #     end&.strftime("%d %b %Y %H:%M:%S")  # ✅ Correct format for FreeRADIUS
-
-  #     if expiration_time
-  #       ActiveRecord::Base.connection.execute(<<-SQL)
-  #         INSERT INTO radgroupcheck (groupname, radiusattribute, op, value)
-  #         VALUES ('#{group_name}', 'Expiration', ':=', '#{expiration_time}')
-  #       SQL
-  #     end
-  #   end
-  #   # radiusattribute
-  #   # Handle weekdays restrictions
-  #   # 
-  #   #rename_column :radcheck, :radius_attribute, :radiusattribute
-
-  #   if package.weekdays.present?
-  #     days_string = package.weekdays.map { |day| day[0..2] }.join(",")
-
-  #     ActiveRecord::Base.connection.execute(<<-SQL)
-  #       INSERT INTO radgroupcheck (groupname, radiusattribute, op, value)
-  #       VALUES ('#{group_name}', 'Day-Of-Week', ':=', '#{days_string}')
-  #     SQL
-  #   else
-  #     # If no weekdays are set, remove any existing restriction
-  #     ActiveRecord::Base.connection.execute(<<-SQL)
-  #       DELETE FROM radgroupcheck WHERE groupname = '#{group_name}' AND radiusattribute = 'Wk-Day';
-  #     SQL
-  #   end
-  # end
-  # 
-
-
-
   group_name = package.name # Unique group for each package
-now = Time.current
 
-ActiveRecord::Base.transaction do
-  # Set speed limits in Radgroupreply
-  RadGroupReply.create!(
-    groupname: group_name,
-    radiusattribute: 'Mikrotik-Rate-Limit',
-    op: ':=',
-    value: "#{package.upload_limit}M/#{package.download_limit}M"
-  )
+  ActiveRecord::Base.transaction do
+    # ✅ Update or create speed limits in Radgroupreply
+    rad_reply = RadGroupReply.find_or_initialize_by(groupname: group_name, radiusattribute: 'Mikrotik-Rate-Limit')
+    rad_reply.update!(op: ':=', value: "#{package.upload_limit}M/#{package.download_limit}M")
 
-  # Handle validity and expiration
-  if package.validity.present? && package.validity_period_units.present?
+    # ✅ Handle validity and expiration
+    if package.validity.present? && package.validity_period_units.present?
       expiration_time = case package.validity_period_units
-when 'days' then Time.current + package.validity.days
-when 'hours' then Time.current + package.validity.hours
-when 'minutes' then Time.current= + package.validity.minutes
-end&.strftime("%d %b %Y %H:%M:%S")
+                        when 'days' then Time.current + package.validity.days
+                        when 'hours' then Time.current + package.validity.hours
+                        when 'minutes' then Time.current + package.validity.minutes
+                        end&.strftime("%d %b %Y %H:%M:%S")
 
+      if expiration_time
+        rad_check = RadGroupCheck.find_or_initialize_by(groupname: group_name, radiusattribute: 'Expiration')
+        rad_check.update!(op: ':=', value: expiration_time)
+      end
+    else
+      # ✅ If validity is removed, delete the Expiration record
+      RadGroupCheck.where(groupname: group_name, radiusattribute: 'Expiration').destroy_all
+    end
 
-    if expiration_time
-      RadGroupCheck.create!(
-        groupname: group_name,
-        radiusattribute: 'Expiration',
-        op: ':=',
-        value: expiration_time
-      )
+    # ✅ Handle weekdays restrictions
+    if package.weekdays.present?
+      days_string = package.weekdays.map { |day| day[0..2] }.join(",")
+
+      rad_days = RadGroupCheck.find_or_initialize_by(groupname: group_name, radiusattribute: 'Day-Of-Week')
+      rad_days.update!(op: ':=', value: days_string)
+    else
+      # ✅ If no weekdays are set, remove existing restriction
+      RadGroupCheck.where(groupname: group_name, radiusattribute: 'Day-Of-Week').destroy_all
     end
   end
-
-  # Handle weekdays restrictions
-  if package.weekdays.present?
-    days_string = package.weekdays.map { |day| day[0..2] }.join(",")
-
-    RadGroupCheck.create!(
-      groupname: group_name,
-      radiusattribute: 'Day-Of-Week',
-      op: ':=',
-      value: days_string
-    )
-  else
-    # If no weekdays are set, remove any existing restriction
-    RadGroupCheck.where(groupname: group_name, radiusattribute: 'Wk-Day').destroy_all
-  end
 end
-
-end
-
-
-
 
 
 
