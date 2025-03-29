@@ -340,14 +340,6 @@ end
 
 
 
-expiration_seconds = (expiration_time - Time.current).to_i
-
-RadGroupReply.create(
-  groupname: hotspot_voucher,
-  radiusattribute: 'Session-Timeout',
-  op: ':=',
-  value: expiration_seconds
-)
 end
   
 

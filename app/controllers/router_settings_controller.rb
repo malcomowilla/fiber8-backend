@@ -10,7 +10,7 @@ class RouterSettingsController < ApplicationController
 
   # POST /router_settings or /router_settings.json
   def create
-    @router_setting = RouterSetting.first_or_initialize(router_setting_params)
+    @router_setting = RouterSetting.find_or_initialize_by(router_setting_params)
     @router_setting.update(use_radius: params[:use_radius], router_name: params[:router_name])
       if @router_setting.save
         render json: @router_setting, status: :created
