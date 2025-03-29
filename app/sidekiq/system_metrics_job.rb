@@ -99,7 +99,7 @@ class SystemMetricsJob
             disk_used: '0GB', # Save disk used
             load_average: 0,
             uptime: 0,
-            account_id: ActsAsTenant.current_tenant.id
+            account_id: ActsAsTenant.current_tenant&.id
           )
           sys.update(
             cpu_usage: '0%',

@@ -18,9 +18,18 @@ class HotspotExpirationJob
   private
 
   def logout_hotspot_user(voucher)
-    router_ip = "192.168.88.1"  # Replace with your MikroTik router IP
-    router_username = "admin"
-    router_password = "yourpassword"
+
+    router_setting = ActsAsTenant.current_tenant.&router_setting
+    
+
+    ip_address = router_setting.ip_address
+    username = router_setting.username
+    password = router_setting.password
+
+
+    router_ip =  ip_address # Replace with your MikroTik router IP
+    router_username = username
+    router_password = password 
 
     remove_command = "/ip hotspot active remove [find user=#{voucher.voucher}]"
 
