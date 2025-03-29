@@ -130,12 +130,12 @@ class HotspotExpirationJob
 
 
        def send_expiration_text_sms(phone_number, voucher_code)
-sms_setting = SmsSetting.find_by(sms_provider: params[:selected_provider])
+# sms_setting = SmsSetting.find_by(sms_provider: params[:selected_provider])
 
-if sms_setting.nil?
-render json: { error: "SMS provider not found" }, status: :not_found
-return
-end
+# if sms_setting.nil?
+# render json: { error: "SMS provider not found" }, status: :not_found
+# return
+# end
 
 api_key = SmsSetting.find_by(sms_provider: ActsAsTenant.current_tenant.sms_provider_setting.sms_provider)&.api_key
 partnerID = SmsSetting.find_by(sms_provider: ActsAsTenant.current_tenant.sms_provider_setting.sms_provider)&.partnerID
