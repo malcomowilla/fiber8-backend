@@ -19,12 +19,12 @@ class HotspotExpirationJob
 
   def logout_hotspot_user(voucher)
 
-    router_setting = ActsAsTenant.current_tenant&.router_setting&.name
+    router_setting = ActsAsTenant.current_tenant&.router_setting&.router_name
     
 
-    ip_address = NasRouter.find_by(name:router_setting).ip_address
-    username = NasRouter.find_by(name:router_setting).username
-    password = NasRouter.find_by(name:router_setting).password
+    ip_address = NasRouter.find_by(name:router_setting)&.ip_address
+    username = NasRouter.find_by(name:router_setting)&.username
+    password = NasRouter.find_by(name:router_setting)&.password
 
 
     router_ip =  ip_address # Replace with your MikroTik router IP
