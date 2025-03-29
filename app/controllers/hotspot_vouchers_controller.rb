@@ -324,6 +324,8 @@ RadUserGroup.create(username: hotspot_voucher, groupname: package, priority: 1)
 validity_period_units = HotspotPackage.find_by(name: package).validity_period_units
 validity = HotspotPackage.find_by(name: package).validity
 
+
+
 expiration_time = case validity_period_units
 when 'days' then Time.current + validity.days
 when 'hours' then Time.current + validity.hours
@@ -335,7 +337,18 @@ if expiration_time
   rad_check.update!(op: ':=', value: expiration_time)
 end
   
-  end
+
+
+
+expiration_seconds = (expiration_time - Time.current).to_i
+
+RadGroupReply.create(
+  groupname: hotspot_voucher,
+  radiusattribute: 'Session-Timeout',
+  op: ':=',
+  value: expiration_seconds
+)
+end
   
 
 
