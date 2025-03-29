@@ -1,4 +1,5 @@
 Rails.application.routes.draw do
+  resources :sms_provider_settings
   resources :user_groups
   resources :dial_up_mpesa_settings
   resources :hotspot_mpesa_settings
@@ -37,6 +38,8 @@ mount ActionCable.server => '/cable'
 scope '/api' do
   resources :ip_pools
   resources :user_groups
+  resources :sms_provider_settings
+
 
   resources :dial_up_mpesa_settings
   resources :hotspot_mpesa_settings

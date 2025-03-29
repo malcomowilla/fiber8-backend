@@ -11,7 +11,9 @@ class SmsSettingsController < ApplicationController
   
   before_action :set_tenant
   def index
+    Rails.logger.info "current tenant sms settin: #{ActsAsTenant.current_tenant.sms_setting.sms_provider}"
     @sms_settings = SmsSetting.find_by(sms_provider: params[:provider])
+
     render json: @sms_settings
   end
 
