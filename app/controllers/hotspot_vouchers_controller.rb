@@ -319,8 +319,21 @@ end
 # ")
 RadCheck.create(username: hotspot_voucher, radiusattribute: 'Cleartext-Password', op: ':=', value: hotspot_voucher)  
 RadCheck.create(username: hotspot_voucher, radiusattribute: 'Simultaneous-Use', op: ':=', value: shared_users.to_s)  
-RadUserGroup.create(username: hotspot_voucher, groupname: package, priority: 1)  
+RadUserGroup.create(username: hotspot_voucher, groupname: package, priority: 1) 
 
+validity_period_units = HotspotPackage.find_by(name: package).validity_period_units
+validity = HotspotPackage.find_by(name: package).validity
+
+expiration_time = case validity_period_units
+when 'days' then Time.current + validity.days
+when 'hours' then Time.current + validity.hours
+when 'minutes' then Time.current + validity.minutes
+end&.strftime("%d %b %Y %H:%M:%S")
+
+if expiration_time
+  rad_check = RadGroupCheck.find_or_initialize_by(groupname: hotspot_voucher, radiusattribute: 'Expiration')
+  rad_check.update!(op: ':=', value: expiration_time)
+end
   
   end
   
