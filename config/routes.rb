@@ -59,7 +59,10 @@ scope '/api' do
 
 end
 
-
+  get '/api/service_status', to: 'system_metrics#check_services'
+  get '/service_status', to: 'system_metrics#check_services'
+  post '/restart_service', to: 'system_metrics#restart_service'
+  post '/api/restart_service', to: 'system_metrics#restart_service'
 
 post '/api/radius_settings', to: 'radius_settings#create_nas_settings'
 post '/radius_settings', to: 'radius_settings#create_nas_settings'

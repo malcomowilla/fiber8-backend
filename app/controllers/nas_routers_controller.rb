@@ -51,16 +51,30 @@ router_status = RouterStatus.where(tenant_id: @tenant.id).order(checked_at: :des
 
     if router_status
       # Render the cached data
-      render json: { router_status: router_status }, status: :ok
+      render json: router_status, each_serializer: RouterStatusSerializer , status: :ok
     else
       # Handle case where cache is empty
       render json: { error: "No router status found for tenant #{@tenant.id}" }, status: :not_found
     end
 
 
+
 end
 
 
+
+
+# @tenant = ActsAsTenant.current_tenant
+# router_status = RouterStatus.all
+
+#     if router_status
+#       # Render the cached data
+#       render json: router_status, each_serializer: RouterStatusSerializer, status: :ok
+
+#     else
+#       # Handle case where cache is empty
+#       render json: { error: "No router status found for tenant #{@tenant.id}" }, status: :not_found
+#     end
 
 
 
