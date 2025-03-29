@@ -1,0 +1,38 @@
+class HotspotExpirationJob
+  include Sidekiq::Job
+  queue_as :default
+
+  def perform
+    Account.find_each do |tenant|
+      ActsAsTenant.with_tenant(tenant) do
+        expired_vouchers = HotspotVoucher.where("expiration <= ?", Time.current)
+
+        expired_vouchers.each do |voucher|
+          logout_hotspot_user(voucher)
+          voucher.update!(status: 'expired')  # Mark as expired in DB
+        end
+      end
+    end
+  end
+
+  private
+
+  def logout_hotspot_user(voucher)
+    router_ip = "192.168.88.1"  # Replace with your MikroTik router IP
+    router_username = "admin"
+    router_password = "yourpassword"
+
+    remove_command = "/ip hotspot active remove [find user=#{voucher.voucher}]"
+
+    begin
+      Net::SSH.start(router_ip, router_username, password: router_password, verify_host_key: :never) do |ssh|
+        output = ssh.exec!(remove_command)
+        Rails.logger.info("Successfully removed user #{voucher.voucher}: #{output}")
+      end
+    rescue Net::SSH::AuthenticationFailed
+      Rails.logger.error("SSH authentication failed for MikroTik router")
+    rescue StandardError => e
+      Rails.logger.error("Failed to logout user #{voucher.voucher}: #{e.message}")
+    end
+  end
+end
