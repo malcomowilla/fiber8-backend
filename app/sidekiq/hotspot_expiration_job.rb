@@ -79,7 +79,7 @@ class HotspotExpirationJob
   original_message = sms_template ?  MessageTemplate.interpolate(send_voucher_template,{
     
   voucher_code: voucher_code,
-  })  :   "Hello, here is your voucher #{voucher_code} is expired.
+  })  :   "Hello, your voucher #{voucher_code} is expired.
            "
   
   
@@ -148,7 +148,7 @@ send_voucher_template = sms_template&.send_voucher_template
 original_message = if sms_template
 MessageTemplate.interpolate(send_voucher_template, { voucher_code: voucher_code })
 else
-"Hello, here is your voucher #{voucher_code} is expired"
+"Hello, your voucher #{voucher_code} is expired"
 end
 
 uri = URI("https://sms.textsms.co.ke/api/services/sendsms")
