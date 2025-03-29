@@ -19,7 +19,7 @@ class HotspotExpirationJob
 
   def logout_hotspot_user(voucher)
 
-    router_setting = ActsAsTenant.current_tenant.&router_setting
+    router_setting = ActsAsTenant.current_tenant&.router_setting
     
 
     ip_address = router_setting.ip_address
