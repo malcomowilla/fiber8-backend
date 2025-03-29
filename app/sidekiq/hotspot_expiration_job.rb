@@ -38,9 +38,9 @@ class HotspotExpirationJob
         output = ssh.exec!(remove_command)
 
         if ActsAsTenant.current_tenant.sms_provider_setting.sms_provider == 'TextSms'
-          send_expiration_text_sms(expired_vouchers.phone, expired_vouchers.voucher)
+          send_expiration_text_sms(voucher.phone, voucher.voucher)
         elsif ActsAsTenant.current_tenant.sms_provider_setting.sms_provider == 'SMS leopard'
-          send_expiration(expired_vouchers.phone, expired_vouchers.voucher)
+          send_expiration(voucher.phone, voucher.voucher)
         end
         Rails.logger.info("Successfully removed user #{voucher.voucher}: #{output}")
       end
