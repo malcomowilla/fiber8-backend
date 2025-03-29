@@ -1484,21 +1484,21 @@ def update_freeradius_policies(package)
     rad_reply.update!(op: ':=', value: "#{package.upload_limit}M/#{package.download_limit}M")
 
     # ✅ Handle validity and expiration
-    if package.validity.present? && package.validity_period_units.present?
-      expiration_time = case package.validity_period_units
-                        when 'days' then Time.current + package.validity.days
-                        when 'hours' then Time.current + package.validity.hours
-                        when 'minutes' then Time.current + package.validity.minutes
-                        end&.strftime("%d %b %Y %H:%M:%S")
+    # if package.validity.present? && package.validity_period_units.present?
+    #   # expiration_time = case package.validity_period_units
+    #   #                   when 'days' then Time.current + package.validity.days
+    #   #                   when 'hours' then Time.current + package.validity.hours
+    #   #                   when 'minutes' then Time.current + package.validity.minutes
+    #   #                   end&.strftime("%d %b %Y %H:%M:%S")
 
-      if expiration_time
-        rad_check = RadGroupCheck.find_or_initialize_by(groupname: group_name, radiusattribute: 'Expiration')
-        rad_check.update!(op: ':=', value: expiration_time)
-      end
-    else
-      # ✅ If validity is removed, delete the Expiration record
-      RadGroupCheck.where(groupname: group_name, radiusattribute: 'Expiration').destroy_all
-    end
+    #   # if expiration_time
+    #   #   rad_check = RadGroupCheck.find_or_initialize_by(groupname: group_name, radiusattribute: 'Expiration')
+    #   #   rad_check.update!(op: ':=', value: expiration_time)
+    #   # end
+    # else
+    #   # ✅ If validity is removed, delete the Expiration record
+    #   RadGroupCheck.where(groupname: group_name, radiusattribute: 'Expiration').destroy_all
+    # end
 
     # ✅ Handle weekdays restrictions
     if package.weekdays.present?
