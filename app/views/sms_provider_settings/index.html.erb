@@ -1,0 +1,16 @@
+<p style="color: green"><%= notice %></p>
+
+<% content_for :title, "Sms provider settings" %>
+
+<h1>Sms provider settings</h1>
+
+<div id="sms_provider_settings">
+  <% @sms_provider_settings.each do |sms_provider_setting| %>
+    <%= render sms_provider_setting %>
+    <p>
+      <%= link_to "Show this sms provider setting", sms_provider_setting %>
+    </p>
+  <% end %>
+</div>
+
+<%= link_to "New sms provider setting", new_sms_provider_setting_path %>

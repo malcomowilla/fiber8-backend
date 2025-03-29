@@ -1,0 +1,22 @@
+<%= form_with(model: sms_provider_setting) do |form| %>
+  <% if sms_provider_setting.errors.any? %>
+    <div style="color: red">
+      <h2><%= pluralize(sms_provider_setting.errors.count, "error") %> prohibited this sms_provider_setting from being saved:</h2>
+
+      <ul>
+        <% sms_provider_setting.errors.each do |error| %>
+          <li><%= error.full_message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div>
+    <%= form.label :sms_provider, style: "display: block" %>
+    <%= form.text_field :sms_provider %>
+  </div>
+
+  <div>
+    <%= form.submit %>
+  </div>
+<% end %>
