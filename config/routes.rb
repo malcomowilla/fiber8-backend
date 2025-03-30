@@ -62,6 +62,11 @@ scope '/api' do
 
 end
 
+
+
+
+get '/api/wireguard/generate_config', to: 'wireguard#generate_config'
+get '/wireguard/generate_config', to: 'wireguard#generate_config'
   get '/api/service_status', to: 'system_metrics#check_services'
   get '/service_status', to: 'system_metrics#check_services'
   post '/restart_service', to: 'system_metrics#restart_service'
