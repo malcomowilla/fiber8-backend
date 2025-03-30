@@ -2,7 +2,7 @@ class WireguardController < ApplicationController
   require 'securerandom'
   require 'open3'
 
-  WG_CONFIG_PATH = "/etc/wireguard/wg0.conf"  # Path to your WireGuard config
+  WG_CONFIG_PATH = "/etc/wireguard/wg0.conf"  # WireGuard configuration path
 
   def generate_config
     # Generate WireGuard private key for the client
@@ -34,6 +34,7 @@ class WireguardController < ApplicationController
 
     # Append new peer to wg0.conf (Ubuntu WireGuard server)
     peer_config = <<~PEER
+
       [Peer]
       PublicKey = #{client_public_key}
       AllowedIPs = #{client_ip}
@@ -43,8 +44,11 @@ class WireguardController < ApplicationController
       file.puts peer_config
     end
 
-    # Restart WireGuard to apply new settings
-    system("wg syncconf wg0 <(wg-quick strip wg0)")
+    # Apply the new configuration to WireGuard
+    system("wg set wg0 peer #{client_public_key} allowed-ips #{client_ip}")
+
+    # Restart WireGuard to apply new settings (if necessary)
+    system("systemctl restart wg-quick@wg0")
 
     # Return MikroTik configuration as plain text
     render plain: mikrotik_config
