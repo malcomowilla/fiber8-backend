@@ -20,13 +20,15 @@ class WireguardController < ApplicationController
     # Assign a random IP in 10.2.0.x range
     client_ip = "10.2.0.#{rand(2..254)}/32"
 
+
+    
     # Generate MikroTik configuration for the client
     mikrotik_config = <<~SCRIPT
       /interface wireguard
       add name=wireguard1 private-key="#{client_private_key}"
 
       /interface wireguard peers
-      add interface=wireguard1 public-key="#{server_public_key}" allowed-address=#{client_ip} endpoint=102.221.35.92:51820 persistent-keepalive=25
+  add allowed-address=#{client_ip} endpoint-address=102.221.35.92 endpoint-port=51820 interface=wireguard-inet persistent-keepalive=25s public-key="#{server_public_key}"
 
       /ip address
       add address=#{client_ip} interface=wireguard1
