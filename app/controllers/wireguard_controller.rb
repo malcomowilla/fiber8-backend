@@ -26,7 +26,7 @@ class WireguardController < ApplicationController
       add name=wireguard1 private-key=#{client_private_key}
 
       /interface wireguard peers
-      add interface=wireguard1 public-key=#{server_public_key} allowed-address=#{client_ip} endpoint=YOUR_SERVER_IP:51820 persistent-keepalive=25
+      add interface=wireguard1 public-key=#{server_public_key} allowed-address=#{client_ip} endpoint=102.221.35.92:51820 persistent-keepalive=25
 
       /ip address
       add address=#{client_ip} interface=wireguard1
