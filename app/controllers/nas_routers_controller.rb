@@ -101,7 +101,6 @@ end
           nas_router.update(nas_router_params)
          
 
-          Rails.logger.info "Updated nas_router: #{na.inspect}"
           render json: nas_router      
 
       end
