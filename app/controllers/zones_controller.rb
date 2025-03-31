@@ -28,7 +28,7 @@ class ZonesController < ApplicationController
 @zone.zone_code =  SecureRandom.alphanumeric(6).upcase 
 
     if @zone
-      render json: @zone, status: :created,  serializer:  ZoneSerializer
+      render json: @zone, status: :ok,  serializer:  ZoneSerializer
 
 
     else
