@@ -8,20 +8,19 @@ class HotspotExpirationJob
         expired_vouchers = HotspotVoucher.where("expiration <= ?", Time.current)
 
 
-if expired_vouchers
- if ActsAsTenant.current_tenant.sms_provider_setting.sms_provider == 'TextSms'
-          send_expiration_text_sms(voucher.phone, voucher.voucher)
-        elsif ActsAsTenant.current_tenant.sms_provider_setting.sms_provider == 'SMS leopard'
-          send_expiration(voucher.phone, voucher.voucher)
-        end
-
-end
 
 
 
         expired_vouchers.each do |voucher|
           logout_hotspot_user(voucher)
           voucher.update!(status: 'expired')  # Mark as expired in DB
+          if ActsAsTenant.current_tenant.sms_provider_setting.sms_provider == 'TextSms'
+            send_expiration_text_sms(voucher.phone, voucher.voucher)
+          elsif ActsAsTenant.current_tenant.sms_provider_setting.sms_provider == 'SMS leopard'
+            send_expiration(voucher.phone, voucher.voucher)
+          end
+  
+
         end
       end
     end
