@@ -25,10 +25,11 @@ class WireguardController < ApplicationController
     # Generate MikroTik configuration for the client
     mikrotik_config = <<~SCRIPT
       /interface wireguard
-      add name=wireguard1 private-key="#{client_private_key}"
+
+      add listen-port=13231 mtu=1420 name=wireguard1 private-key="#{client_private_key}
 
       /interface wireguard peers
-  add allowed-address=#{client_ip} endpoint-address=102.221.35.92 endpoint-port=51820 interface=wireguard-inet persistent-keepalive=25s public-key="#{server_public_key}"
+  add allowed-address=#{client_ip} endpoint-address=102.221.35.92 endpoint-port=51820 interface=wireguard1 persistent-keepalive=25s public-key="#{server_public_key}"
 
       /ip address
       add address=#{client_ip} interface=wireguard1
