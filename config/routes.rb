@@ -64,7 +64,8 @@ end
 
 
 
-
+post '/api/reboot_router', to: 'system_metrics#reboot_router'
+post '/reboot_router', to: 'system_metrics#reboot_router'
 get '/api/wireguard/generate_config', to: 'wireguard#generate_config'
 get '/wireguard/generate_config', to: 'wireguard#generate_config'
   get '/api/service_status', to: 'system_metrics#check_services'
