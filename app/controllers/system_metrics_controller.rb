@@ -23,8 +23,70 @@ class SystemMetricsController < ApplicationController
   end
 
 
+  # def reboot_router
+  #   router_setting = ActsAsTenant.current_tenant&.router_setting&.router_name
+  #   router = NasRouter.find_by(name: router_setting)
+
+  #   return unless router
+
+  #   router_ip = router.ip_address
+  #   router_username = router.username
+  #   router_password = router.password 
 
 
+  #   begin
+  #     Net::SSH.start(router_ip, router_username, password: router_password, verify_host_key: :never) do |ssh|
+  #       ssh.exec!('system reboot; :put "y"')  # Auto-confirm reboot
+  #     end
+  #     Rails.logger.info "MikroTik router at #{router_ip } is rebooting."
+  #     render json: { message: 'Router is rebooting' }, status: :ok
+  #     { success: true, message: "Router is rebooting." }
+  #   rescue StandardError => e
+  #     Rails.logger.error "Failed to reboot router: #{e.message}"
+  #     render json: {error: 'Failed to reboot router'}, status: :unprocessable_entity  
+  #     { success: false, error: e.message }
+  #   end
+  # end
+
+  def reboot_router
+    router_setting = ActsAsTenant.current_tenant&.router_setting&.router_name
+    router = NasRouter.find_by(name: router_setting)
+  
+    return unless router
+  
+    router_ip = router.ip_address
+    router_username = router.username
+    router_password = router.password 
+  
+    begin
+      Net::SSH.start(router_ip, router_username, password: router_password, verify_host_key: :never) do |ssh|
+        ssh.open_channel do |channel|
+          channel.exec("/system reboot") do |ch, success|
+            if success
+              Rails.logger.info "Reboot command sent to MikroTik at #{router_ip}, confirming..."
+              sleep 1  # Give time for MikroTik to process the command
+              ch.send_data("y\n")  # Confirm reboot
+              ch.send_data("\n")   # Extra newline just in case
+            else
+              Rails.logger.error "Failed to execute reboot command."
+            end
+          end
+        end
+        ssh.loop(1) # Allow time for command execution before closing connection
+      end
+  
+      Rails.logger.info "MikroTik router at #{router_ip} is rebooting."
+      render json: { message: 'Router is rebooting' }, status: :ok
+    rescue IOError => e
+      Rails.logger.warn "Router is rebooting, connection closed: #{e.message}"
+      render json: { message: 'Router is rebooting' }, status: :ok  # Handle expected disconnection gracefully
+    rescue StandardError => e
+      Rails.logger.error "Failed to reboot router: #{e.message}"
+      render json: { error: 'Failed to reboot router' }, status: :unprocessable_entity  
+    end
+  end
+  
+  
 
 def system_status
   @tenant = ActsAsTenant.current_tenant
