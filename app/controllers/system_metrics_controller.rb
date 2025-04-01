@@ -49,11 +49,14 @@ class SystemMetricsController < ApplicationController
   # end
 
   def reboot_router
+
     router_setting = ActsAsTenant.current_tenant&.router_setting&.router_name
     router = NasRouter.find_by(name: router_setting)
   
     return unless router
   
+    authorize! :reboot_router, router  
+
     router_ip = router.ip_address
     router_username = router.username
     router_password = router.password 

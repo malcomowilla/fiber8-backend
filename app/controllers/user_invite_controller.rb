@@ -80,10 +80,21 @@ class UserInviteController < ApplicationController
          can_read_users: params[:can_read_users],
          can_manage_zones: params[:can_manage_zones],
          can_read_zones: params[:can_read_zones],
-
+can_manage_mpesa_settings: params[:can_manage_mpesa_settings],
+can_read_mpesa_settings: params[:can_read_mpesa_settings],
   can_manage_user_setting: params[:can_manage_user_setting],
   can_read_user_setting: params[:can_read_user_setting],
-  can_read_router_setting: params[:can_read_router_setting]
+  can_read_router_setting: params[:can_read_router_setting],
+  can_manage_free_radius: params[:can_manage_free_radius],
+can_read_free_radius: params[:can_read_free_radius],
+can_reboot_router: params[:can_reboot_router],
+can_manage_user_group: params[:can_read_user_group],
+can_read_user_group: params[:can_read_user_group],
+can_manage_hotspot_template: params[:can_manage_hotspot_template],
+can_read_hotspot_template: params[:can_read_hotspot_template],
+can_read_hotspot_voucher: params[:can_read_hotspot_voucher],
+can_manage_hotspot_voucher: params[:can_manage_hotspot_voucher],
+
       
 
       )
@@ -171,7 +182,18 @@ if send_password_via_email == true || send_password_via_email == 'true'
        can_read_zones: params[:can_read_zones],
 can_manage_user_setting: params[:can_manage_user_setting],
 can_read_user_setting: params[:can_read_user_setting],
-can_read_router_setting: params[:can_read_router_setting]
+can_read_router_setting: params[:can_read_router_setting],
+can_manage_free_radius: params[:can_manage_free_radius],
+can_read_free_radius: params[:can_read_free_radius],
+can_manage_mpesa_settings: params[:can_manage_mpesa_settings],
+can_read_mpesa_settings: params[:can_read_mpesa_settings],
+can_reboot_router: params[:can_reboot_router],
+can_manage_user_group: params[:can_manage_user_group],
+can_read_user_group: params[:can_read_user_group],
+can_manage_hotspot_template: params[:can_manage_hotspot_template],
+can_read_hotspot_template: params[:can_read_hotspot_template],
+can_read_hotspot_voucher: params[:can_read_hotspot_voucher],
+can_manage_hotspot_voucher: params[:can_manage_hotspot_voucher],
     )
       render json: @my_admin, status: :ok
     else
@@ -210,11 +232,18 @@ end
   :can_manage_sms, :can_read_sms, :can_manage_sms_settings, :can_read_sms_settings,:can_manage_subscriber_setting,
   :can_read_subscriber_setting,:can_manage_subscription, :can_read_subscription,:can_read_support_tickets,
   :can_read_support_tickets,:can_manage_users, :can_read_users,:can_manage_zones,:can_read_zones,
- 
+  :can_manage_free_radius, :can_read_free_radius,
+ :can_manage_mpesa_settings, :can_read_mpesa_settings,
 :can_manage_support_tickets,
   :can_manage_user_setting,
   :can_read_user_setting,
-  :can_read_router_setting
+  :can_reboot_router,
+  :can_read_router_setting,
+  :can_manage_user_group,
+  :can_read_user_group,
+  :can_manage_hotspot_template, :can_read_hotspot_template,
+  :can_manage_hotspot_voucher, :can_read_hotspot_voucher
+
 
     )
   end

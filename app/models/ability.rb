@@ -23,12 +23,13 @@ class Ability
     if admin.role == 'super_administrator' || admin.role == 'Super Administrator' || admin.role == 'super administrator'  || admin.role == 'Super administrator' || admin.role == 'Super Admin' || admin.role == 'super admin' || admin.role == 'Super admin' || admin.role == 'superadmin' || admin.role == 'Superadmin' || admin.role == 'SUPER ADMINISTRATOR' || admin.role == 'SUPER ADMIN'
       can :manage, :all
       can :read, :all
-      
+      can :reboot_router, NasRouter
 
       
     elsif admin.role == 'system_administrator'
     can :manage, :all
     can :read, :all
+    can :reboot_router, NasRouter
 
 
     elsif admin.role == 'customer_support'
@@ -178,7 +179,7 @@ class Ability
 
     can :manage, EmailSetting if admin.can_manage_email_setting
     can :read, EmailSetting if admin.can_read_email_setting
-      
+    can :reboot_router, NasRouter if admin.can_reboot_router
 
     can :manage, HotspotPackage if admin.can_manage_hotspot_packages
     can :read, HotspotPackage if admin.can_read_hotspot_packages
@@ -213,11 +214,19 @@ can :read, SubscriberSetting if admin.can_read_subscriber_setting
 can :manage, SmsSetting if admin.can_manage_sms_settings
 can :read, SmsSetting if admin.can_read_sms_settings
 
+can :manage, HotspotMpesaSetting if admin.can_manage_mpesa_settings
+can :read, HotspotMpesaSetting if admin.can_read_mpesa_settings
+
+can :manage, Na if admin.can_manage_free_radius
+can :read, Na if admin.can_read_free_radius
 
 
+can :manage, HotspotTemplate if admin.can_manage_hotspot_template
+can :read, HotspotTemplate if admin.can_read_hotspot_template
 
 
-
+can :manage, HotspotVoucher if admin.can_manage_hotspot_voucher
+can :read, HotspotVoucher if admin.can_read_hotspot_voucher
 
     can :manage, TicketSetting if admin.can_manage_ticket_settings
     can :read, TicketSetting if admin.can_read_ticket_settings
@@ -229,6 +238,10 @@ can :read, SmsSetting if admin.can_read_sms_settings
 
  
 
+
+
+can :manage, UserGroup if  admin.can_manage_user_group
+can :read, UserGroup if admin.can_read_user_group
 
     can :manage, User if admin.can_manage_users
     can :read, User if admin.can_read_users
