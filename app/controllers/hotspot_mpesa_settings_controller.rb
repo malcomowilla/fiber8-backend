@@ -1,5 +1,8 @@
 class HotspotMpesaSettingsController < ApplicationController
 
+
+  load_and_authorize_resource
+
   set_current_tenant_through_filter
 
 
