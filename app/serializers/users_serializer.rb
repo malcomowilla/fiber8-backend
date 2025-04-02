@@ -11,6 +11,7 @@ attributes :can_manage_subscriber,:can_read_read_subscriber,:can_manage_ticket_s
 :can_reboot_router,:can_manage_hotspot_template, :can_read_hotspot_template,
 
 :can_manage_hotspot_voucher, :can_read_hotspot_voucher,
+:can_manage_hotspot_settings, :can_read_hotspot_settings,
 
 :can_manage_support_tickets,
 :can_manage_user_group, :can_read_user_group,

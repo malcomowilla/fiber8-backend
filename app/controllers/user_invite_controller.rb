@@ -94,6 +94,8 @@ can_manage_hotspot_template: params[:can_manage_hotspot_template],
 can_read_hotspot_template: params[:can_read_hotspot_template],
 can_read_hotspot_voucher: params[:can_read_hotspot_voucher],
 can_manage_hotspot_voucher: params[:can_manage_hotspot_voucher],
+can_manage_hotspot_settings: params[:can_manage_hotspot_settings],
+can_read_hotspot_settings: params[:can_read_hotspot_settings],
 
       
 
@@ -194,6 +196,8 @@ can_manage_hotspot_template: params[:can_manage_hotspot_template],
 can_read_hotspot_template: params[:can_read_hotspot_template],
 can_read_hotspot_voucher: params[:can_read_hotspot_voucher],
 can_manage_hotspot_voucher: params[:can_manage_hotspot_voucher],
+can_manage_hotspot_settings: params[:can_manage_hotspot_settings],
+can_read_hotspot_settings: params[:can_read_hotspot_settings],
     )
       render json: @my_admin, status: :ok
     else
@@ -242,7 +246,9 @@ end
   :can_manage_user_group,
   :can_read_user_group,
   :can_manage_hotspot_template, :can_read_hotspot_template,
-  :can_manage_hotspot_voucher, :can_read_hotspot_voucher
+  :can_manage_hotspot_voucher, :can_read_hotspot_voucher,
+  :can_manage_hotspot_settings, :can_read_hotspot_settings,
+
 
 
     )

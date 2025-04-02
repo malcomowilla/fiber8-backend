@@ -233,6 +233,9 @@ can :read, HotspotVoucher if admin.can_read_hotspot_voucher
 
 
 
+    can :manage, HotspotSetting if admin.can_manage_hotspot_settings
+    can :read, HotspotSetting if admin.can_read_hotspot_settings
+
 # can :manage, CalendarEvent if admin.can_manage_calendar
 # can :read, CalendarEvent if admin.can_read_calendar
 
