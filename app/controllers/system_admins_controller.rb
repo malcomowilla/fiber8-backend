@@ -429,7 +429,8 @@ end
     @my_admin.password_confirmation = generate_secure_password(16)
     @my_admin.role = 'super_administrator'
     #  @my_admin.account = ActsAsTenant.current_tenant
-  
+    @my_admin.date_registered = Time.now.strftime('%Y-%m-%d %I:%M:%S %p'),
+
 
     # if @my_admin.errors.empty?
       if @my_admin.save
