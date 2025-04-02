@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2025_04_01_132606) do
+ActiveRecord::Schema[7.2].define(version: 2025_04_02_152238) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -616,6 +616,8 @@ ActiveRecord::Schema[7.2].define(version: 2025_04_01_132606) do
     t.boolean "can_read_hotspot_template", default: false
     t.boolean "can_manage_hotspot_voucher", default: false
     t.boolean "can_read_hotspot_voucher", default: false
+    t.boolean "can_manage_hotspot_settings", default: false
+    t.boolean "can_read_hotspot_settings", default: false
   end
 
   create_table "zones", force: :cascade do |t|

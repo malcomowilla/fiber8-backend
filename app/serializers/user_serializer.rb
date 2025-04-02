@@ -12,6 +12,7 @@ class UserSerializer < ActiveModel::Serializer
 :can_reboot_router,:can_manage_user_group, :can_read_user_group,
 :can_manage_hotspot_template, :can_read_hotspot_template,
 :can_manage_hotspot_voucher, :can_read_hotspot_voucher,
+:can_manage_hotspot_settings, :can_read_hotspot_settings,
 
 
 
