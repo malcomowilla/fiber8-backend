@@ -13,7 +13,7 @@ class UserSerializer < ActiveModel::Serializer
 :can_manage_hotspot_template, :can_read_hotspot_template,
 :can_manage_hotspot_voucher, :can_read_hotspot_voucher,
 :can_manage_hotspot_settings, :can_read_hotspot_settings,
-
+:date_registered,
 
 
   :can_manage_user_setting,
@@ -26,7 +26,9 @@ class UserSerializer < ActiveModel::Serializer
   attribute :welcome_back_message, if: :include_welcome_back_message?
  
   
-
+  def date_registered
+    object.date_registered.strftime("%B %d, %Y at %I:%M %p") if object.date_registered.present?
+  end
 
 
 
