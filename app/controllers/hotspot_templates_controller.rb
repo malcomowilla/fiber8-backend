@@ -1,7 +1,7 @@
 class HotspotTemplatesController < ApplicationController
   # before_action :set_hotspot_template, only: %i[ show edit update destroy ]
 
-load_and_authorize_resource
+load_and_authorize_resource except: [:allow_get_hotspot_templates]
 
   set_current_tenant_through_filter
   before_action :set_tenant
@@ -27,6 +27,8 @@ load_and_authorize_resource
     @hotspot_templates = HotspotTemplate.all
     render json: @hotspot_templates
   end
+
+
 
 
 

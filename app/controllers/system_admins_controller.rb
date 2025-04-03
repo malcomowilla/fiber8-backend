@@ -439,7 +439,7 @@ end
         #   ).deliver_now
 
         AdminOnboardingMailer.admin_onboarding(@my_admin).deliver_now
-        BlockedUserMailer.notify_block(@my_admin).deliver_now
+        # BlockedUserMailer.notify_block(@my_admin).deliver_now
         # send_password(@my_admin.phone_number, @my_admin.password, @my_admin.email)
         render json: @my_admin, status: :created
       else
