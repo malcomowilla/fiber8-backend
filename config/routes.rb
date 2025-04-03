@@ -128,8 +128,8 @@ get '/allow_get_hotspot_packages', to: 'hotspot_packages#allow_get_hotspot_packa
 get '/get_active_hotspot_users', to: 'hotspot_subscriptions#get_active_hotspot_users'
 
 get '/api/get_active_hotspot_users', to: 'hotspot_subscriptions#get_active_hotspot_users'
-get '/allow_get_hotspot_templates ', to: 'hotspot_templates#allow_get_hotspot_templates'
-get '/api/allow_get_hotspot_templates ', to: 'hotspot_templates#allow_get_hotspot_templates'
+get '/allow_get_hotspot_templates', to: 'hotspot_templates#allow_get_hotspot_templates'
+get '/api/allow_get_hotspot_templates', to: 'hotspot_templates#allow_get_hotspot_templates'
 
 get '/api/router_info', to: 'router_info#router_info'
 post '/login_with_hotspot_voucher', to: 'hotspot_vouchers#login_with_hotspot_voucher'
