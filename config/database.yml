@@ -116,6 +116,8 @@ test:
 # the values provided in this file. Alternatively, you can specify a connection
 # URL environment variable explicitly:
 #
+# WANDevice.1.WANConnectionDevice.2.WANPPPConnection.1.Password : Inst
+
 #   production:
 #     url: <%= ENV["MY_APP_DATABASE_URL"] %>
 #
@@ -133,7 +135,6 @@ production:
   # url: <%= ENV['DATABASE_URL'] %>
   # # username: quality_smiles_backend
   # # password: <%= ENV["QUALITY_SMILES_BACKEND_DATABASE_PASSWORD"] %>
-
 
 
 
