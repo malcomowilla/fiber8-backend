@@ -273,8 +273,8 @@ post '/api/hotspot_trial', to: 'hotspot_trial#create'
   # Defines the root path route ("/")
   # root "posts#index"
 
-get "/password/reset", to: "password_resets#new"
-get "/api/password/reset", to: "password_resets#new"
+post "/password_reset", to: "password_resets#reset_password_confirmation"
+post "/api/password_reset", to: "password_resets#reset_password_confirmation"
 post "/password/reset", to: "password_resets#create"
 post "/api/password/reset", to: "password_resets#create"
 
