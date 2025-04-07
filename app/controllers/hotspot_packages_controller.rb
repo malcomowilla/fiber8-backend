@@ -925,7 +925,8 @@ def destroy
     return render json: { error: "Hotspot package not found" }, status: :not_found
   end
 
-  group_name = @hotspot_package.name # Get the group name before deletion
+  group_name = "hotspot_#{@hotspot_package.name.parameterize(separator: '_')}"
+
 
   ActiveRecord::Base.transaction do
     # ✅ Delete related FreeRADIUS records
