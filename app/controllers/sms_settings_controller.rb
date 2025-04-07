@@ -23,8 +23,10 @@ class SmsSettingsController < ApplicationController
 
   def saved_sms_settings
     
-    @sms_settings = SmsSetting.all
-    render json: @sms_settings
+    # @sms_settings = SmsSetting.all
+    # render json: @sms_settings
+    @sms_settings = SmsSetting.order(updated_at: :desc)
+  render json: @sms_settings
   end
 
   def set_tenant
