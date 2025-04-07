@@ -11,6 +11,12 @@ class IpPoolsController < ApplicationController
 
 
 
+  # ip = IPAddress "172.16.10.1/24"
+
+  # ip.each do |addr|
+  #   puts "ip adreses => #{addr}"
+  # end
+
 
 
 

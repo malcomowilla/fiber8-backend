@@ -1,4 +1,5 @@
 Rails.application.routes.draw do
+  resources :nodes
   resources :sms_provider_settings
   resources :user_groups
   resources :dial_up_mpesa_settings
@@ -19,6 +20,7 @@ Rails.application.routes.draw do
   resources :subscriber_settings
   resources :support_tickets
   resources :sms_settings
+  
   # resources :sms
   resources :system_admin_web_authn_credentials
   resources :email_settings
@@ -57,13 +59,15 @@ scope '/api' do
   resources :hotspot_subscriptions
   resources :pp_poe_plans
   resources :hotspot_plans
+  resources :system_admin_sms
+
 
 
 
 end
 
 
-
+post '/api/send_sms', to: 'send_sms#send_sms'
 post '/api/reboot_router', to: 'system_metrics#reboot_router'
 post '/reboot_router', to: 'system_metrics#reboot_router'
 get '/api/wireguard/generate_config', to: 'wireguard#generate_config'

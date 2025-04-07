@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2025_04_04_143816) do
+ActiveRecord::Schema[7.2].define(version: 2025_04_07_072520) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -267,6 +267,14 @@ ActiveRecord::Schema[7.2].define(version: 2025_04_04_143816) do
     t.datetime "updated_at", null: false
   end
 
+  create_table "nodes", force: :cascade do |t|
+    t.string "name"
+    t.string "latitude"
+    t.string "longitude"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
+
   create_table "p_poe_packages", id: false, force: :cascade do |t|
     t.string "name"
     t.string "price"
@@ -426,6 +434,12 @@ ActiveRecord::Schema[7.2].define(version: 2025_04_04_143816) do
     t.string "last_renewed"
     t.datetime "expires"
     t.boolean "online"
+    t.string "location_name"
+    t.string "latitude"
+    t.string "longitude"
+    t.string "buildin_name"
+    t.string "house_number"
+    t.string "building_name"
   end
 
   create_table "subscriptions", force: :cascade do |t|
@@ -491,6 +505,7 @@ ActiveRecord::Schema[7.2].define(version: 2025_04_04_143816) do
     t.string "system_user"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "sms_provider"
   end
 
   create_table "system_admin_web_authn_credentials", force: :cascade do |t|

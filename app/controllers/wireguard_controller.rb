@@ -2,8 +2,10 @@ class WireguardController < ApplicationController
   require 'securerandom'
   require 'open3'
 
-  WG_CONFIG_PATH = "/etc/wireguard/wg0.conf"  # WireGuard configuration path
 
+  WG_CONFIG_PATH = "/etc/wireguard/wg0.conf"  # WireGuard configuration path
+ Account.find_each do |tenant|
+      ActsAsTenant.with_tenant(tenant) do
   def generate_config
     # Generate WireGuard private key for the client
     client_private_key, _stderr, _status = Open3.capture3("wg genkey")
@@ -54,4 +56,10 @@ class WireguardController < ApplicationController
     # Return MikroTik configuration as plain text
     render plain: mikrotik_config
   end
+
 end
+end
+end
+
+
+
