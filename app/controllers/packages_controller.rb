@@ -76,174 +76,228 @@ class PackagesController < ApplicationController
     end
   
             
-            def create
+            # def create
           
-                  # puts @package.inspect  
+            #       # puts @package.inspect  
 
              
-                  host = request.headers['X-Subdomain'] 
+            #       host = request.headers['X-Subdomain'] 
 
-                  if host === 'demo'
+            #       if host === 'demo'
 
-                    if Package.exists?(name: params[:name])
-                      render json: { error: "ip pool already exists" }, status: :unprocessable_entity
-                      return
+            #         if Package.exists?(name: params[:name])
+            #           render json: { error: "ip pool already exists" }, status: :unprocessable_entity
+            #           return
                       
-                    end
+            #         end
                     
     
                     
-                    if params[:name].blank?
-                      render json: { error: "package name is required" }, status: :unprocessable_entity
-                      return
-                    end
+            #         if params[:name].blank?
+            #           render json: { error: "package name is required" }, status: :unprocessable_entity
+            #           return
+            #         end
                     
-                    if params[:download_limit].blank?
-                      render json: { error: "download limit is required" }, status: :unprocessable_entity
-                      return
-                    end
+            #         if params[:download_limit].blank?
+            #           render json: { error: "download limit is required" }, status: :unprocessable_entity
+            #           return
+            #         end
                     
-                    if params[:upload_limit].blank?
-                      render json: { error: "upload limit is required" }, status: :unprocessable_entity
-                      return
-                    end
+            #         if params[:upload_limit].blank?
+            #           render json: { error: "upload limit is required" }, status: :unprocessable_entity
+            #           return
+            #         end
                     
-                    if params[:price].blank?
-                      render json: { error: "price is required" }, status: :unprocessable_entity
-                      return
-                    end
+            #         if params[:price].blank?
+            #           render json: { error: "price is required" }, status: :unprocessable_entity
+            #           return
+            #         end
                     
     
     
-                    @package = Package.new(package_params)
+            #         @package = Package.new(package_params)
 
-                    @package.save
-                    render json: @package, serializer: PackageSerializer
-                  else
-                    use_radius = ActsAsTenant.current_tenant.router_setting.use_radius
-                    @package = Package.new(package_params)
-                    if use_radius
-                      @package = Package.new(package_params)
-                      profile_id= fetch_profile_id_from_mikrotik(@package.name)
-                      limitation_id = fetch_limitation_id_from_mikrotik(@package.name)
+            #         @package.save
+            #         render json: @package, serializer: PackageSerializer
+            #       else
+            #         use_radius = ActsAsTenant.current_tenant.router_setting.use_radius
+            #         @package = Package.new(package_params)
+            #         if use_radius
+            #           @package = Package.new(package_params)
+            #           profile_id= fetch_profile_id_from_mikrotik(@package.name)
+            #           limitation_id = fetch_limitation_id_from_mikrotik(@package.name)
       
       
       
                      
                       
-                      if Package.exists?(name: params[:name])
-                        render json: { error: "ip pool already exists" }, status: :unprocessable_entity
-                        return
+            #           if Package.exists?(name: params[:name])
+            #             render json: { error: "ip pool already exists" }, status: :unprocessable_entity
+            #             return
                         
-                      end
+            #           end
                       
       
                       
-                      if params[:name].blank?
-                        render json: { error: "package name is required" }, status: :unprocessable_entity
-                        return
-                      end
+            #           if params[:name].blank?
+            #             render json: { error: "package name is required" }, status: :unprocessable_entity
+            #             return
+            #           end
                       
-                      if params[:download_limit].blank?
-                        render json: { error: "download limit is required" }, status: :unprocessable_entity
-                        return
-                      end
+            #           if params[:download_limit].blank?
+            #             render json: { error: "download limit is required" }, status: :unprocessable_entity
+            #             return
+            #           end
                       
-                      if params[:upload_limit].blank?
-                        render json: { error: "upload limit is required" }, status: :unprocessable_entity
-                        return
-                      end
+            #           if params[:upload_limit].blank?
+            #             render json: { error: "upload limit is required" }, status: :unprocessable_entity
+            #             return
+            #           end
                       
-                      if params[:price].blank?
-                        render json: { error: "price is required" }, status: :unprocessable_entity
-                        return
-                      end
+            #           if params[:price].blank?
+            #             render json: { error: "price is required" }, status: :unprocessable_entity
+            #             return
+            #           end
                       
       
       
       
       
       
-                        if  profile_id && limitation_id &&  @package.save
+            #             if  profile_id && limitation_id &&  @package.save
         
                        
-                        if profile_id && limitation_id 
-                              @package.update(mikrotik_id: profile_id, limitation_id: limitation_id,)
-                              profile_limitation_id =  fetch_profile_limitation_id(@package.name)
-                  @package.update(profile_limitation_id: profile_limitation_id)
+            #             if profile_id && limitation_id 
+            #                   @package.update(mikrotik_id: profile_id, limitation_id: limitation_id,)
+            #                   profile_limitation_id =  fetch_profile_limitation_id(@package.name)
+            #       @package.update(profile_limitation_id: profile_limitation_id)
         
-                                  render json:  @package, status: :created
+            #                       render json:  @package, status: :created
         
-                        else
-                                render json: { error: 'Failed to obtain the  ids' }, status: :unprocessable_entity
+            #             else
+            #                     render json: { error: 'Failed to obtain the  ids' }, status: :unprocessable_entity
         
-                        end
-                      else
-                        render json: {error: 'Package Already Created'}, status: :unprocessable_entity
+            #             end
+            #           else
+            #             render json: {error: 'Package Already Created'}, status: :unprocessable_entity
                       
                     
-                      end
+            #           end
                     
-                    else
+            #         else
       
       
                   
       
       
-                      if params[:ip_pool].blank?
-                        render json: { error: "ip pool is required" }, status: :unprocessable_entity
-                        return
-                      end
+            #           if params[:ip_pool].blank?
+            #             render json: { error: "ip pool is required" }, status: :unprocessable_entity
+            #             return
+            #           end
                       
-                      if Package.exists?(name: params[:name])
-                        render json: { error: "ip pool already exists" }, status: :unprocessable_entity
-                        return
+            #           if Package.exists?(name: params[:name])
+            #             render json: { error: "ip pool already exists" }, status: :unprocessable_entity
+            #             return
                         
-                      end
+            #           end
                       
       
                       
-                      if params[:name].blank?
-                        render json: { error: "package name is required" }, status: :unprocessable_entity
-                        return
-                      end
+            #           if params[:name].blank?
+            #             render json: { error: "package name is required" }, status: :unprocessable_entity
+            #             return
+            #           end
                       
-                      if params[:download_limit].blank?
-                        render json: { error: "download limit is required" }, status: :unprocessable_entity
-                        return
-                      end
+            #           if params[:download_limit].blank?
+            #             render json: { error: "download limit is required" }, status: :unprocessable_entity
+            #             return
+            #           end
                       
-                      if params[:upload_limit].blank?
-                        render json: { error: "upload limit is required" }, status: :unprocessable_entity
-                        return
-                      end
+            #           if params[:upload_limit].blank?
+            #             render json: { error: "upload limit is required" }, status: :unprocessable_entity
+            #             return
+            #           end
                       
-                      if params[:price].blank?
-                        render json: { error: "price is required" }, status: :unprocessable_entity
-                        return
-                      end
+            #           if params[:price].blank?
+            #             render json: { error: "price is required" }, status: :unprocessable_entity
+            #             return
+            #           end
                       
                       
-                      ppoe_profile_id = fetch_ppp_profile_id_from_mikrotik
+            #           ppoe_profile_id = fetch_ppp_profile_id_from_mikrotik
       
       
       
-                      if ppoe_profile_id && @package.save
-                        @package.update(ppoe_profile_id: ppoe_profile_id)
-                        render json:  @package, status: :created
-                      else
-                        render json: { error: 'Failed to obtain the  ppoe profile id from mikrotik' }, status: :unprocessable_entity
-                      end
+            #           if ppoe_profile_id && @package.save
+            #             @package.update(ppoe_profile_id: ppoe_profile_id)
+            #             render json:  @package, status: :created
+            #           else
+            #             render json: { error: 'Failed to obtain the  ppoe profile id from mikrotik' }, status: :unprocessable_entity
+            #           end
       
-                    end
+            #         end
 
-                  end
+            #       end
              
             
                 
-              end
+            #   end
 
     
+
+
+
+
+
+
+
+
+
+
+              def create
+                # Validate package attributes
+                if Package.exists?(name: params[:name])
+                  render json: { error: "ip pool already exists" }, status: :unprocessable_entity
+                  return
+                  
+                end
+                
+
+                
+                if params[:name].blank?
+                  render json: { error: "package name is required" }, status: :unprocessable_entity
+                  return
+                end
+                
+                if params[:download_limit].blank?
+                  render json: { error: "download limit is required" }, status: :unprocessable_entity
+                  return
+                end
+                
+                if params[:upload_limit].blank?
+                  render json: { error: "upload limit is required" }, status: :unprocessable_entity
+                  return
+                end
+                
+                if params[:price].blank?
+                  render json: { error: "price is required" }, status: :unprocessable_entity
+                  return
+                end
+                
+              
+                @package = Package.new(package_params)
+                
+                if @package.save
+                  # Call the method to update FreeRADIUS policies after saving the package
+                  update_freeradius_policies(@package)
+                  render json: @package, serializer: PackageSerializer
+                else
+                  render json: { error: @package.errors.full_messages }, status: :unprocessable_entity
+                end
+              end
+
+
+
 
 
             
@@ -682,6 +736,23 @@ class PackagesController < ApplicationController
       
 
 
+
+
+
+    def update_freeradius_policies(package)
+      # group_name = "#{package.name}_HotspotPackage" 
+    group_name = "hotspot_#{package.name.parameterize(separator: '_')}"
+    
+      ActiveRecord::Base.transaction do
+        # ✅ Update or create speed limits in Radgroupreply
+        rad_reply = RadGroupReply.find_or_initialize_by(groupname: group_name, radiusattribute: 'Mikrotik-Rate-Limit')
+        rad_reply.update!(op: ':=', value: "#{package.upload_limit}M/#{package.download_limit}M")
+    
+       
+      end
+    end
+
+
 def fetch_limitation_id_from_mikrotik(package_name)
   
   router_name = params[:router_name]
@@ -962,10 +1033,43 @@ def fetch_profile_limitation_id(package_name)
 end
 
 
+def update_freeradius_policies(package)
+  # Ensure the package is of type PppoePackage
+  # return unless package.is_a?(PppoePackage)
+
+  # Define the group name for PPPOE package
+  group_name = "pppoe_#{package.name.parameterize(separator: '_')}"
+
+  ActiveRecord::Base.transaction do
+    # ✅ Update or create speed limits in RadGroupReply for PPPOE
+    rad_reply = RadGroupReply.find_or_initialize_by(groupname: group_name, radiusattribute: 'Mikrotik-Rate-Limit')
+    rad_reply.update!(op: ':=', value: "#{package.upload_limit}M/#{package.download_limit}M")
+
+    # ✅ Optionally handle validity or expiration if applicable
+    # if package.validity.present?
+    #   rad_check = RadGroupCheck.find_or_initialize_by(groupname: group_name, radiusattribute: 'Expiration')
+    #   expiration_time = (Time.current + package.validity.days).strftime("%d %b %Y %H:%M:%S")
+    #   rad_check.update!(op: ':=', value: expiration_time)
+    # end
+
+
+
+
+    
+
+    # ✅ Optionally handle burst limits if applicable
+    if package.upload_burst_limit.present? && package.download_burst_limit.present?
+      burst_reply = RadGroupReply.find_or_initialize_by(groupname: group_name, radiusattribute: 'Mikrotik-Burst-Limit')
+      burst_reply.update!(op: ':=', value: "#{package.upload_burst_limit}M/#{package.download_burst_limit}M")
+    end
+  end
+end
 
 
       def package_params
-        params.require(:package).permit(:name, :download_limit, :upload_limit, :price, :validity, :upload_burst_limit,
+        params.require(:package).permit(:name, :download_limit, :upload_limit, :price,
+         :validity, 
+        :upload_burst_limit,
         :download_burst_limit,  :validity_period_units, :router_name,
         :ip_pool
          )

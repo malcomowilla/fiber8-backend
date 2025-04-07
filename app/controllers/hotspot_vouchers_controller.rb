@@ -287,7 +287,9 @@ end
      
   
       else
-  puts 'testt123'
+        create_voucher_radcheck(@hotspot_voucher.voucher, @hotspot_voucher.package, @hotspot_voucher.shared_users)
+      
+        calculate_expiration(params[:package], @hotspot_voucher)
       end
 
     end
@@ -317,9 +319,11 @@ end
 # INSERT INTO radusergroup (username, groupname, priority) 
 # VALUES ('#{hotspot_voucher}', '#{package}', 1)
 # ")
+hotspot_package = "hotspot_#{package.parameterize(separator: '_')}"
+
 RadCheck.create(username: hotspot_voucher, radiusattribute: 'Cleartext-Password', op: ':=', value: hotspot_voucher)  
 RadCheck.create(username: hotspot_voucher, radiusattribute: 'Simultaneous-Use', op: ':=', value: shared_users.to_s)  
-RadUserGroup.create(username: hotspot_voucher, groupname: package, priority: 1) 
+RadUserGroup.create(username: hotspot_voucher, groupname: hotspot_package, priority: 1) 
 
 validity_period_units = HotspotPackage.find_by(name: package).validity_period_units
 validity = HotspotPackage.find_by(name: package).validity
