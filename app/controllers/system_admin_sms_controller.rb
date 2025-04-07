@@ -1,24 +1,50 @@
 class SystemAdminSmsController < ApplicationController
-  before_action :set_system_admin_sm, only: %i[ show edit update destroy ]
+
+  set_current_tenant_through_filter
+  before_action :set_tenant
+
+  load_and_authorize_resource except: [:allow_get_system_admin_sms]
+
+
+
+
+
+
+  def set_tenant
+   
+    Rails.logger.info "Setting tenant for app#{ActsAsTenant.current_tenant}"
+    
+    
+    host = request.headers['X-Subdomain']
+    @account = Account.find_by(subdomain: host)
+    ActsAsTenant.current_tenant = @account
+    set_current_tenant(@account)
+    EmailConfiguration.configure(@account, ENV['SYSTEM_ADMIN_EMAIL'])
+  
+    # set_current_tenant(@account)
+  rescue ActiveRecord::RecordNotFound
+    render json: { error: 'Invalid tenant' }, status: :not_found
+  
+    end
+
+
+
+
+    def allow_get_system_admin_sms
+      @system_admin_sms = SystemAdminSm.all
+      render json: @system_admin_sms
+      
+    end
+
 
   # GET /system_admin_sms or /system_admin_sms.json
   def index
     @system_admin_sms = SystemAdminSm.all
+    render json: @system_admin_sms
   end
 
   # GET /system_admin_sms/1 or /system_admin_sms/1.json
-  def show
-  end
-
-  # GET /system_admin_sms/new
-  def new
-    @system_admin_sm = SystemAdminSm.new
-  end
-
-  # GET /system_admin_sms/1/edit
-  def edit
-  end
-
+  
   # POST /system_admin_sms or /system_admin_sms.json
   def create
     @system_admin_sm = SystemAdminSm.new(system_admin_sm_params)

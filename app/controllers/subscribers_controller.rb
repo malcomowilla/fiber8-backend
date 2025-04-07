@@ -920,10 +920,13 @@ Rails.logger.info 'router not found'
             end
             # Only allow a list of trusted parameters through.
             def subscriber_params
-              params.require(:subscriber).permit(:name, :phone_number, :ppoe_username, :ppoe_password, :email, :ppoe_package,
+              params.require(:subscriber).permit(:name, :phone_number, :ppoe_username, :ppoe_password,
+              :house_number, :building_name, :latitude, :longitude,
+               :email, :ppoe_package,
               :date_registered, :ref_no, :valid_until, :router_name, :package_name, :installation_fee, 
               :subscriber_discount, :second_phone_number)
             end
 
 
 end
+

@@ -203,6 +203,7 @@ GEM
       activesupport (>= 6.0.0)
       railties (>= 6.0.0)
     io-console (0.8.0)
+    ipaddress (0.8.3)
     irb (1.15.1)
       pp (>= 0.6.0)
       rdoc (>= 4.0.0)
@@ -376,8 +377,6 @@ GEM
     rubyzip (2.4.1)
     rufus-scheduler (3.9.2)
       fugit (~> 1.1, >= 1.11.1)
-    safe_attributes (1.0.10)
-      activerecord (>= 3.0.0)
     safety_net_attestation (0.4.0)
       jwt (~> 2.0)
     securerandom (0.4.1)
@@ -487,6 +486,7 @@ DEPENDENCIES
   http
   image_processing (~> 1.2)
   importmap-rails
+  ipaddress (~> 0.8.3)
   jbuilder
   jwt
   mailtrap
@@ -503,7 +503,6 @@ DEPENDENCIES
   redis (>= 4.0.1)
   rest-client
   rqrcode
-  safe_attributes
   securerandom
   selenium-webdriver
   sidekiq

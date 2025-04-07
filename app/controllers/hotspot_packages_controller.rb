@@ -1476,7 +1476,8 @@ end
 
 
 def update_freeradius_policies(package)
-  group_name = package.name # Unique group for each package
+  # group_name = "#{package.name}_HotspotPackage" 
+group_name = "hotspot_#{package.name.parameterize(separator: '_')}"
 
   ActiveRecord::Base.transaction do
     # ✅ Update or create speed limits in Radgroupreply

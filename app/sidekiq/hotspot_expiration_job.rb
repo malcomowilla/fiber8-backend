@@ -437,8 +437,12 @@ class HotspotExpirationJob
   end
 
   def send_expiration(phone_number, voucher_code)
+
+    # provider = ActsAsTenant.current_tenant.sms_provider_setting.sms_provider
+
     api_key = SmsSetting.find_by(sms_provider: 'SMS leopard')&.api_key
     api_secret = SmsSetting.find_by(sms_provider: 'SMS leopard')&.api_secret
+    
 
     sms_template = ActsAsTenant.current_tenant.sms_template
     send_voucher_template = sms_template&.send_voucher_template
@@ -473,7 +477,9 @@ class HotspotExpirationJob
       message: original_message,
       mobile: phone_number,
       partnerID: partnerID,
-      shortcode: 'TextSMS'
+      shortcode: 'TextSMS',
+      sms_provider: 'TextSms'
+
     }
     uri.query = URI.encode_www_form(params)
 
@@ -495,7 +501,8 @@ class HotspotExpirationJob
           message: message,
           status: sms_status,
           date: Time.current,
-          system_user: 'system'
+          system_user: 'system',
+          sms_provider: 'SMS leopard'
         )
       else
         Rails.logger.info "Failed to send message: #{sms_data['responses'][0]['response-description']}"

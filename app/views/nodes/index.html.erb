@@ -1,0 +1,16 @@
+<p style="color: green"><%= notice %></p>
+
+<% content_for :title, "Nodes" %>
+
+<h1>Nodes</h1>
+
+<div id="nodes">
+  <% @nodes.each do |node| %>
+    <%= render node %>
+    <p>
+      <%= link_to "Show this node", node %>
+    </p>
+  <% end %>
+</div>
+
+<%= link_to "New node", new_node_path %>

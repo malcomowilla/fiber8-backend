@@ -59,6 +59,9 @@ rescue ActiveRecord::RecordNotFound
 
   # GET /support_tickets or /support_tickets.json
   def index
+   
+
+
     @support_tickets = SupportTicket.all
     render json: @support_tickets
   end
