@@ -25,7 +25,7 @@ class SmsSettingsController < ApplicationController
     
     # @sms_settings = SmsSetting.all
     # render json: @sms_settings
-    @sms_settings = SmsSetting.order(updated_at: :desc)
+    @sms_settings = SmsSetting.order(updated_at: :asc)
   render json: @sms_settings
   end
 
