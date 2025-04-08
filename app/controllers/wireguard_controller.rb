@@ -236,23 +236,24 @@ class WireguardController < ApplicationController
   
       # Check if the [Interface] section exists
       interface_section_index = config_lines.index { |line| line.strip == '[Interface]' }
-      
       if interface_section_index
-        # If [Interface] exists, update the Address line (find and replace it)
+        # Look only between [Interface] and the next section (e.g., [Peer])
+        next_section_index = config_lines[interface_section_index + 1..].index { |line| line.strip.start_with?('[') }
+        range_end = next_section_index ? interface_section_index + 1 + next_section_index : config_lines.length
+      
         updated = false
-        config_lines.each_with_index do |line, index|
-          if line.strip.start_with?('Address') # Update Address line in the [Interface] section
-            config_lines[index] = "Address = #{server_ip}/#{subnet_mask}\n"
+        (interface_section_index + 1...range_end).each do |i|
+          if config_lines[i].strip.start_with?('Address')
+            config_lines[i] = "Address = #{server_ip}/#{subnet_mask}\n"
             updated = true
+            break
           end
         end
-  
-        # If no Address line was updated, add it to the [Interface] section
+      
         unless updated
           config_lines.insert(interface_section_index + 1, "Address = #{server_ip}/#{subnet_mask}\n")
         end
       else
-        # If [Interface] doesn't exist, append it to the end of the config
         config_lines << "\n[Interface]\nAddress = #{server_ip}/#{subnet_mask}\n"
       end
   
