@@ -231,16 +231,23 @@ class WireguardController < ApplicationController
     begin
       # Open the configuration file to modify it
       config_lines = File.readlines(WG_CONFIG_PATH)
-      
-      # Check if the [Interface] section already exists
+  
+      # Check if the [Interface] section exists
       interface_section_index = config_lines.index { |line| line.strip == '[Interface]' }
       
       if interface_section_index
         # If [Interface] exists, update the Address line (find and replace it)
+        updated = false
         config_lines.each_with_index do |line, index|
           if line.strip.start_with?('Address') # Update Address line in the [Interface] section
             config_lines[index] = "Address = #{server_ip}/#{subnet_mask}\n"
+            updated = true
           end
+        end
+  
+        # If no Address line was updated, add it to the [Interface] section
+        unless updated
+          config_lines.insert(interface_section_index + 1, "Address = #{server_ip}/#{subnet_mask}\n")
         end
       else
         # If [Interface] doesn't exist, append it to the end of the config
@@ -272,7 +279,7 @@ class WireguardController < ApplicationController
       public_key: client_public_key
     }
   end
-
+  
   private
 
   def generate_mikrotik_config(private_key, server_pubkey, ip)
