@@ -222,6 +222,8 @@ class WireguardController < ApplicationController
   
     # Calculate server's dynamic address (first IP in the range)
     # server_ip = network.to_range.first.to_s
+    network = IPAddr.new("#{network_address}/#{subnet_mask}")
+
     ip_range = network.to_range
     server_ip = ip_range.first.succ.to_s
   
@@ -292,12 +294,12 @@ class WireguardController < ApplicationController
       /interface wireguard add name=wireguard1 private-key="#{private_key}"
       
  
-      /interface wireguard peers add \\
-        allowed-address=0.0.0.0/0 \\
+      /interface wireguard peers add 
+        allowed-address=0.0.0.0/0 
         endpoint-address=102.221.35.92
-        endpoint-port=51820 \\
-        interface=wireguard1 \\
-        persistent-keepalive=25s \\
+        endpoint-port=51820 
+        interface=wireguard1 
+        persistent-keepalive=25s 
         public-key="#{server_pubkey}"
       
       /ip address add address=#{ip} interface=wireguard1
