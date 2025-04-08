@@ -205,6 +205,22 @@ end
       # Restart WireGuard to apply changes
       system("systemctl restart wg-quick@wg0") if Rails.env.production?
     end
+  
+    # Remove the specific IP from the [Interface] section if no peers remain
+    remove_ip_from_interface(wg_config_path, ip)
+  end
+  
+  def remove_ip_from_interface(wg_config_path, ip)
+    current_config = File.read(wg_config_path)
+    
+    # Find the [Interface] section and the line with the specific IP
+    new_config = current_config.gsub(/^(\[Interface\][^\[]*)\s*Address\s*=\s*#{Regexp.escape(ip)}[^\n]*/m, '\1')
+    
+    # Write the modified config back
+    File.write(wg_config_path, new_config)
+    
+    # Restart WireGuard to apply changes
+    system("systemctl restart wg-quick@wg0") if Rails.env.production?
   end
 
 
