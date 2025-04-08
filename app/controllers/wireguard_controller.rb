@@ -183,7 +183,7 @@ class WireguardController < ApplicationController
     network_address = params[:network_address] || "10.2.0.0"
     subnet_mask = params[:subnet_mask] || "24"
     client_ip = params[:client_ip] # Optional: if user wants to specify exact IP
-  
+
     # Validate network address
     begin
       network = IPAddr.new("#{network_address}/#{subnet_mask}")
@@ -191,7 +191,7 @@ class WireguardController < ApplicationController
       render json: { error: "Invalid network address: #{e.message}" }, status: :bad_request
       return
     end
-  
+
     # Generate keys
     client_private_key, _ = Open3.capture3("wg genkey")
     client_private_key.strip!
@@ -199,7 +199,7 @@ class WireguardController < ApplicationController
     client_public_key.strip!
     server_public_key, _ = Open3.capture3("wg show wg0 public-key")
     server_public_key.strip!
-  
+
     # Assign IP address
     assigned_ip = if client_ip.present?
       begin
@@ -219,20 +219,19 @@ class WireguardController < ApplicationController
       random_ip = host_range.to_a[1..-2].sample || host_range.first.succ
       "#{random_ip}/#{subnet_mask}"
     end
-  
-    # Calculate server's dynamic address (first IP in the range)
-    server_ip = network.to_range.first.succ.to_s
 
-  
+    # Calculate server's dynamic gateway (first usable IP in the range)
+    server_ip = get_gateway(network_address, subnet_mask)
+
     # Generate configurations
     mikrotik_config = generate_mikrotik_config(client_private_key, server_public_key, assigned_ip)
     server_config = generate_server_config(client_public_key, assigned_ip)
-  
+
     # Save to WireGuard server configuration
     begin
       # Open the configuration file to modify it
       config_lines = File.readlines(WG_CONFIG_PATH)
-  
+
       # Check if the [Interface] section exists
       interface_section_index = config_lines.index { |line| line.strip == '[Interface]' }
       
@@ -245,7 +244,7 @@ class WireguardController < ApplicationController
             updated = true
           end
         end
-  
+
         # If no Address line was updated, add it to the [Interface] section
         unless updated
           config_lines.insert(interface_section_index + 1, "Address = #{server_ip}/#{subnet_mask}\n")
@@ -254,14 +253,14 @@ class WireguardController < ApplicationController
         # If [Interface] doesn't exist, append it to the end of the config
         config_lines << "\n[Interface]\nAddress = #{server_ip}/#{subnet_mask}\n"
       end
-  
+
       # Append the client peer config to the file
       config_lines << "\n# Added by WireGuardController for peer #{client_public_key}\n"
       config_lines << server_config
-  
+
       # Write the modified config back to the file
       File.open(WG_CONFIG_PATH, 'w') { |file| file.puts(config_lines) }
-  
+
       # Apply the configuration and restart WireGuard service
       system("wg set wg0 peer #{client_public_key} allowed-ips #{assigned_ip}")
       system("systemctl restart wg-quick@wg0") if Rails.env.production?
@@ -270,7 +269,7 @@ class WireguardController < ApplicationController
              status: :internal_server_error
       return
     end
-  
+
     render json: { 
       mikrotik_config: mikrotik_config,
       server_config: server_config,
@@ -282,6 +281,12 @@ class WireguardController < ApplicationController
   end
   
   private
+
+  def get_gateway(network_address, subnet_mask)
+    # Calculate the first usable IP (gateway)
+    network = IPAddr.new("#{network_address}/#{subnet_mask}")
+    network.to_range.first.succ.to_s
+  end
 
   def generate_mikrotik_config(private_key, server_pubkey, ip)
     <<~CONFIG
@@ -298,8 +303,6 @@ class WireguardController < ApplicationController
         public-key="#{server_pubkey}"
       
       /ip address add address=#{ip} interface=wireguard1
-      
-    
     CONFIG
   end
 
@@ -313,6 +316,7 @@ class WireguardController < ApplicationController
     CONFIG
   end
 end
+
 
 
 
