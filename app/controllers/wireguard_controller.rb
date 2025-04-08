@@ -221,7 +221,8 @@ class WireguardController < ApplicationController
     end
   
     # Calculate server's dynamic address (first IP in the range)
-    server_ip = network.to_range.first.to_s
+    server_ip = network.to_range.first.succ.to_s
+
   
     # Generate configurations
     mikrotik_config = generate_mikrotik_config(client_private_key, server_public_key, assigned_ip)
@@ -312,3 +313,6 @@ class WireguardController < ApplicationController
     CONFIG
   end
 end
+
+
+
