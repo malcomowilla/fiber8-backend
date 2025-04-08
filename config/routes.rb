@@ -1,4 +1,5 @@
 Rails.application.routes.draw do
+  resources :ip_networks
   resources :nodes
   resources :sms_provider_settings
   resources :user_groups

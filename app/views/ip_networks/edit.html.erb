@@ -1,0 +1,12 @@
+<% content_for :title, "Editing ip network" %>
+
+<h1>Editing ip network</h1>
+
+<%= render "form", ip_network: @ip_network %>
+
+<br>
+
+<div>
+  <%= link_to "Show this ip network", @ip_network %> |
+  <%= link_to "Back to ip networks", ip_networks_path %>
+</div>

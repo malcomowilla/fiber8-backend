@@ -61,6 +61,8 @@
 # end
 # end
 
+  # Optional: Add route if needed
+      # /ip route add dst-address=0.0.0.0/0 gateway=wireguard1
 
 class WireguardController < ApplicationController
   require 'securerandom'
@@ -143,9 +145,10 @@ class WireguardController < ApplicationController
       # WireGuard MikroTik Configuration
       /interface wireguard add name=wireguard1 private-key="#{private_key}"
       
+ 
       /interface wireguard peers add \\
         allowed-address=0.0.0.0/0 \\
-        endpoint-address=#{ENV['WG_SERVER_IP'] || 'your.server.ip'} \\
+        endpoint-address=102.221.35.92
         endpoint-port=51820 \\
         interface=wireguard1 \\
         persistent-keepalive=25s \\
@@ -153,8 +156,7 @@ class WireguardController < ApplicationController
       
       /ip address add address=#{ip} interface=wireguard1
       
-      # Optional: Add route if needed
-      # /ip route add dst-address=0.0.0.0/0 gateway=wireguard1
+    
     CONFIG
   end
 

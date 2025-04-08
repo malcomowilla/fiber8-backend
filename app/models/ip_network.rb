@@ -1,0 +1,2 @@
+class IpNetwork < ApplicationRecord
+end
