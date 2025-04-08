@@ -277,6 +277,7 @@ class WireguardController < ApplicationController
       mikrotik_config: mikrotik_config,
       server_config: server_config,
       client_ip: assigned_ip,
+      server_ip: server_ip,
       network: "#{network_address}/#{subnet_mask}",
       private_key: client_private_key,
       public_key: client_public_key
