@@ -115,15 +115,30 @@ end
     end
   
 
+    # def delete
+    #   nas_router = find_nas_router
+
+    # nas_router.destroy
+    # head :no_content
+  
+    # end
+
     def delete
       nas_router = find_nas_router
-
-    nas_router.destroy
-    head :no_content
-  
+      
+      # Get the WireGuard IP assigned to this router (you'll need to store this when creating)
+      wg_ip = nas_router.ip_address # Assuming you have this field in your model
+      
+      # Delete the NAS router record first
+      nas_router.destroy
+      
+      # Then remove the WireGuard peer configuration
+      if wg_ip.present?
+        remove_wireguard_peer(wg_ip)
+      end
+      
+      head :no_content
     end
-
-
 
   # POST /nas_routers or /nas_routers.json
   def create
@@ -166,6 +181,42 @@ end
   # end
 
   private
+
+  def remove_wireguard_peer(ip)
+    wg_config_path = "/etc/wireguard/wg0.conf"
+    
+    # Read current config
+    current_config = File.read(wg_config_path)
+    
+    # Find the peer block with this IP
+    peer_block = current_config.match(/\[Peer\][^\[]+AllowedIPs\s*=\s*#{Regexp.escape(ip)}/m)
+    
+    if peer_block
+      # Remove the peer block from config
+      new_config = current_config.gsub(peer_block[0], '')
+      
+      # Write the modified config back
+      File.write(wg_config_path, new_config)
+      
+      # Remove the peer from running interface
+      public_key = peer_block[0].match(/PublicKey\s*=\s*(\S+)/)[1]
+      system("wg set wg0 peer #{public_key} remove")
+      
+      # Restart WireGuard to apply changes
+      system("systemctl restart wg-quick@wg0") if Rails.env.production?
+    end
+  end
+
+
+
+
+
+
+
+
+
+
+
   def nas_router_params
     params.require(:nas_router).permit(:name, :ip_address, :username, :password)
   end

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2025_04_07_104536) do
+ActiveRecord::Schema[7.2].define(version: 2025_04_07_155744) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -218,6 +218,16 @@ ActiveRecord::Schema[7.2].define(version: 2025_04_07_104536) do
     t.string "user_profile_id"
     t.string "shared_users"
     t.datetime "sms_sent_at"
+  end
+
+  create_table "ip_networks", force: :cascade do |t|
+    t.string "network"
+    t.string "title"
+    t.string "ip_adress"
+    t.string "subnet_mask"
+    t.integer "account_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
   end
 
   create_table "ip_pools", force: :cascade do |t|

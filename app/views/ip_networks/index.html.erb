@@ -1,0 +1,16 @@
+<p style="color: green"><%= notice %></p>
+
+<% content_for :title, "Ip networks" %>
+
+<h1>Ip networks</h1>
+
+<div id="ip_networks">
+  <% @ip_networks.each do |ip_network| %>
+    <%= render ip_network %>
+    <p>
+      <%= link_to "Show this ip network", ip_network %>
+    </p>
+  <% end %>
+</div>
+
+<%= link_to "New ip network", new_ip_network_path %>
