@@ -249,7 +249,7 @@ class WireguardController < ApplicationController
   
         # If no Address line was updated, add it to the [Interface] section
         unless updated
-          config_lines.insert(interface_section_index + 1, "Address = #{server_ip}/#{subnet_mask}\n)
+          config_lines.insert(interface_section_index + 1, "Address = #{server_ip}/#{subnet_mask}\n")
         end
       else
         # If [Interface] doesn't exist, append it to the end of the config
