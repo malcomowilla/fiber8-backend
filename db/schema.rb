@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2025_04_07_155744) do
+ActiveRecord::Schema[7.2].define(version: 2025_04_11_071827) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -228,6 +228,10 @@ ActiveRecord::Schema[7.2].define(version: 2025_04_07_155744) do
     t.integer "account_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "total_ip_addresses"
+    t.string "net_mask"
+    t.string "client_host_range"
+    t.string "nas"
   end
 
   create_table "ip_pools", force: :cascade do |t|
@@ -464,6 +468,16 @@ ActiveRecord::Schema[7.2].define(version: 2025_04_07_155744) do
     t.datetime "updated_at", null: false
     t.integer "account_id"
     t.string "price"
+    t.string "ip_address"
+    t.string "pppoe_username"
+    t.string "pppoe_password"
+    t.string "type"
+    t.string "ppoe_password"
+    t.string "ppoe_username"
+    t.string "phone_number"
+    t.string "network_name"
+    t.string "validity_period_units"
+    t.string "validity"
   end
 
   create_table "support_tickets", force: :cascade do |t|
