@@ -3,9 +3,9 @@ class SubscriptionsController < ApplicationController
 
   # GET /subscriptions or /subscriptions.json
 
-# set_current_tenant_through_filter
+set_current_tenant_through_filter
 
-# before_action :set_current_tenant
+before_action :set_current_tenant
 
 load_and_authorize_resource
 
@@ -32,10 +32,53 @@ end
   end
 
 
+
+
+
+  def get_ips
+    # Step 1: Get the network details
+    network = IpNetwork.find_by(title: params[:network_name])
+  
+    if network.nil?
+      render json: { error: "Network not found" }, status: 404 and return
+    end
+  
+    # Step 2: Parse the network and generate the range
+    cidr = "#{network.network}/#{network.subnet_mask}"
+    network_range = IPAddr.new(cidr).to_range.to_a
+  
+    # Step 3: Filter out reserved IPs
+    reserved_ips = [
+      network_range.first,  # Network address (.0)
+      network_range.last,   # Broadcast address (.255)
+      IPAddr.new(network_range.first.to_i + 1, Socket::AF_INET)  # Typically .1 (gateway)
+    ]
+  
+    available_ips = network_range - reserved_ips
+  
+    # Step 4: Exclude already used IPs
+    used_ips = Subscription.pluck(:ip_address).compact.map { |ip| IPAddr.new(ip) }
+    available_ips -= used_ips
+  
+    # Step 5: Select a small, unique set of IPs (e.g., 5 IPs)
+    limited_ips = available_ips.sample(5) # You can change 5 to whatever small number you want
+  
+    if limited_ips.empty?
+      render json: { error: "No available IPs in the network" }, status: 404 and return
+    end
+  
+    # Step 6: Return the selected IPs
+    render json: limited_ips.map(&:to_s)
+  end
+  
+
   # POST /subscriptions or /subscriptions.json
   def create
-    @subscription = Subscription.first_or_initialize(subscription_params)
-    @subscription.update(subscription_params)
+
+    @subscription = Subscription.create(
+      subscription_params
+    )
+    calculate_expiration(@subscription)
       if @subscription.save
          render json: @subscription, status: :created
       else
@@ -46,24 +89,79 @@ end
   end
 
   
-  # # DELETE /subscriptions/1 or /subscriptions/1.json
-  # def destroy
-  #   @subscription.destroy!
+  # DELETE /subscriptions/1 or /subscriptions/1.json
+  def destroy
+    @subscription = set_subscription
+  
+    @subscription.destroy!
 
-  #   respond_to do |format|
-  #     format.html { redirect_to subscriptions_url, notice: "Subscription was successfully destroyed." }
-  #     format.json { head :no_content }
-  #   end
-  # end
+       head :no_content 
+    
+  end
 
+
+
+
+  def update
+    @subscription = set_subscription
+    if @subscription.update(subscription_params)
+      calculate_expiration(@subscription)
+      render json: @subscription, status: :ok
+    else
+      render json: @subscription.errors, status: :unprocessable_entity
+    end
+  end
   private
     # Use callbacks to share common setup or constraints between actions.
     def set_subscription
       @subscription = Subscription.find_by(id: params[:id])
     end
 
+    
+    def calculate_expiration(subscription)
+      return nil unless subscription.validity.present? && subscription.validity_period_units.present?
+    
+      validity = subscription.validity.to_i
+    
+      # Calculate expiration time
+      expiration_time = case subscription.validity_period_units.downcase
+                        when 'days'
+                          Time.current + validity.days
+                        when 'hours'
+                          Time.current + validity.hours
+                        when 'minutes'
+                          Time.current + validity.minutes
+                        else
+                          nil
+                        end
+    
+      # If expiration was calculated, update the subscription
+      if expiration_time
+        subscription.update(expiry: expiration_time)
+        formatted_expiry = expiration_time.strftime("%B %d, %Y at %I:%M %p")
+      else
+        formatted_expiry = "unknown"
+      end
+    
+      # Return formatted expiry
+      {
+        expiry: formatted_expiry
+      }
+    end
+    
+
+
+
+
+
+
     # Only allow a list of trusted parameters through.
     def subscription_params
-      params.require(:subscription).permit(:name, :phone, :package, :status, :last_subscribed, :expiry)
+      params.require(:subscription).permit(:name, :phone_number, :package, :status, 
+      :last_subscribed, :expiry, :ip_address,
+       :ppoe_username, :ppoe_password, :type, :network_name, :mac_address, :validity_period_units, :validity)
     end
+
+   
+
 end

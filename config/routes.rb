@@ -21,7 +21,8 @@ Rails.application.routes.draw do
   resources :subscriber_settings
   resources :support_tickets
   resources :sms_settings
-  
+  resources :subscriptions
+
   # resources :sms
   resources :system_admin_web_authn_credentials
   resources :email_settings
@@ -41,9 +42,9 @@ mount ActionCable.server => '/cable'
 scope '/api' do
   resources :ip_pools
   resources :user_groups
-  resources :sms_provider_settings
-
-
+  resources :ip_networks
+  resources :subscriptions
+  resources :sms_provider_settings                                   
   resources :dial_up_mpesa_settings
   resources :hotspot_mpesa_settings
   resources :sms_templates
@@ -67,6 +68,9 @@ scope '/api' do
 
 end
 
+
+get '/get_ips', to: 'subscriptions#get_ips'
+get '/api/get_ips', to: 'subscriptions#get_ips'
 
 post '/api/send_sms', to: 'send_sms#send_sms'
 post '/api/reboot_router', to: 'system_metrics#reboot_router'

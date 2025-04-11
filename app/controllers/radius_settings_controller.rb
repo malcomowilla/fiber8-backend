@@ -1,7 +1,8 @@
 class RadiusSettingsController < ApplicationController
 
 
-  load_and_authorize_resource
+  # load_and_authorize_resource
+  load_and_authorize_resource class: 'Na'
 
   set_current_tenant_through_filter
   before_action :set_tenant
