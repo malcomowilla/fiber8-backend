@@ -1081,6 +1081,8 @@ private
       original_message = sms_template ?  MessageTemplate.interpolate(send_voucher_template,{
         
       voucher_code: voucher_code,
+      voucher_exporation: voucher_exporation
+
       })  :   "Hello, here is your voucher code: #{voucher_code}.This code is valid for #{voucher_exporation}. Enjoy your browsing"
                
       
