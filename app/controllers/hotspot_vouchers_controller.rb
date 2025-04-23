@@ -851,9 +851,9 @@ expiration_time = if hotspot_package.validity.present? && hotspot_package.validi
   # end
 
   # Return both expiration and status
-  {
+  
     expiration: expiration_time&.strftime("%B %d, %Y at %I:%M %p"),
-  }
+  
 end
 
 
