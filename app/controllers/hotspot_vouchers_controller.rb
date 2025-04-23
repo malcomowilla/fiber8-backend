@@ -862,7 +862,7 @@ end
 
     def generate_voucher_code
       loop do
-        code = "HS-" + SecureRandom.hex(4).upcase # Example: HS-A1B2C3D4
+        code = SecureRandom.hex(4).upcase 
         break code unless HotspotVoucher.exists?(voucher: code)
       end
     end
