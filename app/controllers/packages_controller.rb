@@ -301,260 +301,280 @@ class PackagesController < ApplicationController
 
 
             
-              def update_package
-                        # session[:router_name] = params[:router_name]
-                        host = request.headers['X-Subdomain'] 
+          #     def update_package
+          #               # session[:router_name] = params[:router_name]
+          #               host = request.headers['X-Subdomain'] 
                         
-                        if host === 'demo'
-                          package = Package.find_by(id: params[:id])
-                          if package
-                            package.update(package_params)
-                            render json: package
+          #               if host === 'demo'
+          #                 package = Package.find_by(id: params[:id])
+          #                 if package
+          #                   package.update(package_params)
+          #                   render json: package
 
-                          else
-                            render json: { error: 'package not found' }, status: :not_found
+          #                 else
+          #                   render json: { error: 'package not found' }, status: :not_found
                             
-                          end
-                        else
+          #                 end
+          #               else
 
-                          package = Package.find_by(id: params[:id])
-                          use_radius = ActsAsTenant.current_tenant.router_setting.use_radius
+          #                 package = Package.find_by(id: params[:id])
+          #                 use_radius = ActsAsTenant.current_tenant.router_setting.use_radius
           
-                            if use_radius
+          #                   if use_radius
           
-                              if package
-                                router_name = params[:router_name]
-                              nas_router = NasRouter.find_by(name: router_name)
-                              if nas_router
-                                router_ip_address = nas_router.ip_address
-                                router_password = nas_router.password
-                                router_username = nas_router.username
-                              else
-                                puts 'router not found'
-                              end
+          #                     if package
+          #                       router_name = params[:router_name]
+          #                     nas_router = NasRouter.find_by(name: router_name)
+          #                     if nas_router
+          #                       router_ip_address = nas_router.ip_address
+          #                       router_password = nas_router.password
+          #                       router_username = nas_router.username
+          #                     else
+          #                       puts 'router not found'
+          #                     end
             
             
             
             
             
-                              mikrotik_id = package.mikrotik_id
-                              limitation_id = package.limitation_id
-                              if mikrotik_id.present? && limitation_id.present?
+          #                     mikrotik_id = package.mikrotik_id
+          #                     limitation_id = package.limitation_id
+          #                     if mikrotik_id.present? && limitation_id.present?
                                 
-                                download_limit = package_params[:download_limit]
-                                upload_limit = package_params[:upload_limit]
+          #                       download_limit = package_params[:download_limit]
+          #                       upload_limit = package_params[:upload_limit]
                             
-                              upload_burst_limit = package_params[:upload_burst_limit]
-                              download_burst_limit = package_params[:download_burst_limit]
-                                  validity = package_params[:validity]
+          #                     upload_burst_limit = package_params[:upload_burst_limit]
+          #                     download_burst_limit = package_params[:download_burst_limit]
+          #                         validity = package_params[:validity]
                                       
-                            price =  package_params[:price]
+          #                   price =  package_params[:price]
                           
-                                  validity_period_units = package_params[:validity_period_units]
-                              name = package_params[:name]
+          #                         validity_period_units = package_params[:validity_period_units]
+          #                     name = package_params[:name]
                           
                               
-                            validity_period  =   if validity_period_units == 'days'
-                              "#{validity}d 00:00:00"
+          #                   validity_period  =   if validity_period_units == 'days'
+          #                     "#{validity}d 00:00:00"
                             
-                              elsif validity_period_units == 'hours'
-                                "#{validity}:00:00"
+          #                     elsif validity_period_units == 'hours'
+          #                       "#{validity}:00:00"
                               
-                              end
+          #                     end
             
             
             
             
-                                req_body={
-                                  "name" => name,
+          #                       req_body={
+          #                         "name" => name,
             
-                                  :price => price,
-                                  :validity => validity_period
+          #                         :price => price,
+          #                         :validity => validity_period
             
-                                }
+          #                       }
             
                                   
                             
-                                        req_body2 = {
+          #                               req_body2 = {
                                           
-                                          "download-limit" => download_limit,
-                                          "upload-limit" => upload_limit,
-                                      "name" => name,
-                                      "rate-limit-rx" => "#{upload_limit}M",
-                                      "rate-limit-tx" => "#{download_limit}M",
-                                      "rate-limit-burst-rx" => "#{upload_burst_limit}M",
-                                      "rate-limit-burst-tx" => "#{download_burst_limit}M",
-                                      "uptime-limit" => validity_period
-                                        }
+          #                                 "download-limit" => download_limit,
+          #                                 "upload-limit" => upload_limit,
+          #                             "name" => name,
+          #                             "rate-limit-rx" => "#{upload_limit}M",
+          #                             "rate-limit-tx" => "#{download_limit}M",
+          #                             "rate-limit-burst-rx" => "#{upload_burst_limit}M",
+          #                             "rate-limit-burst-tx" => "#{download_burst_limit}M",
+          #                             "uptime-limit" => validity_period
+          #                               }
                                         
-                                        begin
-                                        uri = URI("http://#{router_ip_address}/rest/user-manager/profile/#{mikrotik_id}") 
-                                        uri2 = URI("http://#{router_ip_address}/rest/user-manager/limitation/#{limitation_id}") 
-                                        req = Net::HTTP::Patch.new(uri)
-                                        req2 = Net::HTTP::Patch.new(uri2)
+          #                               begin
+          #                               uri = URI("http://#{router_ip_address}/rest/user-manager/profile/#{mikrotik_id}") 
+          #                               uri2 = URI("http://#{router_ip_address}/rest/user-manager/limitation/#{limitation_id}") 
+          #                               req = Net::HTTP::Patch.new(uri)
+          #                               req2 = Net::HTTP::Patch.new(uri2)
                                            
             
-                                            req.basic_auth router_username, router_password
-                                            req2.basic_auth router_username, router_password
+          #                                   req.basic_auth router_username, router_password
+          #                                   req2.basic_auth router_username, router_password
                                            
-                                            req['Content-Type'] = 'application/json'
-                                            req2['Content-Type'] = 'application/json'
+          #                                   req['Content-Type'] = 'application/json'
+          #                                   req2['Content-Type'] = 'application/json'
             
-                                  req.body = req_body.to_json
-                                  req2.body = req_body2.to_json
+          #                         req.body = req_body.to_json
+          #                         req2.body = req_body2.to_json
             
-                                  response = Net::HTTP.start(uri.hostname, uri.port){|http| http.request(req)}
-                                  response2 = Net::HTTP.start(uri2.hostname, uri2.port){|http| http.request(req2)} 
-            
-            
-                                if response.is_a?(Net::HTTPSuccess) && response2.is_a?(Net::HTTPSuccess) 
-                                  package.update(package_params)
-                                  render json: package
-                                else
-                                  puts "Failed to update profile and limitation : #{response.code} - #{response.message}"
-            
-                                  render json: { error: "Failed to update package" }, status: :unprocessable_entity
-            
-                                end
+          #                         response = Net::HTTP.start(uri.hostname, uri.port){|http| http.request(req)}
+          #                         response2 = Net::HTTP.start(uri2.hostname, uri2.port){|http| http.request(req2)} 
             
             
-              rescue Net::OpenTimeout, Net::ReadTimeout
-                render json: { error: "Request timed out while connecting to the router. Please check if the router is online." }, status: :gateway_timeout
-              rescue Errno::ECONNREFUSED
-                render json: { error: "Failed to connect to the router at #{router_ip_address}. Connection refused." }, status: :bad_gateway
-              rescue StandardError => e
-                render json: { error: "An unexpected error occurred: #{e.message}" }, status: :internal_server_error
+          #                       if response.is_a?(Net::HTTPSuccess) && response2.is_a?(Net::HTTPSuccess) 
+          #                         package.update(package_params)
+          #                         render json: package
+          #                       else
+          #                         puts "Failed to update profile and limitation : #{response.code} - #{response.message}"
+            
+          #                         render json: { error: "Failed to update package" }, status: :unprocessable_entity
+            
+          #                       end
+            
+            
+          #     rescue Net::OpenTimeout, Net::ReadTimeout
+          #       render json: { error: "Request timed out while connecting to the router. Please check if the router is online." }, status: :gateway_timeout
+          #     rescue Errno::ECONNREFUSED
+          #       render json: { error: "Failed to connect to the router at #{router_ip_address}. Connection refused." }, status: :bad_gateway
+          #     rescue StandardError => e
+          #       render json: { error: "An unexpected error occurred: #{e.message}" }, status: :internal_server_error
               
-                                end
+          #                       end
             
                               
-                              else
+          #                     else
                               
-                                render json: { error: "Mikrotik ID, limitation ID, or profile limitation ID not found in the package" }, status: :unprocessable_entity
+          #                       render json: { error: "Mikrotik ID, limitation ID, or profile limitation ID not found in the package" }, status: :unprocessable_entity
             
-                              end
+          #                     end
             
                               
             
-                              else
-                                render json: { error: 'Unprocesable entity' }, status: :unprocessable_entity
-                              end
+          #                     else
+          #                       render json: { error: 'Unprocesable entity' }, status: :unprocessable_entity
+          #                     end
           
           
-                            else
-                                if package
-                                router_name = params[:router_name]
-                              nas_router = NasRouter.find_by(name: router_name)
-                              if nas_router
-                                router_ip_address = nas_router.ip_address
-                                router_password = nas_router.password
-                                router_username = nas_router.username
-                              else
-                                puts 'router not found'
-                              end
+          #                   else
+          #                       if package
+          #                       router_name = params[:router_name]
+          #                     nas_router = NasRouter.find_by(name: router_name)
+          #                     if nas_router
+          #                       router_ip_address = nas_router.ip_address
+          #                       router_password = nas_router.password
+          #                       router_username = nas_router.username
+          #                     else
+          #                       puts 'router not found'
+          #                     end
             
             
             
             
             
-                            ppoe_profile_id = package.ppoe_profile_id
-                              if ppoe_profile_id.present?
+          #                   ppoe_profile_id = package.ppoe_profile_id
+          #                     if ppoe_profile_id.present?
                                 
-          validity = package_params[:validity]
+          # validity = package_params[:validity]
           
-          validity = package_params[:validity]
-                validity_period_units = package_params[:validity_period_units]
+          # validity = package_params[:validity]
+          #       validity_period_units = package_params[:validity_period_units]
               
-             download_limit = package_params[:download_limit]
-             upload_limit = package_params[:upload_limit]
-             name = package_params[:name]
+          #    download_limit = package_params[:download_limit]
+          #    upload_limit = package_params[:upload_limit]
+          #    name = package_params[:name]
             
               
-             validity_period =   if validity_period_units == 'days'
-              "#{validity}d 00:00:00"
+          #    validity_period =   if validity_period_units == 'days'
+          #     "#{validity}d 00:00:00"
             
-              elsif validity_period_units == 'hours'
-                 "#{validity}:00:00"
+          #     elsif validity_period_units == 'hours'
+          #        "#{validity}:00:00"
               
-              end
+          #     end
           
-          ip_pool = package_params[:ip_pool]
-          # pool_name = package_params[:pool_name]
-              request_body = {
-                # "comment": "any",
-                # "dns-server": "any",
-                "local-address": "#{ip_pool}",
-                "name": "#{name}",
+          # ip_pool = package_params[:ip_pool]
+          # # pool_name = package_params[:pool_name]
+          #     request_body = {
+          #       # "comment": "any",
+          #       # "dns-server": "any",
+          #       "local-address": "#{ip_pool}",
+          #       "name": "#{name}",
                
-                # "only-one": "any",
+          #       # "only-one": "any",
                 
-                "rate-limit": "#{upload_limit}/#{download_limit}",
-                "remote-address": "#{ip_pool}",
-                "session-timeout": "#{validity_period}",
-                # "use-encryption": "any",
+          #       "rate-limit": "#{upload_limit}/#{download_limit}",
+          #       "remote-address": "#{ip_pool}",
+          #       "session-timeout": "#{validity_period}",
+          #       # "use-encryption": "any",
                
                
-              }
+          #     }
                                
             
                                   
                             
                                        
                                         
-                                        begin
-                                        uri = URI("http://#{router_ip_address}/rest/ppp/profile/#{ppoe_profile_id}") 
-                                        req = Net::HTTP::Patch.new(uri)
+          #                               begin
+          #                               uri = URI("http://#{router_ip_address}/rest/ppp/profile/#{ppoe_profile_id}") 
+          #                               req = Net::HTTP::Patch.new(uri)
                                            
             
-                                            req.basic_auth router_username, router_password
+          #                                   req.basic_auth router_username, router_password
                                            
-                                            req['Content-Type'] = 'application/json'
+          #                                   req['Content-Type'] = 'application/json'
             
-                                  req.body = request_body.to_json
+          #                         req.body = request_body.to_json
             
-                                  response = Net::HTTP.start(uri.hostname, uri.port){|http| http.request(req)}
-            
-            
-                                if response.is_a?(Net::HTTPSuccess)
-                                  package.update(package_params)
-                                  render json: package
-                                else
-                                  puts "Failed to update ppoe profile : #{response.code} - #{response.message}"
-            
-                                  render json: { error: "Failed to update package" }, status: :unprocessable_entity
-            
-                                end
+          #                         response = Net::HTTP.start(uri.hostname, uri.port){|http| http.request(req)}
             
             
-              rescue Net::OpenTimeout, Net::ReadTimeout
-                render json: { error: "Request timed out while connecting to the router. Please check if the router is online." }, status: :gateway_timeout
-              rescue Errno::ECONNREFUSED
-                render json: { error: "Failed to connect to the router at #{router_ip_address}. Connection refused." }, status: :bad_gateway
-              rescue StandardError => e
-                render json: { error: "An unexpected error occurred: #{e.message}" }, status: :internal_server_error
+          #                       if response.is_a?(Net::HTTPSuccess)
+          #                         package.update(package_params)
+          #                         render json: package
+          #                       else
+          #                         puts "Failed to update ppoe profile : #{response.code} - #{response.message}"
+            
+          #                         render json: { error: "Failed to update package" }, status: :unprocessable_entity
+            
+          #                       end
+            
+            
+          #     rescue Net::OpenTimeout, Net::ReadTimeout
+          #       render json: { error: "Request timed out while connecting to the router. Please check if the router is online." }, status: :gateway_timeout
+          #     rescue Errno::ECONNREFUSED
+          #       render json: { error: "Failed to connect to the router at #{router_ip_address}. Connection refused." }, status: :bad_gateway
+          #     rescue StandardError => e
+          #       render json: { error: "An unexpected error occurred: #{e.message}" }, status: :internal_server_error
               
-                                end
+          #                       end
             
                               
-                              else
+          #                     else
                               
-                                render json: { error: "Mikrotik ID, limitation ID, or profile limitation ID not found in the package" }, status: :unprocessable_entity
+          #                       render json: { error: "Mikrotik ID, limitation ID, or profile limitation ID not found in the package" }, status: :unprocessable_entity
             
-                              end
+          #                     end
             
                               
             
-                              else
-                                render json: { error: 'Unprocesable entity' }, status: :unprocessable_entity
-                              end
-                            end
+          #                     else
+          #                       render json: { error: 'Unprocesable entity' }, status: :unprocessable_entity
+          #                     end
+          #                   end
                            
-                        end
+          #               end
                                       
-              end
+          #     end
 
 
 
+
+
+
+
+
+          def update_package
+
+ package = Package.find_by(id: params[:id])
+                          if package
+                            package.update(package_params)
+                            update_freeradius_policies(package)
+
+                            render json: package
+
+                          else
+                            render json: { error: 'package not found' }, status: :not_found
+                            
+                          end
+
+          end
 
 
     
