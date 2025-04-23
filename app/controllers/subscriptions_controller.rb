@@ -78,7 +78,7 @@ end
     @subscription = Subscription.create(
       
     # params[:subscription][:name],
-    package: package[:subscription][:package_name],
+    package: params[:subscription][:package_name],
     phone_number: params[:subscription][:phone_number],
   status:  params[:subscription][:status],
   ip_address: params[:subscription][:ip_address],
@@ -91,7 +91,7 @@ end
   validity:  params[:subscription][:validity]
 
     )
-    create_pppoe_credentials_radius(@subscription.pppoe_password, @subscription.pppoe_username, params[:package_name])
+    create_pppoe_credentials_radius(@subscription.pppoe_password, @subscription.pppoe_username, @subscription.package)
     calculate_expiration(@subscription)
       if @subscription.save
          render json: @subscription, status: :created
