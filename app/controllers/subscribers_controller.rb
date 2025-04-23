@@ -556,6 +556,11 @@ end
       return render json: { error: "Package not found" }, status: :not_found
     end
     found_subscriber.update(subscriber_params)
+    if found_subscriber.save
+      render json: found_subscriber, status: :ok
+    else
+      render json: { error: "Failed to update subscriber" }, status: :unprocessable_entity
+    end
 
   end
 
