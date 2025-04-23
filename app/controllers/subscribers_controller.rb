@@ -417,155 +417,147 @@ end
 
 
   # PATCH/PUT /subscribers/1 or /subscribers/1.json
+  # def update
+  #   found_subscriber = set_subscriber
+
+  #   use_radius = ActsAsTenant.current_tenant.router_setting.use_radius
+    
+  #   unless found_subscriber
+  #     return render json: { error: "Package not found" }, status: :not_found
+  #   end
+  
+  
+  #   if use_radius
+  #     router_name = params[:router_name]
+  #     nas_router = NasRouter.find_by(name: router_name)
+    
+  #     unless nas_router
+  #       return render json: { error: "Router not found" }, status: :not_found
+  #     end
+    
+  #     router_ip_address = nas_router.ip_address
+  #     router_password = nas_router.password
+  #       router_username = nas_router.username
+    
+  #     ppoe_secrets_id = found_subscriber.ppoe_secrets_id
+  #     mikrotik_user_id = found_subscriber.mikrotik_user_id
+    
+  #     unless mikrotik_user_id.present?
+  #       return render json: { error: "mikrotik_user_id id missing in package" }, status: :unprocessable_entity
+  #     end 
+    
+  #     begin
+
+
+
+  #       request_body2={
+  #         name: params[:ppoe_username],
+  #         password:   params[:ppoe_password] 
+  #       }
+
+  #       uri = URI("http://#{router_ip_address}/rest/user-manager/user/#{mikrotik_user_id}")
+    
+  #       request = Net::HTTP::Patch.new(uri)
+    
+  #       request.basic_auth(router_username, router_password)
+  #       request.body = request_body2.to_json
+  #       request.content_type = 'application/json'
+  #       response = Net::HTTP.start(uri.hostname, uri.port, open_timeout: 10, read_timeout: 10) { |http| http.request(request) }
+    
+  #       if response.is_a?(Net::HTTPSuccess) 
+    
+  #         found_subscriber.update(subscriber_params)
+  #       render json: found_subscriber, status: :ok
+  #       else
+  #         error_message = "Failed to delete usermanager user - #{response.code} #{response.message}"
+  #         render json: { error: error_message }, status: :unprocessable_entity
+  #       end
+    
+  #     rescue Net::OpenTimeout, Net::ReadTimeout
+  #       render json: { error: "Request timed out while connecting to the router. Please check if the router is online." }, status: :gateway_timeout
+  #     rescue Errno::ECONNREFUSED
+  #       render json: { error: "Failed to connect to the router at #{router_ip_address}. Connection refused." }, status: :bad_gateway
+  #     rescue StandardError => e
+  #       render json: { error: "An unexpected error occurred: #{e.message}" }, status: :internal_server_error
+  #     end
+      
+  #   else
+  
+  #   router_name = params[:router_name]
+  #   nas_router = NasRouter.find_by(name: router_name)
+  
+
+
+  #    req_body = {
+                                
+  #                               "password" => params[:ppoe_password],
+  #                           "name" => params[:ppoe_username],
+  #                           "profile" => params[:package_name],
+                           
+  #                             }
+  #   unless nas_router
+  #     return render json: { error: "Router not found" }, status: :not_found
+  #   end
+  
+  #   router_ip_address = nas_router.ip_address
+  #   router_password = nas_router.password
+  #   router_username = nas_router.username
+  
+  #   ppoe_secrets_id = found_subscriber.ppoe_secrets_id
+  
+  #   unless ppoe_secrets_id.present?
+  #     return render json: { error: "secrets id missing in package" }, status: :unprocessable_entity
+  #   end
+  
+  #   begin
+  #     uri = URI("http://#{router_ip_address}/rest/ppp/secret/#{ppoe_secrets_id}")
+  
+  #     request = Net::HTTP::Patch.new(uri)
+  
+  #     request.basic_auth(router_username, router_password)
+
+  #     request['Content-Type'] = 'application/json'
+
+  #     request.body = req_body.to_json
+  #     response = Net::HTTP.start(uri.hostname, uri.port){|http| http.request(request)}
+  
+  #     if response.is_a?(Net::HTTPSuccess) 
+  
+  #       found_subscriber.update(subscriber_params)
+  #       render json: found_subscriber, status: :ok
+  #     else
+  #       error_message = "Failed to update: Ppp  secrets - #{response.code} #{response.message}"
+  #       render json: { error: error_message }, status: :unprocessable_entity
+  #     end
+  
+  #   rescue Net::OpenTimeout, Net::ReadTimeout
+  #     render json: { error: "Request timed out while connecting to the router. Please check if the router is online." }, status: :gateway_timeout
+  #   rescue Errno::ECONNREFUSED
+  #     render json: { error: "Failed to connect to the router at #{router_ip_address}. Connection refused." }, status: :bad_gateway
+  #   rescue StandardError => e
+  #     render json: { error: "An unexpected error occurred: #{e.message}" }, status: :internal_server_error
+  #   end
+  #   end
+  
+
+  # end
+
+
+
+
+
+
+
+
   def update
     found_subscriber = set_subscriber
-
-    use_radius = ActsAsTenant.current_tenant.router_setting.use_radius
-    
+    # use_radius = ActsAsTenant.current_tenant.router_setting.use_radius
     unless found_subscriber
       return render json: { error: "Package not found" }, status: :not_found
     end
-  
-  
-    if use_radius
-      router_name = params[:router_name]
-      nas_router = NasRouter.find_by(name: router_name)
-    
-      unless nas_router
-        return render json: { error: "Router not found" }, status: :not_found
-      end
-    
-      router_ip_address = nas_router.ip_address
-      router_password = nas_router.password
-        router_username = nas_router.username
-    
-      ppoe_secrets_id = found_subscriber.ppoe_secrets_id
-      mikrotik_user_id = found_subscriber.mikrotik_user_id
-    
-      unless mikrotik_user_id.present?
-        return render json: { error: "mikrotik_user_id id missing in package" }, status: :unprocessable_entity
-      end 
-    
-      begin
-
-
-
-        request_body2={
-          name: params[:ppoe_username],
-          password:   params[:ppoe_password] 
-        }
-
-        uri = URI("http://#{router_ip_address}/rest/user-manager/user/#{mikrotik_user_id}")
-    
-        request = Net::HTTP::Patch.new(uri)
-    
-        request.basic_auth(router_username, router_password)
-        request.body = request_body2.to_json
-        request.content_type = 'application/json'
-        response = Net::HTTP.start(uri.hostname, uri.port, open_timeout: 10, read_timeout: 10) { |http| http.request(request) }
-    
-        if response.is_a?(Net::HTTPSuccess) 
-    
-          found_subscriber.update(subscriber_params)
-        render json: found_subscriber, status: :ok
-        else
-          error_message = "Failed to delete usermanager user - #{response.code} #{response.message}"
-          render json: { error: error_message }, status: :unprocessable_entity
-        end
-    
-      rescue Net::OpenTimeout, Net::ReadTimeout
-        render json: { error: "Request timed out while connecting to the router. Please check if the router is online." }, status: :gateway_timeout
-      rescue Errno::ECONNREFUSED
-        render json: { error: "Failed to connect to the router at #{router_ip_address}. Connection refused." }, status: :bad_gateway
-      rescue StandardError => e
-        render json: { error: "An unexpected error occurred: #{e.message}" }, status: :internal_server_error
-      end
-      
-    else
-  
-    router_name = params[:router_name]
-    nas_router = NasRouter.find_by(name: router_name)
-  
-
-
-     req_body = {
-                                
-                                "password" => params[:ppoe_password],
-                            "name" => params[:ppoe_username],
-                            "profile" => params[:package_name],
-                           
-                              }
-    unless nas_router
-      return render json: { error: "Router not found" }, status: :not_found
-    end
-  
-    router_ip_address = nas_router.ip_address
-    router_password = nas_router.password
-    router_username = nas_router.username
-  
-    ppoe_secrets_id = found_subscriber.ppoe_secrets_id
-  
-    unless ppoe_secrets_id.present?
-      return render json: { error: "secrets id missing in package" }, status: :unprocessable_entity
-    end
-  
-    begin
-      uri = URI("http://#{router_ip_address}/rest/ppp/secret/#{ppoe_secrets_id}")
-  
-      request = Net::HTTP::Patch.new(uri)
-  
-      request.basic_auth(router_username, router_password)
-
-      request['Content-Type'] = 'application/json'
-
-      request.body = req_body.to_json
-      response = Net::HTTP.start(uri.hostname, uri.port){|http| http.request(request)}
-  
-      if response.is_a?(Net::HTTPSuccess) 
-  
-        found_subscriber.update(subscriber_params)
-        render json: found_subscriber, status: :ok
-      else
-        error_message = "Failed to update: Ppp  secrets - #{response.code} #{response.message}"
-        render json: { error: error_message }, status: :unprocessable_entity
-      end
-  
-    rescue Net::OpenTimeout, Net::ReadTimeout
-      render json: { error: "Request timed out while connecting to the router. Please check if the router is online." }, status: :gateway_timeout
-    rescue Errno::ECONNREFUSED
-      render json: { error: "Failed to connect to the router at #{router_ip_address}. Connection refused." }, status: :bad_gateway
-    rescue StandardError => e
-      render json: { error: "An unexpected error occurred: #{e.message}" }, status: :internal_server_error
-    end
-    end
-  
+    found_subscriber.update(subscriber_params)
 
   end
-
-
-
-
-#   {
-#   "caller-id": "any",
-#   "comment": "any",
-#   "copy-from": "any",
-#   "disabled": "any",
-#   "ipv6-routes": "any",
-#   "limit-bytes-in": "any",
-#   "limit-bytes-out": "any",
-#   "local-address": "any",
-#   "name": "any",
-#   "password": "any",
-#   "profile": "any",
-#   "remote-address": "any",
-#   "remote-ipv6-prefix": "any",
-#   "routes": "any",
-#   "service": "any",
-#   ".proplist": "any",
-#   ".query": "array"
-# }
-
-  # /ppp/secret/add
 
 
 
@@ -936,35 +928,35 @@ Rails.logger.info 'router not found'
 
 
 
-  def create_ppoe_us_and_pass_radcheck(ppoe_username, ppoe_password, package_name)
+  # def create_ppoe_us_and_pass_radcheck(ppoe_username, ppoe_password, package_name)
   
   
-    ppoe_package = "pppoe_#{package_name.parameterize(separator: '_')}"
+  #   ppoe_package = "pppoe_#{package_name.parameterize(separator: '_')}"
     
-    RadCheck.create(username: ppoe_username, radiusattribute: 'Cleartext-Password', op: ':=', value: ppoe_password)  
-    RadUserGroup.create(username: ppoe_username, groupname:  ppoe_package, priority: 1) 
+  #   RadCheck.create(username: ppoe_username, radiusattribute: 'Cleartext-Password', op: ':=', value: ppoe_password)  
+  #   RadUserGroup.create(username: ppoe_username, groupname:  ppoe_package, priority: 1) 
     
-    validity_period_units = Package.find_by(name: package_name).validity_period_units
-    validity = Package.find_by(name: package_name).validity
+  #   validity_period_units = Package.find_by(name: package_name).validity_period_units
+  #   validity = Package.find_by(name: package_name).validity
     
     
 
-    expiration_time = case validity_period_units
-    when 'days' then Time.current + validity.days
-    when 'hours' then Time.current + validity.hours
-    when 'minutes' then Time.current + validity.minutes
-    end&.strftime("%d %b %Y %H:%M:%S")
+  #   expiration_time = case validity_period_units
+  #   when 'days' then Time.current + validity.days
+  #   when 'hours' then Time.current + validity.hours
+  #   when 'minutes' then Time.current + validity.minutes
+  #   end&.strftime("%d %b %Y %H:%M:%S")
     
-    if expiration_time
+  #   if expiration_time
     
-      rad_check = RadGroupCheck.find_or_initialize_by(groupname: ppoe_username, radiusattribute: 'Expiration')
-      rad_check.update!(op: ':=', value: expiration_time)
-    end
+  #     rad_check = RadGroupCheck.find_or_initialize_by(groupname: ppoe_username, radiusattribute: 'Expiration')
+  #     rad_check.update!(op: ':=', value: expiration_time)
+  #   end
       
     
     
     
-    end
+  #   end
 
 
 
