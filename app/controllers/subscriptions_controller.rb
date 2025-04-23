@@ -91,7 +91,7 @@ end
   validity:  params[:subscription][:validity]
 
     )
-    create_pppoe_credentials_radius(@subscription.pppoe_password, @subscription.pppoe_username, @subscription.package)
+    create_pppoe_credentials_radius(params[:subscription][:ppoe_password], params[:subscription][:ppoe_username], params[:subscription][:package_name])
     calculate_expiration(@subscription)
       if @subscription.save
          render json: @subscription, status: :created
