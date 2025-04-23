@@ -266,7 +266,7 @@ end
                )
                
              elsif  params[:selected_provider] == "TextSms"
-               send_voucher_text_sms(params[:phone], @hotspot_voucher.voucher,
+               send_voucher_text_sms(@hotspot_voucher.phone, @hotspot_voucher.voucher,
                voucher_expiration
                )
                
