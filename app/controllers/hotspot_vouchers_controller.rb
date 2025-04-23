@@ -1065,10 +1065,12 @@ private
       def send_voucher(phone_number, voucher_code,
         voucher_exporation
         )
-      api_key = ActsAsTenant.current_tenant.sms_setting.api_key
-      api_secret = ActsAsTenant.current_tenant.sms_setting.api_secret
+      # api_key = ActsAsTenant.current_tenant.sms_setting.api_key
+      # api_secret = ActsAsTenant.current_tenant.sms_setting.api_secret
       
-      
+      api_key = SmsSetting.find_by(selected_provider: 'SMS leopard')&.api_key
+    api_secret = SmsSetting.find_by(selected_provider: 'SMS leopard')&.api_secret
+    
               api_key = api_key
               api_secret = api_secret
              
