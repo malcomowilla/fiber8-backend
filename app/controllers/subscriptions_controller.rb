@@ -107,6 +107,8 @@ end
     @subscription = set_subscription
     if @subscription.update(subscription_params)
       calculate_expiration(@subscription)
+      create_pppoe_credentials_radius(@subscription.pppoe_password, @subscription.pppoe_username, @subscription.package)
+
       render json: @subscription, status: :ok
     else
       render json: @subscription.errors, status: :unprocessable_entity
@@ -123,30 +125,35 @@ end
 
     def create_pppoe_credentials_radius(pppoe_password, pppoe_username, package)
   
-  
-      # hotspot_package = "hotspot_#{package.parameterize(separator: '_')}"
-       pppoe_package = "pppoe_#{package.parameterize(separator: '_')}"
+      pppoe_package = "pppoe_#{package.parameterize(separator: '_')}"
 
-      
-      RadCheck.create(username: pppoe_username, radiusattribute: 'Cleartext-Password', op: ':=', value: pppoe_password)  
-      RadUserGroup.create(username: pppoe_username, groupname:pppoe_package, priority: 1) 
-      
-      validity_period_units = Package.find_by(name: package).validity_period_units
-      validity = Package.find_by(name: package).validity
-      
-      
-      
+      # Create or update RadCheck (password)
+      rad_check = RadCheck.find_or_initialize_by(username: pppoe_username, radiusattribute: 'Cleartext-Password')
+      rad_check.assign_attributes(op: ':=', value: pppoe_password)
+      rad_check.save!
+    
+      # Create or update RadUserGroup (package)
+      user_group = RadUserGroup.find_or_initialize_by(username: pppoe_username)
+      user_group.assign_attributes(groupname: pppoe_package, priority: 1)
+      user_group.save!
+    
+      # Get package validity
+      pkg = Package.find_by(name: package)
+      validity_period_units = pkg&.validity_period_units
+      validity = pkg&.validity
+    
       expiration_time = case validity_period_units
-      when 'days' then Time.current + validity.days
-      when 'hours' then Time.current + validity.hours
-      when 'minutes' then Time.current + validity.minutes
-      end&.strftime("%d %b %Y %H:%M:%S")
-      
+                        when 'days' then Time.current + validity.days
+                        when 'hours' then Time.current + validity.hours
+                        when 'minutes' then Time.current + validity.minutes
+                        end&.strftime("%d %b %Y %H:%M:%S")
+    
+      # Create or update Expiration in RadGroupCheck
       if expiration_time
-        rad_check = RadGroupCheck.find_or_initialize_by(groupname: pppoe_username, radiusattribute: 'Expiration')
-        rad_check.update!(op: ':=', value: expiration_time)
+        expiration_check = RadGroupCheck.find_or_initialize_by(groupname: pppoe_username, radiusattribute: 'Expiration')
+        expiration_check.assign_attributes(op: ':=', value: expiration_time)
+        expiration_check.save!
       end
-        
       
       
       
