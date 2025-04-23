@@ -233,7 +233,6 @@ end
         return
       end
   
-        if use_radius == true
       @hotspot_voucher = HotspotVoucher.new(
         package: params[:package],
         shared_users: params[:shared_users],
@@ -246,7 +245,7 @@ end
       # user_manager_user_id = get_user_manager_user_id(@hotspot_voucher.voucher)
       # user_profile_id = get_user_profile_id_from_mikrotik(@hotspot_voucher.voucher)
       # calculate_expiration(package, hotspot_package_created)
-      # create_voucher_radcheck(@hotspot_voucher.voucher, @hotspot_voucher.package, @hotspot_voucher.shared_users)
+      create_voucher_radcheck(@hotspot_voucher.voucher, @hotspot_voucher.package, @hotspot_voucher.shared_users)
       # @hotspot_voucher.update(
       #   user_manager_user_id: user_manager_user_id,
       #     user_profile_id: user_profile_id,
@@ -286,18 +285,12 @@ end
         end
      
   
-      else
-        @hotspot_voucher = HotspotVoucher.new(
-          package: params[:package],
-          shared_users: params[:shared_users],
-          phone: params[:phone],
-          voucher: generate_voucher_code
-        )
-    
-        # create_voucher_radcheck(@hotspot_voucher.voucher, @hotspot_voucher.package, @hotspot_voucher.shared_users)
+      # else
+        
+      #   create_voucher_radcheck(@hotspot_voucher.voucher, @hotspot_voucher.package, @hotspot_voucher.shared_users)
       
-        calculate_expiration(params[:package], @hotspot_voucher)
-      end
+      #   calculate_expiration(params[:package], @hotspot_voucher)
+      # end
 
     end
 
