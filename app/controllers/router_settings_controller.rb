@@ -8,6 +8,8 @@ class RouterSettingsController < ApplicationController
     render json: @router_settings
   end
 
+
+  
   # POST /router_settings or /router_settings.json
   def create
     @router_setting = RouterSetting.find_or_initialize_by(router_setting_params)
@@ -16,8 +18,8 @@ class RouterSettingsController < ApplicationController
         render json: @router_setting, status: :created
       else
        render json: @router_setting.errors, status: :unprocessable_entity 
-      
     end
+
   end
 
 
