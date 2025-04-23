@@ -77,20 +77,19 @@ end
 
     @subscription = Subscription.create(
       
-    params[:subscription][:name],
-    params[:subscription][:phone_number],
-    params[:subscription][:package],
-    params[:subscription][:status],
-    params[:subscription][:last_subscribed],
-    params[:subscription][:expiry],
-    params[:subscription][:ip_address],
-    params[:subscription][:ppoe_username],
-    params[:subscription][:ppoe_password],
-    params[:subscription][:type],
-    params[:subscription][:network_name],
-    params[:subscription][:mac_address],
-    params[:subscription][:validity_period_units],
-    params[:subscription][:validity]
+    # params[:subscription][:name],
+    package: package[:subscription][:package_name],
+    phone_number: params[:subscription][:phone_number],
+  status:  params[:subscription][:status],
+  ip_address: params[:subscription][:ip_address],
+  ppoe_username:  params[:subscription][:ppoe_username],
+  ppoe_password:  params[:subscription][:ppoe_password],
+  type:  params[:subscription][:type],
+  network_name: params[:subscription][:network_name],
+  mac_address: params[:subscription][:mac_address],
+  validity_period_units: params[:subscription][:validity_period_units],
+  validity:  params[:subscription][:validity]
+
     )
     create_pppoe_credentials_radius(@subscription.pppoe_password, @subscription.pppoe_username, params[:package_name])
     calculate_expiration(@subscription)
