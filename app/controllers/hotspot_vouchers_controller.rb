@@ -274,7 +274,7 @@ end
           # send_voucher(params[:phone], @hotspot_voucher.voucher,
           # voucher_expiration
           # )
-          render json: @hotspot_voucher, status: :created
+          return render json: @hotspot_voucher, status: :created
           end
           
           
