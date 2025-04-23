@@ -1063,7 +1063,7 @@ private
 
 
       def send_voucher(phone_number, voucher_code,
-        voucher_exporation
+        voucher_expiration
         )
       # api_key = ActsAsTenant.current_tenant.sms_setting.api_key
       # api_secret = ActsAsTenant.current_tenant.sms_setting.api_secret
@@ -1081,9 +1081,9 @@ private
       original_message = sms_template ?  MessageTemplate.interpolate(send_voucher_template,{
         
       voucher_code: voucher_code,
-      voucher_exporation: voucher_exporation
+      voucher_expiration: voucher_expiration
 
-      })  :   "Hello, here is your voucher code: #{voucher_code}.This code is valid for #{voucher_exporation}. Enjoy your browsing"
+      })  :   "Hello, here is your voucher code: #{voucher_code}.This code is valid for #{voucher_expiration}. Enjoy your browsing"
                
       
       
