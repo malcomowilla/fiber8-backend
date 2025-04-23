@@ -252,6 +252,7 @@ end
       # )
       calculate_expiration(params[:package], @hotspot_voucher)
         if @hotspot_voucher.save
+
   
          
   
@@ -273,13 +274,14 @@ end
           # send_voucher(params[:phone], @hotspot_voucher.voucher,
           # voucher_expiration
           # )
-  
+          render json: @hotspot_voucher, status: :created
           end
           
           
   
-  
           render json: @hotspot_voucher, status: :created
+
+          
         else
           render json: @hotspot_voucher.errors, status: :unprocessable_entity 
         end
