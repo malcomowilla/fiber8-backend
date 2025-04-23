@@ -86,7 +86,7 @@ end
   ppoe_password:  params[:subscription][:ppoe_password],
   type:  params[:subscription][:type],
   network_name: params[:subscription][:network_name],
-  mac_address: params[:subscription][:mac_address],
+  # mac_address: params[:subscription][:mac_address],
   validity_period_units: params[:subscription][:validity_period_units],
   validity:  params[:subscription][:validity]
 
