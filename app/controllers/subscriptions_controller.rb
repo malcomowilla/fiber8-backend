@@ -117,6 +117,43 @@ end
       @subscription = Subscription.find_by(id: params[:id])
     end
 
+
+
+
+    def create_voucher_radcheck(pppoe_password, pppoe_username, package)
+  
+  
+      # hotspot_package = "hotspot_#{package.parameterize(separator: '_')}"
+       pppoe_package = "pppoe_#{package.parameterize(separator: '_')}"
+
+      
+      RadCheck.create(username: pppoe_username, radiusattribute: 'Cleartext-Password', op: ':=', value: pppoe_password)  
+      RadUserGroup.create(username: pppoe_username, groupname:pppoe_package, priority: 1) 
+      
+      validity_period_units = Package.find_by(name: package).validity_period_units
+      validity = Package.find_by(name: package).validity
+      
+      
+      
+      expiration_time = case validity_period_units
+      when 'days' then Time.current + validity.days
+      when 'hours' then Time.current + validity.hours
+      when 'minutes' then Time.current + validity.minutes
+      end&.strftime("%d %b %Y %H:%M:%S")
+      
+      if expiration_time
+        rad_check = RadGroupCheck.find_or_initialize_by(groupname: pppoe_username, radiusattribute: 'Expiration')
+        rad_check.update!(op: ':=', value: expiration_time)
+      end
+        
+      
+      
+      
+      end
+
+
+
+
     
     def calculate_expiration(subscription)
       return nil unless subscription.validity.present? && subscription.validity_period_units.present?
