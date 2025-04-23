@@ -76,7 +76,21 @@ end
   def create
 
     @subscription = Subscription.create(
-      subscription_params
+      
+    params[:subscription][:name],
+    params[:subscription][:phone_number],
+    params[:subscription][:package],
+    params[:subscription][:status],
+    params[:subscription][:last_subscribed],
+    params[:subscription][:expiry],
+    params[:subscription][:ip_address],
+    params[:subscription][:ppoe_username],
+    params[:subscription][:ppoe_password],
+    params[:subscription][:type],
+    params[:subscription][:network_name],
+    params[:subscription][:mac_address],
+    params[:subscription][:validity_period_units],
+    params[:subscription][:validity]
     )
     create_pppoe_credentials_radius(@subscription.pppoe_password, @subscription.pppoe_username, params[:package_name])
     calculate_expiration(@subscription)
@@ -124,7 +138,7 @@ end
 
 
     def create_pppoe_credentials_radius(pppoe_password, pppoe_username, package)
-  Rails.logger.info "params#{params.inspect}"
+  # Rails.logger.info "params#{params.inspect}"
       pppoe_package = "pppoe_#{package.parameterize(separator: '_')}"
 
       # Create or update RadCheck (password)
