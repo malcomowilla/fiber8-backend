@@ -78,6 +78,7 @@ end
     @subscription = Subscription.create(
       subscription_params
     )
+    create_pppoe_credentials_radius(@subscription.pppoe_password, @subscription.pppoe_username, @subscription.package)
     calculate_expiration(@subscription)
       if @subscription.save
          render json: @subscription, status: :created
@@ -120,7 +121,7 @@ end
 
 
 
-    def create_voucher_radcheck(pppoe_password, pppoe_username, package)
+    def create_pppoe_credentials_radius(pppoe_password, pppoe_username, package)
   
   
       # hotspot_package = "hotspot_#{package.parameterize(separator: '_')}"
