@@ -124,7 +124,7 @@ end
 
 
     def create_pppoe_credentials_radius(pppoe_password, pppoe_username, package)
-  
+  Rails.logger.info "params#{params.inspect}"
       pppoe_package = "pppoe_#{package.parameterize(separator: '_')}"
 
       # Create or update RadCheck (password)
