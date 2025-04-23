@@ -261,7 +261,7 @@ end
              voucher_expiration = calculate_expiration_send_to_customer(params[:package])
   
              if params[:selected_provider] == "SMS leopard"
-               send_voucher(params[:phone], @hotspot_voucher.voucher,
+               send_voucher(@hotspot_voucher.phone, @hotspot_voucher.voucher,
                voucher_expiration
                )
                
