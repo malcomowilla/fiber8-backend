@@ -992,68 +992,68 @@ end
 private
 
 
-def send_voucher(phone_number, voucher_code,
-  voucher_exporation
-  )
-api_key = ActsAsTenant.current_tenant.sms_setting.api_key
-api_secret = ActsAsTenant.current_tenant.sms_setting.api_secret
+# def send_voucher(phone_number, voucher_code,
+#   voucher_exporation
+#   )
+# api_key = ActsAsTenant.current_tenant.sms_setting.api_key
+# api_secret = ActsAsTenant.current_tenant.sms_setting.api_secret
 
 
-        api_key = api_key
-        api_secret = api_secret
+#         api_key = api_key
+#         api_secret = api_secret
        
 
 
-sms_template =  ActsAsTenant.current_tenant.sms_template
-send_voucher_template = sms_template.send_voucher_template
-original_message = sms_template ?  MessageTemplate.interpolate(send_voucher_template,{
+# sms_template =  ActsAsTenant.current_tenant.sms_template
+# send_voucher_template = sms_template.send_voucher_template
+# original_message = sms_template ?  MessageTemplate.interpolate(send_voucher_template,{
   
-voucher_code: voucher_code,
-})  :   "Hello, here is your voucher code: #{voucher_code}.
-         This code is valid for #{voucher_exporation}. Enjoy your browsing"
+# voucher_code: voucher_code,
+# })  :   "Hello, here is your voucher code: #{voucher_code}.
+#          This code is valid for #{voucher_exporation}. Enjoy your browsing"
 
 
-        sender_id = "SMS_TEST" # Ensure this is a valid sender ID
+#         sender_id = "SMS_TEST" # Ensure this is a valid sender ID
     
-        uri = URI("https://api.smsleopard.com/v1/sms/send")
-        params = {
-          username: api_key,
-          password: api_secret,
-          message: original_message,
-          destination: phone_number,
-          source: sender_id
-        }
-        uri.query = URI.encode_www_form(params)
+#         uri = URI("https://api.smsleopard.com/v1/sms/send")
+#         params = {
+#           username: api_key,
+#           password: api_secret,
+#           message: original_message,
+#           destination: phone_number,
+#           source: sender_id
+#         }
+#         uri.query = URI.encode_www_form(params)
     
-        response = Net::HTTP.get_response(uri)
-        if response.is_a?(Net::HTTPSuccess)
-          sms_data = JSON.parse(response.body)
+#         response = Net::HTTP.get_response(uri)
+#         if response.is_a?(Net::HTTPSuccess)
+#           sms_data = JSON.parse(response.body)
       
-          if sms_data['success']
-            sms_recipient = sms_data['recipients'][0]['number']
-            sms_status = sms_data['recipients'][0]['status']
+#           if sms_data['success']
+#             sms_recipient = sms_data['recipients'][0]['number']
+#             sms_status = sms_data['recipients'][0]['status']
             
-            puts "Recipient: #{sms_recipient}, Status: #{sms_status}"
+#             puts "Recipient: #{sms_recipient}, Status: #{sms_status}"
       
-            # Save the original message and response details in your database
-            SystemAdminSm.create!(
-              user: sms_recipient,
-              message: original_message,
-              status: sms_status,
-              date:Time.now.strftime('%Y-%m-%d %I:%M:%S %p'),
-              system_user: 'system'
-            )
+#             # Save the original message and response details in your database
+#             SystemAdminSm.create!(
+#               user: sms_recipient,
+#               message: original_message,
+#               status: sms_status,
+#               date:Time.now.strftime('%Y-%m-%d %I:%M:%S %p'),
+#               system_user: 'system'
+#             )
             
-            # Return a JSON response or whatever is appropriate for your application
-            # render json: { success: true, message: "Message sent successfully", recipient: sms_recipient, status: sms_status }
-          else
-            render json: { error: "Failed to send message: #{sms_data['message']}" }
-          end
-        else
-          puts "Failed to send message: #{response.body}"
-          # render json: { error: "Failed to send message: #{response.body}" }
-        end
-      end
+#             # Return a JSON response or whatever is appropriate for your application
+#             # render json: { success: true, message: "Message sent successfully", recipient: sms_recipient, status: sms_status }
+#           else
+#             render json: { error: "Failed to send message: #{sms_data['message']}" }
+#           end
+#         else
+#           puts "Failed to send message: #{response.body}"
+#           # render json: { error: "Failed to send message: #{response.body}" }
+#         end
+#       end
 
 
 
