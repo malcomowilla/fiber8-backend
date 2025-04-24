@@ -37,15 +37,33 @@ class IpNetworksController < ApplicationController
 
   # POST /ip_networks or /ip_networks.json
   def create
+    # ip route add 10.254.0.0/16 dev wg0
+
     @ip_network = IpNetwork.new(ip_network_params)
 
       if @ip_network.save
+        add_route_to_wireguard(@ip_network.network, @ip_network.subnet_mask)
+
         render json: @ip_network, status: :created
       else
          render json: @ip_network.errors, status: :unprocessable_entity 
       end
     
   end
+
+
+  def add_route_to_wireguard(network, mask)
+    route = "#{network}/#{mask}"
+    command = "ip route add #{route} dev wg0"
+  
+    Rails.logger.info "Adding route: #{command}"
+  
+    system(command)
+    unless $?.success?
+      Rails.logger.error "❌ Failed to add route: #{command}"
+    end
+  end
+
 
   # PATCH/PUT /ip_networks/1 or /ip_networks/1.json
   def update
