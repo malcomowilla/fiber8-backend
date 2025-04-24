@@ -433,7 +433,7 @@ def destroy
     # ✅ Delete FreeRADIUS records first
     RadCheck.where(username: @hotspot_voucher.voucher).destroy_all
     RadUserGroup.where(username: @hotspot_voucher.voucher).destroy_all
-    RadGroupCheck.where(username: @hotspot_voucher.voucher).destroy_all
+    RadGroupCheck.where(groupname: @hotspot_voucher.voucher).destroy_all
 
     # ✅ Delete the HotspotVoucher record
     @hotspot_voucher.destroy!
