@@ -577,158 +577,174 @@ class PackagesController < ApplicationController
           end
 
 
+
+
     
-    def delete
+  #   def delete
 
 
-      host = request.headers['X-Subdomain'] 
+  #     host = request.headers['X-Subdomain'] 
 
-      if host == 'demo'
-        package = Package.find_by(id: params[:id])
-        if package
-          package.destroy
-          head :no_content
-        else
-          render json: { error: 'package not found' }, status: :not_found
-        end
-      else
+  #     if host == 'demo'
+  #       package = Package.find_by(id: params[:id])
+  #       if package
+  #         package.destroy
+  #         head :no_content
+  #       else
+  #         render json: { error: 'package not found' }, status: :not_found
+  #       end
+  #     else
 
-  package = Package.find_by(id: params[:id])
-      use_radius = ActsAsTenant.current_tenant.router_setting.use_radius
+  # package = Package.find_by(id: params[:id])
+  #     use_radius = ActsAsTenant.current_tenant.router_setting.use_radius
 
 
-      if  use_radius
+  #     if  use_radius
           
-  unless package
-    return render json: { error: "Package not found" }, status: :not_found
-  end
+  # unless package
+  #   return render json: { error: "Package not found" }, status: :not_found
+  # end
 
-  router_name = params[:router_name]
-  nas_router = NasRouter.find_by(name: router_name)
+  # router_name = params[:router_name]
+  # nas_router = NasRouter.find_by(name: router_name)
 
-  unless nas_router
-    return render json: { error: "Router not found" }, status: :not_found
-  end
+  # unless nas_router
+  #   return render json: { error: "Router not found" }, status: :not_found
+  # end
 
-  router_ip_address = nas_router.ip_address
-  router_password = nas_router.password
-  router_username = nas_router.username
+  # router_ip_address = nas_router.ip_address
+  # router_password = nas_router.password
+  # router_username = nas_router.username
 
-  mikrotik_id = package.mikrotik_id
-  limitation_id = package.limitation_id
+  # mikrotik_id = package.mikrotik_id
+  # limitation_id = package.limitation_id
 
-  unless mikrotik_id.present? && limitation_id.present?
-    return render json: { error: "Mikrotik ID or Limitation ID missing in package" }, status: :unprocessable_entity
-  end
+  # unless mikrotik_id.present? && limitation_id.present?
+  #   return render json: { error: "Mikrotik ID or Limitation ID missing in package" }, status: :unprocessable_entity
+  # end
 
-  begin
-    uri = URI("http://#{router_ip_address}/rest/user-manager/profile/#{mikrotik_id}")
-    uri2 = URI("http://#{router_ip_address}/rest/user-manager/limitation/#{limitation_id}")
+  # begin
+  #   uri = URI("http://#{router_ip_address}/rest/user-manager/profile/#{mikrotik_id}")
+  #   uri2 = URI("http://#{router_ip_address}/rest/user-manager/limitation/#{limitation_id}")
 
-    request = Net::HTTP::Delete.new(uri)
-    request2 = Net::HTTP::Delete.new(uri2)
+  #   request = Net::HTTP::Delete.new(uri)
+  #   request2 = Net::HTTP::Delete.new(uri2)
 
-    request.basic_auth(router_username, router_password)
-    request2.basic_auth(router_username, router_password)
+  #   request.basic_auth(router_username, router_password)
+  #   request2.basic_auth(router_username, router_password)
 
-    response = Net::HTTP.start(uri.hostname, uri.port, open_timeout: 10, read_timeout: 10) { |http| http.request(request) }
-    response2 = Net::HTTP.start(uri2.hostname, uri2.port, open_timeout: 10, read_timeout: 10) { |http| http.request(request2) }
+  #   response = Net::HTTP.start(uri.hostname, uri.port, open_timeout: 10, read_timeout: 10) { |http| http.request(request) }
+  #   response2 = Net::HTTP.start(uri2.hostname, uri2.port, open_timeout: 10, read_timeout: 10) { |http| http.request(request2) }
 
-    if response.is_a?(Net::HTTPSuccess) && response2.is_a?(Net::HTTPSuccess)
-      package.destroy
-      head :no_content
-    else
-      error_message = "Failed to delete: Profile - #{response.code} #{response.message}, Limitation - #{response2.code} #{response2.message}"
-      render json: { error: error_message }, status: :unprocessable_entity
-    end
+  #   if response.is_a?(Net::HTTPSuccess) && response2.is_a?(Net::HTTPSuccess)
+  #     package.destroy
+  #     head :no_content
+  #   else
+  #     error_message = "Failed to delete: Profile - #{response.code} #{response.message}, Limitation - #{response2.code} #{response2.message}"
+  #     render json: { error: error_message }, status: :unprocessable_entity
+  #   end
 
-  rescue Net::OpenTimeout, Net::ReadTimeout
-    render json: { error: "Request timed out while connecting to the router. Please check if the router is online." }, status: :gateway_timeout
-  rescue Errno::ECONNREFUSED
-    render json: { error: "Failed to connect to the router at #{router_ip_address}. Connection refused." }, status: :bad_gateway
-  rescue StandardError => e
-    render json: { error: "An unexpected error occurred: #{e.message}" }, status: :internal_server_error
+  # rescue Net::OpenTimeout, Net::ReadTimeout
+  #   render json: { error: "Request timed out while connecting to the router. Please check if the router is online." }, status: :gateway_timeout
+  # rescue Errno::ECONNREFUSED
+  #   render json: { error: "Failed to connect to the router at #{router_ip_address}. Connection refused." }, status: :bad_gateway
+  # rescue StandardError => e
+  #   render json: { error: "An unexpected error occurred: #{e.message}" }, status: :internal_server_error
   
 
         
-        profile_limitation_id = package.profile_limitation_id
+  #       profile_limitation_id = package.profile_limitation_id
 
-        uri3 = URI("http://#{router_ip_address}/rest/user-manager/profile-limitation/#{profile_limitation_id}")
-        request3 = Net::HTTP::Delete.new(uri3)
+  #       uri3 = URI("http://#{router_ip_address}/rest/user-manager/profile-limitation/#{profile_limitation_id}")
+  #       request3 = Net::HTTP::Delete.new(uri3)
 
-        request3.basic_auth router_username, router_password
+  #       request3.basic_auth router_username, router_password
 
-        response3 = Net::HTTP.start(uri3.hostname, uri3.port) { |http| http.request(request3) }
+  #       response3 = Net::HTTP.start(uri3.hostname, uri3.port) { |http| http.request(request3) }
 
-        if response3.is_a?(Net::HTTPSuccess)
-          head :no_content
-        else
-          'failed  to delete'
-        end
-      else
-        render json: { error: "Package not found" }, status: :not_found
-      end
+  #       if response3.is_a?(Net::HTTPSuccess)
+  #         head :no_content
+  #       else
+  #         'failed  to delete'
+  #       end
+  #     else
+  #       render json: { error: "Package not found" }, status: :not_found
+  #     end
 
-      else
+  #     else
       
-  unless package
-    return render json: { error: "Package not found" }, status: :not_found
-  end
+  # unless package
+  #   return render json: { error: "Package not found" }, status: :not_found
+  # end
 
-  router_name = params[:router_name]
-  nas_router = NasRouter.find_by(name: router_name)
+  # router_name = params[:router_name]
+  # nas_router = NasRouter.find_by(name: router_name)
 
-  unless nas_router
-    return render json: { error: "Router not found" }, status: :not_found
-  end
+  # unless nas_router
+  #   return render json: { error: "Router not found" }, status: :not_found
+  # end
 
-  router_ip_address = nas_router.ip_address
-  router_password = nas_router.password
-  router_username = nas_router.username
+  # router_ip_address = nas_router.ip_address
+  # router_password = nas_router.password
+  # router_username = nas_router.username
 
-  ppoe_profile_id = package.ppoe_profile_id
+  # ppoe_profile_id = package.ppoe_profile_id
 
-  unless ppoe_profile_id.present?
-    return render json: { error: "ppoe profile id missing in package" }, status: :unprocessable_entity
-  end
+  # unless ppoe_profile_id.present?
+  #   return render json: { error: "ppoe profile id missing in package" }, status: :unprocessable_entity
+  # end
 
-  begin
-    uri = URI("http://#{router_ip_address}/rest/ppp/profile/#{ppoe_profile_id}")
+  # begin
+  #   uri = URI("http://#{router_ip_address}/rest/ppp/profile/#{ppoe_profile_id}")
 
-    request = Net::HTTP::Delete.new(uri)
+  #   request = Net::HTTP::Delete.new(uri)
 
-    request.basic_auth(router_username, router_password)
+  #   request.basic_auth(router_username, router_password)
 
-    response = Net::HTTP.start(uri.hostname, uri.port, open_timeout: 10, read_timeout: 10) { |http| http.request(request) }
+  #   response = Net::HTTP.start(uri.hostname, uri.port, open_timeout: 10, read_timeout: 10) { |http| http.request(request) }
 
-    if response.is_a?(Net::HTTPSuccess)
-      package.destroy
-      head :no_content
-    else
-      error_message = "Failed to delete ppp Profile - #{response.code} #{response.message}, Limitation - #{response2.code} #{response2.message}"
-      render json: { error: error_message }, status: :unprocessable_entity
-    end
+  #   if response.is_a?(Net::HTTPSuccess)
+  #     package.destroy
+  #     head :no_content
+  #   else
+  #     error_message = "Failed to delete ppp Profile - #{response.code} #{response.message}, Limitation - #{response2.code} #{response2.message}"
+  #     render json: { error: error_message }, status: :unprocessable_entity
+  #   end
 
-  rescue Net::OpenTimeout, Net::ReadTimeout
-    render json: { error: "Request timed out while connecting to the router. Please check if the router is online." }, status: :gateway_timeout
-  rescue Errno::ECONNREFUSED
-    render json: { error: "Failed to connect to the router at #{router_ip_address}. Connection refused." }, status: :bad_gateway
-  rescue StandardError => e
-    render json: { error: "An unexpected error occurred: #{e.message}" }, status: :internal_server_error
-  end
-
-        
-        
-      end
-
-        
-      end
-    
-    
-      
-    end
+  # rescue Net::OpenTimeout, Net::ReadTimeout
+  #   render json: { error: "Request timed out while connecting to the router. Please check if the router is online." }, status: :gateway_timeout
+  # rescue Errno::ECONNREFUSED
+  #   render json: { error: "Failed to connect to the router at #{router_ip_address}. Connection refused." }, status: :bad_gateway
+  # rescue StandardError => e
+  #   render json: { error: "An unexpected error occurred: #{e.message}" }, status: :internal_server_error
+  # end
+  #     end
+  #     end 
+  #   end
     
   
+def delete
+  @package = Package.find_by(id: params[:id])
+
+  if @package.nil?
+    return render json: { error: "pppoe package not found" }, status: :not_found
+  end
+
+  group_name = "pppoe_#{@package.name.parameterize(separator: '_')}"
+
+
+  ActiveRecord::Base.transaction do
+    # ✅ Delete related FreeRADIUS records
+    RadGroupReply.where(groupname: group_name).destroy_all
+
+    # ✅ Delete the HotspotPackage
+    @package.destroy!
+  end
+
+  render json: { message: "Hotspot package deleted successfully" }, status: :ok
+rescue => e
+  render json: { error: "Failed to delete hotspot package: #{e.message}" }, status: :unprocessable_entity
+end
 
 
 
@@ -759,18 +775,7 @@ class PackagesController < ApplicationController
 
 
 
-    def update_freeradius_policies(package)
-      # group_name = "#{package.name}_HotspotPackage" 
-    group_name = "hotspot_#{package.name.parameterize(separator: '_')}"
-    
-      ActiveRecord::Base.transaction do
-        # ✅ Update or create speed limits in Radgroupreply
-        rad_reply = RadGroupReply.find_or_initialize_by(groupname: group_name, radiusattribute: 'Mikrotik-Rate-Limit')
-        rad_reply.update!(op: ':=', value: "#{package.upload_limit}M/#{package.download_limit}M")
-    
-       
-      end
-    end
+
 
 
 def fetch_limitation_id_from_mikrotik(package_name)
