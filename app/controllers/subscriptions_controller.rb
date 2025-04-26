@@ -151,8 +151,10 @@ end
     @subscription = set_subscription
     if @subscription.update(subscription_params)
       calculate_expiration(@subscription)
-      create_pppoe_credentials_radius(@subscription.pppoe_password, @subscription.pppoe_username, @subscription.package)
-
+      # create_pppoe_credentials_radius(@subscription.pppoe_password, @subscription.pppoe_username, @subscription.package)
+      create_pppoe_credentials_radius(params[:subscription][:ppoe_password], 
+      params[:subscription][:ppoe_username], params[:subscription][:package_name],  params[:subscription][:ip_address])
+     
       render json: @subscription, status: :ok
     else
       render json: @subscription.errors, status: :unprocessable_entity
