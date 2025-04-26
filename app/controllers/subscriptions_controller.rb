@@ -107,6 +107,8 @@ end
     )
     create_pppoe_credentials_radius(params[:subscription][:ppoe_password], 
     params[:subscription][:ppoe_username], params[:subscription][:package_name],  params[:subscription][:ip_address])
+   
+    
     calculate_expiration(@subscription)
       if @subscription.save
          render json: @subscription, status: :created
@@ -135,13 +137,13 @@ end
       RadUserGroup.where(username: @subscription.ppoe_password).destroy_all
  
   
-      # ✅ Delete the HotspotVoucher record
-      @hotspot_voucher.destroy!
+  #     # ✅ Delete the HotspotVoucher record
+      @subscription.destroy!
   
       render json: { message: "subscription deleted successfully" }, status: :ok
-    end
-  rescue => e
-    render json: { error: "Failed to delete subscription: #{e.message}" }, status: :unprocessable_entity
+  #   end
+  # rescue => e
+  #   render json: { error: "Failed to delete subscription: #{e.message}" }, status: :unprocessable_entity
   end
 
 
