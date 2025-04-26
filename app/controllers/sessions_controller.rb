@@ -19,7 +19,7 @@ rate_limit to: 20, within: 5.minutes, only: :create, with: -> {
   host = request.headers['X-Subdomain']
 
   # Return JSON response
-  render json: { redirect: "http://#{host}.aitechs.co.ke/account-locked" }, status: :too_many_requests 
+  render json: { redirect: "https://#{host}.aitechs.co.ke/account-locked" }, status: :too_many_requests 
 }
 
 
