@@ -16,9 +16,10 @@ rate_limit to: 20, within: 5.minutes, only: :create, with: -> {
   
   # Lock the account if the user exists
   user.update(locked_account: true, locked_at: Time.current) if user.present?
+  host = request.headers['X-Subdomain']
 
   # Return JSON response
-  render json: { redirect: "http://localhost:5173/account-locked" }, status: :too_many_requests 
+  render json: { redirect: "http://#{host}.aitechs.co.ke/account-locked" }, status: :too_many_requests 
 }
 
 
