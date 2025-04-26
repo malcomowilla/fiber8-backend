@@ -137,13 +137,13 @@ end
       RadUserGroup.where(username: @subscription.ppoe_password).destroy_all
  
   
-  #     # ✅ Delete the HotspotVoucher record
+      # ✅ Delete the HotspotVoucher record
       @subscription.destroy!
   
       render json: { message: "subscription deleted successfully" }, status: :ok
-  #   end
-  # rescue => e
-  #   render json: { error: "Failed to delete subscription: #{e.message}" }, status: :unprocessable_entity
+    end
+  rescue => e
+    render json: { error: "Failed to delete subscription: #{e.message}" }, status: :unprocessable_entity
   end
 
 
