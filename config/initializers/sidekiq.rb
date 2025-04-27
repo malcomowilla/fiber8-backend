@@ -29,6 +29,11 @@ Sidekiq.configure_server do |config|
         'cron' => '* * * * *' # Run every minute
       },
 
+      'radact_job' => {
+        'class' => 'RadactJob',
+        'cron' => '* * * * *' # Run every minute
+
+      },
 
       'system_metrics_job' => {
         'class' => 'SystemMetricsJob',
@@ -40,10 +45,7 @@ Sidekiq.configure_server do |config|
         'cron' => '* * * * *' # Run every minute
       },
       
-      'radact_job' => {
-        'class' => 'RadactJob',
-        'cron' => '* * * * *' # Run every minute
-      },
+      
     }
 
     Sidekiq.schedule = schedule
