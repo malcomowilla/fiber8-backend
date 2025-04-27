@@ -2,6 +2,7 @@ class SubscriptionsController < ApplicationController
   # before_action :set_subscription, only: %i[ show edit update destroy ]
 
   # GET /subscriptions or /subscriptions.json
+  require 'net/ssh'
 
 set_current_tenant_through_filter
 
@@ -170,8 +171,11 @@ end
    
     
     calculate_expiration(@subscription)
+    limit_bandwidth(params[:subscription][:ip_address], params[:subscription][:package_name], params[:subscription][:ppoe_username])
       if @subscription.save
          render json: @subscription, status: :created
+
+
       else
      render json: @subscription.errors, status: :unprocessable_entity 
       end
@@ -207,6 +211,30 @@ end
   end
 
 
+  # def update
+  #   @subscription = set_subscription
+  #   if params[:subscription][:ppoe_username].blank? || params[:subscription][:ppoe_password].blank?
+  #     render json: { error: "Username and password are required" }, status: :unprocessable_entity
+  #     return
+  #   end
+  
+  #   # Check uniqueness manually
+  #   if Subscription.where(ppoe_username: params[:subscription][:ppoe_username])
+  #     .where.not(id: @subscription.id)
+  #     .exists?
+  #     render json: { error: "Username already taken" }, status: :unprocessable_entity
+  #     return
+  #   end
+  #   if @subscription.update(subscription_params)
+  #     calculate_expiration(@subscription)
+  #     create_pppoe_credentials_radius(params[:subscription][:ppoe_password], 
+  #     params[:subscription][:ppoe_username], params[:subscription][:package_name],  params[:subscription][:ip_address])
+     
+  #     render json: @subscription, status: :ok
+  #   else
+  #     render json: @subscription.errors, status: :unprocessable_entity
+  #   end
+  # end
   def update
     @subscription = set_subscription
     if params[:subscription][:ppoe_username].blank? || params[:subscription][:ppoe_password].blank?
@@ -221,11 +249,24 @@ end
       render json: { error: "Username already taken" }, status: :unprocessable_entity
       return
     end
+  
+    old_ip = @subscription.ip_address # store the old IP
+  
+    # Update the subscription record
     if @subscription.update(subscription_params)
+      # If IP address has changed, update bandwidth limits
+      if old_ip != @subscription.ip_address
+        # Remove old bandwidth limit (if any) for the old IP
+        remove_bandwidth_limit(old_ip)
+        
+        # Limit bandwidth for the new IP
+        limit_bandwidth(@subscription.ip_address, @subscription.package, @subscription.ppoe_username)
+      end
+  
       calculate_expiration(@subscription)
       create_pppoe_credentials_radius(params[:subscription][:ppoe_password], 
       params[:subscription][:ppoe_username], params[:subscription][:package_name],  params[:subscription][:ip_address])
-     
+  
       render json: @subscription, status: :ok
     else
       render json: @subscription.errors, status: :unprocessable_entity
@@ -363,8 +404,62 @@ end
 
 
 
+    def limit_bandwidth(ip_address, package, ppoe_username)
+      
+      package = Package.find_by(name: package)
+      download_limit = package&.download_limit
+      upload_limit = package&.upload_limit
+      begin
+        # MikroTik SSH connection details
+        router_setting = ActsAsTenant.current_tenant&.router_setting&.router_name
+        router = NasRouter.find_by(name: router_setting)
+    
+        return unless router
+    
+        router_ip = router.ip_address
+        router_username = router.username
+        router_password = router.password 
+    
+        # Connect via SSH to MikroTik
+        Net::SSH.start(router_ip, router_username, password: router_password, verify_host_key: :never) do |ssh|
+          # Command to limit the bandwidth (4M/4M)
+          command = "/queue simple add name=aitechs_limit_#{ppoe_username} target=#{ip_address} max-limit=#{download_limit}M/#{upload_limit}M"
+          
+          # Execute the command
+          ssh.exec!(command)
+        end
+      rescue StandardError => e
+        Rails.logger.error "Error limiting bandwidth for IP #{ip_address}: #{e.message}"
+      end
+    end
 
 
+
+
+def remove_bandwidth_limit(ip_address)
+  # Assuming a MikroTik command to remove the limit is something like this:
+  begin
+    router_setting = ActsAsTenant.current_tenant&.router_setting&.router_name
+    router = NasRouter.find_by(name: router_setting)
+  
+    return unless router
+    
+    router_ip = router.ip_address
+    router_username = router.username
+    router_password = router.password 
+    
+    # Connect via SSH to MikroTik
+    Net::SSH.start(router_ip, router_username, password: router_password, verify_host_key: :never) do |ssh|
+      # Command to remove the bandwidth limit
+      command = "/queue simple remove [find target=#{ip_address}]"
+      
+      # Execute the command
+      ssh.exec!(command)
+    end
+  rescue StandardError => e
+    Rails.logger.error "Error removing bandwidth limit for IP #{ip_address}: #{e.message}"
+  end
+end
     # Only allow a list of trusted parameters through.
     def subscription_params
       params.require(:subscription).permit(:name, :phone_number, :package, :status, 
