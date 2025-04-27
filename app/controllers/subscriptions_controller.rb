@@ -32,45 +32,42 @@ def last_seen
   subscriptions = Subscription.all
 
   data = subscriptions.map do |subscription|
-    # First, find any active session (acctstoptime is NULL)
-    radacct_online = RadAcct.where(username: subscription.ppoe_username, acctstoptime: nil)
-                            .order('acctupdatetime DESC')
-                            .first
+    radacct_latest = RadAcct.where(username: subscription.ppoe_username)
+                             .order('COALESCE(acctstoptime, acctupdatetime) DESC')
+                             .first
 
-    if radacct_online
-      {
-        id: subscription.id,
-        ppoe_username: subscription.ppoe_username,
-        status: "online",
-        last_seen: radacct_online.acctupdatetime
-      }
-    else
-      # No active session, find the latest offline session
-      radacct_offline = RadAcct.where(username: subscription.ppoe_username)
-                               .where.not(acctstoptime: nil)
-                               .order('acctstoptime DESC')
-                               .first
-
-      if radacct_offline
+    if radacct_latest
+      if radacct_latest.acctstoptime.nil?
+        # Active session
+        {
+          id: subscription.id,
+          ppoe_username: subscription.ppoe_username,
+          status: "online",
+          last_seen: radacct_latest.acctupdatetime
+        }
+      else
+        # Disconnected session
         {
           id: subscription.id,
           ppoe_username: subscription.ppoe_username,
           status: "offline",
-          last_seen: radacct_offline.acctstoptime
-        }
-      else
-        {
-          id: subscription.id,
-          ppoe_username: subscription.ppoe_username,
-          status: "never connected",
-          last_seen: nil
+          last_seen: radacct_latest.acctstoptime
         }
       end
+    else
+      # No session records at all
+      {
+        id: subscription.id,
+        ppoe_username: subscription.ppoe_username,
+        status: "never connected",
+        last_seen: nil
+      }
     end
   end
 
   render json: data
 end
+
 
 
 
