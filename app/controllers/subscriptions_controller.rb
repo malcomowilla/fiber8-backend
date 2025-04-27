@@ -266,7 +266,7 @@ end
       calculate_expiration(@subscription)
       create_pppoe_credentials_radius(params[:subscription][:ppoe_password], 
       params[:subscription][:ppoe_username], params[:subscription][:package_name],  params[:subscription][:ip_address])
-  
+      remove_pppoe_connection(params[:subscription][:ppoe_username])
       render json: @subscription, status: :ok
     else
       render json: @subscription.errors, status: :unprocessable_entity
@@ -278,7 +278,30 @@ end
       @subscription = Subscription.find_by(id: params[:id])
     end
 
-
+    def remove_pppoe_connection(ppoe_username)
+      begin
+        router_setting = ActsAsTenant.current_tenant&.router_setting&.router_name
+        router = NasRouter.find_by(name: router_setting)
+      
+        return unless router
+        
+        router_ip = router.ip_address
+        router_username = router.username
+        router_password = router.password 
+        
+        # Connect via SSH to MikroTik
+        Net::SSH.start(router_ip, router_username, password: router_password, verify_host_key: :never) do |ssh|
+          # Correct command to remove active PPPoE session based on pppoe_username
+          command = "/interface pppoe-server active remove [find name=#{ppoe_username}]"
+          
+          # Execute the command
+          ssh.exec!(command)
+        end
+      rescue StandardError => e
+        Rails.logger.error "Error removing PPPoE connection for username #{ppoe_username}: #{e.message}"
+      end
+    end
+    
 
 
     def create_pppoe_credentials_radius(pppoe_password, pppoe_username, package, pppoe_ip)
