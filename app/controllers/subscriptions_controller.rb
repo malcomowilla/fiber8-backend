@@ -32,16 +32,12 @@ def last_seen
   subscriptions = Subscription.all
 
   data = subscriptions.map do |subscription|
-    radaccts = RadAcct.where(username: subscription.ppoe_username)
-                      .order(acctupdatetime: :desc, acctstoptime: :desc)
-
-    radacct = radaccts.find do |r|
-      r.acctstoptime.present? || r.acctupdatetime.present?
-    end
+    radacct = RadAcct.where(username: subscription.ppoe_username)
+                     .order('COALESCE(acctstoptime, acctupdatetime) DESC')
+                     .first
 
     if radacct
-      if radacct.acctstoptime.nil?
-        # Online
+      if radacct.acctstoptime.blank?
         {
           id: subscription.id,
           ppoe_username: subscription.ppoe_username,
@@ -49,7 +45,6 @@ def last_seen
           last_seen: radacct.acctupdatetime
         }
       else
-        # Offline
         {
           id: subscription.id,
           ppoe_username: subscription.ppoe_username,
@@ -69,6 +64,7 @@ def last_seen
 
   render json: data
 end
+
 
 
 
