@@ -26,6 +26,54 @@ rescue ActiveRecord::RecordNotFound
 end
 
 
+
+
+def last_seen
+  subscriptions = Subscription.all
+
+  data = subscriptions.map do |subscription|
+    # First, find any active session (acctstoptime is NULL)
+    radacct_online = Radacct.where(username: subscription.ppoe_username, acctstoptime: nil)
+                            .order('acctupdatetime DESC')
+                            .first
+
+    if radacct_online
+      {
+        id: subscription.id,
+        ppoe_username: subscription.ppoe_username,
+        status: "online",
+        last_seen: radacct_online.acctupdatetime
+      }
+    else
+      # No active session, find the latest offline session
+      radacct_offline = Radacct.where(username: subscription.ppoe_username)
+                               .where.not(acctstoptime: nil)
+                               .order('acctstoptime DESC')
+                               .first
+
+      if radacct_offline
+        {
+          id: subscription.id,
+          ppoe_username: subscription.ppoe_username,
+          status: "offline",
+          last_seen: radacct_offline.acctstoptime
+        }
+      else
+        {
+          id: subscription.id,
+          ppoe_username: subscription.ppoe_username,
+          status: "never connected",
+          last_seen: nil
+        }
+      end
+    end
+  end
+
+  render json: data
+end
+
+
+
   def index
     @subscriptions = Subscription.all
     render json: @subscriptions
@@ -115,8 +163,8 @@ end
 
     )
 
-    # create_pppoe_credentials_radius(params[:subscription][:ppoe_password], 
-    # params[:subscription][:ppoe_username], params[:subscription][:package_name],  params[:subscription][:ip_address])
+    create_pppoe_credentials_radius(params[:subscription][:ppoe_password], 
+    params[:subscription][:ppoe_username], params[:subscription][:package_name],  params[:subscription][:ip_address])
    
     
     calculate_expiration(@subscription)
@@ -137,23 +185,23 @@ end
       return render json: { error: "Subscription not found" }, status: :not_found
     end
   
-  #   ActiveRecord::Base.transaction do
-  #     # ✅ Delete FreeRADIUS records first
-  #     RadCheck.where(username: @subscription.ppoe_username).destroy_all
-  #     RadGroupCheck.where(groupname: @subscription.ppoe_username).destroy_all
-  #     RadGroupCheck.where(groupname: @subscription.ppoe_password).destroy_all
+    ActiveRecord::Base.transaction do
+      # ✅ Delete FreeRADIUS records first
+      RadCheck.where(username: @subscription.ppoe_username).destroy_all
+      RadGroupCheck.where(groupname: @subscription.ppoe_username).destroy_all
+      RadGroupCheck.where(groupname: @subscription.ppoe_password).destroy_all
 
-  #     RadUserGroup.where(username: @subscription.ppoe_username).destroy_all
-  #     RadUserGroup.where(username: @subscription.ppoe_password).destroy_all
+      RadUserGroup.where(username: @subscription.ppoe_username).destroy_all
+      RadUserGroup.where(username: @subscription.ppoe_password).destroy_all
  
   
   #     # ✅ Delete the HotspotVoucher record
       @subscription.destroy!
   
       render json: { message: "subscription deleted successfully" }, status: :ok
-  #   end
-  # rescue => e
-  #   render json: { error: "Failed to delete subscription: #{e.message}" }, status: :unprocessable_entity
+    end
+  rescue => e
+    render json: { error: "Failed to delete subscription: #{e.message}" }, status: :unprocessable_entity
   end
 
 
@@ -173,9 +221,8 @@ end
     end
     if @subscription.update(subscription_params)
       calculate_expiration(@subscription)
-      # create_pppoe_credentials_radius(@subscription.pppoe_password, @subscription.pppoe_username, @subscription.package)
-      # create_pppoe_credentials_radius(params[:subscription][:ppoe_password], 
-      # params[:subscription][:ppoe_username], params[:subscription][:package_name],  params[:subscription][:ip_address])
+      create_pppoe_credentials_radius(params[:subscription][:ppoe_password], 
+      params[:subscription][:ppoe_username], params[:subscription][:package_name],  params[:subscription][:ip_address])
      
       render json: @subscription, status: :ok
     else
