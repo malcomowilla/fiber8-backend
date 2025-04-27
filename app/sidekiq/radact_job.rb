@@ -16,8 +16,11 @@ class RadactJob
       # radacct.update!(account_id: ActsAsTenant.current_tenant.id)
       # RadAcct.where(account_id: nil).find_each do |radacct|
   if radacct
-    Rails.logger.info "Updating radacct with id: #{radacct.id}"
-    radacct.update!(account_id: ActsAsTenant.current_tenant.id)
+    begin
+      radacct.update!(account_id: ActsAsTenant.current_tenant.id)
+    rescue => e
+      Rails.logger.error "Failed to update radacct with id #{radacct.id}: #{e.message}"
+    end
   else
     Rails.logger.info "No radacct found with nil account_id."
   end
