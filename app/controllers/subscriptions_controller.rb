@@ -32,30 +32,32 @@ def last_seen
   subscriptions = Subscription.all
 
   data = subscriptions.map do |subscription|
-    radacct_latest = RadAcct.where(username: subscription.ppoe_username)
-                             .order('COALESCE(acctstoptime, acctupdatetime) DESC')
-                             .first
+    radaccts = RadAcct.where(username: subscription.ppoe_username)
+                      .order(acctupdatetime: :desc, acctstoptime: :desc)
 
-    if radacct_latest
-      if radacct_latest.acctstoptime.nil?
-        # Active session
+    radacct = radaccts.find do |r|
+      r.acctstoptime.present? || r.acctupdatetime.present?
+    end
+
+    if radacct
+      if radacct.acctstoptime.nil?
+        # Online
         {
           id: subscription.id,
           ppoe_username: subscription.ppoe_username,
           status: "online",
-          last_seen: radacct_latest.acctupdatetime
+          last_seen: radacct.acctupdatetime
         }
       else
-        # Disconnected session
+        # Offline
         {
           id: subscription.id,
           ppoe_username: subscription.ppoe_username,
           status: "offline",
-          last_seen: radacct_latest.acctstoptime
+          last_seen: radacct.acctstoptime
         }
       end
     else
-      # No session records at all
       {
         id: subscription.id,
         ppoe_username: subscription.ppoe_username,
@@ -67,6 +69,7 @@ def last_seen
 
   render json: data
 end
+
 
 
 
