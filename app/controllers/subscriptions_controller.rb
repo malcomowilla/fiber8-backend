@@ -45,14 +45,16 @@ Rails.logger.info "radacct: #{radacct}"
           ppoe_username: subscription.ppoe_username,
           status: "online",
           last_seen: radacct.acctupdatetime.strftime("%B %d, %Y at %I:%M %p"),
-          mac_adress: radacct.mac_adress
+          mac_adress: radacct.callingstationid
         }
       else
         {
           id: subscription.id,
           ppoe_username: subscription.ppoe_username,
           status: "offline",
-          last_seen: radacct.acctstoptime.strftime("%B %d, %Y at %I:%M %p")
+          last_seen: radacct.acctstoptime.strftime("%B %d, %Y at %I:%M %p"),
+          mac_adress: radacct.callingstationid
+
         }
       end
     else
