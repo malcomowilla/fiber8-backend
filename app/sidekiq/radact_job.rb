@@ -9,7 +9,7 @@ class RadactJob
       ActsAsTenant.with_tenant(tenant) do
     # Ensure ActsAsTenant is set for the current tenant, else set it manually if needed
     # ActsAsTenant.current_tenant = Tenant.find(1)  # Or dynamically find the current tenant
-    nil_radacct_count = RadAcct.unscoped.where(account_id: nil)
+    nil_radacct_count = RadAcct.unscoped.where(account_id: nil).count
     Rails.logger.info "Found #{nil_radacct_count} RadAcct records with nil account_id for tenant #{ActsAsTenant.current_tenant.id}"
     
     # Update all RadAcct records where account_id is nil
