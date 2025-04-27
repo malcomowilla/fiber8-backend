@@ -32,7 +32,7 @@ def last_seen
   subscriptions = Subscription.all
 
   data = subscriptions.map do |subscription|
-    radacct = RadAcct.where(username: subscription.ppoe_username)
+    radacct = RadAcct.where(username: 'test')
     .order(acctupdatetime: :desc, acctstoptime: :desc)
                      .first
 Rails.logger.info "radacct: #{radacct}"
