@@ -12,6 +12,7 @@ class RadactJob
 
     # Update all RadAcct records where account_id is nil
     RadAcct.where(account_id: nil).find_each do |radacct|
+      Raails.logger.info "radct update in job#{radacct}"
       radacct.update(account_id: ActsAsTenant.current_tenant.id)
     end
   end
