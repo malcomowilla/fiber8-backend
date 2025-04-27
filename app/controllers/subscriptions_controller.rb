@@ -36,7 +36,6 @@ def last_seen
                     #  .order(acctupdatetime: :desc, acctstoptime: :desc)
                      .first
 
-    if radacct
       if radacct.acctstoptime.blank?
         {
           id: subscription.id,
@@ -52,14 +51,7 @@ def last_seen
           last_seen: radacct.acctstoptime
         }
       end
-    else
-      {
-        id: subscription.id,
-        ppoe_username: subscription.ppoe_username,
-        status: "never connected",
-        last_seen: nil
-      }
-    end
+   
   end
 
   render json: data
