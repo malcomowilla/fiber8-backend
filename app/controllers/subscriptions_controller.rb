@@ -36,7 +36,6 @@ def last_seen
     radacct = RadAcct.where(username: subscription.ppoe_username)
     .order(acctupdatetime: :desc, acctstoptime: :desc)
                      .first
-   radacct.update(account_id: ActsAsTenant.current_tenant.id) if radacct.present? && radacct.account_id.nil?
 
 Rails.logger.info "radacct: #{radacct}"
     if radacct
