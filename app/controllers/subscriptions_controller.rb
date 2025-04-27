@@ -33,7 +33,7 @@ def last_seen
 
   data = subscriptions.map do |subscription|
     radacct = RadAcct.where(username: subscription.ppoe_username)
-                     .order('COALESCE(acctstoptime, acctupdatetime) DESC')
+                     .order(acctupdatetime: :desc, acctstoptime: :desc)
                      .first
 
     if radacct
@@ -64,6 +64,7 @@ def last_seen
 
   render json: data
 end
+
 
 
 
