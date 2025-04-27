@@ -71,6 +71,9 @@ end
 
 get '/get_ips', to: 'subscriptions#get_ips'
 get '/api/get_ips', to: 'subscriptions#get_ips'
+get '/api/last_seen', to: 'subscriptions#last_seen'
+get '/last_seen', to: 'subscriptions#last_seen'
+
 
 post '/api/send_sms', to: 'send_sms#send_sms'
 post '/api/reboot_router', to: 'system_metrics#reboot_router'
