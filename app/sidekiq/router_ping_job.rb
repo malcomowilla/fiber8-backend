@@ -7,6 +7,36 @@ class RouterPingJob
   def perform
     Account.find_each do |tenant| # Iterate over all tenants
       ActsAsTenant.with_tenant(tenant) do
+
+
+
+
+# ActsAsTenant.current_tenant = Tenant.find(1)  # Or dynamically find the current tenant
+nil_radacct_count = RadAcct.unscoped.where(account_id: nil).count
+Rails.logger.info "Found #{nil_radacct_count} RadAcct records with nil account_id for tenant #{ActsAsTenant.current_tenant.id}"
+
+# Update all RadAcct records where account_id is nil
+#         RadAcct.unscoped.where(account_id: nil).find_each do |radacct|
+RadAcct.unscoped.where(account_id: nil).find_each do |radacct|
+
+  # Rails.logger.info "radct update in job#{radacct}"
+  # radacct.update!(account_id: ActsAsTenant.current_tenant.id)
+  # RadAcct.where(account_id: nil).find_each do |radacct|
+if radacct
+begin
+  radacct.update!(account_id: ActsAsTenant.current_tenant.id)
+rescue => e
+  Rails.logger.error "Failed to update radacct with id #{radacct.id}: #{e.message}"
+end
+else
+Rails.logger.info "No radacct found with nil account_id."
+end
+end
+
+
+
+
+
         unless tenant.router_setting&.router_name
           Rails.logger.info "No router setting found for tenant #{tenant.id}"
           next
