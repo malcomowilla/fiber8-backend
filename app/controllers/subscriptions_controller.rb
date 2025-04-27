@@ -33,7 +33,7 @@ def last_seen
 
   data = subscriptions.map do |subscription|
     # First, find any active session (acctstoptime is NULL)
-    radacct_online = Radacct.where(username: subscription.ppoe_username, acctstoptime: nil)
+    radacct_online = RadAcct.where(username: subscription.ppoe_username, acctstoptime: nil)
                             .order('acctupdatetime DESC')
                             .first
 
@@ -46,7 +46,7 @@ def last_seen
       }
     else
       # No active session, find the latest offline session
-      radacct_offline = Radacct.where(username: subscription.ppoe_username)
+      radacct_offline = RadAcct.where(username: subscription.ppoe_username)
                                .where.not(acctstoptime: nil)
                                .order('acctstoptime DESC')
                                .first
