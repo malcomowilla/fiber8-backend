@@ -35,7 +35,7 @@ def last_seen
     radacct = RadAcct.where(username: subscription.ppoe_username)
     .order(acctupdatetime: :desc, acctstoptime: :desc)
                      .first
-
+Rails.logger.info "radacct: #{radacct}"
     if radacct
       if radacct.acctstoptime.blank?
         {
