@@ -15,7 +15,22 @@ class RadactJob
       Rails.logger.info "radct update in job#{radacct}"
       radacct.update!(account_id: ActsAsTenant.current_tenant.id)
     end
+
+
+  
+
+
+
   end
       end
+
+
+
+
+
+
       end
+
+
+
 end
