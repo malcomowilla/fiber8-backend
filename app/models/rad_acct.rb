@@ -1,5 +1,5 @@
 class RadAcct < ApplicationRecord
-  self.table_name = 'radacct'
+  self.table_name = radacct'
   acts_as_tenant(:account)
 
   self.ignored_columns = ["class"]
