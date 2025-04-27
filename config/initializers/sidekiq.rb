@@ -40,10 +40,10 @@ Sidekiq.configure_server do |config|
         'cron' => '* * * * *' # Run every minute
       },
 
-      'hotspot_expiration_job' => {
-        'class' => 'HotspotExpirationJob',
-        'cron' => '* * * * *' # Run every minute
-      },
+      # 'hotspot_expiration_job' => {
+      #   'class' => 'HotspotExpirationJob',
+      #   'cron' => '* * * * *' # Run every minute
+      # },
       
       
     }
