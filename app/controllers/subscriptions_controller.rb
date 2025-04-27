@@ -292,7 +292,7 @@ end
         # Connect via SSH to MikroTik
         Net::SSH.start(router_ip, router_username, password: router_password, verify_host_key: :never) do |ssh|
           # Correct command to remove active PPPoE session based on pppoe_username
-          command = "/interface pppoe-server active remove [find name=#{ppoe_username}]"
+          command = "/ppp active remove [find name=#{ppoe_username}]"
           
           # Execute the command
           ssh.exec!(command)
