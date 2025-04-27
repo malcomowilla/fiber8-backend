@@ -33,7 +33,7 @@ def last_seen
 
   data = subscriptions.map do |subscription|
     radacct = RadAcct.where(username: subscription.ppoe_username)
-                     .order(acctupdatetime: :desc, acctstoptime: :desc)
+                    #  .order(acctupdatetime: :desc, acctstoptime: :desc)
                      .first
 
     if radacct
