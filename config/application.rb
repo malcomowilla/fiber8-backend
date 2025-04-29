@@ -24,6 +24,21 @@ module Fiber8backend
     # puts("Loading cookies session store KEY")
     # config.middleware.use Rack::Attack
     # config.middleware.use BlockedUser
+    # 
+
+
+
+    def self.current_cloudflare_url
+      @current_cloudflare_url ||= begin
+       
+          # For development/staging - parse from cloudflared logs
+          logs = `journalctl -u cloudflared -n 50 --no-pager 2>/dev/null` rescue ''
+          match = logs.match(/https:\/\/([a-z0-9-]+\.trycloudflare\.com)/)
+          match ? match[1] : 'default.trycloudflare.com'
+        
+      end
+    end
+
     Rails.application.config.middleware.delete Rack::Attack
 
 config.middleware.use SetTenant
@@ -53,14 +68,15 @@ config.middleware.use SetTenant
     # config.eager_load_paths << Rails.root.join("extras")
     # config/application.rb
     # config.force_ssl = true
-    Rails.application.routes.default_url_options[:host] = 'solving-choice-dutch-utah.trycloudflare.com'
-
+    # Rails.application.routes.default_url_options[:host] = 'solving-choice-dutch-utah.trycloudflare.com'
+    config.hosts << current_cloudflare_url
+    Rails.application.routes.default_url_options[:host] = current_cloudflare_url
 # config.hosts = nil
     config.middleware.use ActionDispatch::Cookies
     # puts("Loading cookies session store options")
     # config.session_store :cookie_store, key: '_fiber8backend_session', httponly: true, same_site: :none, secure: Rails.env.production?
 # Use SameSite=Strict for all cookies to help protect against CSRF
 config.action_dispatch.cookies_same_site_protection = :strict
-config.hosts << "solving-choice-dutch-utah.trycloudflare.com" 
+# config.hosts << "solving-choice-dutch-utah.trycloudflare.com" 
   end
 end
