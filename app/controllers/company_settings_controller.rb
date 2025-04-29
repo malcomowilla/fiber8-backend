@@ -65,11 +65,17 @@ end
 
   end
 
-
+  def fetch_cloudflare_tunnel_hostname
+    log_output = `journalctl -u cloudflared -n 100 --no-pager`
+    match = log_output.match(%r{https://([a-z0-9-]+\.trycloudflare\.com)})
+    match[1] if match
+  end
 
 
 
   def allow_get_company_settings  
+    tunnel_host = fetch_cloudflare_tunnel_hostname
+
     # account = Account.find_or_create_by(subdomain: host)
     # ActsAsTenant.current_tenant = account
      # @company_settings = CompanySetting.first
@@ -91,7 +97,7 @@ end
   # "https://8209-102-221-35-92.ngrok-free.app/rails/active_storage/blobs/#{@company_settings.logo.key}" : nil
 
       logo_url: @company_settings&.logo&.attached? ? 
-  URI.join("https://speeches-air-una-dolls.trycloudflare.com", Rails.application.routes.url_helpers.rails_blob_path(@company_settings.logo)).to_s : nil
+  URI.join("https://#{tunnel_host}", Rails.application.routes.url_helpers.rails_blob_path(@company_settings.logo)).to_s : nil
 
       # logo_url: @company_settings&.logo&.attached? ? "#{Rails.application.routes.default_url_options[:host]}/rails/active_storage/blobs/#{@company_settings.logo.key}" : nil
 
@@ -109,8 +115,12 @@ end
       }
   end
   
+
+  
+
   # POST /company_settings or /company_settings.json
   def create
+    tunnel_host = fetch_cloudflare_tunnel_hostname
 
     
   @company_setting = CompanySetting.first_or_initialize(company_setting_params)
@@ -126,7 +136,7 @@ contact_info: @company_setting.contact_info,
 email_info: @company_setting.email_info,
 # logo_url: @company_setting.logo.attached? ? url_for(@company_setting.logo) : nil
 logo_url: @company_settings&.logo&.attached? ? rails_blob_url(@company_settings.logo,
- host: 'speeches-air-una-dolls.trycloudflare.com', protocol: 'https', port: nil) : nil
+ host: tunnel_host, protocol: 'https', port: nil) : nil
 
 
 }

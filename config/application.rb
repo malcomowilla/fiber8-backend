@@ -17,7 +17,6 @@ if Rails.env.development? || Rails.env.test?
   Dotenv::Rails.load
 end
 
-
 module Fiber8backend
   class Application < Rails::Application
     # config.session_store :cookie_store, key: '_hue_session', domain: :all
