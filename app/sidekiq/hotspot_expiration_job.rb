@@ -399,7 +399,7 @@ class HotspotExpirationJob
             # SSH into MikroTik router
             Net::SSH.start(router_ip, router_username , password: router_password) do |ssh|
               # Add the user's IP address to the MikroTik Address List
-              ssh.exec!("ip firewall address-list add list=aitechs_blocked_list_#{subscription.ppoe_username} address=#{subscription.ip_address} comment=#{subscription.ppoe_username}")
+              ssh.exec!("ip firewall address-list add list=aitechs_blocked_list address=#{subscription.ip_address} comment=#{subscription.ppoe_username}")
         
               puts "Blocked #{subscription.ppoe_username} (#{subscription.ip_address}) on MikroTik."
         
