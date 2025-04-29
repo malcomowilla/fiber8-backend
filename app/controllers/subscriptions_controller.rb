@@ -335,6 +335,14 @@ end
       render json: { error: "Username already taken" }, status: :unprocessable_entity
       return
     end
+
+
+
+
+
+
+
+    
   
     old_ip = @subscription.ip_address # store the old IP
   
@@ -349,7 +357,8 @@ end
         limit_bandwidth(@subscription.ip_address, @subscription.package, @subscription.ppoe_username)
       end
   
-      calculate_expiration(@subscription)
+      # calculate_expiration(@subscription)
+       calculate_expiration_update(@subscription)
       create_pppoe_credentials_radius(params[:subscription][:ppoe_password], 
       params[:subscription][:ppoe_username], params[:subscription][:package_name],  params[:subscription][:ip_address])
       remove_pppoe_connection(params[:subscription][:ppoe_username])
@@ -510,6 +519,56 @@ end
     end
     
 
+    def calculate_expiration_update(subscription)
+      return nil unless subscription.validity.present? && subscription.validity_period_units.present?
+    
+      validity = subscription.validity.to_i
+    
+      # Calculate new expiration time
+      expiration_time = case subscription.validity_period_units.downcase
+                        when 'days'
+                          Time.current + validity.days
+                        when 'hours'
+                          Time.current + validity.hours
+                        when 'minutes'
+                          Time.current + validity.minutes
+                        else
+                          nil
+                        end
+    
+      if expiration_time
+        old_expiry = subscription.expiry
+    
+        # Update subscription expiry
+        subscription.update(expiry: expiration_time)
+    
+        # If expiry was changed, remove IP from address list in MikroTik
+        if old_expiry != expiration_time
+          begin
+            router_setting = ActsAsTenant.current_tenant&.router_setting&.router_name
+            router = NasRouter.find_by(name: router_setting)
+    
+            if router
+              Net::SSH.start(router.ip_address, router.username, password: router.password) do |ssh|
+                ssh.exec!("ip firewall address-list remove [find list=aitechs_blocked_list address=#{subscription.ip_address}]")
+                puts "Removed #{subscription.ip_address} from aitechs_blocked_list"
+              end
+            end
+          rescue => e
+            puts "Error unblocking IP: #{e.message}"
+          end
+        end
+    
+        formatted_expiry = expiration_time.strftime("%B %d, %Y at %I:%M %p")
+      else
+        formatted_expiry = "unknown"
+      end
+    
+      {
+        expiry: formatted_expiry
+      }
+    end
+    
 
 
 
