@@ -33,43 +33,41 @@ def last_seen
   subscriptions = Subscription.all
 
   data = subscriptions.map do |subscription|
-    
     radacct = RadAcct.where(username: subscription.ppoe_username)
-    .order(acctupdatetime: :desc, acctstoptime: :desc)
-                     .first
+    .order(acctupdatetime: :desc)
+
+online_record = radacct.find { |r| r.acctstoptime.nil? }
+
+radacct = online_record || radacct.first
 
 Rails.logger.info "radacct: #{radacct}"
-    if radacct
-      if radacct.acctstoptime == nil
-        {
-          id: subscription.id,
-          ppoe_username: subscription.ppoe_username,
-          status: "online",
-          last_seen: radacct.acctupdatetime.strftime("%B %d, %Y at %I:%M %p"),
-          mac_adress: radacct.callingstationid
-        }
-      else
-        {
-          id: subscription.id,
-          ppoe_username: subscription.ppoe_username,
-          status: "offline",
-          last_seen: radacct.acctstoptime.strftime("%B %d, %Y at %I:%M %p"),
-          mac_adress: radacct.callingstationid
-
-        }
-      end
-    else
-      {
-        id: subscription.id,
-        ppoe_username: subscription.ppoe_username,
-        status: "never connected",
-        last_seen: nil
-      }
-    end
+if radacct
+  if radacct.acctstoptime.nil?
+    {
+      id: subscription.id,
+      ppoe_username: subscription.ppoe_username,
+      status: "online",
+      last_seen: radacct.acctupdatetime.strftime("%B %d, %Y at %I:%M %p"),
+      mac_adress: radacct.callingstationid
+    }
+  else
+    {
+      id: subscription.id,
+      ppoe_username: subscription.ppoe_username,
+      status: "offline",
+      last_seen: radacct.acctstoptime.strftime("%B %d, %Y at %I:%M %p"),
+      mac_adress: radacct.callingstationid
+    }
   end
-
-  render json: data
+else
+  {
+    id: subscription.id,
+    ppoe_username: subscription.ppoe_username,
+    status: "never connected",
+    last_seen: nil
+  }
 end
+
 
 
 
