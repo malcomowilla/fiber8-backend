@@ -34,7 +34,6 @@ def last_seen
 
   data = subscriptions.map do |subscription|
     radacct = RadAcct.where(username: subscription.ppoe_username)
-    .order(acctupdatetime: :desc)
 
 online_record = radacct.find { |r| r.acctstoptime.nil? }
 
