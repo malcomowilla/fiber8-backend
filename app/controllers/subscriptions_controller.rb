@@ -538,11 +538,9 @@ end
     
       if expiration_time
         old_expiry = subscription.expiry
-        subscription.update(expiry: expiration_time)
-        formatted_expiry = expiration_time.strftime("%B %d, %Y at %I:%M %p")
+    
         # Update subscription expiry
-        # subscription.update(expiry: expiration_time)
-        # 
+        subscription.update(expiry: expiration_time)
     
         # If expiry was changed, remove IP from address list in MikroTik
         if old_expiry != expiration_time
