@@ -35,14 +35,14 @@ def last_seen
   data = subscriptions.map do |subscription|
     
     radacct = RadAcct.where(username: subscription.ppoe_username)
-                 .order(acctupdatetime: :desc)
+                 .order(acctupdatetime: :desc).first
 
-online = radacct.find_by(acctstoptime: nil)
-radacct = online || radacct.first
+# online = radacct.find_by(acctstoptime: nil)
+# radacct = online || radacct.first
 
 Rails.logger.info "radacct: #{radacct}"
     if radacct
-      if online
+      if radacct
         {
           id: subscription.id,
           ppoe_username: subscription.ppoe_username,
