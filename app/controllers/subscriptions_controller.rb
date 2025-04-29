@@ -551,6 +551,7 @@ end
             if router
               Net::SSH.start(router.ip_address, router.username, password: router.password) do |ssh|
                 ssh.exec!("ip firewall address-list remove [find list=aitechs_blocked_list address=#{subscription.ip_address}]")
+                subscription.update!(status: 'online')
                 puts "Removed #{subscription.ip_address} from aitechs_blocked_list"
               end
             end
