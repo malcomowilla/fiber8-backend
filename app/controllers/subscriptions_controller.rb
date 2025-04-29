@@ -33,12 +33,15 @@ def last_seen
   subscriptions = Subscription.all
 
   data = subscriptions.map do |subscription|
-    radacct = RadAcct.where(username: subscription.ppoe_username)
-    .order(acctupdatetime: :desc)
+    
+  end
+  radacct = RadAcct.where(username: subscription.ppoe_username)
+  .order(acctupdatetime: :desc)
 
 online_record = radacct.find { |r| r.acctstoptime.nil? }
 
 radacct = online_record || radacct.first
+
 
 Rails.logger.info "radacct: #{radacct}"
 if radacct
@@ -68,6 +71,9 @@ else
   }
 end
 
+
+  render json: data
+end
 
 
 
