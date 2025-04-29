@@ -42,7 +42,7 @@ radacct = online || radacct.first
 
 Rails.logger.info "radacct: #{radacct}"
     if radacct
-      if radacct.acctstoptime.nil?
+      if online
         {
           id: subscription.id,
           ppoe_username: subscription.ppoe_username,
