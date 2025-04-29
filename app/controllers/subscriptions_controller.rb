@@ -46,9 +46,9 @@ Rails.logger.info "radacct: #{radacct}"
         {
           id: subscription.id,
           ppoe_username: subscription.ppoe_username,
-          status: "online",
+          status: subscription.status == 'blocked' ? 'blocked' : 'online',
           last_seen: radacct.acctupdatetime.strftime("%B %d, %Y at %I:%M %p"),
-          mac_adress: radacct.callingstationid
+          mac_adress: radacct.callingstationid,
         }
       else
         {
