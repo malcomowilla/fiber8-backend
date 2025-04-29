@@ -40,7 +40,7 @@ def last_seen
 
 Rails.logger.info "radacct: #{radacct}"
     if radacct
-      if radacct.acctstoptime.blank?
+      if radacct.acctstoptime.nil?
         {
           id: subscription.id,
           ppoe_username: subscription.ppoe_username,
