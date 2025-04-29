@@ -33,14 +33,12 @@ def last_seen
   subscriptions = Subscription.all
 
   data = subscriptions.map do |subscription|
-    
-    radacct = RadAcct.where(username: subscription.ppoe_username)
-                 .order(acctupdatetime: :desc).first
+    radacct_records = RadAcct.where(username: subscription.ppoe_username).order(acctupdatetime: :desc)
 
-# online = radacct.find_by(acctstoptime: nil)
-# radacct = online || radacct.first
+    radacct = radacct_records.find { |r| r.acctstoptime.nil? } || radacct_records.first
 
-Rails.logger.info "radacct: #{radacct}"
+    Rails.logger.info "radacct: #{radacct.inspect}"
+
     if radacct
       if radacct.acctstoptime.nil?
         {
@@ -48,7 +46,7 @@ Rails.logger.info "radacct: #{radacct}"
           ppoe_username: subscription.ppoe_username,
           status: subscription.status == 'blocked' ? 'blocked' : 'online',
           last_seen: radacct.acctupdatetime.strftime("%B %d, %Y at %I:%M %p"),
-          mac_adress: radacct.callingstationid,
+          mac_adress: radacct.callingstationid
         }
       else
         {
@@ -57,7 +55,6 @@ Rails.logger.info "radacct: #{radacct}"
           status: "offline",
           last_seen: radacct.acctstoptime.strftime("%B %d, %Y at %I:%M %p"),
           mac_adress: radacct.callingstationid
-
         }
       end
     else
@@ -72,6 +69,7 @@ Rails.logger.info "radacct: #{radacct}"
 
   render json: data
 end
+
 
 
 
