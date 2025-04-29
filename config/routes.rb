@@ -74,7 +74,8 @@ get '/api/get_ips', to: 'subscriptions#get_ips'
 get '/api/last_seen', to: 'subscriptions#last_seen'
 get '/last_seen', to: 'subscriptions#last_seen'
 
-
+get '/api/pppoe_stats', to: 'subscriptions#pppoe_stats'
+get '/pppoe_stats', to: 'subscriptions#pppoe_stats'
 post '/api/send_sms', to: 'send_sms#send_sms'
 post '/api/reboot_router', to: 'system_metrics#reboot_router'
 post '/reboot_router', to: 'system_metrics#reboot_router'
