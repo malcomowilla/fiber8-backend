@@ -77,6 +77,92 @@ end
 
 
 
+def parse_uptime_to_seconds(uptime)
+  total_seconds = 0
+  uptime.scan(/(\d+d)?(\d+h)?(\d+m)?(\d+s)?/).each do |d, h, m, s|
+    total_seconds += d.to_i * 86400 if d
+    total_seconds += h.to_i * 3600 if h
+    total_seconds += m.to_i * 60 if m
+    total_seconds += s.to_i if s
+  end
+  total_seconds
+end
+
+def fetch_pppoe_stats
+  router_setting = ActsAsTenant.current_tenant&.router_setting&.router_name
+  router = NasRouter.find_by(name: router_setting)
+
+  return [] unless router
+
+  router_ip = router.ip_address
+  router_username = router.username
+  router_password = router.password 
+
+  stats = []
+
+  Net::SSH.start(router_ip, router_username, password: router_password, verify_host_key: :never) do |ssh|
+    output = ssh.exec!('/ppp active print detail')
+    Rails.logger.info "PPPoE stats: #{output}"
+
+    output.scan(/name="(.+?)".*?address=(.+?) uptime=(.+?) /m).each do |match|
+      username = match[0]
+      address = match[1]
+      uptime_raw = match[2]
+
+      interface_name = "<pppoe-#{username}>"
+      ppoe_username = Subscription.find_by(ppoe_username: username)
+      # Rails.logger.info 'ppoe_username', ppoe_username
+      package = ppoe_username&.package
+      mbps_package = Package.find_by(name: package)
+      download_limit = mbps_package&.download_limit
+      upload_limit = mbps_package&.upload_limit
+      traffic_output = ssh.exec!("/interface monitor-traffic interface=#{interface_name} once")
+      Rails.logger.info "Traffic stats for #{username}: #{traffic_output}"
+
+      rx_speed = extract_speed_direct(traffic_output[/rx-bits-per-second:\s+(\S+)/, 1])
+      tx_speed = extract_speed_direct(traffic_output[/tx-bits-per-second:\s+(\S+)/, 1])
+
+      stats << {
+        username: username,
+        address: address,
+        uptime: uptime_raw,
+        download_speed: rx_speed,
+        upload_speed: tx_speed,
+        package: "#{download_limit} Mbps"
+      }
+    end
+  end
+
+  stats
+
+rescue => e
+  Rails.logger.error "Failed to fetch PPPoE stats: #{e.message}"
+  []
+end
+
+# 🛠 This is the simple parser that accepts whatever Mikrotik gave
+def extract_speed_direct(raw_value)
+  return "0 bps" if raw_value.blank?
+
+  # Mikrotik gives with unit already, just format spacing better
+  if raw_value =~ /^(\d+(\.\d+)?)([a-zA-Z]+)$/
+    number = Regexp.last_match(1)
+    unit = Regexp.last_match(3)
+    "#{number} #{unit}"
+  else
+    raw_value
+  end
+end
+
+def pppoe_stats
+  stats = fetch_pppoe_stats
+  render json: stats
+end
+
+
+
+
+
   def index
     @subscriptions = Subscription.all
     render json: @subscriptions
@@ -483,6 +569,12 @@ def remove_bandwidth_limit(ip_address)
     Rails.logger.error "Error removing bandwidth limit for IP #{ip_address}: #{e.message}"
   end
 end
+
+
+
+# "burst-limit": "any",
+#   "burst-threshold": "any",
+#   "burst-time": "any",
     # Only allow a list of trusted parameters through.
     def subscription_params
       params.require(:subscription).permit(:name, :phone_number, :package, :status, 
