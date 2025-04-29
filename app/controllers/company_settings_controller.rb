@@ -26,11 +26,17 @@ def set_tenant
 end
 
 
-
+def fetch_cloudflare_tunnel_hostname
+  log_output = `journalctl -u cloudflared -n 100 --no-pager`
+  match = log_output.match(%r{https://([a-z0-9-]+\.trycloudflare\.com)})
+  match[1] if match
+end
 
 
   # GET /company_settings or /company_settings.json
   def index
+    tunnel_host = fetch_cloudflare_tunnel_hostname
+
     # @company_settings = CompanySetting.first
      @account = ActsAsTenant.current_tenant
      @company_settings = @account.company_setting
@@ -47,7 +53,7 @@ end
 
 
       logo_url: @company_settings&.logo&.attached? ? 
-  URI.join("https://speeches-air-una-dolls.trycloudflare.com", Rails.application.routes.url_helpers.rails_blob_path(@company_settings.logo)).to_s : nil
+  URI.join("https://#{tunnel_host}", Rails.application.routes.url_helpers.rails_blob_path(@company_settings.logo)).to_s : nil
 
       # customer_support_phone_number: @company_settings&.customer_support_phone_number,
       # logo_url: @company_settings&.logo&.attached? ? url_for(@company_settings.logo) : nil,
@@ -65,11 +71,7 @@ end
 
   end
 
-  def fetch_cloudflare_tunnel_hostname
-    log_output = `journalctl -u cloudflared -n 100 --no-pager`
-    match = log_output.match(%r{https://([a-z0-9-]+\.trycloudflare\.com)})
-    match[1] if match
-  end
+  
 
 
 

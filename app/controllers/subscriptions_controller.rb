@@ -71,7 +71,34 @@ def last_seen
 end
 
 
+def block_service
+  begin
+    router_setting = ActsAsTenant.current_tenant&.router_setting&.router_name
+router = NasRouter.find_by(name: router_setting)
 
+return unless router
+  ip_address =  params[:subscription][:ip_address],
+  ppoe_username = params[:subscription][:ppoe_username],
+
+subscription = Subscription.find_by(ppoe_username: ppoe_username)
+router_ip = router.ip_address
+router_username = router.username
+router_password = router.password 
+    # SSH into MikroTik router
+    Net::SSH.start(router_ip, router_username , password: router_password) do |ssh|
+      # Add the user's IP address to the MikroTik Address List
+      ssh.exec!("ip firewall address-list add list=aitechs_blocked_list address=#{params[:subscription][:ip_address]} comment=#{params[:subscription][:ppoe_username]}")
+
+      puts "Blocked #{ppoe_username} (#{ip_address}) on MikroTik."
+render json: { message: "Blocked #{ppoe_username} (#{ip_address}) on MikroTik." }
+      # Update subscription status in DB
+      subscription.update!(status: 'blocked')
+    end
+  rescue => e
+    puts "Error blocking #{subscription.username}: #{e.message}"
+  end
+
+end
 
 
 
