@@ -41,7 +41,6 @@
     { name: "Basic",  maximum_pppoe_subscribers: 50 },
     { name: "Silver",  maximum_pppoe_subscribers: 500 }
 
-
   ]
 
 
@@ -80,18 +79,5 @@ puts "Plans have been loaded successfully! 🎯"
 
 
   
-  
-
-
-
-
-
-
-
-
-
-
-
-
 
 
