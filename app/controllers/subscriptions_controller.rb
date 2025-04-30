@@ -379,6 +379,8 @@ end
       if old_ip != @subscription.ip_address
         # Remove old bandwidth limit (if any) for the old IP
         remove_bandwidth_limit(old_ip)
+        render json: @subscription, status: :ok
+
         
         # Limit bandwidth for the new IP
         limit_bandwidth(@subscription.ip_address, @subscription.package, @subscription.ppoe_username)
