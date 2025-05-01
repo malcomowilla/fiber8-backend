@@ -24,10 +24,17 @@ Rails.application.config.action_mailer.smtp_settings = {
   domain: 'aitechs.co.ke',
   port: email_setting.smtp_port,
   authentication: :login,
-  ssl: true,
-  tls: true,
+  # ssl: true,
+  # tls: true,
   enable_starttls_auto: true
 }
+
+
+
+
+
+  # Rails.application.config.action_mailer.delivery_method = :mailtrapconfig.action_mailer.smtp_settings = {
+  
 
       
     elsif current_account.present?
