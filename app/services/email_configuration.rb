@@ -10,9 +10,19 @@ class EmailConfiguration
     elsif current_system_admin.present?
       Rails.logger.info "configuring system admin email settings."
 
-      Rails.application.config.action_mailer.delivery_method = :mailtrap
-      Rails.application.config.action_mailer.mailtrap_settings = {
-        api_key: "d848f326f33a7aa8db359e399fd7c510"
+      # Rails.application.config.action_mailer.delivery_method = :mailtrap
+      # Rails.application.config.action_mailer.mailtrap_settings = {
+      #   api_key: "d848f326f33a7aa8db359e399fd7c510"
+      # }
+      Rails.application.config.action_mailer.delivery_method = :smtp
+      Rails.application.config.action_mailer.smtp_settings = {
+        user_name: email_setting.smtp_username,
+        password: email_setting.smtp_password,
+        address: email_setting.smtp_host,
+        domain: email_setting.domain,
+        port: email_setting.smtp_port,
+        authentication: :plain,
+        enable_starttls_auto: true
       }
       
     elsif current_account.present?
@@ -46,9 +56,19 @@ class EmailConfiguration
       #   api_key: 'd848f326f33a7aa8db359e399fd7c510'
       # }
      
-      Rails.application.config.action_mailer.delivery_method = :mailtrap
-      Rails.application.config.action_mailer.mailtrap_settings = {
-        api_key: account.email_setting.api_key
+      # Rails.application.config.action_mailer.delivery_method = :mailtrap
+      # Rails.application.config.action_mailer.mailtrap_settings = {
+      #   api_key: account.email_setting.api_key
+      # }
+      #  Rails.application.config.action_mailer.delivery_method = :smtp
+      Rails.application.config.action_mailer.smtp_settings = {
+        user_name: email_setting.smtp_username,
+        password: email_setting.smtp_password,
+        address: email_setting.smtp_host,
+        domain: email_setting.domain,
+        port: email_setting.smtp_port,
+        authentication: :plain,
+        enable_starttls_auto: true
       }
     else 
 
@@ -58,7 +78,7 @@ class EmailConfiguration
         password: email_setting.smtp_password,
         address: email_setting.smtp_host,
         domain: email_setting.domain,
-        port: '587',
+        port: email_setting.smtp_port,
         authentication: :plain,
         enable_starttls_auto: true
       }
