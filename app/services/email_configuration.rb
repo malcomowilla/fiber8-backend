@@ -17,15 +17,18 @@ class EmailConfiguration
       # }
       
       Rails.application.config.action_mailer.delivery_method = :smtp
-      Rails.application.config.action_mailer.smtp_settings = {
-        user_name: email_setting.smtp_username,
-        password: email_setting.smtp_password,
-        address: email_setting.smtp_host,
-        domain: email_setting.domain,
-        port: email_setting.smtp_port,
-        authentication: :plain,
-        enable_starttls_auto: true
-      }
+Rails.application.config.action_mailer.smtp_settings = {
+  user_name: email_setting.smtp_username,
+  password: email_setting.smtp_password,
+  address: email_setting.smtp_host,
+  domain: email_setting.domain,
+  port: email_setting.smtp_port,
+  authentication: :login,
+  ssl: true,
+  tls: true,
+  enable_starttls_auto: true
+}
+
       
     elsif current_account.present?
       Rails.logger.info "configuring email settings for super admin."
@@ -69,9 +72,12 @@ class EmailConfiguration
         address: email_setting.smtp_host,
         domain: email_setting.domain,
         port: email_setting.smtp_port,
-        authentication: :plain,
+        authentication: :login,
+        ssl: true,
+        tls: true,
         enable_starttls_auto: true
       }
+      
     else 
 
       Rails.application.config.action_mailer.delivery_method = :smtp
@@ -81,9 +87,12 @@ class EmailConfiguration
         address: email_setting.smtp_host,
         domain: email_setting.domain,
         port: email_setting.smtp_port,
-        authentication: :plain,
+        authentication: :login,
+        ssl: true,
+        tls: true,
         enable_starttls_auto: true
       }
+      
       # Rails.logger.warn "No email settings found for account. Using fallback."
       # set_fallback_settings
     end
