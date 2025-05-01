@@ -97,9 +97,6 @@ Rails.application.config.action_mailer.smtp_settings = {
 
 
 
-      default._domainkey.aitechs.co.ke.
-      v=DKIM1; k=rsa; p=MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAsNrtDejgQNWLLp2i7z9wHk3XFI/fbC3PtiqwjZ+BYMsVnAj8MrZEYkvuXF6gpL79RMUzUt4zjV9dV352PVP1gBPaQKkJwKzQFgiIOlpIC6tn1z+VtvhLX8tBquIHQflpRQf5KDaJ8Ox+NNQqVMh7Ywb2J9vVJ268H7l9bCZ6HxEiPEuH5MdpP4DUTBd8ywQtxqtFq/riGCN3b05DG+Q0XisYYS6a1oO5Nk4fX1Qjp5Vn/f72NWmhOpG6X7y5lYmnxWqTvB4T13hz8YvmyvV5cFxCXGFRPm9TDvF/lizvSs0nEbcCyWlwbeeAGcmURsUF0QJhBG7IacJun4F6tj8/DwIDAQAB;
-
       
       Rails.application.config.action_mailer.delivery_method = :smtp
       Rails.application.config.action_mailer.smtp_settings = {
