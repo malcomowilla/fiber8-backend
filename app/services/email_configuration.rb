@@ -26,7 +26,9 @@ Rails.application.config.action_mailer.smtp_settings = {
   authentication: :login,
   # ssl: true,
   # tls: true,
-  enable_starttls_auto: true
+  # enable_starttls_auto: true,
+  ssl: true,                      # Enable SSL for port 465
+  tls: false 
 }
 
 
@@ -88,7 +90,9 @@ Rails.application.config.action_mailer.smtp_settings = {
         authentication: :login,
         # ssl: true,
         # tls: true,
-        enable_starttls_auto: true
+        # enable_starttls_auto: true
+         ssl: true,                      # Enable SSL for port 465
+  tls: false  
       }
       
     else 
@@ -107,9 +111,11 @@ Rails.application.config.action_mailer.smtp_settings = {
         domain: 'aitechs.co.ke',
 
         authentication: :login,
+        ssl: true,                      # Enable SSL for port 465
+  tls: false  
         # ssl: true,
         # tls: true,
-        enable_starttls_auto: true
+        # enable_starttls_auto: true
       }
       
       # Rails.logger.warn "No email settings found for account. Using fallback."
