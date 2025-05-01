@@ -9,7 +9,20 @@ Rails.application.configure do
   config.enable_reloading = true
   config.action_mailer.delivery_method = :letter_opener
   config.action_mailer.perform_deliveries = true
-  Rails.application.routes.default_url_options[:host] = 'speeches-air-una-dolls.trycloudflare.com'
+
+  def self.current_cloudflare_url
+    @current_cloudflare_url ||= begin
+     
+        # For development/staging - parse from cloudflared logs
+        logs = `journalctl -u cloudflared -n 50 --no-pager 2>/dev/null` rescue ''
+        match = logs.match(/https:\/\/([a-z0-9-]+\.trycloudflare\.com)/)
+        match ? match[1] : 'default.trycloudflare.com'
+      
+    end
+  end
+
+  Rails.application.routes.default_url_options[:host] = current_cloudflare_url
+
 
   # Rails.application.routes.default_url_options[:host] = 'solving-choice-dutch-utah.trycloudflare.com'
   # Rails.application.routes.default_url_options[:host] = 'localhost:5173'
@@ -62,7 +75,8 @@ config.action_mailer.smtp_settings = {
   # Don't care if the mailer can't send.
   config.action_mailer.raise_delivery_errors = false
   # config.hosts << "solving-choice-dutch-utah.trycloudflare.com" 
-config.hosts << "speeches-air-una-dolls.trycloudflare.com"
+     config.hosts << current_cloudflare_url
+
   config.action_mailer.perform_caching = false
 
   # Print deprecation notices to the Rails logger.

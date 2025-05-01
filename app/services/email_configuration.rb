@@ -21,6 +21,7 @@ Rails.application.config.action_mailer.smtp_settings = {
   user_name: email_setting.smtp_username,
   password: email_setting.smtp_password,
   address: email_setting.smtp_host,
+  domain: 'aitechs.co.ke',
   port: email_setting.smtp_port,
   authentication: :login,
   ssl: true,
@@ -69,6 +70,7 @@ Rails.application.config.action_mailer.smtp_settings = {
         user_name: email_setting.smtp_username,
         password: email_setting.smtp_password,
         address: email_setting.smtp_host,
+        domain: 'aitechs.co.ke',
 
         port: email_setting.smtp_port,
         authentication: :login,
@@ -85,6 +87,7 @@ Rails.application.config.action_mailer.smtp_settings = {
         password: email_setting.smtp_password,
         address: email_setting.smtp_host,
         port: email_setting.smtp_port,
+        domain: 'aitechs.co.ke',
 
         authentication: :login,
         ssl: true,
