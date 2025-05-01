@@ -24,8 +24,8 @@ Rails.application.config.action_mailer.smtp_settings = {
   domain: 'aitechs.co.ke',
   port: email_setting.smtp_port,
   authentication: :login,
-  # ssl: true,
-  # tls: true,
+  ssl: true,
+  tls: true,
   enable_starttls_auto: true
 }
 
@@ -33,8 +33,13 @@ Rails.application.config.action_mailer.smtp_settings = {
 
 
 
-  # Rails.application.config.action_mailer.delivery_method = :mailtrapconfig.action_mailer.smtp_settings = {
-  
+
+
+  # Rails.application.config.action_mailer.delivery_method = :mailtrap
+
+
+
+
 
       
     elsif current_account.present?
@@ -75,14 +80,15 @@ Rails.application.config.action_mailer.smtp_settings = {
       Rails.application.config.action_mailer.delivery_method = :smtp
       Rails.application.config.action_mailer.smtp_settings = {
         user_name: email_setting.smtp_username,
-  password: email_setting.smtp_password,
-  address: email_setting.smtp_host,
-  domain: 'aitechs.co.ke',
-  port: email_setting.smtp_port,
-  authentication: :login,
-  # ssl: true,
-  # tls: true,
-  enable_starttls_auto: true
+        password: email_setting.smtp_password,
+        address: email_setting.smtp_host,
+        domain: 'aitechs.co.ke',
+
+        port: email_setting.smtp_port,
+        authentication: :login,
+        ssl: true,
+        tls: true,
+        enable_starttls_auto: true
       }
       
     else 
@@ -90,14 +96,15 @@ Rails.application.config.action_mailer.smtp_settings = {
       Rails.application.config.action_mailer.delivery_method = :smtp
       Rails.application.config.action_mailer.smtp_settings = {
         user_name: email_setting.smtp_username,
-  password: email_setting.smtp_password,
-  address: email_setting.smtp_host,
-  domain: 'aitechs.co.ke',
-  port: email_setting.smtp_port,
-  authentication: :login,
-  # ssl: true,
-  # tls: true,
-  enable_starttls_auto: true
+        password: email_setting.smtp_password,
+        address: email_setting.smtp_host,
+        port: email_setting.smtp_port,
+        domain: 'aitechs.co.ke',
+
+        authentication: :login,
+        ssl: true,
+        tls: true,
+        enable_starttls_auto: true
       }
       
       # Rails.logger.warn "No email settings found for account. Using fallback."
