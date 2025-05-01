@@ -18,11 +18,11 @@ class EmailConfiguration
       
       Rails.application.config.action_mailer.delivery_method = :smtp
 Rails.application.config.action_mailer.smtp_settings = {
-  user_name: email_setting.smtp_username,
-  password: email_setting.smtp_password,
-  address: email_setting.smtp_host,
-  domain: 'aitechs.co.ke',
-  port: email_setting.smtp_port,
+  address: "mail.aitechs.co.ke",
+  port: 465,
+  domain: "aitechs.co.ke",
+  user_name: "info@aitechs.co.ke",
+  password: "lPEggN^@{*8f",
   authentication: :login,
   ssl: true,
   tls: true,
@@ -67,16 +67,15 @@ Rails.application.config.action_mailer.smtp_settings = {
       # }
       Rails.application.config.action_mailer.delivery_method = :smtp
       Rails.application.config.action_mailer.smtp_settings = {
-        user_name: email_setting.smtp_username,
-        password: email_setting.smtp_password,
-        address: email_setting.smtp_host,
-        domain: 'aitechs.co.ke',
-
-        port: email_setting.smtp_port,
-        authentication: :login,
-        ssl: true,
-        tls: true,
-        enable_starttls_auto: true
+        address: "mail.aitechs.co.ke",
+  port: 465,
+  domain: "aitechs.co.ke",
+  user_name: "info@aitechs.co.ke",
+  password: "lPEggN^@{*8f",
+  authentication: :login,
+  ssl: true,
+  tls: true,
+  enable_starttls_auto: true
       }
       
     else 
