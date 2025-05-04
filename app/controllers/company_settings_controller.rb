@@ -155,7 +155,7 @@ logo_url: @company_settings&.logo&.attached? ? rails_blob_url(@company_settings.
 
 
     match = log_output.match(%r{https://([a-z0-9-]+\.trycloudflare\.com)})
-    match[1] if match
+    match[1] 
     Rails.logger.info "Cloudflare tunnel hostname: #{match[1]}"
   end
   
