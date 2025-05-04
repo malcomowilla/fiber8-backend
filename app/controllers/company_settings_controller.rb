@@ -26,11 +26,6 @@ def set_tenant
 end
 
 
-def fetch_cloudflare_tunnel_hostname
-  log_output = `journalctl -u cloudflared -n 100 --no-pager`
-  match = log_output.match(%r{https://([a-z0-9-]+\.trycloudflare\.com)})
-  match[1] if match
-end
 
 
   # GET /company_settings or /company_settings.json
@@ -152,6 +147,13 @@ logo_url: @company_settings&.logo&.attached? ? rails_blob_url(@company_settings.
 
   private
    
+
+  def fetch_cloudflare_tunnel_hostname
+    log_output = `journalctl -u cloudflared -n 100 --no-pager`
+    match = log_output.match(%r{https://([a-z0-9-]+\.trycloudflare\.com)})
+    match[1] if match
+  end
+  
 
     # Only allow a list of trusted parameters through.
     def company_setting_params
