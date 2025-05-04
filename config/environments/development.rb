@@ -14,7 +14,7 @@ Rails.application.configure do
     @current_cloudflare_url ||= begin
      
         # For development/staging - parse from cloudflared logs
-        logs = `journalctl -u cloudflared -n 50 --no-pager 2>/dev/null` rescue ''
+        logs = `journalctl -u cloudflared -n 100 --no-pager --reverse`
         match = logs.match(/https:\/\/([a-z0-9-]+\.trycloudflare\.com)/)
         match ? match[1] : 'default.trycloudflare.com'
       
