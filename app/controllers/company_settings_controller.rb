@@ -149,18 +149,17 @@ logo_url: @company_settings&.logo&.attached? ? rails_blob_url(@company_settings.
    
 
   def fetch_cloudflare_tunnel_hostname
-    Rails.cache.fetch('cloudflare_tunnel_hostname', expires_in: 5.minutes) do
-      # Try direct command first
-      output = `cloudflared tunnel info 2>&1`
-      match = output.match(%r{https://([a-z0-9-]+\.trycloudflare\.com)})
-      Rails.logger.info "Cloudflare tunnel hostname: #{match[1]}"
-
-      unless match
-        # Fallback to recent logs
-        log_output = `journalctl -u cloudflared -n 50 --no-pager`
-        match = log_output.match(%r{https://([a-z0-9-]+\.trycloudflare\.com)})
-      end
-      
+    # Use cloudflared command directly instead of journalctl
+    output = `cloudflared tunnel info 2>&1`
+    match = output.match(%r{https://([a-z0-9-]+\.trycloudflare\.com)})
+    
+    if match
+      Rails.logger.info "Active Cloudflare tunnel hostname: #{match[1]}"
+      match[1]
+    else
+      # Fallback to checking running process
+      output = `ps aux | grep cloudflared | grep -v grep`
+      match = output.match(%r{--hostname ([a-z0-9-]+\.trycloudflare\.com)})
       match[1] if match
     end
   end
