@@ -149,12 +149,22 @@ logo_url: @company_settings&.logo&.attached? ? rails_blob_url(@company_settings.
    
 
   def fetch_cloudflare_tunnel_hostname
-    log_output = `journalctl -u cloudflared -n 100 --no-pager`
-    match = log_output.match(%r{https://([a-z0-9-]+\.trycloudflare\.com)})
-    match[1] if match
-    Rails.logger.info "Cloudflare tunnel hostname: #{match[1]}"
+    Rails.cache.fetch('cloudflare_tunnel_hostname', expires_in: 5.minutes) do
+      # Try direct command first
+      output = `cloudflared tunnel info 2>&1`
+      match = output.match(%r{https://([a-z0-9-]+\.trycloudflare\.com)})
+      Rails.logger.info "Cloudflare tunnel hostname: #{match[1]}"
+
+      unless match
+        # Fallback to recent logs
+        log_output = `journalctl -u cloudflared -n 50 --no-pager`
+        match = log_output.match(%r{https://([a-z0-9-]+\.trycloudflare\.com)})
+      end
+      
+      match[1] if match
+    end
   end
-  
+
 
     # Only allow a list of trusted parameters through.
     def company_setting_params
