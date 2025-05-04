@@ -93,13 +93,14 @@ end
   #     logo_url: @company_settings&.logo&.attached? ? 
   # "https://8209-102-221-35-92.ngrok-free.app/rails/active_storage/blobs/#{@company_settings.logo.key}" : nil
 
-      logo_url: @company_settings&.logo&.attached? ? 
-  URI.join("https://#{tunnel_host}", Rails.application.routes.url_helpers.rails_blob_path(@company_settings.logo)).to_s : nil
+  #     logo_url: @company_settings&.logo&.attached? ? 
+  # URI.join("https://#{tunnel_host}", Rails.application.routes.url_helpers.rails_blob_path(@company_settings.logo)).to_s : nil
 
       # logo_url: @company_settings&.logo&.attached? ? "#{Rails.application.routes.default_url_options[:host]}/rails/active_storage/blobs/#{@company_settings.logo.key}" : nil
 
-      # logo_url: @company_settings&.logo&.attached? ? rails_blob_url(@company_settings.logo, host: '8209-102-221-35-92.ngrok-free.app', protocol: 'https', port: nil,
-      # ) : nil
+      logo_url: @company_settings&.logo&.attached? ? rails_blob_url(@company_settings.logo,
+       host: tunnel_host, protocol: 'https', port: nil,
+      ) : nil
       # logo_url: @company_settings&.logo&.attached? ? rails_blob_url(@company_settings.logo, host: '38d6-102-221-35-116.ngrok-free.app', protocol: 'https') : nil
       # logo_url: @company_settings&.logo&.attached? ? 
       # rails_blob_url(@company_settings.logo, host: '38d6-102-221-35-116.ngrok-free.app', protocol: 'https', port: nil) 
