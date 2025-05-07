@@ -29,8 +29,11 @@
   #   { name: "Basic", features: ["24/7 Support", "Unlimited Devices", "Custom Features"], maximum_pppoe_subscribers: 50 }
 
   # ]
-  # 
-  #
+  
+  
+
+
+  
   
   plans = [
     { name: "Pro", maximum_pppoe_subscribers: 100 },
@@ -42,6 +45,7 @@
     { name: "Silver",  maximum_pppoe_subscribers: 500 }
 
   ]
+
 
 
 
