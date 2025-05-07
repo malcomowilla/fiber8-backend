@@ -405,7 +405,19 @@ end
     hotspot_plan = HotspotPlan.find_by(name: params[:hotspot_plan]) if params[:hotspot_plan].present?
 
     if plan.present?
-      ActsAsTenant.current_tenant.update!(pp_poe_plan_id: plan.id)
+
+
+  validity = 30
+
+  validity_period_units = 'days'
+  # Calculate expiration time
+  expiration_time = case validity_period_units.downcase
+                    when 'days'
+                      Time.current + validity.days
+                    else
+                      nil
+                    end
+      ActsAsTenant.current_tenant.pp_poe_plan.update!(pp_poe_plan_id: plan.id, expiry: expiration_time)
       return render json:{message: 'Plan updated successfully'}, status: :ok
     else
       puts "ppoe plan not found! Make sure it exists in the database."
@@ -414,7 +426,7 @@ end
 
 
     if hotspot_plan.present?
-      ActsAsTenant.current_tenant.update!(hotspot_plan_id: hotspot_plan.id)
+      ActsAsTenant.current_tenant.hotspot_plan.update!(hotspot_plan_id: hotspot_plan.id, expiry: expiration_time)
       return render json:{message: 'Hotspot plan updated successfully'}, status: :ok
       
     else

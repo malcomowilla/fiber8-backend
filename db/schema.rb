@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2025_04_28_175135) do
+ActiveRecord::Schema[7.2].define(version: 2025_05_04_182958) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -19,8 +19,6 @@ ActiveRecord::Schema[7.2].define(version: 2025_04_28_175135) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.string "domain"
-    t.integer "pp_poe_plan_id"
-    t.integer "hotspot_plan_id"
     t.index ["subdomain"], name: "index_accounts_on_subdomain", unique: true
   end
 
@@ -163,6 +161,9 @@ ActiveRecord::Schema[7.2].define(version: 2025_04_28_175135) do
     t.string "hotspot_subscribers"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.integer "account_id"
+    t.datetime "expiry_days"
+    t.string "billing_cycle"
   end
 
   create_table "hotspot_settings", force: :cascade do |t|
@@ -335,6 +336,10 @@ ActiveRecord::Schema[7.2].define(version: 2025_04_28_175135) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.string "name"
+    t.datetime "expiry"
+    t.integer "account_id"
+    t.datetime "expiry_days"
+    t.string "billing_cycle"
   end
 
   create_table "prefix_and_digits", force: :cascade do |t|

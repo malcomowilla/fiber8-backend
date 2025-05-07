@@ -5,8 +5,8 @@ Rails.application.routes.draw do
   resources :user_groups
   resources :dial_up_mpesa_settings
   resources :hotspot_mpesa_settings
-  resources :hotspot_plans
-  resources :pp_poe_plans
+  # resources :hotspot_plans
+  # resources :pp_poe_plans
   resources :isp_subscriptions
   resources :hotspot_settings
   resources :sms_templates
@@ -33,9 +33,14 @@ Rails.application.routes.draw do
   resources :router_settings
   resources :hotspot_packages
   resource :ticket_settings
+  # resources :pppoe_plans
+  # resources :hotspot_plans
 
 
-
+  # namespace :api do
+  #   resources :pppoe_plans, only: [:index, :create, :update]
+  #   resources :hotspot_plans, only: [:index, :create, :update]
+  # end
   # allow_get_admin_settings
  
 mount ActionCable.server => '/cable'
@@ -59,9 +64,11 @@ scope '/api' do
   resources :hotspot_vouchers
   resources :hotspot_settings
   resources :hotspot_subscriptions
-  resources :pp_poe_plans
-  resources :hotspot_plans
+  # resources :pp_poe_plans
+  # resources :hotspot_plans
   resources :system_admin_sms
+  # resources :pppoe_plans
+  # resources :hotspot_plans
 
 
 
@@ -70,6 +77,22 @@ end
 
 
 get '/get_ips', to: 'subscriptions#get_ips'
+patch '/api/pppoe_plans', to: 'pppoe_plans#update'
+get '/api/pppoe_plans', to: 'pppoe_plans#index'
+get '/pppoe_plans', to: 'pppoe_plans#index'
+
+get '/api/hotspot_plans', to: 'hotspot_plans#index'
+get '/hotspot_plans', to: 'hotspot_plans#index'
+
+
+patch '/pppoe_plans', to: 'pppoe_plans#update'
+post '/api/pppoe_plans/', to: 'pppoe_plans#create'
+post '/api/hotspot_plans/', to: 'hotspot_plans#create'
+post '/hotspot_plans/', to: 'hotspot_plans#create'
+
+post '/pppoe_plans/', to: 'pppoe_plans#create'
+
+
 get '/api/get_ips', to: 'subscriptions#get_ips'
 get '/api/last_seen', to: 'subscriptions#last_seen'
 get '/last_seen', to: 'subscriptions#last_seen'

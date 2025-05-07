@@ -1,5 +1,6 @@
 class HotspotPlan < ApplicationRecord
+  acts_as_tenant(:account)
 
-  has_many :accounts
+  # has_many :accounts
 
 end

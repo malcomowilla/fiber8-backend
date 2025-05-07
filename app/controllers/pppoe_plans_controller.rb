@@ -1,20 +1,18 @@
-
 # app/controllers/api/pppoe_plans_controller.rb
-class HotspotPlansController < ApplicationController
+class PppoePlansController < ApplicationController
   # before_action :set_plan, only: [:update]
 
 set_current_tenant_through_filter
 
 before_action :set_tenant
 
-
   def index
-    @plans = HotspotPlan.all
-    render json: { hotspot_plans: @plans }
+    @plans = PpPoePlan.all
+    render json: { pppoe_plans: @plans }
   end
 
   def create
-    @plan = HotspotPlan.new(plan_params)
+    @plan = PpPoePlan.new(plan_params)
     if @plan.save
       render json: @plan, status: :created
     else
@@ -22,14 +20,6 @@ before_action :set_tenant
     end
   end
 
-  def update
-    @plan = HotspotPlan.new(plan_params)
-    if @plan.update(plan_params)
-      render json: @plan
-    else
-      render json: { errors: @plan.errors }, status: :unprocessable_entity
-    end
-  end
 
   def set_tenant
     host = request.headers['X-Subdomain']
@@ -46,10 +36,20 @@ before_action :set_tenant
     
   end
 
+  def update
+    @plan = PpPoePlan.new(plan_params)
+
+    if @plan.update(plan_params)
+      render json: @plan
+    else
+      render json: { errors: @plan.errors }, status: :unprocessable_entity
+    end
+  end
+
   private
 
   def set_plan
-    @plan = HotspotPlan.find_by(name: params[:name])
+    @plan = PpPoePlan.find_by(name: params[:name])
   end
 
   def plan_params
