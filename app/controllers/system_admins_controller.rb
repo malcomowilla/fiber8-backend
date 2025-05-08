@@ -401,39 +401,7 @@ end
     )
   
 
-    plan = PpPoePlan.find_by(name: params[:plan]) if params[:plan].present?
-    hotspot_plan = HotspotPlan.find_by(name: params[:hotspot_plan]) if params[:hotspot_plan].present?
 
-    if plan.present?
-
-
-  validity = 30
-
-  validity_period_units = 'days'
-  # Calculate expiration time
-  expiration_time = case validity_period_units.downcase
-                    when 'days'
-                      Time.current + validity.days
-                    else
-                      nil
-                    end
-      ActsAsTenant.current_tenant.pp_poe_plan.update!(pp_poe_plan_id: plan.id, expiry: expiration_time)
-      return render json:{message: 'Plan updated successfully'}, status: :ok
-    else
-      puts "ppoe plan not found! Make sure it exists in the database."
-      return render json: { error: "plan not found!" }, status: :unprocessable_entity
-    end
-
-
-    if hotspot_plan.present?
-      ActsAsTenant.current_tenant.hotspot_plan.update!(hotspot_plan_id: hotspot_plan.id, expiry: expiration_time)
-      return render json:{message: 'Hotspot plan updated successfully'}, status: :ok
-      
-    else
-      puts "hotspot plan not found! Make sure it exists in the database."
-      return render json: { error: "hotspot plan not found!" }, status: :unprocessable_entity
-      
-    end
 
 
     @my_admin.password = generate_secure_password(16)
@@ -477,28 +445,9 @@ end
       phone_number: params[:phone_number],
       password: params[:password]
     )
-  
-    plan = PpPoePlan.find_by(name: params[:plan]) if params[:plan].present?
-    hotspot_plan = HotspotPlan.find_by(name: params[:hotspot_plan]) if params[:hotspot_plan].present?
-  
-    if params[:plan].present? && plan.nil?
-      return render json: { error: "PPPoE plan not found!" }, status: :unprocessable_entity
-    end
-  
-    if params[:hotspot_plan].present? && hotspot_plan.nil?
-      return render json: { error: "Hotspot plan not found!" }, status: :unprocessable_entity
-    end
-  
-    begin
-      ActsAsTenant.current_tenant.update!(
-        pp_poe_plan_id: plan&.id || ActsAsTenant.current_tenant.pp_poe_plan_id,
-        hotspot_plan_id: hotspot_plan&.id || ActsAsTenant.current_tenant.hotspot_plan_id
-      )
-    rescue ActiveRecord::RecordInvalid => e
-      return render json: { error: e.message }, status: :unprocessable_entity
-    end
-  
-    render json: { message: "Plans updated successfully" }, status: :ok
+
+render json: @admin, status: :ok
+
   end
   
 
