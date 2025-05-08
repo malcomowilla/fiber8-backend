@@ -10,11 +10,16 @@ before_action :set_tenant
 
   def index
     @plans = HotspotPlan.all
-    render json: { hotspot_plans: @plans }
+    render json:  @plans, each_serializer: HotspotPlanSerializer
   end
 
   def create
-    @plan = HotspotPlan.new(plan_params)
+    @plan = HotspotPlan.create(
+      name: params[:plan][:name],
+      hotspot_subscribers: params[:plan][:hotspot_subscribers],
+      expiry_days: params[:plan][:expiry_days],
+      billing_cycle: params[:plan][:billing_cycle]
+    )
     if @plan.save
       render json: @plan, status: :created
     else
@@ -53,6 +58,6 @@ before_action :set_tenant
   end
 
   def plan_params
-    params.permit(:name, :maximum_pppoe_subscribers, :expiry_days, :billing_cycle)
+    params.permit(:name, :hotspot_subscribers, :expiry_days, :billing_cycle)
   end
 end
