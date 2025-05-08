@@ -8,7 +8,7 @@ before_action :set_tenant
 
   def index
     @plans = PpPoePlan.all
-    render json: { pppoe_plans: @plans }
+    render json: @plans , each_serializer: PpPoePlanSerializer
   end
 
   def create
