@@ -17,6 +17,9 @@ class Account < ApplicationRecord
     has_one :sms_template, dependent: :destroy
     has_one :hotspot_setting, dependent: :destroy
     has_many :ip_pools, dependent: :destroy
+    has_one :pp_poe_plan, dependent: :destroy
+    has_one :license_setting, dependent: :destroy
+    has_one :hotspot_plan, dependent: :destroy
     # belongs_to :pp_poe_plan
     # belongs_to :hotspot_plan
     has_many :user_groups, dependent: :destroy
