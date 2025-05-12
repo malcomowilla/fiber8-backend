@@ -28,6 +28,14 @@ Sidekiq.configure_server do |config|
       #   'class' => 'RouterPingJob',
       #   'cron' => '* * * * *' # Run every minute
       # },
+      # 
+      
+'subscription_expired_job' => {
+  'class' => 'SubscriptionExpiredJob',
+  'cron' => '*/4 * * * *' # Run every 4 minutes
+},
+
+
       'router_ping_job' => {
   'class' => 'RouterPingJob',
   'cron' => '*/4 * * * *' # Run every 4 minutes
@@ -45,10 +53,6 @@ Sidekiq.configure_server do |config|
 },
 
 
-'subscription_expired_job' => {
-  'class' => 'SubscriptionExpiredJob',
-  'cron' => '*/4 * * * *' # Run every 4 minutes
-},
 
       # 'radact_job' => {
       #   'class' => 'RadactJob',
