@@ -27,10 +27,10 @@ Sidekiq.configure_server do |config|
 
 
 
-  'hotspot_expiration_job' => {
-    'class' => 'HotspotExpirationJob',
-    'cron' => '* * * * *'
-  },
+  # 'hotspot_expiration_job' => {
+  #   'class' => 'HotspotExpirationJob',
+  #   'cron' => '* * * * *'
+  # },
 
 
   'router_ping_job' => {
