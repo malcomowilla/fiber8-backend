@@ -26,11 +26,11 @@ Sidekiq.configure_server do |config|
     schedule = {
      
 'subscription_expired_job' => {
-  'class' => 'SubscriptionExpiredJob',
-  'cron' => '* * * * *',
-  'queue' => 'default'
-  
-},
+        'class' => 'SubscriptionExpiredJob',
+        'cron' => '* * * * *', # Every minute
+        'queue' => 'default',
+        'description' => 'Block expired PPPoE subscriptions'
+      },
 
 
       'router_ping_job' => {
@@ -77,5 +77,7 @@ Sidekiq.configure_server do |config|
 
     Sidekiq.schedule = schedule
     Sidekiq::Scheduler.reload_schedule!
+    Rails.logger.info("Sidekiq schedule loaded: #{Sidekiq.schedule.inspect}")
+
   end
 end
