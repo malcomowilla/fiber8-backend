@@ -91,8 +91,9 @@
 
 # app/jobs/subscription_expired_job.rb
 class SubscriptionExpiredJob
-  include Sidekiq::Worker
-  sidekiq_options queue: 'default'
+  include Sidekiq::Job
+  queue_as :default
+
 
   def perform
     Account.find_each do |tenant|
