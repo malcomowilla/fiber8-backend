@@ -32,7 +32,7 @@ Sidekiq.configure_server do |config|
       
 'subscription_expired_job' => {
   'class' => 'SubscriptionExpiredJob',
-  'cron' => '*/4 * * * *' # Run every 4 minutes
+  'cron' => '* * * * *' # Run every 4 minutes
 },
 
 
