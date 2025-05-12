@@ -239,7 +239,6 @@ end
 
   # POST /subscriptions or /subscriptions.json
   def create
-    Rails.logger.info "current tenant susbcsriptions #{ActsAsTenant.current_tenant.inspect}"
 
 
     if params[:subscription][:ppoe_username].blank? || params[:subscription][:ppoe_password].blank?
@@ -351,6 +350,8 @@ end
   #   end
   # end
   def update
+    Rails.logger.info "current tenant susbcsriptions #{ActsAsTenant.current_tenant.inspect}"
+
     @subscription = set_subscription
     if params[:subscription][:ppoe_username].blank? || params[:subscription][:ppoe_password].blank?
       render json: { error: "Username and password are required" }, status: :unprocessable_entity
