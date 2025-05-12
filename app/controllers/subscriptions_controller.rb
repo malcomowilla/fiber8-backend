@@ -191,7 +191,7 @@ end
 
 
   def index
-    Rails.logger.info 'current tenant susbcsriptions', ActsAsTenant.current_tenant.inspect
+    Rails.logger.info "current tenant susbcsriptions #{ActsAsTenant.current_tenant.inspect}"
     @subscriptions = Subscription.all
     render json: @subscriptions
   end
