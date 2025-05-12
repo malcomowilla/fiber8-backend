@@ -28,10 +28,10 @@ Sidekiq.configure_server do |config|
       #   'class' => 'RouterPingJob',
       #   'cron' => '* * * * *' # Run every minute
       # },
-      'router_ping_job' => {
-  'class' => 'RouterPingJob',
-  'cron' => '*/4 * * * *' # Run every 4 minutes
-},
+#       'router_ping_job' => {
+#   'class' => 'RouterPingJob',
+#   'cron' => '*/4 * * * *' # Run every 4 minutes
+# },
 
       # 'radact_job' => {
       #   'class' => 'RadactJob',
