@@ -24,12 +24,7 @@ Sidekiq.configure_server do |config|
 
   config.on(:startup) do
     schedule = {
-      # 'router_ping_job' => {
-      #   'class' => 'RouterPingJob',
-      #   'cron' => '* * * * *' # Run every minute
-      # },
-      # 
-      
+     
 'subscription_expired_job' => {
   'class' => 'SubscriptionExpiredJob',
   'cron' => '* * * * *' # Run every 4 minutes
@@ -52,7 +47,12 @@ Sidekiq.configure_server do |config|
   'cron' => '*/4 * * * *'
 },
 
-
+ # 'router_ping_job' => {
+      #   'class' => 'RouterPingJob',
+      #   'cron' => '* * * * *' # Run every minute
+      # },
+      # 
+      
 
       # 'radact_job' => {
       #   'class' => 'RadactJob',
