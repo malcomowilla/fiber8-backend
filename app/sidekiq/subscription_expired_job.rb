@@ -28,12 +28,13 @@ class SubscriptionExpiredJob
               ssh.exec!("ip firewall address-list add list=aitechs_blocked_list address=#{subscription.ip_address} comment=#{subscription.ppoe_username}")
         
               puts "Blocked #{subscription.ppoe_username} (#{subscription.ip_address}) on MikroTik."
-        
+        Rails.logger.info("Blocked #{subscription.ppoe_username} (#{subscription.ip_address}) on MikroTik.")
               # Update subscription status in DB
               subscription.update!(status: 'blocked')
             end
           rescue => e
             puts "Error blocking #{subscription.username}: #{e.message}"
+            Rails.logger.error("Error blocking #{subscription.username}: #{e.message}")
           end
         end
 
