@@ -22,11 +22,7 @@ production:
 
 
 
-# :schedule:
-#   router_ping_job:
-#     every: ["4m", first_in: "4m"]  # Wait 4 minutes before first run, then every 4 minutes
-#     class: "RouterPingJob"
-#     queue: default
+
 
 
 
