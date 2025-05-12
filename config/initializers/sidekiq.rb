@@ -33,6 +33,17 @@ Sidekiq.configure_server do |config|
   'cron' => '*/4 * * * *' # Run every 4 minutes
 },
 
+'system_metrics_job' => {
+  'class' => 'SystemMetricsJob',
+  'cron' => '* * * * *' # Run every minute
+},
+
+ 
+'hotspot_expiration_job' => {
+  'class' => 'HotspotExpirationJob',
+  'cron' => '*/4 * * * *'
+},
+
 
 'subscription_expired_job' => {
   'class' => 'SubscriptionExpiredJob',
@@ -45,10 +56,7 @@ Sidekiq.configure_server do |config|
 
       # },
 
-      'system_metrics_job' => {
-        'class' => 'SystemMetricsJob',
-        'cron' => '* * * * *' # Run every minute
-      },
+   
 
 
 
@@ -57,11 +65,7 @@ Sidekiq.configure_server do |config|
       #   'class' => 'HotspotExpirationJob',
       #   'cron' => '* * * * *' # Run every minute
       # },
-      
-      'hotspot_expiration_job' => {
-  'class' => 'HotspotExpirationJob',
-  'cron' => '*/4 * * * *'
-}
+     
       
     }
 
