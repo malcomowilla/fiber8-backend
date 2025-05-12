@@ -98,12 +98,12 @@ get '/api/hotspot_plans', to: 'hotspot_plans#index'
 get '/hotspot_plans', to: 'hotspot_plans#index'
 
 
-patch '/pppoe_plans', to: 'pppoe_plans#update'
-post '/api/pppoe_plans/', to: 'pppoe_plans#create'
+patch '/pppoe_plans', to: 'pp_poe_plans#update'
+post '/api/pppoe_plans/', to: 'pp_poe_plans#create'
 post '/api/hotspot_plans/', to: 'hotspot_plans#create'
 post '/hotspot_plans/', to: 'hotspot_plans#create'
 
-post '/pppoe_plans/', to: 'pppoe_plans#create'
+post '/pppoe_plans', to: 'pp_poe_plans#create'
 
 
 get '/api/get_ips', to: 'subscriptions#get_ips'
