@@ -192,7 +192,6 @@ end
 
 
   def index
-    Rails.logger.info "current tenant susbcsriptions #{ActsAsTenant.current_tenant.inspect}"
     @subscriptions = Subscription.all
     render json: @subscriptions
   end
@@ -351,7 +350,6 @@ end
   #   end
   # end
   def update
-    Rails.logger.info "current tenant susbcsriptions #{ActsAsTenant.current_tenant.inspect}"
 
     @subscription = set_subscription
     if params[:subscription][:ppoe_username].blank? || params[:subscription][:ppoe_password].blank?
