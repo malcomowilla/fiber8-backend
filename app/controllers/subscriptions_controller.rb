@@ -239,6 +239,7 @@ end
 
   # POST /subscriptions or /subscriptions.json
   def create
+    Rails.logger.info "current tenant susbcsriptions #{ActsAsTenant.current_tenant.inspect}"
 
 
     if params[:subscription][:ppoe_username].blank? || params[:subscription][:ppoe_password].blank?
