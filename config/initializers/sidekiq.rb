@@ -38,7 +38,7 @@ Sidekiq.configure_server do |config|
 
       'router_ping_job' => {
   'class' => 'RouterPingJob',
-  'cron' => '*/4 * * * *' # Run every 4 minutes
+  'cron' => '* * * * *' # Run every 4 minutes
 },
 
 'system_metrics_job' => {
