@@ -1,5 +1,4 @@
 
-
 class SubscriptionExpiredJob
   include Sidekiq::Job
   queue_as :default
