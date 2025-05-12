@@ -1,0 +1,16 @@
+<p style="color: green"><%= notice %></p>
+
+<% content_for :title, "License settings" %>
+
+<h1>License settings</h1>
+
+<div id="license_settings">
+  <% @license_settings.each do |license_setting| %>
+    <%= render license_setting %>
+    <p>
+      <%= link_to "Show this license setting", license_setting %>
+    </p>
+  <% end %>
+</div>
+
+<%= link_to "New license setting", new_license_setting_path %>

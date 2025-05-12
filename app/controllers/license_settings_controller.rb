@@ -1,0 +1,92 @@
+class LicenseSettingsController < ApplicationController
+  
+  set_current_tenant_through_filter
+
+  before_action :set_tenant
+
+  def index
+    @license_settings = LicenseSetting.all
+
+    render json: @license_settings, each_serializer: LicenseSettingSerializer
+  end
+
+  # GET /license_settings/1 or /license_settings/1.json
+
+
+  # GET /license_settings/new
+  def set_tenant
+    host = request.headers['X-Subdomain']
+    @account = Account.find_by(subdomain: host)
+    Rails.logger.info "host #{host}"
+    @current_account = host
+    # @current_account= ActsAsTenant.current_tenant 
+    #  ActsAsTenant.current_tenant = @current_account
+    set_current_tenant(@account)
+    EmailConfiguration.configure(@current_account, ENV['SYSTEM_ADMIN_EMAIL'])
+    # EmailSystemAdmin.configure(@current_account, current_system_admin)
+  
+    Rails.logger.info "set_current_tenant #{ActsAsTenant.current_tenant.inspect}"
+    # set_current_tenant(@account)
+  rescue ActiveRecord::RecordNotFound
+    render json: { error: 'Invalid tenant' }, status: :not_found
+  
+    
+  end
+
+
+
+  # POST /license_settings or /license_settings.json
+  def create
+    @license_setting = LicenseSetting.first_or_initialize(
+
+    expiry_warning_days: params[:expiry_warning_days],
+     phone_notification: params[:phone_notification],
+     phone_number: params[:phone_number]
+    )
+    @license_setting.update(
+
+    expiry_warning_days: params[:expiry_warning_days],
+    phone_notification: params[:phone_notification],
+    phone_number: params[:phone_number]
+    )
+
+      if @license_setting.save
+         render json: @license_setting, status: :created
+      else
+         render json: @license_setting.errors, status: :unprocessable_entity 
+      end
+    end
+  
+
+  # PATCH/PUT /license_settings/1 or /license_settings/1.json
+  def update
+      if @license_setting.update(license_setting_params)
+        render json: @license_setting
+      else
+        format.html { render :edit, status: :unprocessable_entity }
+        format.json { render json: @license_setting.errors, status: :unprocessable_entity }
+      end
+    end
+  
+
+  # DELETE /license_settings/1 or /license_settings/1.json
+  def destroy
+    @license_setting.destroy!
+
+    respond_to do |format|
+      format.html { redirect_to license_settings_path, status: :see_other, notice: "License setting was successfully destroyed." }
+      format.json { head :no_content }
+    end
+  end
+
+  private
+    # Use callbacks to share common setup or constraints between actions.
+    def set_license_setting
+      @license_setting = LicenseSetting.find(params[:id])
+    end
+
+    # Only allow a list of trusted parameters through.
+    def license_setting_params
+      params.require(:license_setting).permit(:expiry_warning_days, :phone_number, :phone_notification)
+    end
+end

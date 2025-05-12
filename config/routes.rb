@@ -1,4 +1,5 @@
 Rails.application.routes.draw do
+  resources :license_settings
   resources :ip_networks
   resources :nodes
   resources :sms_provider_settings
@@ -45,6 +46,8 @@ Rails.application.routes.draw do
  
 mount ActionCable.server => '/cable'
 scope '/api' do
+  resources :license_settings
+
   resources :ip_pools
   resources :user_groups
   resources :ip_networks
@@ -77,9 +80,19 @@ end
 
 
 get '/get_ips', to: 'subscriptions#get_ips'
-patch '/api/pppoe_plans', to: 'pppoe_plans#update'
-get '/api/pppoe_plans', to: 'pppoe_plans#index'
-get '/pppoe_plans', to: 'pppoe_plans#index'
+patch '/api/pppoe_plans', to: 'pp_poe_plans#update'
+get '/api/pppoe_plans', to: 'pp_poe_plans#index'
+get '/pppoe_plans', to: 'pp_poe_plans#index'
+get '/get_current_pppoe_plan', to: 'pp_poe_plans#get_current_plan'
+get '/api/get_current_pppoe_plan', to: 'pp_poe_plans#get_current_plan'
+get '/api/allow_get_current_pppoe_plan', to: 'pp_poe_plans#allow_get_current_plan'
+get '/allow_get_current_pppoe_plan', to: 'pp_poe_plans#allow_get_current_plan'
+
+get '/get_current_hotspot_plan', to: 'hotspot_plans#get_current_hotspot_plan'
+get '/api/get_current_hotspot_plan', to: 'hotspot_plans#get_current_hotspot_plan'
+get '/api/allow_get_current_hotspot_plan', to: 'hotspot_plans#allow_get_current_hotspot_plan'
+get '/allow_get_current_hotspot_plan', to: 'hotspot_plans#allow_get_current_hotspot_plan'
+
 
 get '/api/hotspot_plans', to: 'hotspot_plans#index'
 get '/hotspot_plans', to: 'hotspot_plans#index'
@@ -107,9 +120,12 @@ get '/api/wireguard/generate_config', to: 'wireguard#generate_config'
 post '/api/wireguard/generate_config', to: 'wireguard#generate_config'
 post '/wireguard/generate_config', to: 'wireguard#generate_config'
 
+
+
 get '/wireguard/generate_config', to: 'wireguard#generate_config'
   get '/api/service_status', to: 'system_metrics#check_services'
   get '/service_status', to: 'system_metrics#check_services'
+  
   post '/restart_service', to: 'system_metrics#restart_service'
   post '/api/restart_service', to: 'system_metrics#restart_service'
 

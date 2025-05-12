@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2025_05_04_182958) do
+ActiveRecord::Schema[7.2].define(version: 2025_05_10_160206) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -164,6 +164,8 @@ ActiveRecord::Schema[7.2].define(version: 2025_05_04_182958) do
     t.integer "account_id"
     t.datetime "expiry_days"
     t.string "billing_cycle"
+    t.string "status"
+    t.boolean "condition"
   end
 
   create_table "hotspot_settings", force: :cascade do |t|
@@ -260,6 +262,15 @@ ActiveRecord::Schema[7.2].define(version: 2025_05_04_182958) do
     t.datetime "updated_at", null: false
   end
 
+  create_table "license_settings", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.string "phone_number"
+    t.integer "account_id"
+    t.boolean "phone_notification"
+    t.integer "expiry_warning_days"
+  end
+
   create_table "nas", force: :cascade do |t|
     t.string "name"
     t.string "shortname"
@@ -340,6 +351,8 @@ ActiveRecord::Schema[7.2].define(version: 2025_05_04_182958) do
     t.integer "account_id"
     t.datetime "expiry_days"
     t.string "billing_cycle"
+    t.string "status"
+    t.boolean "condition"
   end
 
   create_table "prefix_and_digits", force: :cascade do |t|

@@ -4,9 +4,9 @@ class SystemAdminsController < ApplicationController
   
 # before_action :set_system_admin_email_settings
 
-set_current_tenant_through_filter
+# set_current_tenant_through_filter
 
-before_action :set_tenant
+# before_action :set_tenant
 
   # before_action :set_system_admin_email_settings
   def index
@@ -401,11 +401,18 @@ end
     )
   
 
+   account_id = Account.find_by(subdomain: params[:company_name])
 
 
 
-    @my_admin.password = generate_secure_password(16)
-    @my_admin.password_confirmation = generate_secure_password(16)
+    # @my_admin.password = generate_secure_password(16)
+    # @my_admin.password_confirmation = generate_secure_password(16)
+
+    @my_admin.update!(account_id: account_id.id)
+@my_admin.update!(password: params[:password],  password_confirmation: params[:password])
+
+
+
     @my_admin.role = 'super_administrator'
     #  @my_admin.account = ActsAsTenant.current_tenant
     @my_admin.date_registered = Time.now.strftime('%Y-%m-%d %I:%M:%S %p'),
@@ -417,7 +424,7 @@ end
        
         #   ).deliver_now
 
-        AdminOnboardingMailer.admin_onboarding(@my_admin).deliver_now
+        # AdminOnboardingMailer.admin_onboarding(@my_admin).deliver_now
         # BlockedUserMailer.notify_block(@my_admin).deliver_now
         # send_password(@my_admin.phone_number, @my_admin.password, @my_admin.email)
         render json: @my_admin, status: :created
@@ -443,10 +450,12 @@ end
       username: params[:username],
       email: params[:email],
       phone_number: params[:phone_number],
-      password: params[:password]
+      password: params[:password],
+      password_confirmation: params[:password]
+      
     )
 
-render json: @admin, status: :ok
+render json: admin, status: :ok
 
   end
   

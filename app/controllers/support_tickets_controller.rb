@@ -150,12 +150,12 @@ end
 
 
   def update
-    @support_ticket = SupportTicket.find(params[:id])
-      if @support_ticket.update(support_ticket_params)
-        @support_ticket.update(date_closed: Time.now.strftime('%Y-%m-%d %I:%M:%S %p'))
-         render json: @support_ticket, status: :ok
+    support_ticket = SupportTicket.find_by(id: params[:id])
+      if support_ticket.update(support_ticket_params)
+        support_ticket.update(date_closed: Time.now.strftime('%Y-%m-%d %I:%M:%S %p'))
+         render json: support_ticket, status: :ok
       else
-         render json: @support_ticket.errors, status: :unprocessable_entity 
+         render json: support_ticket.errors, status: :unprocessable_entity 
       end
     
   end
