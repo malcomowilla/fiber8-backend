@@ -5,7 +5,7 @@ class HotspotPlansController < ApplicationController
 
 set_current_tenant_through_filter
 
-before_action :set_tenant, only: [:get_current_hotspot_plan]
+before_action :set_tenant, only: [:get_current_hotspot_plan, :index, :create]
 load_and_authorize_resource except: [:allow_get_current_hotspot_plan, :index, :create]
 
 
@@ -38,7 +38,7 @@ load_and_authorize_resource except: [:allow_get_current_hotspot_plan, :index, :c
     )
 
 
-   account_id = Account.find_by(subdomain: params[:company_name])
+   account_id = Account.find_by(subdomain: params[:plan][:company_name])
 
 
 
@@ -61,7 +61,7 @@ load_and_authorize_resource except: [:allow_get_current_hotspot_plan, :index, :c
                      end
 
                      expiry_time_update = expiration_time.strftime("%B %d, %Y at %I:%M %p")
-   @plan.update!(account_id: account_id.id, expiry:  expiry_time_update)
+   @plan.update!(account_id: account_id&.id, expiry:  expiry_time_update)
 
     @plan.update(
       name: params[:plan][:name],
