@@ -90,7 +90,7 @@
 
 
 # app/jobs/subscription_expired_job.rb
-class SubscriptionExpiredJob
+class SubscriptionExpirationJob
   include Sidekiq::Job
   queue_as :default
 

@@ -38,11 +38,9 @@ Sidekiq.configure_server do |config|
     'cron' => '* * * * *' # Run every 4 minutes
   },
       
-  'subscription_expired_job' => {
-          'class' => 'SubscriptionExpiredJob',
+  'subscription_expiration_job' => {
+          'class' => 'SubscriptionExpirationJob',
           'cron' => '* * * * *', # Every minute
-          'queue' => 'default',
-          'description' => 'Block expired PPPoE subscriptions'
         },
 
 
