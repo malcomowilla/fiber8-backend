@@ -35,10 +35,10 @@ Sidekiq.configure_server do |config|
 
       # },
 
-      'system_metrics_job' => {
-        'class' => 'SystemMetricsJob',
-        'cron' => '* * * * *' # Run every minute
-      },
+      # 'system_metrics_job' => {
+      #   'class' => 'SystemMetricsJob',
+      #   'cron' => '* * * * *' # Run every minute
+      # },
 
 
 
