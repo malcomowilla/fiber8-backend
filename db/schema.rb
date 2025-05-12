@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2025_05_10_160206) do
+ActiveRecord::Schema[7.2].define(version: 2025_05_12_092811) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -166,6 +166,7 @@ ActiveRecord::Schema[7.2].define(version: 2025_05_10_160206) do
     t.string "billing_cycle"
     t.string "status"
     t.boolean "condition"
+    t.datetime "expiry"
   end
 
   create_table "hotspot_settings", force: :cascade do |t|
