@@ -24,53 +24,35 @@ Sidekiq.configure_server do |config|
 
   config.on(:startup) do
     schedule = {
-     
-'subscription_expired_job' => {
-        'class' => 'SubscriptionExpiredJob',
-        'cron' => '* * * * *', # Every minute
-        'queue' => 'default',
-        'description' => 'Block expired PPPoE subscriptions'
-      },
-
-
-#       'router_ping_job' => {
-#   'class' => 'RouterPingJob',
-#   'cron' => '* * * * *' # Run every 4 minutes
-# },
-
-# 'system_metrics_job' => {
-#   'class' => 'SystemMetricsJob',
-#   'cron' => '* * * * *' # Run every minute
-# },
-
- 
-# 'hotspot_expiration_job' => {
-#   'class' => 'HotspotExpirationJob',
-#   'cron' => '*/4 * * * *'
-# },
-
- # 'router_ping_job' => {
-      #   'class' => 'RouterPingJob',
-      #   'cron' => '* * * * *' # Run every minute
-      # },
-      # 
       
+  'subscription_expired_job' => {
+          'class' => 'SubscriptionExpiredJob',
+          'cron' => '* * * * *', # Every minute
+          'queue' => 'default',
+          'description' => 'Block expired PPPoE subscriptions'
+        },
 
-      # 'radact_job' => {
-      #   'class' => 'RadactJob',
-      #   'cron' => '* * * * *' # Run every minute
 
-      # },
+      'router_ping_job' => {
+  'class' => 'RouterPingJob',
+  'cron' => '* * * * *' # Run every 4 minutes
+},
+
+'system_metrics_job' => {
+  'class' => 'SystemMetricsJob',
+  'cron' => '* * * * *' # Run every minute
+},
+
+  
+  'hotspot_expiration_job' => {
+    'class' => 'HotspotExpirationJob',
+    'cron' => '* * * * *'
+  },
+
 
    
 
 
-
-
-      # 'hotspot_expiration_job' => {
-      #   'class' => 'HotspotExpirationJob',
-      #   'cron' => '* * * * *' # Run every minute
-      # },
      
       
     }
