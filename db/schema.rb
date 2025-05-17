@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2025_05_12_092811) do
+ActiveRecord::Schema[7.2].define(version: 2025_05_15_211704) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -67,6 +67,7 @@ ActiveRecord::Schema[7.2].define(version: 2025_05_12_092811) do
     t.string "checkinactiveminutes"
     t.string "checkinactivehrs"
     t.string "checkinactivedays"
+    t.boolean "enable_2fa_google_auth", default: false
   end
 
   create_table "admin_web_authn_credentials", force: :cascade do |t|
@@ -421,6 +422,7 @@ ActiveRecord::Schema[7.2].define(version: 2025_05_12_092811) do
     t.string "sms_provider"
     t.integer "account_id"
     t.string "partnerID"
+    t.datetime "sms_setting_updated_at"
   end
 
   create_table "sms_templates", force: :cascade do |t|
@@ -680,6 +682,11 @@ ActiveRecord::Schema[7.2].define(version: 2025_05_12_092811) do
     t.boolean "can_read_hotspot_settings", default: false
     t.datetime "password_reset_sent_at"
     t.string "password_reset_token"
+    t.string "status"
+    t.datetime "last_login_at"
+    t.string "otp_secret"
+    t.text "otp_backup_codes", default: [], array: true
+    t.boolean "otp_verified"
   end
 
   create_table "zones", force: :cascade do |t|

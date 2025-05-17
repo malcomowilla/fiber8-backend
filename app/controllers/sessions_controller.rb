@@ -3,6 +3,8 @@ class SessionsController < ApplicationController
 
   set_current_tenant_through_filter
 before_action :set_tenant
+# require 'rqrcode_png'
+require 'base64'
 # before_action :throttle_login
 
 
@@ -261,6 +263,8 @@ end
           cookies.encrypted.signed[:jwt_user] = { value: token, httponly: true,
            secure: true, exp: 24.hours.from_now.to_i, sameSite: 'strict' }
       
+           admin.update(last_login_at: Time.current, status: 'active')
+
           # Update the sign count for the stored credential
           stored_credential.update!(sign_count: webauthn_credential.sign_count)
       
@@ -502,18 +506,131 @@ end
   
   
 
+  def verify_totp
+    user = User.find_by(email: params[:email])
+    if user.nil?
+      render json: { error: 'User not found' }, status: :not_found
+      return
+    end
+    totp = ROTP::TOTP.new(user.otp_secret)
+    if totp.verify(params[:code], drift_behind: 30)
+      # Success – code is valid
+      user.update!(otp_verified: true)
+      render json: { success: true }
+    else
+      render json: { success: false, error: "Invalid code" }, status: :unauthorized
+    end
+  end
 
 
 
 
 
+
+
+  def verify_backup_code
+    entered_code = params[:code]
+    user = params[:email]
+    if user.otp_backup_codes.include?(entered_code)
+      user.otp_backup_codes.delete(entered_code)
+      user.save!
+      
+      # Optionally mark as verified
+      user.update!(otp_verified: true)
+      render json: { success: true }
+    else
+      render json: { success: false, error: "Invalid backup code" }, status: :unauthorized
+    end
+  end
+
+  def setup_google_authenticator
+      otp_secret = ROTP::Base32.random_base32
+      company_name = request.headers['X-Subdomain']
+      totp = ROTP::TOTP.new(otp_secret, issuer: company_name)
+      uri = totp.provisioning_uri(current_user.email)
+    
+      qrcode = RQRCode::QRCode.new(uri)
+      png = qrcode.as_png(size: 300)
+      base64 = Base64.strict_encode64(png.to_s)
+    
+      backup_codes = Array.new(10) { SecureRandom.hex(4) }
+    
+      current_user.update!(
+        otp_secret: otp_secret,
+        otp_backup_codes: backup_codes
+      )
+    
+      render json: {
+        provisioning_uri: uri,
+        qr_code_data_url: "data:image/png;base64,#{base64}",
+        backup_codes: backup_codes # send them once; don't show again
+      }
+    
+  end
+
+
+
+
+  # def verify_2fa
+  #   user = User.find_by(email: params[:email])
+  #   return render json: { error: 'User not found' }, status: :not_found unless user
+
+  #   code = params[:code]
+  #   totp = ROTP::TOTP.new(user.otp_secret)
+  #   if totp.verify(code, drift_behind: 15)
+
+  #     token = generate_token(user_id: user.id)
+  #     cookies.encrypted.signed[:jwt_user] = { 
+  #       value: token, 
+  #       httponly: true, 
+  #       secure: true,
+  #       sameSite: 'strict'
+  #     }
+  #     render json: user, status: :accepted
+  #   else
+  #     render json: { error: 'Invalid 2FA code' }, status: :unauthorized
+  #   end
+  # end
+
+  def verify_2fa
+    user = User.find_by(email: params[:email])
+    return render json: { error: 'User not found' }, status: :not_found unless user
+  
+    code = params[:code]
+    totp = ROTP::TOTP.new(user.otp_secret)
+  
+    # Strict verification with 5-second window (recommended)
+    if totp.verify(code, drift_behind: 5, drift_ahead: 0)
+      # Prevent code reuse
+      if user.last_used_otp == code
+        render json: { error: 'This code was already used' }, status: :unauthorized
+        return
+      end
+  
+      # Update last used code
+      user.update(last_used_otp: code)
+  
+      token = generate_token(user_id: user.id)
+      cookies.encrypted.signed[:jwt_user] = { 
+        value: token, 
+        httponly: true, 
+        secure: true,
+        sameSite: 'strict'
+      }
+      render json: user, status: :accepted
+    else
+      render json: { error: 'Invalid 2FA code' }, status: :unauthorized
+    end
+  end
     
     def destroy
         # session.delete :user_id
-        
+        current_user.update(status: 'inactive')
         cookies.delete(:jwt_user)
         head :no_content
     end
+
+
 
 def currently_logged_in_user
     if  current_user
@@ -553,31 +670,17 @@ if @user.locked_account == true && @user&.locked_at > 5.minutes.ago
       else
 
        
-
-
-
         if @user&.authenticate(params[:password])
           # set_current_tenant(@user.account)
           # session[:user_id] = @user.id
           # reset_login_attempts 
           token = generate_token(user_id: @user.id)
-    
+    @user.update(last_login_at: Time.current, status: 'active')
           cookies.encrypted.signed[:jwt_user] = { value: token, httponly: true, secure: true,
          sameSite: 'strict'}
 
 
-
-     
-
-     
-
-
-
 render json:@user,   status: :accepted
-
-             
-        
-
 
       else
         render json: { error: 'Invalid email or password' }, status: :unauthorized

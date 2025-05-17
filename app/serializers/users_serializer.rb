@@ -12,7 +12,9 @@ attributes :can_manage_subscriber,:can_read_read_subscriber,:can_manage_ticket_s
 :date_registered,
 :can_manage_hotspot_voucher, :can_read_hotspot_voucher,
 :can_manage_hotspot_settings, :can_read_hotspot_settings,
+:last_login_at,
 
+:status,
 :can_manage_support_tickets,
 :can_manage_user_group, :can_read_user_group,
 
@@ -35,6 +37,10 @@ attributes :can_manage_subscriber,:can_read_read_subscriber,:can_manage_ticket_s
     context_present? && instance_options[:context][:welcome_back_message] == false
   end
 
+
+  def last_login_at
+    object.last_login_at.strftime("%B %d, %Y at %I:%M %p") if object.last_login_at.present?
+  end
 
   def context_present?
     instance_options[:context].present?
