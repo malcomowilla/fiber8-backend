@@ -98,6 +98,10 @@ get '/api/hotspot_plans', to: 'hotspot_plans#index'
 get '/hotspot_plans', to: 'hotspot_plans#index'
 
 
+post '/api/setup_google_authenticator', to: 'sessions#setup_google_authenticator'
+post '/setup_google_authenticator', to: 'sessions#setup_google_authenticator'
+post '/api/verify_totp', to: 'sessions#verify_totp'
+post '/verify_totp', to: 'sessions#verify_totp'
 patch '/pppoe_plans', to: 'pp_poe_plans#update'
 post '/api/pppoe_plans/', to: 'pp_poe_plans#create'
 post '/api/hotspot_plans/', to: 'hotspot_plans#create'

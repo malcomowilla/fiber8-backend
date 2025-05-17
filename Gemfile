@@ -216,6 +216,8 @@ gem 'sidekiq-scheduler'
 gem "browser"
 gem 'rqrcode'
 
+
+gem 'rotp'
 gem 'sys-proctable'
 gem 'sys-filesystem'
 # gem 'safe_attributes'

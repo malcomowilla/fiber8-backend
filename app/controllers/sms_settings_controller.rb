@@ -25,7 +25,8 @@ class SmsSettingsController < ApplicationController
     
     # @sms_settings = SmsSetting.all
     # render json: @sms_settings
-    @sms_settings = SmsSetting.order(updated_at: :asc)
+    # @sms_settings = SmsSetting.order(updated_at: :asc)
+    @sms_settings = SmsSetting.order(sms_setting_updated_at: :desc)
   render json: @sms_settings
   end
 
@@ -51,13 +52,14 @@ class SmsSettingsController < ApplicationController
         api_secret: params[:api_secret],
         api_key: params[:api_key],
       ) 
-    @sms_setting.update(
+    @sms_setting.update!(
       api_key: params[:api_key],
       api_secret: params[:api_secret],
       sender_id: params[:sender_id],
       short_code: params[:short_code],
       sms_provider: params[:sms_provider],
-      partnerID: params[:partnerID]
+      partnerID: params[:partnerID],
+      sms_setting_updated_at: Time.current
 
     )
       if  @sms_setting.save 

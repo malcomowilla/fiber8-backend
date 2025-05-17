@@ -64,6 +64,8 @@ require 'bigdecimal/util'
   
     # Log and return the customized data
     Rails.logger.info "Customized router info data: #{customized_data}"
+    Rails.logger.info "router info data: #{data}"
+
     render json: customized_data
   end
   

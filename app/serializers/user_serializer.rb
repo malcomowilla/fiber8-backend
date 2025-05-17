@@ -13,9 +13,9 @@ class UserSerializer < ActiveModel::Serializer
 :can_manage_hotspot_template, :can_read_hotspot_template,
 :can_manage_hotspot_voucher, :can_read_hotspot_voucher,
 :can_manage_hotspot_settings, :can_read_hotspot_settings,
-:date_registered,
+:date_registered, :last_login_at,
 
-
+:status,
   :can_manage_user_setting,
   :can_read_user_setting,
   :can_read_router_setting
@@ -33,7 +33,10 @@ class UserSerializer < ActiveModel::Serializer
 
 
 
-
+  def last_login_at
+    object.last_login_at.strftime("%B %d, %Y at %I:%M %p") if object.last_login_at.present?
+  end
+  
 
   def include_welcome_back_message?
     context_present? && instance_options[:context][:welcome_back_message] == false

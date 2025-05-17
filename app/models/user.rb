@@ -31,7 +31,19 @@ class User < ApplicationRecord
 # validates :password, uniqueness: true, presence: true
 # validate :validate_complex_password
 
-   
+# def verify_totp(code)
+#     return false unless  self.otp_secret.present?
+    
+#     totp = ROTP::TOTP.new(otp_secret)
+#     totp.verify(code, drift_behind: 15, drift_ahead: 15)
+#   end
+  
+#   def verify_backup_code(code)
+#     return false unless self.otp_backup_codes.present?
+    
+#     otp_backup_codes.include?(code) && 
+#       (otp_backup_codes.delete(code) && save!)
+#   end
 
 private
 
