@@ -5,6 +5,8 @@ class HotspotPlanSerializer < ActiveModel::Serializer
   belongs_to :account
 
 
+
+
   def expiry
     object.expiry.strftime("%B %d, %Y at %I:%M %p") if object.expiry.present?
   end
@@ -31,8 +33,27 @@ else
 
   'active'
 end
+    # object.status
+  end
+
+
+
+
+
+
+
 
   
-    object.status
-  end
+
 end
+
+
+
+
+
+
+
+
+
+
+
