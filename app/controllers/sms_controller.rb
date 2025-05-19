@@ -116,7 +116,7 @@ Rails.logger.info "api_secret found #{api_key}"
     puts "Your Balance #{response.body}"
     balance_data = JSON.parse(response.body)
     balance = balance_data['credit']
-    render json: {message: "SMS Balance:#{balance}"},status: :ok
+    render json: {message: "#{balance}"},status: :ok
   else
     render json: {error: "Error Getting Balance: #{response.body}" }
     puts "Error Getting Balance: #{response.body}"
