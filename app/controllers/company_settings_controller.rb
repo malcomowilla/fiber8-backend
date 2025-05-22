@@ -54,8 +54,8 @@ end
 
 
 
-  # logo_url: @company_settings&.logo&.attached? ? rails_blob_url(@company_settings.logo,
-  # host: tunnel_host, protocol: 'https', port: nil) : nil
+  logo_url: @company_settings&.logo&.attached? ? rails_blob_url(@company_settings.logo,
+  host: tunnel_host, protocol: 'https', port: nil) : nil
 
 
 
@@ -113,9 +113,9 @@ end
 
 
 
-      # logo_url: @company_settings&.logo&.attached? ? rails_blob_url(@company_settings.logo,
-      #  host: tunnel_host, protocol: 'https', port: nil,
-      # ) : nil
+      logo_url: @company_settings&.logo&.attached? ? rails_blob_url(@company_settings.logo,
+       host: tunnel_host, protocol: 'https', port: nil,
+      ) : nil
 
 
 
