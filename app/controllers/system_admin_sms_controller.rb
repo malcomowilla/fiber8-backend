@@ -12,7 +12,7 @@ class SystemAdminSmsController < ApplicationController
 
   def set_tenant
    
-    Rails.logger.info "Setting tenant for app#{ActsAsTenant.current_tenant}"
+    # Rails.logger.info "Setting tenant for app#{ActsAsTenant.current_tenant}"
     
     
     host = request.headers['X-Subdomain']

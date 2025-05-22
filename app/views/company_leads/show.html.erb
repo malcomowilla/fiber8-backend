@@ -1,0 +1,10 @@
+<p style="color: green"><%= notice %></p>
+
+<%= render @company_lead %>
+
+<div>
+  <%= link_to "Edit this company lead", edit_company_lead_path(@company_lead) %> |
+  <%= link_to "Back to company leads", company_leads_path %>
+
+  <%= button_to "Destroy this company lead", @company_lead, method: :delete %>
+</div>

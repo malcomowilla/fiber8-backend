@@ -14,8 +14,8 @@ class IpNetworksController < ApplicationController
   def set_tenant
     host = request.headers['X-Subdomain']
     @account = Account.find_by(subdomain: host)
-    @current_account =ActsAsTenant.current_tenant 
-    EmailConfiguration.configure(@current_account, ENV['SYSTEM_ADMIN_EMAIL'])
+    ActsAsTenant.current_tenant  = @account
+    EmailConfiguration.configure(@account, ENV['SYSTEM_ADMIN_EMAIL'])
     # EmailSystemAdmin.configure(@current_account, current_system_admin)
   Rails.logger.info "Setting tenant for app#{ActsAsTenant.current_tenant}"
   

@@ -1,0 +1,16 @@
+<p style="color: green"><%= notice %></p>
+
+<% content_for :title, "Client leads" %>
+
+<h1>Client leads</h1>
+
+<div id="client_leads">
+  <% @client_leads.each do |client_lead| %>
+    <%= render client_lead %>
+    <p>
+      <%= link_to "Show this client lead", client_lead %>
+    </p>
+  <% end %>
+</div>
+
+<%= link_to "New client lead", new_client_lead_path %>
