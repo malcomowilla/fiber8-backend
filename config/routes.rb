@@ -1,4 +1,6 @@
 Rails.application.routes.draw do
+  resources :client_leads
+  resources :company_leads
   resources :license_settings
   resources :ip_networks
   resources :nodes
@@ -47,6 +49,9 @@ Rails.application.routes.draw do
 mount ActionCable.server => '/cable'
 scope '/api' do
   resources :license_settings
+  resources :company_leads
+  resources :nodes
+  resources :client_leads
 
   resources :ip_pools
   resources :user_groups

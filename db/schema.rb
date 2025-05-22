@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2025_05_15_211704) do
+ActiveRecord::Schema[7.2].define(version: 2025_05_20_231619) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -80,10 +80,30 @@ ActiveRecord::Schema[7.2].define(version: 2025_05_15_211704) do
     t.datetime "updated_at", null: false
   end
 
+  create_table "client_leads", force: :cascade do |t|
+    t.string "name"
+    t.string "email"
+    t.string "company_name"
+    t.string "phone_number"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.integer "account_id"
+  end
+
   create_table "client_mac_adresses", force: :cascade do |t|
     t.string "macadress"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+  end
+
+  create_table "company_leads", force: :cascade do |t|
+    t.string "name"
+    t.string "company_name"
+    t.string "email"
+    t.string "message"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.string "phone_number"
   end
 
   create_table "company_settings", force: :cascade do |t|
@@ -301,6 +321,7 @@ ActiveRecord::Schema[7.2].define(version: 2025_05_15_211704) do
     t.string "longitude"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "country"
   end
 
   create_table "p_poe_packages", id: false, force: :cascade do |t|

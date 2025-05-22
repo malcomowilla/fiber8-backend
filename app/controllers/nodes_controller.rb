@@ -1,5 +1,11 @@
 class NodesController < ApplicationController
-  before_action :set_node, only: %i[ show edit update destroy ]
+  # before_action :set_node, only: %i[ show edit update destroy ]
+
+
+set_current_tenant_through_filter
+
+before_action :set_tenant
+
 
   # GET /nodes or /nodes.json
   def index
@@ -7,6 +13,24 @@ class NodesController < ApplicationController
     render json: @nodes
   end
 
+
+
+
+
+
+  def set_tenant
+
+    host = request.headers['X-Subdomain'] 
+    # Rails.logger.info("Setting tenant for host: #{host}")
+  
+    @account = Account.find_by(subdomain: host)
+    set_current_tenant(@account)
+  
+    unless @account
+      render json: { error: 'Invalid tenant' }, status: :not_found
+    end
+    
+  end
   # GET /nodes/1 or /nodes/1.json
   
 
@@ -17,7 +41,12 @@ class NodesController < ApplicationController
 
   # POST /nodes or /nodes.json
   def create
-    @node = Node.new(node_params)
+    @node = Node.new(
+      name: params[:name],
+      latitude: params[:position][:lat],
+      longitude: params[:position][:lng],
+      country: params[:country]
+    )
 
       if @node.save
         render json: @node, status: :created
@@ -29,25 +58,22 @@ class NodesController < ApplicationController
 
   # PATCH/PUT /nodes/1 or /nodes/1.json
   def update
-    respond_to do |format|
+    @node = Node.find_by(id: params[:id])
       if @node.update(node_params)
-        format.html { redirect_to @node, notice: "Node was successfully updated." }
-        format.json { render :show, status: :ok, location: @node }
+         render json: @node, status: :ok
       else
-        format.html { render :edit, status: :unprocessable_entity }
-        format.json { render json: @node.errors, status: :unprocessable_entity }
-      end
+         render json: @node.errors, status: :unprocessable_entity 
+      
     end
   end
 
   # DELETE /nodes/1 or /nodes/1.json
   def destroy
+    @node = Node.find_by(id: params[:id])
     @node.destroy!
 
-    respond_to do |format|
-      format.html { redirect_to nodes_path, status: :see_other, notice: "Node was successfully destroyed." }
-      format.json { head :no_content }
-    end
+       head :no_content 
+    
   end
 
   private
@@ -58,6 +84,6 @@ class NodesController < ApplicationController
 
     # Only allow a list of trusted parameters through.
     def node_params
-      params.require(:node).permit(:name, :latitude, :longitude)
+      params.require(:node).permit(:name, :latitude, :longitude, :country)
     end
 end

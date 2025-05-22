@@ -14,7 +14,7 @@ before_action :set_tenant
 def set_tenant
 
   host = request.headers['X-Subdomain'] 
-  Rails.logger.info("Setting tenant for host: #{host}")
+  # Rails.logger.info("Setting tenant for host: #{host}")
 
   @account = Account.find_by(subdomain: host)
   set_current_tenant(@account)
@@ -49,8 +49,18 @@ end
 
   #     logo_url: @company_settings&.logo&.attached? ? 
   # URI.join("https://#{tunnel_host}", Rails.application.routes.url_helpers.rails_blob_path(@company_settings.logo)).to_s : nil
-  logo_url: @company_settings&.logo&.attached? ? rails_blob_url(@company_settings.logo,
-  host: tunnel_host, protocol: 'https', port: nil) : nil
+  # 
+  
+
+
+
+  # logo_url: @company_settings&.logo&.attached? ? rails_blob_url(@company_settings.logo,
+  # host: tunnel_host, protocol: 'https', port: nil) : nil
+
+
+
+
+
       # customer_support_phone_number: @company_settings&.customer_support_phone_number,
       # logo_url: @company_settings&.logo&.attached? ? url_for(@company_settings.logo) : nil,
       # logo_url: @company_settings&.logo&.attached? ? rails_blob_url(@company_settings.logo, host: '38d6-102-221-35-116.ngrok-free.app',
@@ -99,9 +109,19 @@ end
 
       # logo_url: @company_settings&.logo&.attached? ? "#{Rails.application.routes.default_url_options[:host]}/rails/active_storage/blobs/#{@company_settings.logo.key}" : nil
 
-      logo_url: @company_settings&.logo&.attached? ? rails_blob_url(@company_settings.logo,
-       host: tunnel_host, protocol: 'https', port: nil,
-      ) : nil
+
+
+
+
+      # logo_url: @company_settings&.logo&.attached? ? rails_blob_url(@company_settings.logo,
+      #  host: tunnel_host, protocol: 'https', port: nil,
+      # ) : nil
+
+
+
+
+
+
       # logo_url: @company_settings&.logo&.attached? ? rails_blob_url(@company_settings.logo, host: '38d6-102-221-35-116.ngrok-free.app', protocol: 'https') : nil
       # logo_url: @company_settings&.logo&.attached? ? 
       # rails_blob_url(@company_settings.logo, host: '38d6-102-221-35-116.ngrok-free.app', protocol: 'https', port: nil) 

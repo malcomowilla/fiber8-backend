@@ -53,7 +53,7 @@ end
     })
 
     # ✅ Send SMS (you can reuse your existing method or simplify here)
-    sms_setting = SmsSetting.find_by(sms_provider: 'TEXT_SMS')
+    sms_setting = SmsSetting.find_by(sms_provider: 'TextSms')
 
     if sms_setting.nil?
       render json: { error: "SMS provider not found" }, status: :not_found
@@ -74,22 +74,27 @@ end
 
     if response.is_a?(Net::HTTPSuccess)
       body = JSON.parse(response.body)
-      if body.dig('responses', 0, 'respose-code') == 200
+      Rails.logger.info "Response sent message: #{body}"
+      Rails.logger.info "Failed to send message body: #{body.dig('responses', 0, 'response-code')}"
+
+      if body.dig('responses', 0, 'response-code') == 200
         sms_data = JSON.parse(response.body)
         sms_status = sms_data['responses'][0]['response-description']
-    
+
+    Rails.logger.info "SMS Status: #{sms_status}"
         sms_recipient = subscriber.name # or subscriber.id if `user` expects an ID
         SystemAdminSm.create!(
           user: sms_recipient,
           message: interpolated_message,
-          status: sms_status,
+          status: body.dig('responses', 0, 'response-description'),
           date: Time.now.strftime('%Y-%m-%d %I:%M:%S %p'),
-          system_user: 'system',
+          system_user: current_user.username,
           sms_provider: 'TextSms'
 
         )
         render json: { success: true, message: 'SMS sent successfully' }, status: :ok
       else
+        Rails.logger.info "Failed to send message//eror response but message sent: #{body.dig('responses', 0, 'response-description')}"
         render json: { error: body.dig('responses', 0, 'response-description') }, status: :bad_request
       end
     else
@@ -160,7 +165,7 @@ end
           message: interpolated_message,
           status: sms_status,
           date: Time.now.strftime('%Y-%m-%d %I:%M:%S %p'),
-          system_user: 'system',
+          system_user: current_user.username,
           sms_provider: 'SMS leopard'
 
         )

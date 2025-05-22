@@ -1,0 +1,12 @@
+<% content_for :title, "Editing client lead" %>
+
+<h1>Editing client lead</h1>
+
+<%= render "form", client_lead: @client_lead %>
+
+<br>
+
+<div>
+  <%= link_to "Show this client lead", @client_lead %> |
+  <%= link_to "Back to client leads", client_leads_path %>
+</div>
