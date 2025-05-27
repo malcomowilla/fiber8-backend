@@ -1095,6 +1095,7 @@ end
         params.require(:package).permit(:name, :download_limit, :upload_limit, :price,
          :validity, 
         :upload_burst_limit,
+        :package,
         :download_burst_limit,  :validity_period_units, :router_name,
         :ip_pool
          )

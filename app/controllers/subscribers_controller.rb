@@ -176,7 +176,10 @@ end
 
 
 
-
+def expired_subscribers
+  expired_subscribers = Subscriber.where('created_at < ?', 1.day.ago)
+  
+end
 
 
 
