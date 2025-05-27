@@ -1,7 +1,7 @@
 class PackageSerializer < ActiveModel::Serializer
   attributes :id, :name, :price, :download_limit, :upload_limit, :account_id, :tx_rate_limit,
    :rx_rate_limit, :validity_period_units, :download_burst_limit, :upload_burst_limit, :validity, :speed, :validity,
-    :valid, :ip_pool, :package
+    :valid, :ip_pool, :wifi_package
 
     
    def speed
@@ -9,7 +9,7 @@ class PackageSerializer < ActiveModel::Serializer
   end
 
 
-  def package
+  def wifi_package
     "#{object.download_limit} Mbps"
   end
   
