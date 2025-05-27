@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2025_05_20_231619) do
+ActiveRecord::Schema[7.2].define(version: 2025_05_27_100057) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -363,6 +363,7 @@ ActiveRecord::Schema[7.2].define(version: 2025_05_20_231619) do
     t.string "ip_pool"
     t.string "ppoe_profile_id"
     t.string "package"
+    t.string "wifi_package"
   end
 
   create_table "pp_poe_plans", force: :cascade do |t|

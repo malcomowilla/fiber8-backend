@@ -8,15 +8,26 @@ class PackagesController < ApplicationController
   require 'json'
 
     # before_action :authenticate_user!, only: [:index]
-    # load_and_authorize_resource
 
 
 
-  # set_current_tenant_through_filter
+  set_current_tenant_through_filter
 
-  # before_action :set_my_tenant
+  before_action :set_tenant
   
+  def set_tenant
+
+    host = request.headers['X-Subdomain'] 
+    # Rails.logger.info("Setting tenant for host: #{host}")
   
+    @account = Account.find_by(subdomain: host)
+    set_current_tenant(@account)
+  
+    unless @account
+      render json: { error: 'Invalid tenant' }, status: :not_found
+    end
+    
+  end
   
     # def set_my_tenant
     #   set_current_tenant(current_user.account)
@@ -257,7 +268,7 @@ class PackagesController < ApplicationController
               def create
                 # Validate package attributes
                 if Package.exists?(name: params[:package][:name])
-                  render json: { error: "ip pool already exists" }, status: :unprocessable_entity
+                  render json: { error: "package name already exists" }, status: :unprocessable_entity
                   return
                   
                 end
@@ -289,7 +300,7 @@ class PackagesController < ApplicationController
                 
                 if @package.save
                   # Call the method to update FreeRADIUS policies after saving the package
-                  update_freeradius_policies(@package)
+                  # update_freeradius_policies(@package)
                   render json: @package, serializer: PackageSerializer
                 else
                   render json: { error: @package.errors.full_messages }, status: :unprocessable_entity
@@ -565,7 +576,7 @@ class PackagesController < ApplicationController
  package = Package.find_by(id: params[:id])
                           if package
                             package.update(package_params)
-                            update_freeradius_policies(package)
+                            # update_freeradius_policies(package)
 
                             render json: package
 
