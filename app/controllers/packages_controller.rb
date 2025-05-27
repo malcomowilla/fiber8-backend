@@ -300,7 +300,7 @@ class PackagesController < ApplicationController
                 
                 if @package.save
                   # Call the method to update FreeRADIUS policies after saving the package
-                  # update_freeradius_policies(@package)
+                  update_freeradius_policies(@package)
                   render json: @package, serializer: PackageSerializer
                 else
                   render json: { error: @package.errors.full_messages }, status: :unprocessable_entity
@@ -576,7 +576,7 @@ class PackagesController < ApplicationController
  package = Package.find_by(id: params[:id])
                           if package
                             package.update(package_params)
-                            # update_freeradius_policies(package)
+                            update_freeradius_policies(package)
 
                             render json: package
 
