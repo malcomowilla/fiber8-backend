@@ -256,7 +256,7 @@ class PackagesController < ApplicationController
 
               def create
                 # Validate package attributes
-                if Package.exists?(name: params[:name])
+                if Package.exists?(name: params[:package][:name])
                   render json: { error: "ip pool already exists" }, status: :unprocessable_entity
                   return
                   
@@ -264,22 +264,22 @@ class PackagesController < ApplicationController
                 
 
                 
-                if params[:name].blank?
+                if params[:package][:name].blank?
                   render json: { error: "package name is required" }, status: :unprocessable_entity
                   return
                 end
                 
-                if params[:download_limit].blank?
+                if params[:package][:download_limit].blank?
                   render json: { error: "download limit is required" }, status: :unprocessable_entity
                   return
                 end
                 
-                if params[:upload_limit].blank?
+                if params[:package][:upload_limit].blank?
                   render json: { error: "upload limit is required" }, status: :unprocessable_entity
                   return
                 end
                 
-                if params[:price].blank?
+                if params[:package][:price].blank?
                   render json: { error: "price is required" }, status: :unprocessable_entity
                   return
                 end
@@ -1084,11 +1084,14 @@ def update_freeradius_policies(package)
 
     # ✅ Optionally handle burst limits if applicable
     if package.upload_burst_limit.present? && package.download_burst_limit.present?
-      burst_reply = RadGroupReply.find_or_initialize_by(groupname: group_name, radiusattribute: 'Mikrotik-Burst-Limit')
+      burst_reply = RadGroupReply.find_or_initialize_by(groupname: group_name,
+       radiusattribute: 'Mikrotik-Burst-Limit')
       burst_reply.update!(op: ':=', value: "#{package.upload_burst_limit}M/#{package.download_burst_limit}M")
     end
   end
 end
+
+
 
 
       def package_params
