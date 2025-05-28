@@ -83,7 +83,8 @@ scope '/api' do
 
 end
 
-
+get '/api/registration_stats', to: 'subscribers#registration_stats'
+get '/registration_stats', to: 'subscribers#registration_stats'
 get '/get_ips', to: 'subscriptions#get_ips'
 patch '/api/pppoe_plans', to: 'pp_poe_plans#update'
 get '/api/pppoe_plans', to: 'pp_poe_plans#index'
