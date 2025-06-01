@@ -1,4 +1,5 @@
 Rails.application.routes.draw do
+  resources :change_logs
   resources :client_leads
   resources :company_leads
   resources :license_settings
@@ -52,6 +53,8 @@ scope '/api' do
   resources :company_leads
   resources :nodes
   resources :client_leads
+    resources :change_logs
+
 
   resources :ip_pools
   resources :user_groups

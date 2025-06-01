@@ -1,0 +1,32 @@
+<%= form_with(model: change_log) do |form| %>
+  <% if change_log.errors.any? %>
+    <div style="color: red">
+      <h2><%= pluralize(change_log.errors.count, "error") %> prohibited this change_log from being saved:</h2>
+
+      <ul>
+        <% change_log.errors.each do |error| %>
+          <li><%= error.full_message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div>
+    <%= form.label :version, style: "display: block" %>
+    <%= form.text_field :version %>
+  </div>
+
+  <div>
+    <%= form.label :system_changes, style: "display: block" %>
+    <%= form.text_field :system_changes %>
+  </div>
+
+  <div>
+    <%= form.label :change_title, style: "display: block" %>
+    <%= form.text_field :change_title %>
+  </div>
+
+  <div>
+    <%= form.submit %>
+  </div>
+<% end %>
