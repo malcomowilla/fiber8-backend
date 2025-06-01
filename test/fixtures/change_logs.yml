@@ -1,0 +1,11 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  version: MyString
+  system_changes: MyString
+  change_title: MyString
+
+two:
+  version: MyString
+  system_changes: MyString
+  change_title: MyString
