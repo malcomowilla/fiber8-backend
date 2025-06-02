@@ -264,6 +264,8 @@ end
            secure: true, exp: 24.hours.from_now.to_i, sameSite: 'strict' }
       
            admin.update(last_login_at: Time.current, status: 'active')
+            admin.update_column(:inactive, false)
+    admin.update_column(:last_activity_active, Time.zone.now)
 
           # Update the sign count for the stored credential
           stored_credential.update!(sign_count: webauthn_credential.sign_count)
@@ -609,6 +611,8 @@ end
   
       # Update last used code
       user.update(last_used_otp: code)
+       user.update_column(:inactive, false)
+    user.update_column(:last_activity_active, Time.zone.now)
   
       token = generate_token(user_id: user.id)
       cookies.encrypted.signed[:jwt_user] = { 
@@ -623,6 +627,11 @@ end
     end
   end
     
+
+
+
+
+
     def destroy
         # session.delete :user_id
         current_user.update(status: 'inactive')
@@ -679,7 +688,8 @@ if @user.locked_account == true && @user&.locked_at > 5.minutes.ago
           cookies.encrypted.signed[:jwt_user] = { value: token, httponly: true, secure: true,
          sameSite: 'strict'}
 
-
+ @user.update_column(:inactive, false)
+    @user.update_column(:last_activity_active, Time.zone.now)
 render json:@user,   status: :accepted
 
       else

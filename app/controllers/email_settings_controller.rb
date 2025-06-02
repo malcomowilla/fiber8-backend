@@ -11,6 +11,16 @@ class EmailSettingsController < ApplicationController
 
   before_action :set_tenant
 
+  before_action :update_last_activity
+
+
+
+  def update_last_activity
+if current_user
+      current_user.update!(last_activity_active: Time.now)
+    end
+    
+  end
 
 
 

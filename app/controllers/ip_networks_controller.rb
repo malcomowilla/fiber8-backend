@@ -6,6 +6,19 @@ class IpNetworksController < ApplicationController
   set_current_tenant_through_filter
 
   before_action :set_tenant
+  before_action :update_last_activity
+
+
+
+
+
+
+   def update_last_activity
+if current_user
+      current_user.update!(last_activity_active:Time.current)
+    end
+    
+  end
 
 
 
@@ -37,7 +50,6 @@ class IpNetworksController < ApplicationController
 
   # POST /ip_networks or /ip_networks.json
   def create
-    # ip route add 10.254.0.0/16 dev wg0
 
     @ip_network = IpNetwork.new(ip_network_params)
 
@@ -61,6 +73,7 @@ class IpNetworksController < ApplicationController
     system(command)
     unless $?.success?
       Rails.logger.error "❌ Failed to add route: #{command}"
+      render json: { error: "Failed to add route: #{command}" }, status: :unprocessable_entity
     end
   end
 

@@ -5,6 +5,7 @@ class SmsController < ApplicationController
 
   set_current_tenant_through_filter
 before_action :set_tenant
+before_action :update_last_activity, only: [:index]
 
 def set_tenant
 
@@ -16,8 +17,23 @@ def set_tenant
 rescue ActiveRecord::RecordNotFound
   render json: { error: 'Invalid tenant' }, status: :not_found
 
-  
 end
+
+
+
+def update_last_activity
+if current_user
+      current_user.update!(last_activity_active:Time.current)
+    end
+    
+  end
+
+
+
+
+
+
+
   # GET /sms or /sms.json
   def index
     @sms = Sm.all

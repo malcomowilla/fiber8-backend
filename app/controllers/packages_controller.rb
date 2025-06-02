@@ -14,7 +14,25 @@ class PackagesController < ApplicationController
   set_current_tenant_through_filter
 
   before_action :set_tenant
+  before_action :update_last_activity
   
+
+
+
+
+
+
+ def update_last_activity
+if current_user
+      current_user.update!(last_activity_active:Time.current)
+    end
+    
+  end
+
+
+
+
+
   def set_tenant
 
     host = request.headers['X-Subdomain'] 
@@ -577,7 +595,6 @@ class PackagesController < ApplicationController
                           if package
                             package.update(package_params)
                             update_freeradius_policies(package)
-
                             render json: package
 
                           else
@@ -1120,3 +1137,5 @@ end
     render json: { error: "Package not found" }, status: :not_found
   end
 end
+
+

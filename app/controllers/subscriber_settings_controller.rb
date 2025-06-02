@@ -1,6 +1,27 @@
 class SubscriberSettingsController < ApplicationController
   # before_action :set_subscriber_setting, only: %i[ show edit update destroy ]
   load_and_authorize_resource
+  before_action :update_last_activity
+
+
+
+
+
+
+
+
+
+ def update_last_activity
+if current_user
+      current_user.update!(last_activity_active:Time.current)
+    end
+    
+  end
+
+
+
+
+
 
   # GET /subscriber_settings or /subscriber_settings.json
   def index

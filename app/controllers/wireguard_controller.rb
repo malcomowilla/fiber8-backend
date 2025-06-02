@@ -249,6 +249,29 @@ class WireguardController < ApplicationController
 
   WG_CONFIG_PATH = "/etc/wireguard/wg0.conf"
 
+
+before_action :update_last_activity
+
+
+
+   def update_last_activity
+if current_user
+      current_user.update!(last_activity_active: Time.current)
+    end
+    
+  end
+
+
+
+
+
+
+
+
+
+
+
+
   def generate_config
     # Get parameters from frontend
     network_address = params[:network_address] || "10.2.0.0"

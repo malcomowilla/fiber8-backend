@@ -3,10 +3,20 @@ class SmsTemplatesController < ApplicationController
 
   set_current_tenant_through_filter
   before_action :set_tenant
-  # GET /sms_templates or /sms_templates.json
+  before_action :update_last_activity
 
 
 
+
+
+
+
+  def update_last_activity
+if current_user
+      current_user.update!(last_activity_active:Time.current)
+    end
+    
+  end
 
 
   def set_tenant

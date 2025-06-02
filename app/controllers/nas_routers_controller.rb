@@ -5,6 +5,19 @@ class NasRoutersController < ApplicationController
   set_current_tenant_through_filter
   before_action :set_tenant
 
+    before_action :update_last_activity, except: [:router_ping_response]
+
+
+
+
+
+
+  def update_last_activity
+if current_user
+      current_user.update!(last_activity_active:Time.current)
+    end
+    
+  end
   # def set_my_tenant
   #   set_current_tenant(current_user.account)
   # end

@@ -1,6 +1,10 @@
 class RouterSettingsController < ApplicationController
   # before_action :set_router_setting, only: %i[ show edit update destroy ]
   load_and_authorize_resource except: [:allow_get_router_settings]
+  before_action :update_last_activity
+
+
+
 
   # GET /router_settings or /router_settings.json
   def index
@@ -8,6 +12,14 @@ class RouterSettingsController < ApplicationController
     render json: @router_settings
   end
 
+
+
+  def update_last_activity
+if current_user
+      current_user.update!(last_activity_active:Time.current)
+    end
+    
+  end
 
   
   # POST /router_settings or /router_settings.json
