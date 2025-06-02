@@ -9,8 +9,16 @@ class HotspotMpesaSettingsController < ApplicationController
   
   before_action :set_tenant
   # GET /hotspot_mpesa_settings or /hotspot_mpesa_settings.json
+  before_action :update_last_activity
  
 
+
+   def update_last_activity
+if current_user
+      current_user.update_column(:last_activity_active, Time.now.strftime('%Y-%m-%d %I:%M:%S %p'))
+    end
+    
+  end
 
 
   def index

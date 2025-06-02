@@ -8,6 +8,7 @@ class SmsProviderSettingsController < ApplicationController
 
   
   before_action :set_tenant
+  before_action :update_last_activity
 
 
   # GET /sms_provider_settings or /sms_provider_settings.json
@@ -15,6 +16,17 @@ class SmsProviderSettingsController < ApplicationController
     @sms_provider_settings = SmsProviderSetting.all
     render json: @sms_provider_settings
   end
+
+
+
+
+def update_last_activity
+if current_user
+      current_user.update!(last_activity_active:Time.current)
+    end
+    
+  end
+
 
 
 

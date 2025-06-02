@@ -5,11 +5,17 @@ class TicketSettingsController < ApplicationController
 
   before_action :set_tenant
   load_and_authorize_resource
+before_action :update_last_activity
 
 
 
 
-
+    def update_last_activity
+if current_user
+      current_user.update!(last_activity_active:Time.current)
+    end
+    
+  end
 
   def set_tenant
     host = request.headers['X-Subdomain']

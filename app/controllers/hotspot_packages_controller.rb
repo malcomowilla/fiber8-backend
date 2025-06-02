@@ -9,8 +9,25 @@ class HotspotPackagesController < ApplicationController
   set_current_tenant_through_filter
 
   before_action :set_tenant
+  before_action :update_last_activity
   # /ip/hotspot/host?as-string=any&as-string-value=any&number=any&value-name=any
    
+
+
+
+
+ def update_last_activity
+if current_user
+      current_user.update_column(:last_activity_active, Time.now.strftime('%Y-%m-%d %I:%M:%S %p'))
+    end
+    
+  end
+
+  
+
+
+
+
 
   def set_tenant
 

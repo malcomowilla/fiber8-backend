@@ -4,9 +4,22 @@ class HotspotSettingsController < ApplicationController
   set_current_tenant_through_filter
 
   before_action :set_tenant
+  before_action :update_last_activity
   load_and_authorize_resource :except => [:get_hotspot_setting]
   # GET /hotspot_settings or /hotspot_settings.json
   # 
+
+
+
+
+
+
+ def update_last_activity
+if current_user
+      current_user.update!(last_activity_active:Time.current)
+    end
+    
+  end
 
 
 

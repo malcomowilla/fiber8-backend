@@ -17,6 +17,13 @@ load_and_authorize_resource except: [:allow_get_current_hotspot_plan, :index, :c
 
 
 
+
+
+
+
+
+  
+
   def get_current_hotspot_plan
     @plans = HotspotPlan.all
     render json: @plans,each_serializer: HotspotPlanSerializer

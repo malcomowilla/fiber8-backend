@@ -5,6 +5,7 @@ class NodesController < ApplicationController
 set_current_tenant_through_filter
 
 before_action :set_tenant
+before_action :update_last_activity
 
 
   # GET /nodes or /nodes.json
@@ -14,6 +15,12 @@ before_action :set_tenant
   end
 
 
+ def update_last_activity
+if current_user
+      current_user.update!(last_activity_active:Time.current)
+    end
+    
+  end
 
 
 

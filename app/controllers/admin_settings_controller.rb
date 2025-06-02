@@ -3,6 +3,7 @@ class AdminSettingsController < ApplicationController
 
 
   load_and_authorize_resource except: [:allow_get_admin_settings]
+  before_action :update_last_activity
   # GET /admin_settings or /admin_settings.json
   def index
     # @admin_settings = AdminSetting.all
@@ -14,6 +15,12 @@ class AdminSettingsController < ApplicationController
 
 
 
+def update_last_activity
+if current_user
+      current_user.update!(last_activity_active:Time.current)
+    end
+    
+  end
 
 
 

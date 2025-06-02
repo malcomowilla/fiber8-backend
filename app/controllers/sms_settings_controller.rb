@@ -1,14 +1,12 @@
 class SmsSettingsController < ApplicationController
   # before_action :set_sms_setting, only: %i[ show edit update destroy ]
   load_and_authorize_resource
+  before_action :update_last_activity
 
   # GET /sms_settings or /sms_settings.json
   # 
 
   set_current_tenant_through_filter
-
-
-  
   before_action :set_tenant
   def index
     Rails.logger.info "current tenant sms settin: #{ActsAsTenant.current_tenant.sms_setting.sms_provider}"
@@ -18,6 +16,15 @@ class SmsSettingsController < ApplicationController
   end
 
 
+
+
+
+   def update_last_activity
+if current_user
+      current_user.update!(last_activity_active:Time.current)
+    end
+    
+  end
 
 
 

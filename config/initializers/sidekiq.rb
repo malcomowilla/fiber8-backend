@@ -50,6 +50,12 @@ Sidekiq.configure_server do |config|
   'cron' => '* * * * *' # Run every minute
 },
 
+
+'inactivity_check_job' => {
+  'class' => 'InactivityCheckJob',
+  'cron' => '* * * * *' # Run every minute
+},
+
   
 
 

@@ -33,8 +33,8 @@ class SubscriptionExpirationJob
               subscription.update!(status: 'blocked')
             end
           rescue => e
-            puts "Error blocking #{subscription.username}: #{e.message}"
-            Rails.logger.error("Error blocking #{subscription.username}: #{e.message}")
+            puts "Error blocking #{subscription.ppoe_username}: #{e.message}"
+            Rails.logger.error("Error blocking #{subscription.ppoe_username}: #{e.message}")
           end
         end
 

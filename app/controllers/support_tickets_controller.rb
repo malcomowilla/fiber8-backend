@@ -4,6 +4,19 @@ class SupportTicketsController < ApplicationController
 
   load_and_authorize_resource
 
+  before_action :update_last_activity
+
+
+
+
+
+ def update_last_activity
+if current_user
+      current_user.update!(last_activity_active:Time.current)
+    end
+    
+  end
+
 
   def set_tenant
    

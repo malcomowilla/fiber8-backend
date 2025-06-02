@@ -1,6 +1,4 @@
 
-
-
 class RouterInfoController < ApplicationController
 
 set_current_tenant_through_filter

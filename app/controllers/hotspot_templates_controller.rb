@@ -5,7 +5,21 @@ load_and_authorize_resource except: [:allow_get_hotspot_templates]
 
   set_current_tenant_through_filter
   before_action :set_tenant
+  before_action :update_last_activity, except: [:allow_get_hotspot_templates]
 
+
+
+
+
+
+
+
+  def update_last_activity
+if current_user
+      current_user.update!(last_activity_active:Time.current)
+    end
+    
+  end
 
   def set_tenant
 

@@ -22,7 +22,8 @@ class ChangeLogsController < ApplicationController
 
   # POST /change_logs or /change_logs.json
   def create
-    @change_log = ChangeLog.new(change_log_params)
+    @change_log = ChangeLog.first_or_initialize(change_log_params)
+    @change_log.update!(change_log_params)
 
       if @change_log.save
         render json:  @change_log, status: :created
