@@ -27,37 +27,37 @@ Sidekiq.configure_server do |config|
 
 
 
-  'hotspot_expiration_job' => {
-    'class' => 'HotspotExpirationJob',
-    'cron' => '* * * * *'
-  },
+  # 'hotspot_expiration_job' => {
+  #   'class' => 'HotspotExpirationJob',
+  #   'cron' => '* * * * *'
+  # },
 
 
-  'router_ping_job' => {
-    'class' => 'RouterPingJob',
-    'cron' => '* * * * *' # Run every 4 minutes
-  },
+
+  # 'router_ping_job' => {
+  #   'class' => 'RouterPingJob',
+  #   'cron' => '* * * * *' # Run every 4 minutes
+  # },
       
-  'subscription_expiration_job' => {
-          'class' => 'SubscriptionExpirationJob',
-          'cron' => '* * * * *', # Every minute
-        },
 
+
+  # 'subscription_expiration_job' => {
+  #         'class' => 'SubscriptionExpirationJob',
+  #         'cron' => '* * * * *', # Every minute
+  #       },
+
+
+
+# 'system_metrics_job' => {
+#   'class' => 'SystemMetricsJob',
+#   'cron' => '* * * * *' # Run every minute
+# },
 
 
 'inactivity_check_job' => {
   'class' => 'InactivityCheckJob',
   'cron' => '* * * * *' # Run every minute
 },
-
-
-
-'system_metrics_job' => {
-  'class' => 'SystemMetricsJob',
-  'cron' => '* * * * *' # Run every minute
-},
-
-
 
   
 
