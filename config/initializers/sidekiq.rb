@@ -26,6 +26,10 @@ Sidekiq.configure_server do |config|
     schedule = {
 
 
+'inactivity_check_job' => {
+  'class' => 'InactivityCheckJob',
+  'cron' => '* * * * *' # Run every minute
+},
 
   # 'hotspot_expiration_job' => {
   #   'class' => 'HotspotExpirationJob',
@@ -54,10 +58,6 @@ Sidekiq.configure_server do |config|
 # },
 
 
-'inactivity_check_job' => {
-  'class' => 'InactivityCheckJob',
-  'cron' => '* * * * *' # Run every minute
-},
 
   
 
