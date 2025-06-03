@@ -2,6 +2,7 @@
 
 class InactivityCheckJob
   include Sidekiq::Job
+  queue_as :default
 
   def perform
     
