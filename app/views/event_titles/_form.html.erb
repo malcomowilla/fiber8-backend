@@ -1,0 +1,47 @@
+<%= form_with(model: event_title) do |form| %>
+  <% if event_title.errors.any? %>
+    <div style="color: red">
+      <h2><%= pluralize(event_title.errors.count, "error") %> prohibited this event_title from being saved:</h2>
+
+      <ul>
+        <% event_title.errors.each do |error| %>
+          <li><%= error.full_message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div>
+    <%= form.label :start_date_time, style: "display: block" %>
+    <%= form.datetime_field :start_date_time %>
+  </div>
+
+  <div>
+    <%= form.label :end_date_time, style: "display: block" %>
+    <%= form.datetime_field :end_date_time %>
+  </div>
+
+  <div>
+    <%= form.label :title, style: "display: block" %>
+    <%= form.text_field :title %>
+  </div>
+
+  <div>
+    <%= form.label :start, style: "display: block" %>
+    <%= form.datetime_field :start %>
+  </div>
+
+  <div>
+    <%= form.label :end, style: "display: block" %>
+    <%= form.datetime_field :end %>
+  </div>
+
+  <div>
+    <%= form.label :account_id, style: "display: block" %>
+    <%= form.number_field :account_id %>
+  </div>
+
+  <div>
+    <%= form.submit %>
+  </div>
+<% end %>

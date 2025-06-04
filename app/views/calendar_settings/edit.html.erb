@@ -1,0 +1,12 @@
+<% content_for :title, "Editing calendar setting" %>
+
+<h1>Editing calendar setting</h1>
+
+<%= render "form", calendar_setting: @calendar_setting %>
+
+<br>
+
+<div>
+  <%= link_to "Show this calendar setting", @calendar_setting %> |
+  <%= link_to "Back to calendar settings", calendar_settings_path %>
+</div>

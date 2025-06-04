@@ -1,0 +1,12 @@
+<% content_for :title, "Editing event title" %>
+
+<h1>Editing event title</h1>
+
+<%= render "form", event_title: @event_title %>
+
+<br>
+
+<div>
+  <%= link_to "Show this event title", @event_title %> |
+  <%= link_to "Back to event titles", event_titles_path %>
+</div>

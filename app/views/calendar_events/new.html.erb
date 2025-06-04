@@ -1,0 +1,11 @@
+<% content_for :title, "New calendar event" %>
+
+<h1>New calendar event</h1>
+
+<%= render "form", calendar_event: @calendar_event %>
+
+<br>
+
+<div>
+  <%= link_to "Back to calendar events", calendar_events_path %>
+</div>

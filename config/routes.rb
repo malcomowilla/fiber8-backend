@@ -1,4 +1,7 @@
 Rails.application.routes.draw do
+  resources :calendar_settings
+  resources :calendar_events
+  resources :event_titles
   resources :change_logs
   resources :client_leads
   resources :company_leads
@@ -49,11 +52,15 @@ Rails.application.routes.draw do
  
 mount ActionCable.server => '/cable'
 scope '/api' do
+  resources :calendar_settings
+
   resources :license_settings
   resources :company_leads
   resources :nodes
   resources :client_leads
     resources :change_logs
+    resources :calendar_events
+
 
 
   resources :ip_pools
@@ -86,6 +93,10 @@ scope '/api' do
 
 end
 
+
+    post '/api/save_fcm_token', to: 'sessions#create_fcm_token'
+
+ post '/save_fcm_token', to: 'sessions#create_fcm_token'
 get '/api/registration_stats', to: 'subscribers#registration_stats'
 get '/registration_stats', to: 'subscribers#registration_stats'
 get '/get_ips', to: 'subscriptions#get_ips'
