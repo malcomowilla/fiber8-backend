@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2025_06_02_154308) do
+ActiveRecord::Schema[7.2].define(version: 2025_06_04_072246) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -75,6 +75,31 @@ ActiveRecord::Schema[7.2].define(version: 2025_06_02_154308) do
     t.string "public_key"
     t.integer "sign_count"
     t.integer "user_id"
+    t.integer "account_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
+
+  create_table "calendar_events", force: :cascade do |t|
+    t.string "event_title"
+    t.datetime "start_date_time"
+    t.datetime "end_date_time"
+    t.string "title"
+    t.datetime "start"
+    t.datetime "end"
+    t.integer "account_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.string "client"
+    t.string "assigned_to"
+    t.string "task_type"
+    t.string "status"
+    t.string "description"
+  end
+
+  create_table "calendar_settings", force: :cascade do |t|
+    t.string "start_in_hours"
+    t.string "start_in_minutes"
     t.integer "account_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
@@ -721,6 +746,7 @@ ActiveRecord::Schema[7.2].define(version: 2025_06_02_154308) do
     t.datetime "last_activity_active"
     t.boolean "inactive"
     t.boolean "check_is_inactive"
+    t.string "fcm_token"
   end
 
   create_table "zones", force: :cascade do |t|

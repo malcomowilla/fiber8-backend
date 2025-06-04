@@ -44,7 +44,17 @@ end
 
 
 
-
+def create_fcm_token
+  
+   token_saved =  current_user.update!(fcm_token: params[:fcm_token])
+  
+    if token_saved 
+      render json: {message: 'token saved'}, status: :ok
+    else
+      render json: {error: 'something went wrong please try again'},status: :unprocessable_entity
+    end
+    
+  end
 
 
 

@@ -1,0 +1,10 @@
+<p style="color: green"><%= notice %></p>
+
+<%= render @calendar_event %>
+
+<div>
+  <%= link_to "Edit this calendar event", edit_calendar_event_path(@calendar_event) %> |
+  <%= link_to "Back to calendar events", calendar_events_path %>
+
+  <%= button_to "Destroy this calendar event", @calendar_event, method: :delete %>
+</div>

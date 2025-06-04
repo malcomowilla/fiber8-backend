@@ -1,0 +1,16 @@
+<p style="color: green"><%= notice %></p>
+
+<% content_for :title, "Calendar settings" %>
+
+<h1>Calendar settings</h1>
+
+<div id="calendar_settings">
+  <% @calendar_settings.each do |calendar_setting| %>
+    <%= render calendar_setting %>
+    <p>
+      <%= link_to "Show this calendar setting", calendar_setting %>
+    </p>
+  <% end %>
+</div>
+
+<%= link_to "New calendar setting", new_calendar_setting_path %>

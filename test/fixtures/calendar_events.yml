@@ -1,0 +1,19 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  event_title: MyString
+  start_date_time: 2025-06-03 17:16:15
+  end_date_time: 2025-06-03 17:16:15
+  title: MyString
+  start: 2025-06-03 17:16:15
+  end: 2025-06-03 17:16:15
+  account_id: 1
+
+two:
+  event_title: MyString
+  start_date_time: 2025-06-03 17:16:15
+  end_date_time: 2025-06-03 17:16:15
+  title: MyString
+  start: 2025-06-03 17:16:15
+  end: 2025-06-03 17:16:15
+  account_id: 1
