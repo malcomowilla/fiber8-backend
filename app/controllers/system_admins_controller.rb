@@ -17,7 +17,6 @@ class SystemAdminsController < ApplicationController
 
 
   def current_plan
-    
       @current_plan = ActsAsTenant.current_tenant&.pp_poe_plan
       render json: {current_plan: @current_plan&.name}
   end
@@ -32,20 +31,20 @@ end
 
 
 
-  def set_tenant
-    host = request.headers['X-Subdomain']
-    @account = Account.find_by(subdomain: host)
-    @current_account= ActsAsTenant.current_tenant 
-    EmailConfiguration.configure(@current_account, ENV['SYSTEM_ADMIN_EMAIL'])
-    # EmailSystemAdmin.configure(@current_account, current_system_admin)
+  # def set_tenant
+  #   host = request.headers['X-Subdomain']
+  #   @account = Account.find_by(subdomain: host)
+  #    ActsAsTenant.current_tenant = @account
+  #   EmailConfiguration.configure(@account, ENV['SYSTEM_ADMIN_EMAIL'])
+  #   # EmailSystemAdmin.configure(@current_account, current_system_admin)
   
-    Rails.logger.info "set_current_tenant #{ActsAsTenant.current_tenant.inspect}"
-    # set_current_tenant(@account)
-  rescue ActiveRecord::RecordNotFound
-    render json: { error: 'Invalid tenant' }, status: :not_found
+  #   Rails.logger.info "set_current_tenant #{ActsAsTenant.current_tenant.inspect}"
+  #   # set_current_tenant(@account)
+  # rescue ActiveRecord::RecordNotFound
+  #   render json: { error: 'Invalid tenant' }, status: :not_found
   
     
-  end
+  # end
 
 
 
@@ -64,10 +63,13 @@ end
       # name: "#{request.headers['X-Subdomain']}",
       # # id: request.headers['X-Original-Host']
       # id: "#{request.headers['X-Subdomain']}"
-      origin: "https://#{request.headers['X-Subdomain']}.aitechs.co.ke",
-      name: "#{request.headers['X-Subdomain']}.aitechs.co.ke",
-      id: "#{request.headers['X-Subdomain']}.aitechs.co.ke" 
-      
+      # origin: "https://#{request.headers['X-Subdomain']}.aitechs.co.ke",
+      # name: "#{request.headers['X-Subdomain']}.aitechs.co.ke",
+      # id: "#{request.headers['X-Subdomain']}.aitechs.co.ke" 
+       origin: "https://aitechs.co.ke",
+      name: "aitechs.co.ke",
+      id: "aitechs.co.ke" 
+
 
 
 
@@ -133,9 +135,13 @@ end
       # # id: request.headers['X-Original-Host']
       # id: "#{request.headers['X-Subdomain']}"  
       
-      origin: "https://#{request.headers['X-Subdomain']}.aitechs.co.ke",
-      name: "#{request.headers['X-Subdomain']}.aitechs.co.ke",
-      id: "#{request.headers['X-Subdomain']}.aitechs.co.ke" 
+      # origin: "https://#{request.headers['X-Subdomain']}.aitechs.co.ke",
+      # name: "#{request.headers['X-Subdomain']}.aitechs.co.ke",
+      # id: "#{request.headers['X-Subdomain']}.aitechs.co.ke" 
+       origin: "https://aitechs.co.ke",
+      name: "aitechs.co.ke",
+      id: "aitechs.co.ke" 
+
       
       )
 
@@ -252,9 +258,16 @@ def register_webauthn_system_admin
 
       relying_party = WebAuthn::RelyingParty.new(
       
-      origin: "https://#{request.headers['X-Subdomain']}.aitechs.co.ke",
-      name: "#{request.headers['X-Subdomain']}.aitechs.co.ke",
-      id: "#{request.headers['X-Subdomain']}.aitechs.co.ke" 
+      # origin: "https://#{request.headers['X-Subdomain']}.aitechs.co.ke",
+      # name: "#{request.headers['X-Subdomain']}.aitechs.co.ke",
+      # id: "#{request.headers['X-Subdomain']}.aitechs.co.ke" 
+
+
+       origin: "https://aitechs.co.ke",
+      name: "aitechs.co.ke",
+      id: "aitechs.co.ke" 
+
+
 
 
          # origin: "https://#{request.headers['X-Original-Host']}",
@@ -316,9 +329,13 @@ def create_webauthn_system_admin
       # # id: request.headers['X-Original-Host']
       # id: "#{request.headers['X-Subdomain']}"
 
-      origin: "https://#{request.headers['X-Subdomain']}.aitechs.co.ke",
-      name: "#{request.headers['X-Subdomain']}.aitechs.co.ke",
-      id: "#{request.headers['X-Subdomain']}.aitechs.co.ke" 
+      # origin: "https://#{request.headers['X-Subdomain']}.aitechs.co.ke",
+      # name: "#{request.headers['X-Subdomain']}.aitechs.co.ke",
+      # id: "#{request.headers['X-Subdomain']}.aitechs.co.ke" 
+       origin: "https://aitechs.co.ke",
+      name: "aitechs.co.ke",
+      id: "aitechs.co.ke" 
+
     )
 
 
