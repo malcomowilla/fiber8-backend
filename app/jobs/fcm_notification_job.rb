@@ -8,6 +8,7 @@ require 'json'
 
 
   def perform(fcm_token)
+    Rails.logger.info "FcmNotificationJob started"
     Account.find_each do |tenant|
       ActsAsTenant.with_tenant(tenant) do
 
