@@ -1,5 +1,5 @@
 class FcmNotificationJob < ApplicationJob
-  include Sidekiq::Job
+  # include Sidekiq::Job
   queue_as :default
 require 'fcm'
 require 'rest-client'
