@@ -644,7 +644,7 @@ end
 
     def destroy
         # session.delete :user_id
-        # current_user.update(status: 'inactive')
+        current_user.update(status: 'inactive')
         cookies.delete(:jwt_user)
         head :no_content
     end
