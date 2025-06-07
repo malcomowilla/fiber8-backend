@@ -656,7 +656,8 @@ end
   end
 
   cookies.delete(:jwt_user)
-  head :no_content
+  # head :no_content
+  render json: { message: 'Logged out' }, status: :ok
     end
 
 
