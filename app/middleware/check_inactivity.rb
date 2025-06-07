@@ -111,16 +111,15 @@ class CheckInactivity
               #   enable_inactivity_check_hours: admin_settings.check_is_inactivehrs == true,
               #   enable_inactivity_check_minutes: admin_settings.check_is_inactiveminutes == true
               # )
-
-
                
-                  
+              
+
                   if admin_settings.check_is_inactive == true && admin.inactive == true
                 Rails.logger.info "Inactivity check triggered for admin: #{admin.id}"
                 # Clear the JWT cookie
                 # request.cookie_jar.delete(:jwt)
-                
-                # Return unauthorized with a clear message
+                        admin.update(status: 'inactive')
+
                 response = Rack::Response.new
                 response.status = 401
                 response.set_header('Content-Type', 'application/json')

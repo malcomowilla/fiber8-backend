@@ -644,9 +644,19 @@ end
 
     def destroy
         # session.delete :user_id
-        current_user.update(status: 'inactive')
-        cookies.delete(:jwt_user)
-        head :no_content
+        # current_user.update(status: 'inactive') if current_user
+        # cookies.delete(:jwt_user)
+        # head :no_content
+        Rails.logger.info("Current user in destroy: #{current_user.inspect}")
+
+  if current_user
+    current_user.update(status: 'inactive')
+  else
+    Rails.logger.warn("No current_user found during logout")
+  end
+
+  cookies.delete(:jwt_user)
+  head :no_content
     end
 
 
