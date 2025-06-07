@@ -118,5 +118,7 @@ config.active_storage.service = :local
   config.action_controller.raise_on_missing_callback_actions = false
 
   # config.force_ssl = true
+  config.active_job.queue_adapter = :sidekiq
+
 
 end
