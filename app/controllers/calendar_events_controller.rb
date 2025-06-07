@@ -67,9 +67,9 @@ if current_user
 
       # FcmNotificationJob.set(wait_until:notification_time_hrs).perform_later(@calendar_event.id, @fcm_token)
       # FcmNotificationJob.set(wait_until:notification_time_minutes).perform_later(@calendar_event.id, @fcm_token)
-FcmNotificationJob.perform_later(@fcm_token)
+FcmNotificationJob.perform_async(@fcm_token)
 
-TestJob.perform_later(@fcm_token)
+TestJob.perform_async(@fcm_token)
 render json: @calendar_event, status: :created
       else
        render json: @calendar_event.errors, status: :unprocessable_entity 
@@ -90,9 +90,9 @@ render json: @calendar_event, status: :created
       # FcmNotificationJob.perform_now(@calendar_event.id, @fcm_token)
       notification_time_minutes = @calendar_event.start.in_time_zone - in_minutes.to_i.minutes
       notification_time_hrs = @calendar_event.start.in_time_zone - in_hours.to_i.hours
-FcmNotificationJob.perform_later(@fcm_token)
+FcmNotificationJob.perform_async(@fcm_token)
 
-TestJob.perform_later(@fcm_token)
+# TestJob.perform_async(@fcm_token)
       # FcmNotificationJob.set(wait_until:notification_time_hrs).perform_later(@calendar_event.id, @fcm_token)
       # FcmNotificationJob.set(wait_until:notification_time_minutes).perform_later(@calendar_event.id, @fcm_token)
 
