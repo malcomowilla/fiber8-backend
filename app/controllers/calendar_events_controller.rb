@@ -94,6 +94,9 @@ render json: @calendar_event, status: :created
 FcmNotificationWorker.perform_async(@fcm_token)
 
 TestJob.perform_later(@fcm_token)
+ json_key_data = File.read(File.expand_path("/home/aitechs-push-notifications-f504158d59ac.json"))
+ Rails.logger.info "json_key_data: #{json_key_data}"
+
       # FcmNotificationJob.set(wait_until:notification_time_hrs).perform_later(@calendar_event.id, @fcm_token)
       # FcmNotificationJob.set(wait_until:notification_time_minutes).perform_later(@calendar_event.id, @fcm_token)
 
