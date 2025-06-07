@@ -93,7 +93,7 @@ render json: @calendar_event, status: :created
 # FcmNotificationJob.perform_later(@fcm_token)
 FcmNotificationWorker.perform_async(@fcm_token)
 
-TestJob.perform_later(@fcm_token)
+# TestJob.perform_later(@fcm_token)
 
       # FcmNotificationJob.set(wait_until:notification_time_hrs).perform_later(@calendar_event.id, @fcm_token)
       # FcmNotificationJob.set(wait_until:notification_time_minutes).perform_later(@calendar_event.id, @fcm_token)

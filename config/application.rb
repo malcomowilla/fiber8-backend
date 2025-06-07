@@ -61,7 +61,8 @@ config.middleware.use CheckInactivity
     config.autoload_lib(ignore: %w(assets tasks))
     # config.active_job.queue_adapter = :sidekiq
     # Configuration for the application, engines, and railties goes here.
-    #
+    config.active_job.queue_adapter = :async
+
     # These settings can be overridden in specific environments using the files
     # in config/environments, which are processed later.
     #
