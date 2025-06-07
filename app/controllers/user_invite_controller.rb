@@ -4,7 +4,23 @@ class UserInviteController < ApplicationController
 before_action :update_last_activity
 
 
+  set_current_tenant_through_filter
+before_action :set_tenant
 
+
+
+  def set_tenant
+
+  host = request.headers['X-Subdomain']
+  @account = Account.find_by(subdomain: host)
+
+
+  set_current_tenant(@account)
+rescue ActiveRecord::RecordNotFound
+  render json: { error: 'Invalid tenant' }, status: :not_found
+
+  
+end
 
 
 
