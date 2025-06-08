@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2025_06_04_072246) do
+ActiveRecord::Schema[7.2].define(version: 2025_06_08_150204) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -609,6 +609,7 @@ ActiveRecord::Schema[7.2].define(version: 2025_06_04_072246) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.string "sms_provider"
+    t.integer "account_id"
   end
 
   create_table "system_admin_web_authn_credentials", force: :cascade do |t|
