@@ -27,6 +27,12 @@ Sidekiq.configure_server do |config|
 
 
 
+'restart_cloudflared_if_tunnel_missing_job' => {
+  'class' => 'RestartCloudflaredIfTunnelMissingJob',
+  'cron' => '* * * * *'
+},
+
+
   'hotspot_expiration_job' => {
     'class' => 'HotspotExpirationJob',
     'cron' => '* * * * *'
@@ -59,11 +65,6 @@ Sidekiq.configure_server do |config|
 },
 
   
-'restart_cloudflared_if_tunnel_missing_job' => {
-  'class' => 'RestartCloudflaredIfTunnelMissingJob',
-  'cron' => '* * * * *'
-}
-
    
 
 
