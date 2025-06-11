@@ -33,6 +33,8 @@ Sidekiq.configure_server do |config|
   },
 
 
+
+
   'router_ping_job' => {
     'class' => 'RouterPingJob',
     'cron' => '* * * * *' # Run every 4 minutes
@@ -57,7 +59,10 @@ Sidekiq.configure_server do |config|
 },
 
   
-
+'restart_cloudflared_if_tunnel_missing_job' => {
+  'class' => 'RestartCloudflaredIfTunnelMissingJob',
+  'cron' => '* * * * *'
+}
 
    
 
