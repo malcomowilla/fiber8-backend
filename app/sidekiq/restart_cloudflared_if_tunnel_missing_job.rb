@@ -10,8 +10,8 @@ class RestartCloudflaredIfTunnelMissingJob
       Rails.logger.warn "[Tunnel Monitor] No valid Cloudflare tunnel found. Restarting services..."
 
       # Restart cloudflared and your backend service
-      system("sudo systemctl restart cloudflared")
-      system("sudo systemctl restart aitechs-fibe8-backend")
+      system("systemctl restart cloudflared")
+      system("systemctl restart aitechs-fibe8-backend")
 
       Rails.logger.info "[Tunnel Monitor] Services restarted successfully."
     else
