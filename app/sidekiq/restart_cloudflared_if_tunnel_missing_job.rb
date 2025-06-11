@@ -1,7 +1,6 @@
 class RestartCloudflaredIfTunnelMissingJob
-    queue_as :default
-
   include Sidekiq::Job
+  queue_as :default
 
    def perform
     log_output = `journalctl -u cloudflared -n 100 --no-pager --reverse`
@@ -11,7 +10,7 @@ class RestartCloudflaredIfTunnelMissingJob
 
       # Restart cloudflared and your backend service
       system("systemctl restart cloudflared")
-      system("systemctl restart aitechs-fibe8-backend")
+      system("systemctl restart aitechs-fiber8-backend")
 
       Rails.logger.info "[Tunnel Monitor] Services restarted successfully."
     else
