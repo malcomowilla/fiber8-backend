@@ -9,7 +9,7 @@ class RestartCloudflaredIfTunnelMissingJob
 
 
 
-    
+
     unless log_output.match?(%r{https://[a-z0-9-]+\.trycloudflare\.com})
       Rails.logger.warn "[Tunnel Monitor] No valid Cloudflare tunnel found. Restarting services..."
 
@@ -21,5 +21,8 @@ class RestartCloudflaredIfTunnelMissingJob
     else
       Rails.logger.info "[Tunnel Monitor] Tunnel is active. No action needed."
     end
+
+
+    
   end
 end
