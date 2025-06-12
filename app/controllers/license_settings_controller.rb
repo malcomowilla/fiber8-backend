@@ -51,7 +51,14 @@ if current_user
 
   # POST /license_settings or /license_settings.json
   def create
-    @license_setting = LicenseSetting.first_or_initialize(
+            host = request.headers['X-Subdomain']
+
+
+            if  host == 'demo'
+              render json: {error: "Demo tenant does not allow license settings creation"}, status: :unprocessable_entity
+              
+            else
+               @license_setting = LicenseSetting.first_or_initialize(
 
     expiry_warning_days: params[:expiry_warning_days],
      phone_notification: params[:phone_notification],
@@ -69,6 +76,8 @@ if current_user
       else
          render json: @license_setting.errors, status: :unprocessable_entity 
       end
+            end
+   
     end
   
 

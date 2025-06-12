@@ -51,7 +51,13 @@ if current_user
 
 
   def create_nas_settings
-    @nas = Na.first_or_initialize(shortname: params[:shortname], 
+        host = request.headers['X-Subdomain']
+
+         if host == 'demo'
+          render json: {error: "Demo tenant does not allow NAS
+           settings creation"}, status: :unprocessable_entity
+        else
+          @nas = Na.first_or_initialize(shortname: params[:shortname], 
     nasname: params[:ipaddr], secret: params[:secret] )
 
 @nas.update(
@@ -66,6 +72,8 @@ else
   
   render json: {error: "Error creating NAS settings"}, status: :unprocessable_entity
 end
+        end
+    
   end
 
 
