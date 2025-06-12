@@ -19,7 +19,7 @@ before_action :update_last_activity
 
  def update_last_activity
 if current_user
-      current_user.update!(last_activity_active:Time.current)
+      current_user.update!(last_activity_active: Time.current)
     end
     
   end
@@ -29,7 +29,12 @@ if current_user
 
   
 def import
-  file = params[:file]
+       host = request.headers['X-Subdomain']
+
+       if host == 'demo'
+         render json: { error: 'demo mode does not allow subscriber import' }, status: :bad_request
+       else
+          file = params[:file]
   return render json: { error: 'No file uploaded' }, status: :bad_request unless file
 
   tenant_settings = ActsAsTenant.current_tenant.subscriber_setting
@@ -140,9 +145,6 @@ else
 end
       
 
-
-    
-
       subscribers << subscriber
     end
 
@@ -159,7 +161,7 @@ end
     render json: { error: e.message }, status: :unprocessable_entity
   end
   end
-    
+       end
 
 
 end
