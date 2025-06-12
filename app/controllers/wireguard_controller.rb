@@ -273,8 +273,11 @@ if current_user
 
 
   def generate_config
-    # Get parameters from frontend
-    network_address = params[:network_address] || "10.2.0.0"
+     host = request.headers['X-Subdomain']
+     if host == 'demo'
+       render json: { error: 'demo mode does not allow wireguard config generation' }, status: :bad_request
+     else
+       network_address = params[:network_address] || "10.2.0.0"
     subnet_mask = params[:subnet_mask] || "24"
     client_ip = params[:client_ip] # Optional: if user wants to specify exact IP
   
@@ -378,6 +381,9 @@ if current_user
       private_key: client_private_key,
       public_key: client_public_key
     }
+     end
+    # Get parameters from frontend
+   
   end
   
   private
