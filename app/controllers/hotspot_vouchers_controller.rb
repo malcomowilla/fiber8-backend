@@ -225,8 +225,7 @@ end
    
     else
 
-
-      use_radius = ActsAsTenant.current_tenant.router_setting.use_radius
+      # use_radius = ActsAsTenant.current_tenant&.router_setting&.use_radius
 
       if params[:package].blank?
         render json: { error: "hotspot package is required" }, status: :unprocessable_entity
