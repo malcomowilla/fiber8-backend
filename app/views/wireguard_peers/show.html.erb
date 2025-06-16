@@ -1,0 +1,10 @@
+<p style="color: green"><%= notice %></p>
+
+<%= render @wireguard_peer %>
+
+<div>
+  <%= link_to "Edit this wireguard peer", edit_wireguard_peer_path(@wireguard_peer) %> |
+  <%= link_to "Back to wireguard peers", wireguard_peers_path %>
+
+  <%= button_to "Destroy this wireguard peer", @wireguard_peer, method: :delete %>
+</div>

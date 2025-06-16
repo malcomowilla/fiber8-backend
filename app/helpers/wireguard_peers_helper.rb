@@ -1,0 +1,2 @@
+module WireguardPeersHelper
+end

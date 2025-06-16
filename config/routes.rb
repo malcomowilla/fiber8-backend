@@ -1,4 +1,5 @@
 Rails.application.routes.draw do
+  resources :wireguard_peers
   resources :calendar_settings
   resources :calendar_events
   resources :event_titles
