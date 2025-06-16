@@ -459,7 +459,7 @@ def set_tenant
   WireguardPeer.create!(
     public_key: client_public_key,
     # allowed_ips: assigned_ip
-    allowed_ips: "#{assigned_ip}/32"
+    allowed_ips: "#{random_ip}/32"
   )
 
   # Generate peer configs for Mikrotik or client
