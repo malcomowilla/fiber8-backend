@@ -26,6 +26,11 @@ Sidekiq.configure_server do |config|
     schedule = {
 
 
+    'rehydrate_wireguard_job' => {
+      'class' => 'RehydrateWireguardJob',
+      'cron' => '* * * * *'
+    },
+
 
 'restart_cloudflared_if_tunnel_missing_job' => {
   'class' => 'RestartCloudflaredIfTunnelMissingJob',
