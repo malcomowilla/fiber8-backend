@@ -468,7 +468,7 @@ def set_tenant
 
   # Apply peer directly using `wg set`
   begin
-    system("wg set wg0 peer #{client_public_key} allowed-ips #{assigned_ip}")
+    system("wg set wg0 peer #{client_public_key} allowed-ips #{random_ip}/32")
   rescue => e
     render json: { error: "Failed to apply peer to wg0: #{e.message}" }, status: :internal_server_error
     return
