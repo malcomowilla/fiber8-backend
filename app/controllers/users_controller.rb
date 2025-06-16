@@ -6,7 +6,6 @@
     # def set_current_tenant
     #   # Extract subdomain and domain from request
     #   subdomain = request.subdomain
-    #   domain = request.domain
     
     #   # Debugging: Output extracted subdomain and domain
     #   puts "Subdomain: #{subdomain}, Domain: #{domain}"
