@@ -1,0 +1,32 @@
+<%= form_with(model: wireguard_peer) do |form| %>
+  <% if wireguard_peer.errors.any? %>
+    <div style="color: red">
+      <h2><%= pluralize(wireguard_peer.errors.count, "error") %> prohibited this wireguard_peer from being saved:</h2>
+
+      <ul>
+        <% wireguard_peer.errors.each do |error| %>
+          <li><%= error.full_message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div>
+    <%= form.label :public_key, style: "display: block" %>
+    <%= form.text_field :public_key %>
+  </div>
+
+  <div>
+    <%= form.label :allowed_ips, style: "display: block" %>
+    <%= form.text_field :allowed_ips %>
+  </div>
+
+  <div>
+    <%= form.label :persistent_keepalive, style: "display: block" %>
+    <%= form.number_field :persistent_keepalive %>
+  </div>
+
+  <div>
+    <%= form.submit %>
+  </div>
+<% end %>

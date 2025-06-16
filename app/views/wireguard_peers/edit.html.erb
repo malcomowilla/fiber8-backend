@@ -1,0 +1,12 @@
+<% content_for :title, "Editing wireguard peer" %>
+
+<h1>Editing wireguard peer</h1>
+
+<%= render "form", wireguard_peer: @wireguard_peer %>
+
+<br>
+
+<div>
+  <%= link_to "Show this wireguard peer", @wireguard_peer %> |
+  <%= link_to "Back to wireguard peers", wireguard_peers_path %>
+</div>

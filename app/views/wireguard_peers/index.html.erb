@@ -1,0 +1,16 @@
+<p style="color: green"><%= notice %></p>
+
+<% content_for :title, "Wireguard peers" %>
+
+<h1>Wireguard peers</h1>
+
+<div id="wireguard_peers">
+  <% @wireguard_peers.each do |wireguard_peer| %>
+    <%= render wireguard_peer %>
+    <p>
+      <%= link_to "Show this wireguard peer", wireguard_peer %>
+    </p>
+  <% end %>
+</div>
+
+<%= link_to "New wireguard peer", new_wireguard_peer_path %>

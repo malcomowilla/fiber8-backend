@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2025_06_08_150204) do
+ActiveRecord::Schema[7.2].define(version: 2025_06_16_110920) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -748,6 +748,15 @@ ActiveRecord::Schema[7.2].define(version: 2025_06_08_150204) do
     t.boolean "inactive"
     t.boolean "check_is_inactive"
     t.string "fcm_token"
+  end
+
+  create_table "wireguard_peers", force: :cascade do |t|
+    t.string "public_key"
+    t.string "allowed_ips"
+    t.integer "persistent_keepalive"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.integer "account_id"
   end
 
   create_table "zones", force: :cascade do |t|
