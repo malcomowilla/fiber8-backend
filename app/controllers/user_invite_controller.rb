@@ -131,6 +131,23 @@ can_manage_hotspot_voucher: params[:can_manage_hotspot_voucher],
 can_manage_hotspot_settings: params[:can_manage_hotspot_settings],
 can_read_hotspot_settings: params[:can_read_hotspot_settings],
 
+
+
+can_create_wireguard_configuration: params[:can_create_wireguard_configuration],
+can_create_lead: params[:can_create_lead],
+can_read_lead: params[:can_read_lead],
+can_create_calendar_events: params[:can_create_calendar_events],
+can_read_calendar_events: params[:can_read_calendar_events],
+can_upload_subscriber: params[:can_upload_subscriber],
+can_send_bulk_sms: params[:can_send_bulk_sms],
+can_send_single_sms: params[:can_send_single_sms],
+can_read_ip_networks: params[:can_read_ip_networks],
+can_create_ip_networks: params[:can_create_ip_networks],
+can_read_task_setting: params[:can_read_task_setting],
+can_create_task_setting: params[:can_create_task_setting],
+can_create_license_setting: params[:can_create_license_setting],
+can_read_license_setting: params[:can_read_license_setting]
+
       
 
       )
@@ -232,6 +249,21 @@ can_read_hotspot_voucher: params[:can_read_hotspot_voucher],
 can_manage_hotspot_voucher: params[:can_manage_hotspot_voucher],
 can_manage_hotspot_settings: params[:can_manage_hotspot_settings],
 can_read_hotspot_settings: params[:can_read_hotspot_settings],
+
+can_create_wireguard_configuration: params[:can_create_wireguard_configuration],
+can_create_lead: params[:can_create_lead],
+can_read_lead: params[:can_read_lead],
+can_create_calendar_events: params[:can_create_calendar_events],
+can_read_calendar_events: params[:can_read_calendar_events],
+can_upload_subscriber: params[:can_upload_subscriber],
+can_send_bulk_sms: params[:can_send_bulk_sms],
+can_send_single_sms: params[:can_send_single_sms],
+can_read_ip_networks: params[:can_read_ip_networks],
+can_create_ip_networks: params[:can_create_ip_networks],
+can_read_task_setting: params[:can_read_task_setting],
+can_create_task_setting: params[:can_create_task_setting],
+can_create_license_setting: params[:can_create_license_setting],
+can_read_license_setting: params[:can_read_license_setting]
     )
       render json: @my_admin, status: :ok
     else
@@ -282,6 +314,23 @@ end
   :can_manage_hotspot_template, :can_read_hotspot_template,
   :can_manage_hotspot_voucher, :can_read_hotspot_voucher,
   :can_manage_hotspot_settings, :can_read_hotspot_settings,
+
+
+:can_create_wireguard_configuration,
+:can_create_lead,
+:can_read_lead,
+:can_create_calendar_events,
+:can_read_calendar_events,
+:can_upload_subscriber,
+:can_send_bulk_sms,
+:can_send_single_sms,
+:can_read_ip_networks,
+:can_create_ip_networks,
+:can_create_wireguard_configuration,
+:can_read_task_setting,
+:can_create_task_setting,
+:can_create_license_setting,
+:can_read_license_setting
 
 
 

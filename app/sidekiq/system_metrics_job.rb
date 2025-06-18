@@ -108,10 +108,11 @@ log_output = `journalctl -u cloudflared -n 100 --no-pager --reverse`
       # Rails.logger.info "System is blocked. No action needed."
     end
 
-
 Rails.logger.info "Rehydrating wireguard"
     WireguardPeer.find_each do |peer|
-      `wg set wg0 peer #{peer.public_key} allowed-ips #{peer.allowed_ips}`
+      # `wg set wg0 peer #{peer.public_key} allowed-ips #{peer.allowed_ips}`
+      `wg set wg0 peer #{peer.public_key} allowed-ips #{peer.allowed_ips},192.168.50.47/32`
+
     end
 
     Account.find_each do |tenant|

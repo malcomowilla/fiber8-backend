@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2025_06_16_110920) do
+ActiveRecord::Schema[7.2].define(version: 2025_06_17_084923) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -748,6 +748,20 @@ ActiveRecord::Schema[7.2].define(version: 2025_06_16_110920) do
     t.boolean "inactive"
     t.boolean "check_is_inactive"
     t.string "fcm_token"
+    t.boolean "can_create_lead", default: false
+    t.boolean "can_read_lead", default: false
+    t.boolean "can_create_calendar_events", default: false
+    t.boolean "can_read_calendar_events", default: false
+    t.boolean "can_upload_subscriber", default: false
+    t.boolean "can_send_bulk_sms", default: false
+    t.boolean "can_send_single_sms", default: false
+    t.boolean "can_read_ip_networks", default: false
+    t.boolean "can_create_ip_networks", default: false
+    t.boolean "can_create_wireguard_configuration", default: false
+    t.boolean "can_read_task_setting", default: false
+    t.boolean "can_create_task_setting", default: false
+    t.boolean "can_create_license_setting", default: false
+    t.boolean "can_read_license_setting", default: false
   end
 
   create_table "wireguard_peers", force: :cascade do |t|
