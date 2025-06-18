@@ -1,9 +1,39 @@
 class WireguardPeersController < ApplicationController
-  before_action :set_wireguard_peer, only: %i[ show edit update destroy ]
+
+
+before_action :update_last_activity
+before_action :set_tenant
+
+
+
+   def update_last_activity
+if current_user
+      current_user.update!(last_activity_active: Time.current)
+    end
+    
+  end
+
+
+
+
+
+def set_tenant
+    host = request.headers['X-Subdomain']
+    @account = Account.find_by(subdomain: host)
+     ActsAsTenant.current_tenant = @account
+    EmailConfiguration.configure(@account, ENV['SYSTEM_ADMIN_EMAIL'])
+    # EmailSystemAdmin.configure(@current_account, current_system_admin)
+  
+  # set_current_tenant(@account)
+  rescue ActiveRecord::RecordNotFound
+    render json: { error: 'Invalid tenant' }, status: :not_found
+  
+  end
 
   # GET /wireguard_peers or /wireguard_peers.json
   def index
     @wireguard_peers = WireguardPeer.all
+    render json: @wireguard_peers
   end
 
   # GET /wireguard_peers/1 or /wireguard_peers/1.json
@@ -21,40 +51,43 @@ class WireguardPeersController < ApplicationController
 
   # POST /wireguard_peers or /wireguard_peers.json
   def create
-    @wireguard_peer = WireguardPeer.new(wireguard_peer_params)
+    @wireguard_peer = WireguardPeer.new(
+      private_ip:  "#{params[:wireguard_peer][:private_ip]}/#{params[:wireguard_peer][:subnet_mask]}",
 
-    respond_to do |format|
+    )
+
       if @wireguard_peer.save
-        format.html { redirect_to @wireguard_peer, notice: "Wireguard peer was successfully created." }
-        format.json { render :show, status: :created, location: @wireguard_peer }
+        render json: @wireguard_peer, status: :created   
       else
-        format.html { render :new, status: :unprocessable_entity }
-        format.json { render json: @wireguard_peer.errors, status: :unprocessable_entity }
-      end
+         render json: @wireguard_peer.errors, status: :unprocessable_entity 
+      
     end
   end
 
   # PATCH/PUT /wireguard_peers/1 or /wireguard_peers/1.json
   def update
-    respond_to do |format|
-      if @wireguard_peer.update(wireguard_peer_params)
-        format.html { redirect_to @wireguard_peer, notice: "Wireguard peer was successfully updated." }
-        format.json { render :show, status: :ok, location: @wireguard_peer }
+          @wireguard_peer = WireguardPeer.find(params[:id])
+
+      if @wireguard_peer.update(
+      private_ip:  "#{params[:wireguard_peer][:private_ip]}/#{params[:wireguard_peer][:subnet_mask]}",
+
+
+      )
+        render json: @wireguard_peer, status: :ok
       else
-        format.html { render :edit, status: :unprocessable_entity }
-        format.json { render json: @wireguard_peer.errors, status: :unprocessable_entity }
+         render json: @wireguard_peer.errors, status: :unprocessable_entity 
       end
-    end
+    
   end
 
   # DELETE /wireguard_peers/1 or /wireguard_peers/1.json
   def destroy
+          @wireguard_peer = WireguardPeer.find(params[:id])
+
     @wireguard_peer.destroy!
 
-    respond_to do |format|
-      format.html { redirect_to wireguard_peers_path, status: :see_other, notice: "Wireguard peer was successfully destroyed." }
-      format.json { head :no_content }
-    end
+     head :no_content 
+    
   end
 
   private
@@ -65,6 +98,9 @@ class WireguardPeersController < ApplicationController
 
     # Only allow a list of trusted parameters through.
     def wireguard_peer_params
-      params.require(:wireguard_peer).permit(:public_key, :allowed_ips, :persistent_keepalive)
+      params.require(:wireguard_peer).permit(:public_key, :allowed_ips, 
+      :persistent_keepalive, :private_ip)
     end
 end
+
+
