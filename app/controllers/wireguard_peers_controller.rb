@@ -73,6 +73,10 @@ def set_tenant
 
 
       )
+    `ip route add #{params[:wireguard_peer][:private_ip]}/#{params[:wireguard_peer][:subnet_mask]} dev wg0`
+
+# `ip route replace #{@wireguard_peer.private_ip} dev wg0`
+
         render json: @wireguard_peer, status: :ok
       else
          render json: @wireguard_peer.errors, status: :unprocessable_entity 
