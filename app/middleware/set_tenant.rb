@@ -218,6 +218,8 @@ class SetTenant
 'create_package',
   'restart_service',
       'block_service',
+      'client_leads',
+      'calendar_events',
       'send_sms',
       
       'reboot_router',

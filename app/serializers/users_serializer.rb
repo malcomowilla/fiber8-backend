@@ -20,7 +20,34 @@ attributes :can_manage_subscriber,:can_read_read_subscriber,:can_manage_ticket_s
 
 :can_manage_user_setting,
 :can_read_user_setting,
-:can_read_router_setting
+:can_read_router_setting,
+
+
+
+:can_create_wireguard_configuration,
+:can_create_lead,
+:can_read_lead,
+:can_create_calendar_events,
+:can_read_calendar_events,
+:can_upload_subscriber,
+:can_send_bulk_sms,
+:can_send_single_sms,
+:can_read_ip_networks,
+:can_create_ip_networks,
+:can_create_wireguard_configuration,
+:can_read_task_setting,
+:can_create_task_setting,
+:can_create_license_setting,
+:can_read_license_setting
+
+
+
+
+
+
+
+
+
 
 
 
