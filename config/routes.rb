@@ -83,6 +83,8 @@ scope '/api' do
   resources :hotspot_vouchers
   resources :hotspot_settings
   resources :hotspot_subscriptions
+    resources :wireguard_peers
+
   # resources :pp_poe_plans
   # resources :hotspot_plans
   resources :system_admin_sms
