@@ -55,7 +55,7 @@ def set_tenant
       private_ip:  "#{params[:wireguard_peer][:private_ip]}/#{params[:wireguard_peer][:subnet_mask]}",
 
     )
-
+`ip route add #{params[:wireguard_peer][:private_ip]}/#{params[:wireguard_peer][:subnet_mask]} dev wg0`
       if @wireguard_peer.save
         render json: @wireguard_peer, status: :created   
       else
@@ -85,6 +85,7 @@ def set_tenant
           @wireguard_peer = WireguardPeer.find(params[:id])
 
     @wireguard_peer.destroy!
+`ip route del #{@wireguard_peer.private_ip} dev wg0`
 
      head :no_content 
     
