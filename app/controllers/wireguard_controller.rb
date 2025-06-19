@@ -403,7 +403,7 @@ def set_tenant
   
 
   def generate_config
-    authorize! :generate_config, Wireguard
+    authorize! :generate_config, WireguardPeer
   host = request.headers['X-Subdomain']
 
   if host == 'demo'
