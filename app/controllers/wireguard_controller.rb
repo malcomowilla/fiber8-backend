@@ -547,7 +547,6 @@ client_config = <<~WGCONFIG
   PublicKey = #{server_public_key}
   Endpoint = 102.221.35.92:51820
   AllowedIPs = 0.0.0.0/0
-  PersistentKeepalive = 25
 WGCONFIG
 
 
