@@ -537,11 +537,11 @@ def generate_wireguard_app_config
     random_ip = host_range.to_a[1..-2].sample || host_range.first.succ
     "#{random_ip}/#{subnet_mask}"
   end
-
+client_ip = params[:client_ip]
 client_config = <<~WGCONFIG
   [Interface]
   PrivateKey = #{client_private_key}
-  Address = "#{random_ip}/32"
+  Address = "#{client_ip}/32"
 
   [Peer]
   PublicKey = #{server_public_key}
