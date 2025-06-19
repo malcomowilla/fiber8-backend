@@ -541,7 +541,7 @@ def generate_wireguard_app_config
 client_config = <<~WGCONFIG
   [Interface]
   PrivateKey = #{client_private_key}
-  Address = #{assigned_ip}
+  Address = "#{random_ip}/32"
   DNS = 1.1.1.1
 
   [Peer]
