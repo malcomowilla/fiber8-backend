@@ -542,7 +542,6 @@ client_config = <<~WGCONFIG
   [Interface]
   PrivateKey = #{client_private_key}
   Address = "#{random_ip}/32"
-  DNS = 1.1.1.1
 
   [Peer]
   PublicKey = #{server_public_key}
