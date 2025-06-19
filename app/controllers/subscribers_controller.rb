@@ -4,7 +4,7 @@ class SubscribersController < ApplicationController
 rescue_from  ActiveRecord::RecordInvalid, with: :subscriber_invalid
 
   # load_and_authorize_resource except: [:import]
-load_and_authorize_resource 
+load_and_authorize_resource except: [:import] 
 require 'csv'
 
 set_current_tenant_through_filter
@@ -29,6 +29,8 @@ if current_user
 
   
 def import
+    authorize! :import, Subscriber
+
        host = request.headers['X-Subdomain']
 
        if host == 'demo'

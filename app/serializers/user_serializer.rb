@@ -34,7 +34,11 @@ class UserSerializer < ActiveModel::Serializer
 :can_read_task_setting,
 :can_create_task_setting,
 :can_create_license_setting,
-:can_read_license_setting
+:can_read_license_setting,
+:can_manage_networks,
+:can_read_networks,
+:can_manage_private_ips,
+:can_read_private_ips
   
 
   

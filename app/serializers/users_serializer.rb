@@ -38,10 +38,11 @@ attributes :can_manage_subscriber,:can_read_read_subscriber,:can_manage_ticket_s
 :can_read_task_setting,
 :can_create_task_setting,
 :can_create_license_setting,
-:can_read_license_setting
-
-
-
+:can_read_license_setting,
+:can_manage_networks,
+:can_read_networks,
+:can_manage_private_ips,
+:can_read_private_ips
 
 
 

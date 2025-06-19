@@ -240,8 +240,14 @@ can :read, HotspotVoucher if admin.can_read_hotspot_voucher
 # can :read, CalendarEvent if admin.can_read_calendar
 
  
+can :generate_config, Wireguard if admin.can_create_wireguard_configuration
 
+can :delete_user, User if admin.can_manage_users
+can :get_all_admins, User if admin.can_read_users
+can :invite_users, User if admin.can_manage_users
+can :update, User if admin.can_manage_users
 
+can :import, Subscriber if admin.can_upload_subscriber
 
 can :manage, UserGroup if  admin.can_manage_user_group
 can :read, UserGroup if admin.can_read_user_group
@@ -254,6 +260,16 @@ can :read, UserGroup if admin.can_read_user_group
     can :manage, Subscription if admin.can_manage_subscription
     can :read, Subscription if admin.can_read_subscription
 
+    can :manage, CalendarEvent if admin.can_create_calendar_events
+    can :read, CalendarEvent if admin.can_read_calendar_events
+
+    can :manage, WireguardPeer if admin.can_manage_private_ips
+    can :read, WireguardPeer if admin.can_read_private_ips
+
+    can :manage, ClientLead if admin.can_create_lead
+    can :read, ClientLead if admin.can_read_lead
+    can :manage, IpNetwork if admin.can_manage_networks
+    can :read, IpNetwork if admin.can_read_networks
     # can :manage, Location if admin.can_manage_location
     # can :read, Location if admin.can_read_location
     # cannot :manage, SubLocation if admin.can_manage_sub_location == false
@@ -267,3 +283,8 @@ can :read, UserGroup if admin.can_read_user_group
     # can :read, FinancesAndAccount if admin.can_read_finances_account
   end
 end
+
+
+
+
+

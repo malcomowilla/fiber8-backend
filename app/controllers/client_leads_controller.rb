@@ -6,6 +6,7 @@ class ClientLeadsController < ApplicationController
 
   before_action :set_tenant
   before_action :update_last_activity
+  load_and_authorize_resource
 
 
   # GET /client_leads or /client_leads.json

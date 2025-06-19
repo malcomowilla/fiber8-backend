@@ -403,6 +403,7 @@ def set_tenant
   
 
   def generate_config
+    authorize! :generate_config, Wireguard
   host = request.headers['X-Subdomain']
 
   if host == 'demo'
@@ -486,6 +487,40 @@ def set_tenant
 end
 
   private
+
+
+def generate_wireguard_app_config(client_private_key, server_public_key, assigned_ip)
+
+client_config = <<~WGCONFIG
+  [Interface]
+  PrivateKey = #{client_private_key}
+  Address = #{assigned_ip}
+  DNS = 1.1.1.1
+
+  [Peer]
+  PublicKey = #{server_public_key}
+  Endpoint = 102.221.35.92:51820
+  AllowedIPs = 0.0.0.0/0
+  PersistentKeepalive = 25
+WGCONFIG
+
+
+
+qr = RQRCode::QRCode.new(client_config)
+png = qr.as_png(size: 300)
+
+# Convert to base64 for easy display in frontend or API
+qr_base64 = Base64.strict_encode64(png.to_s)
+
+ render json: {
+        qr_code_data_url: "data:image/png;base64,#{qr_base64}",
+      }
+end
+
+
+
+
+
 
   def generate_mikrotik_config(private_key, server_pubkey, ip)
     <<~CONFIG
