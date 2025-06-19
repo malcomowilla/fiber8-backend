@@ -240,7 +240,7 @@ can :read, HotspotVoucher if admin.can_read_hotspot_voucher
 # can :read, CalendarEvent if admin.can_read_calendar
 
  
-can :generate_config, Wireguard if admin.can_create_wireguard_configuration
+can :generate_config, WireguardPeer if admin.can_create_wireguard_configuration
 
 can :delete_user, User if admin.can_manage_users
 can :get_all_admins, User if admin.can_read_users
