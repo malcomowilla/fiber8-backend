@@ -521,17 +521,17 @@ def generate_wireguard_app_config
 
   # Assign client IP
   assigned_ip = if client_ip.present?
-    begin
-      client_ip_obj = IPAddr.new(client_ip)
-      unless network.include?(client_ip_obj)
-        render json: { error: "Specified IP #{client_ip} is not in network #{network_address}/#{subnet_mask}" }, status: :bad_request
-        return
-      end
-      "#{client_ip}/#{subnet_mask}"
-    rescue IPAddr::InvalidAddressError => e
-      render json: { error: "Invalid client IP: #{e.message}" }, status: :bad_request
-      return
-    end
+    # begin
+    #   client_ip_obj = IPAddr.new(client_ip)
+    #   unless network.include?(client_ip_obj)
+    #     render json: { error: "Specified IP #{client_ip} is not in network #{network_address}/#{subnet_mask}" }, status: :bad_request
+    #     return
+    #   end
+    #   "#{client_ip}/#{subnet_mask}"
+    # rescue IPAddr::InvalidAddressError => e
+    #   render json: { error: "Invalid client IP: #{e.message}" }, status: :bad_request
+    #   return
+    # end
   else
     host_range = network.to_range
     random_ip = host_range.to_a[1..-2].sample || host_range.first.succ
