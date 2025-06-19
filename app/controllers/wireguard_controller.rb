@@ -499,7 +499,6 @@ def generate_wireguard_app_config
 
   network_address =  "10.2.0.0"
   subnet_mask = "24"
-  client_ip = params[:client_ip]
 
   # Validate network address
   begin
@@ -522,15 +521,14 @@ def generate_wireguard_app_config
     host_range = network.to_range
     random_ip = host_range.to_a[1..-2].sample || host_range.first.succ
   
-WireguardPeer.create!(
+WireguardPeer.create(
     public_key: client_public_key,
     # allowed_ips: assigned_ip
     allowed_ips: "#{random_ip}/32"
   )
   # Assign client IP
-   
+
   
-client_ip = params[:client_ip]
 client_config = <<~WGCONFIG
   [Interface]
   PrivateKey = #{client_private_key}
