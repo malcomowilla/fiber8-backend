@@ -96,7 +96,7 @@ scope '/api' do
 
 end
 
-  post '/api/wireguard/generate_wireguard_app_config', to: 'wireguard#generate_config'
+  post '/api/wireguard/generate_wireguard_app_config', to: 'wireguard#generate_wireguard_app_config'
     post '/api/save_fcm_token', to: 'sessions#create_fcm_token'
 
  post '/save_fcm_token', to: 'sessions#create_fcm_token'

@@ -486,10 +486,57 @@ def set_tenant
   }
 end
 
-  private
 
 
-def generate_wireguard_app_config(client_private_key, server_public_key, assigned_ip)
+
+def generate_wireguard_app_config
+ host = request.headers['X-Subdomain']
+
+  if host == 'demo'
+    render json: { error: 'demo mode does not allow wireguard config generation' }, status: :bad_request
+    return
+  end
+
+  network_address = params[:network_address] || "10.2.0.0"
+  subnet_mask = params[:subnet_mask] || "24"
+  client_ip = params[:client_ip]
+
+  # Validate network address
+  begin
+    network = IPAddr.new("#{network_address}/#{subnet_mask}")
+  rescue IPAddr::InvalidAddressError => e
+    render json: { error: "Invalid network address: #{e.message}" }, status: :bad_request
+    return
+  end
+
+  # Generate client keys
+  client_private_key, _ = Open3.capture3("wg genkey")
+  client_private_key.strip!
+  client_public_key, _ = Open3.capture3("echo #{client_private_key} | wg pubkey")
+  client_public_key.strip!
+
+  # Get server public key
+  server_public_key, _ = Open3.capture3("wg show wg0 public-key")
+  server_public_key.strip!
+
+  # Assign client IP
+  assigned_ip = if client_ip.present?
+    begin
+      client_ip_obj = IPAddr.new(client_ip)
+      unless network.include?(client_ip_obj)
+        render json: { error: "Specified IP #{client_ip} is not in network #{network_address}/#{subnet_mask}" }, status: :bad_request
+        return
+      end
+      "#{client_ip}/#{subnet_mask}"
+    rescue IPAddr::InvalidAddressError => e
+      render json: { error: "Invalid client IP: #{e.message}" }, status: :bad_request
+      return
+    end
+  else
+    host_range = network.to_range
+    random_ip = host_range.to_a[1..-2].sample || host_range.first.succ
+    "#{random_ip}/#{subnet_mask}"
+  end
 
 client_config = <<~WGCONFIG
   [Interface]
@@ -516,6 +563,11 @@ qr_base64 = Base64.strict_encode64(png.to_s)
         qr_code_data_url: "data:image/png;base64,#{qr_base64}",
       }
 end
+
+
+  private
+
+
 
 
 
