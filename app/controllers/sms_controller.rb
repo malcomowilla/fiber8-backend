@@ -146,8 +146,8 @@ end
 
       api_key = SmsSetting.find_by(sms_provider: selected_provider)&.api_key
       api_secret = SmsSetting.find_by(sms_provider: selected_provider)&.api_secret
-  Rails.logger.info "api_key found #{api_key}"
-   Rails.logger.info "api_secret found #{api_key}"
+  # Rails.logger.info "api_key found #{api_key}"
+  #  Rails.logger.info "api_secret found #{api_key}"
 
       uri = URI("https://api.smsleopard.com/v1/balance")  
       params = {
@@ -159,13 +159,13 @@ end
   
       response = Net::HTTP.get_response(uri)
       if response.is_a?(Net::HTTPSuccess)
-        puts "Your Balance #{response.body}"
+        # puts "Your Balance #{response.body}"
         balance_data = JSON.parse(response.body)
         balance = balance_data['balance']
         render json: {message: "#{balance}"},status: :ok
       else
         render json: {error: "Error Getting Balance: #{response.body}" }
-        puts "Error Getting Balance: #{response.body}"
+        # puts "Error Getting Balance: #{response.body}"
       end
     end
 

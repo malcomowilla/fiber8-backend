@@ -3,7 +3,6 @@ class UserInviteController < ApplicationController
 
 before_action :update_last_activity
 
-
   set_current_tenant_through_filter
 before_action :set_tenant
 
@@ -37,6 +36,7 @@ if current_user
 
 
   def invite_users
+    authorize! :invite_users, User
 
     if User.exists?(username: params[:username])
       render json: { error: "username already exists" }, status: :unprocessable_entity
@@ -196,6 +196,8 @@ if send_password_via_email == true || send_password_via_email == 'true'
 
 
   def update
+        authorize! :update, User
+
     @my_admin = User.find(params[:id])
     if @my_admin.update!(
 
@@ -250,6 +252,7 @@ can_manage_hotspot_voucher: params[:can_manage_hotspot_voucher],
 can_manage_hotspot_settings: params[:can_manage_hotspot_settings],
 can_read_hotspot_settings: params[:can_read_hotspot_settings],
 
+
 can_create_wireguard_configuration: params[:can_create_wireguard_configuration],
 can_create_lead: params[:can_create_lead],
 can_read_lead: params[:can_read_lead],
@@ -263,7 +266,11 @@ can_create_ip_networks: params[:can_create_ip_networks],
 can_read_task_setting: params[:can_read_task_setting],
 can_create_task_setting: params[:can_create_task_setting],
 can_create_license_setting: params[:can_create_license_setting],
-can_read_license_setting: params[:can_read_license_setting]
+can_read_license_setting: params[:can_read_license_setting],
+can_manage_networks: params[:can_manage_networks],
+can_read_networks: params[:can_read_networks],
+can_manage_private_ips: params[:can_manage_private_ips],
+can_read_private_ips: params[:can_read_private_ips]
     )
       render json: @my_admin, status: :ok
     else
@@ -272,12 +279,14 @@ can_read_license_setting: params[:can_read_license_setting]
   end
   
 def  get_all_admins
+    authorize! :get_all_admins, User
 @admins = User.all
 render json: @admins
 end
 
 
 def delete_user
+    authorize! :delete_user, User
 find_user = User.find_by(id: params[:id])
 if find_user
 find_user.destroy

@@ -3,6 +3,7 @@ class WireguardPeersController < ApplicationController
 
 before_action :update_last_activity
 before_action :set_tenant
+load_and_authorize_resource
 
 
 
@@ -51,6 +52,7 @@ def set_tenant
 
   # POST /wireguard_peers or /wireguard_peers.json
   def create
+
     @wireguard_peer = WireguardPeer.new(
       private_ip:  "#{params[:wireguard_peer][:private_ip]}/#{params[:wireguard_peer][:subnet_mask]}",
 

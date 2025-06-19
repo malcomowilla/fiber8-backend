@@ -14,7 +14,7 @@ class UserGroupsController < ApplicationController
 
      def update_last_activity
 if current_user
-      current_user.update!(last_activity_active:Time.current)
+      current_user.update!(last_activity_active: Time.current)
     end
     
   end

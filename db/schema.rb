@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2025_06_18_143517) do
+ActiveRecord::Schema[7.2].define(version: 2025_06_19_103618) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -762,6 +762,10 @@ ActiveRecord::Schema[7.2].define(version: 2025_06_18_143517) do
     t.boolean "can_create_task_setting", default: false
     t.boolean "can_create_license_setting", default: false
     t.boolean "can_read_license_setting", default: false
+    t.boolean "can_manage_networks", default: false
+    t.boolean "can_read_networks", default: false
+    t.boolean "can_manage_private_ips", default: false
+    t.boolean "can_read_private_ips", default: false
   end
 
   create_table "wireguard_peers", force: :cascade do |t|

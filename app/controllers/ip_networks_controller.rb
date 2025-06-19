@@ -4,6 +4,7 @@ class IpNetworksController < ApplicationController
 
 
   set_current_tenant_through_filter
+  load_and_authorize_resource
 
   before_action :set_tenant
   before_action :update_last_activity
