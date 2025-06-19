@@ -520,7 +520,7 @@ def generate_wireguard_app_config
   server_public_key.strip!
 
     host_range = network.to_range
-    random_ip = host_range.to_a[1..-2].sample || host_range.first.succ
+    random_ip = host_range.to_a[1..-2].sample 
   
 WireguardPeer.create!(
     public_key: client_public_key,
@@ -551,6 +551,7 @@ png = qr.as_png(size: 300)
 qr_base64 = Base64.strict_encode64(png.to_s)
 
  render json: {
+  random_ip: random_ip,
         qr_code_data_url: "data:image/png;base64,#{qr_base64}",
       }
 end
