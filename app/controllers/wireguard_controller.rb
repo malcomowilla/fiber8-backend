@@ -498,7 +498,7 @@ def generate_wireguard_app_config
   end
 
   network_address =  "10.2.0.0"
-  subnet_mask = "32"
+  subnet_mask = "24"
   client_ip = params[:client_ip]
 
   # Validate network address
