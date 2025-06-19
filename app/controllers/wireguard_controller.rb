@@ -498,7 +498,7 @@ def generate_wireguard_app_config
   end
 
   network_address = params[:network_address] || "10.2.0.0"
-  subnet_mask = params[:subnet_mask] || "24"
+  subnet_mask = params[:subnet_mask] || "32"
   client_ip = params[:client_ip]
 
   # Validate network address
@@ -541,7 +541,7 @@ def generate_wireguard_app_config
 client_config = <<~WGCONFIG
   [Interface]
   PrivateKey = #{client_private_key}
-  Address = #{random_ip}/32
+  Address = #{assigned_ip}
   DNS = 1.1.1.1
 
   [Peer]
