@@ -541,7 +541,7 @@ client_ip = params[:client_ip]
 client_config = <<~WGCONFIG
   [Interface]
   PrivateKey = #{client_private_key}
-  Address = "#{client_ip}"
+  Address = #{random_ip}/32
 
   [Peer]
   PublicKey = #{server_public_key}
