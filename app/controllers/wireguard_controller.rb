@@ -519,24 +519,17 @@ def generate_wireguard_app_config
   server_public_key, _ = Open3.capture3("wg show wg0 public-key")
   server_public_key.strip!
 
-  # Assign client IP
-  assigned_ip = if client_ip.present?
-    # begin
-    #   client_ip_obj = IPAddr.new(client_ip)
-    #   unless network.include?(client_ip_obj)
-    #     render json: { error: "Specified IP #{client_ip} is not in network #{network_address}/#{subnet_mask}" }, status: :bad_request
-    #     return
-    #   end
-    #   "#{client_ip}/#{subnet_mask}"
-    # rescue IPAddr::InvalidAddressError => e
-    #   render json: { error: "Invalid client IP: #{e.message}" }, status: :bad_request
-    #   return
-    # end
-  else
     host_range = network.to_range
     random_ip = host_range.to_a[1..-2].sample || host_range.first.succ
-    "#{random_ip}/#{subnet_mask}"
-  end
+  
+WireguardPeer.create!(
+    public_key: client_public_key,
+    # allowed_ips: assigned_ip
+    allowed_ips: "#{random_ip}/32"
+  )
+  # Assign client IP
+   
+  
 client_ip = params[:client_ip]
 client_config = <<~WGCONFIG
   [Interface]
