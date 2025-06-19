@@ -509,7 +509,6 @@ def generate_wireguard_app_config
     return
   end
 
-  # Generate client keys
   client_private_key, _ = Open3.capture3("wg genkey")
   client_private_key.strip!
   client_public_key, _ = Open3.capture3("echo #{client_private_key} | wg pubkey")
