@@ -497,8 +497,8 @@ def generate_wireguard_app_config
     return
   end
 
-  network_address = params[:network_address] || "10.2.0.0"
-  subnet_mask = params[:subnet_mask] || "32"
+  network_address =  "10.2.0.0"
+  subnet_mask = "32"
   client_ip = params[:client_ip]
 
   # Validate network address
@@ -518,9 +518,10 @@ def generate_wireguard_app_config
   # Get server public key
   server_public_key, _ = Open3.capture3("wg show wg0 public-key")
   server_public_key.strip!
+    network = IPAddr.new("#{network_address}/#{subnet_mask}")
 
     host_range = network.to_range
-    random_ip = host_range.to_a[1..-2].sample 
+    random_ip = host_range.to_a[1..-2].sample || host_range.first.succ
   
 WireguardPeer.create!(
     public_key: client_public_key,
