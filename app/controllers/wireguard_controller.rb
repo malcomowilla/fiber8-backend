@@ -515,7 +515,7 @@ def generate_wireguard_app_config
 
   # Get server public key
   server_public_key, _ = Open3.capture3("wg show wg0 public-key")
-  server_public_key.strip!ra
+  server_public_key.strip!
     network = IPAddr.new("#{network_address}/#{subnet_mask}")
 
     host_range = network.to_range
