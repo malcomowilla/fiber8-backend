@@ -1,4 +1,9 @@
-class SendSmsController < ApplicationController
+
+
+
+
+
+class SendBulkSmsController < ApplicationController
   require 'net/http'
   require 'json'
   $LOAD_PATH.unshift(File.join(File.dirname(__FILE__), '..', 'lib'))
@@ -14,20 +19,34 @@ class SendSmsController < ApplicationController
     ActsAsTenant.current_tenant = @account
     EmailConfiguration.configure(@account, ENV['SYSTEM_ADMIN_EMAIL'])
   rescue ActiveRecord::RecordNotFound
-    render json: { error: 'Invalid tenant' }, status: :not_found
+    return render json: { error: 'Invalid tenant' }, status: :not_found
   end
 
 def send_sms
   provider = ActsAsTenant.current_tenant.sms_provider_setting.sms_provider
-  case provider
+ 
+  
+  if params[:status] === 'all clients'
+      return render json: { error: "No valid SMS provider configured" }, status: :unprocessable_entity if provider.nil?
+
+       case provider
     when 'TextSms'
       send_sms_text_sms
     when 'SMS leopard'
       send_sms_sms_leopard
-    else
-      render json: { error: "No valid SMS provider configured" }, status: :unprocessable_entity
-      return
+   
+  
+
+  
   end
+
+
+
+  end
+
+
+
+
 
 end
 
@@ -35,35 +54,31 @@ end
 
 
   def send_sms_text_sms
-    to = params[:to]
-    subject = params[:subject]
+        subscribers = Subscriber.all
+        subscribers.each do |subscriber|
+          
+
     message = params[:message]
-
-    # 👉 Fetch subscriber details to replace placeholders
-    subscriber = Subscriber.find_by(name: to)
-
-    if subscriber.nil?
-      render json: { error: 'Subscriber not found' }, status: :not_found
-      return
-    end
-
-    # 👇 Replace placeholders like {{name}}, {{email}}, etc.
+Rails.logger.info "message: #{message}"
     interpolated_message = MessageTemplate.interpolate(message, {
       name: subscriber.name,
+      phone: subscriber.phone_number,
+      email: subscriber.email,
+
+
     })
 
-    # ✅ Send SMS (you can reuse your existing method or simplify here)
     sms_setting = SmsSetting.find_by(sms_provider: 'TextSms')
 
-    if sms_setting.nil?
-      render json: { error: "SMS provider not found" }, status: :not_found
-      return
-    end
+    # if sms_setting.nil?
+    #   return render json: { error: "SMS provider not found" }, status: :not_found
+    # end
+  return { error: "SMS provider not found" } if sms_setting.nil?
 
     uri = URI("https://sms.textsms.co.ke/api/services/sendsms")
     sms_params = {
       apikey: sms_setting.api_key,
-      message: interpolated_message,
+      message: interpolated_message, 
       mobile: subscriber.phone_number,
       partnerID: sms_setting.partnerID,
       shortcode: 'TextSMS'
@@ -93,14 +108,17 @@ end
 
         )
         Rails.logger.info "ody message sent: #{body}"
-        render json: { success: true, message: 'SMS sent successfully' }, status: :ok
+         return render json: { success: true, message: 'SMS sent successfully' }
       else
         Rails.logger.info "Failed to send message//eror response but message sent: #{body.dig('responses', 0, 'response-description')}"
-        render json: { error: body.dig('responses', 0, 'response-description') }, status: :bad_request
+        return render json: { error: body.dig('responses', 0, 'response-description') }, status: :bad_request
       end
     else
-      render json: { error: response.body }, status: :internal_server_error
+      Rails.logger.info "Failed to send message: #{response.body}"
+      return render json: { error: response.body }, status: :internal_server_error
     end
+        end
+
   end
 
 
@@ -108,29 +126,24 @@ end
 
 
   def send_sms_sms_leopard
-    to = params[:to]
-    subject = params[:subject]
+     subscribers = Subscriber.all
+        subscribers.each do |subscriber|
     message = params[:message]
 
-    # 👉 Fetch subscriber details to replace placeholders
-    subscriber = Subscriber.find_by(name: to)
-
-    if subscriber.nil?
-      render json: { error: 'Subscriber not found' }, status: :not_found
-      return
-    end
-
-    # 👇 Replace placeholders like {{name}}, {{email}}, etc.
     interpolated_message = MessageTemplate.interpolate(message, {
       name: subscriber.name,
-    })
+      phone: subscriber.phone_number,
+      email: subscriber.email,
 
+
+    })
+   
     # ✅ Send SMS (you can reuse your existing method or simplify here)
     sms_setting = SmsSetting.find_by(sms_provider: 'SMS leopard')
 
     if sms_setting.nil?
-      render json: { error: "SMS provider not found" }, status: :not_found
-      return
+      return render json: { error: "SMS provider not found" }, status: :not_found
+      
     end
 
 
@@ -170,13 +183,14 @@ end
           sms_provider: 'SMS leopard'
 
         )
-        render json: { success: true, message: 'SMS sent successfully' }, status: :ok
+        return render json: { success: true, message: 'SMS sent successfully' }, status: :ok
       else
-        render json: { error: body.dig('responses', 0, 'response-description') }, status: :bad_request
+        return render json: { error: body.dig('responses', 0, 'response-description') }, status: :bad_request
       end
     else
-      render json: { error: response.body }, status: :internal_server_error
+      return render json: { error: response.body }, status: :internal_server_error
     end
+  end
   end
 
 

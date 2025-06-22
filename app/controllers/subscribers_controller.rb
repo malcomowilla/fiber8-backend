@@ -1084,7 +1084,7 @@ Rails.logger.info 'router not found'
               :house_number, :building_name, :latitude, :longitude,
                :email, :ppoe_package,
               :date_registered, :ref_no, :valid_until, :router_name, :package_name, :installation_fee, 
-              :subscriber_discount, :second_phone_number)
+              :subscriber_discount, :second_phone_number, location: [])
             end
 
 
