@@ -96,6 +96,8 @@ scope '/api' do
 
 end
 
+
+  post '/api/send_bulk_sms', to: 'send_bulk_sms#send_sms'
   post '/api/wireguard/generate_wireguard_app_config', to: 'wireguard#generate_wireguard_app_config'
     post '/api/save_fcm_token', to: 'sessions#create_fcm_token'
 
