@@ -32,7 +32,7 @@ require 'bigdecimal/util'
 
   def router_info
     # Fetch router details
-    router_name = ActsAsTenant.current_tenant.router_setting.router_name
+    router_name = ActsAsTenant.current_tenant&.router_setting&.router_name
     nas_router = NasRouter.find_by(name: router_name)
   
     unless nas_router
