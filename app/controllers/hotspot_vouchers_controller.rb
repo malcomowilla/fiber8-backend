@@ -592,7 +592,6 @@ end
 
 def login_with_hotspot_voucher
 
-  # Rails.logger.info "Router IP: #{params.inspect}"
 
   
   return render json: { error: 'voucher is required' }, status: :bad_request unless params[:voucher].present?
@@ -681,6 +680,7 @@ router_name = params[:router_name]
       if output.include?('failure')
         return render json: { error: "Login failed: #{output}" }, status: :unauthorized
       else
+        @hotspot_voucher.update(status: 'used')
         return render json: {
           message: 'Connected successfully',
           device_ip: client_ip,
