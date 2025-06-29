@@ -1,8 +1,15 @@
 class ApplicationController < ActionController::Base
 
     set_current_tenant_through_filter
+before_action :set_time_zone
 
 
+
+
+def set_time_zone
+  Time.zone = GeneralSetting.first&.timezone || Rails.application.config.time_zone
+  Rails.logger.info "Setting time zone #{Time.zone}"
+end
 
     rescue_from CanCan::AccessDenied do |exception|
       render json: { error: "Access Denied: #{exception.message}" }, status: :forbidden

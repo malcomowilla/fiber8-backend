@@ -54,10 +54,10 @@ def set_tenant
   def create
 
     @wireguard_peer = WireguardPeer.new(
-      private_ip:  "#{params[:wireguard_peer][:private_ip]}/#{params[:wireguard_peer][:subnet_mask]}",
+      private_ip:  "#{params[:wireguard_peer][:private_ip]}",
 
     )
-`ip route add #{params[:wireguard_peer][:private_ip]}/#{params[:wireguard_peer][:subnet_mask]} dev wg0`
+`ip route add #{params[:wireguard_peer][:private_ip]} dev wg0`
       if @wireguard_peer.save
         render json: @wireguard_peer, status: :created   
       else
@@ -71,11 +71,11 @@ def set_tenant
           @wireguard_peer = WireguardPeer.find(params[:id])
 
       if @wireguard_peer.update(
-      private_ip:  "#{params[:wireguard_peer][:private_ip]}/#{params[:wireguard_peer][:subnet_mask]}",
+      private_ip:  "#{params[:wireguard_peer][:private_ip]}",
 
 
       )
-    `ip route add #{params[:wireguard_peer][:private_ip]}/#{params[:wireguard_peer][:subnet_mask]} dev wg0`
+    `ip route add #{params[:wireguard_peer][:private_ip]} dev wg0`
 
 # `ip route replace #{@wireguard_peer.private_ip} dev wg0`
 

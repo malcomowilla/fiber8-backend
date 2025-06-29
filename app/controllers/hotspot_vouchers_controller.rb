@@ -261,12 +261,12 @@ end
   
              if params[:selected_provider] == "SMS leopard"
                send_voucher(@hotspot_voucher.phone, @hotspot_voucher.voucher,
-               voucher_expiration
+               voucher_expiration, @hotspot_voucher.shared_users
                )
                
              elsif  params[:selected_provider] == "TextSms"
                send_voucher_text_sms(@hotspot_voucher.phone, @hotspot_voucher.voucher,
-               voucher_expiration
+               voucher_expiration, @hotspot_voucher.shared_users
                )
                
              end
@@ -1063,7 +1063,7 @@ private
 
 
       def send_voucher(phone_number, voucher_code,
-        voucher_expiration
+        voucher_expiration, shared_users
         )
       # api_key = ActsAsTenant.current_tenant.sms_setting.api_key
       # api_secret = ActsAsTenant.current_tenant.sms_setting.api_secret
@@ -1083,7 +1083,8 @@ private
       voucher_code: voucher_code,
       voucher_expiration: voucher_expiration
 
-      })  :   "Hello, here is your voucher code: #{voucher_code}.This code is valid for #{voucher_expiration}. Enjoy your browsing"
+      })  :   "Your voucher code: #{voucher_code} for #{shared_users} devices. This code is valid until #{voucher_expiration}.
+     Enjoy your browsing"
                
       
       
@@ -1133,7 +1134,8 @@ private
 
 
 
-           def send_voucher_text_sms(phone_number, voucher_code, voucher_exporation)
+           def send_voucher_text_sms(phone_number, voucher_code, voucher_expiration, shared_users
+            )
   sms_setting = SmsSetting.find_by(sms_provider: params[:selected_provider])
 
   if sms_setting.nil?
@@ -1150,7 +1152,8 @@ private
   original_message = if sms_template
     MessageTemplate.interpolate(send_voucher_template, { voucher_code: voucher_code })
   else
-    "Hello, here is your voucher code: #{voucher_code}. This code is valid for #{voucher_exporation}. Enjoy your browsing"
+    "Your voucher code: #{voucher_code} for #{shared_users} devices. This code is valid until #{voucher_expiration}.
+     Enjoy your browsing"
   end
 
   uri = URI("https://sms.textsms.co.ke/api/services/sendsms")

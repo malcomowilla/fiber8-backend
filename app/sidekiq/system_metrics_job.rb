@@ -114,6 +114,8 @@ Rails.logger.info "Rehydrating wireguard"
         if peer.private_ip.nil?
               `wg set wg0 peer #{peer.public_key} allowed-ips #{peer.allowed_ips}`
             else
+              `ip route add #{peer.private_ip} dev wg0`
+
                `wg set wg0 peer #{peer.public_key} allowed-ips #{peer.allowed_ips},#{peer.private_ip}`
 
             end
