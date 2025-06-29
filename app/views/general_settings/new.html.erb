@@ -1,0 +1,11 @@
+<% content_for :title, "New general setting" %>
+
+<h1>New general setting</h1>
+
+<%= render "form", general_setting: @general_setting %>
+
+<br>
+
+<div>
+  <%= link_to "Back to general settings", general_settings_path %>
+</div>

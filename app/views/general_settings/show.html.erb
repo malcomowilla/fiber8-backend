@@ -1,0 +1,10 @@
+<p style="color: green"><%= notice %></p>
+
+<%= render @general_setting %>
+
+<div>
+  <%= link_to "Edit this general setting", edit_general_setting_path(@general_setting) %> |
+  <%= link_to "Back to general settings", general_settings_path %>
+
+  <%= button_to "Destroy this general setting", @general_setting, method: :delete %>
+</div>

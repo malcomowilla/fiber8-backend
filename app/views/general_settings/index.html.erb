@@ -1,0 +1,16 @@
+<p style="color: green"><%= notice %></p>
+
+<% content_for :title, "General settings" %>
+
+<h1>General settings</h1>
+
+<div id="general_settings">
+  <% @general_settings.each do |general_setting| %>
+    <%= render general_setting %>
+    <p>
+      <%= link_to "Show this general setting", general_setting %>
+    </p>
+  <% end %>
+</div>
+
+<%= link_to "New general setting", new_general_setting_path %>

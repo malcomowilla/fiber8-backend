@@ -1,4 +1,5 @@
 Rails.application.routes.draw do
+  resources :general_settings
   resources :wireguard_peers
   resources :calendar_settings
   resources :calendar_events
@@ -62,6 +63,7 @@ scope '/api' do
     resources :change_logs
     resources :calendar_events
 
+  resources :general_settings
 
 
   resources :ip_pools

@@ -50,23 +50,7 @@ if current_user
 
 
 
-[Interface]
-Address = 10.2.0.1/24
 
-
-
-ListenPort = 51820
-
-PrivateKey = yFS+5BaNHOU3vFq/5icKXmncyOYwdlY5atdL1uHTdV0=
-
-
-
-[Peer]
-#PublicKey = AF3n9hJnUnR/7ymFrSUCssddX/iVE3L1+bxJVz2Xo1s=
-PublicKey = FhlWU17w4j8RgFJBhlDgb+P7l+qq6G9mCbse4QOWbhg=
-
-
-AllowedIPs = 10.2.0.2/32
 
 # Added by WireGuardController for peer vgq9soBxRNQDZTOOxVrv+1QkHJIFnKPRlcygBD37wSQ=
 # Add this to your WireGuard server config (/etc/wireguard/wg0.conf)
@@ -76,12 +60,7 @@ AllowedIPs = 10.2.0.2/32
 # Added by WireGuardController for peer uHzzEhBQe4VyafN1PtdGSFMQ2eZPc2+VCfK0FctcMDA=
 
 # Added by WireGuardController for peer 6X3/U3Fc5VzD3LN8duihNzPgqrXYHYosk8unAwqF50w=
-# Add this to your WireGuard server config (/etc/wireguard/wg0.conf)
-[Peer]
-PublicKey = 6X3/U3Fc5VzD3LN8duihNzPgqrXYHYosk8unAwqF50w=
-AllowedIPs = 10.2.0.202/32
-
-
+#
 
   # POST /license_settings or /license_settings.json
   def create
