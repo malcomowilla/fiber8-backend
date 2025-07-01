@@ -1,0 +1,10 @@
+<p style="color: green"><%= notice %></p>
+
+<%= render @customer_portal %>
+
+<div>
+  <%= link_to "Edit this customer portal", edit_customer_portal_path(@customer_portal) %> |
+  <%= link_to "Back to customer portals", customer_portals_path %>
+
+  <%= button_to "Destroy this customer portal", @customer_portal, method: :delete %>
+</div>

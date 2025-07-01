@@ -1,4 +1,5 @@
 Rails.application.routes.draw do
+  resources :customer_portals
   resources :general_settings
   resources :wireguard_peers
   resources :calendar_settings
@@ -98,7 +99,17 @@ scope '/api' do
 
 end
 
+get '/api/allow_get_subscriber_settings', to: 'subscriber_settings#get_allow_subcriber_setting'
+get '/allow_get_subscriber_settings', to: 'subscriber_settings#get_allow_subcriber_setting'
 
+get '/api/get_qr_code', to: 'qr_codes#make_qr_code'
+get '/get_qr_code', to: 'qr_codes#make_qr_code'
+
+post '/api/customer-logout', to: 'customer_portals#customer_logout'
+post '/api/customer-login', to: 'customer_portals#customer_login'
+
+get '/api/current_customer', to: 'customer_portals#currently_logged_in_customer'
+get '/devices', to: 'acs_testing#index'
   post '/api/send_bulk_sms', to: 'send_bulk_sms#send_sms'
   post '/api/wireguard/generate_wireguard_app_config', to: 'wireguard#generate_wireguard_app_config'
     post '/api/save_fcm_token', to: 'sessions#create_fcm_token'

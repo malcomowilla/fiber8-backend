@@ -3,7 +3,7 @@ class SubscriberSerializer < ActiveModel::Serializer
   :date_registered, :ref_no,
    :package_name,:installation_fee, :subscriber_discount, :second_phone_number, :router_name,
    :house_number, :building_name, :latitude, :longitude, :expiration, :registration_date,
-   :location
+   :location,
 
 
 

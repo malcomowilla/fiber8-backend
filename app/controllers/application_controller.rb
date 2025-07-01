@@ -6,6 +6,7 @@ before_action :set_time_zone
 
 
 
+
 def set_time_zone
   Time.zone = GeneralSetting.first&.timezone || Rails.application.config.time_zone
   Rails.logger.info "Setting time zone #{Time.zone}"
@@ -193,6 +194,40 @@ end
         end
              
     end
+
+
+
+
+
+
+
+
+
+
+
+
+
+     def current_customer
+        @current_user ||= begin
+          token = cookies.encrypted.signed[:jwt_customer]
+          if token  
+            begin
+              decoded_token = JWT.decode(token,  ENV['JWT_SECRET'], true, algorithm: 'HS256')
+            customer_id = decoded_token[0]['customer_id']
+            @current_customer = Subscriber.find_by(id: customer_id)
+              return @current_customer if @current_customer
+            rescue JWT::DecodeError, JWT::ExpiredSignature => e
+              cookies.delete(:jwt_customer)
+              Rails.logger.error "JWT Decode Error super admin: #{e}"
+              render json: { error: 'Unauthorized' }, status: :unauthorized
+            end
+          end
+          nil
+        end
+             
+    end
+
+
 
 
     def current_user_ability
