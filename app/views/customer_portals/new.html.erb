@@ -1,0 +1,11 @@
+<% content_for :title, "New customer portal" %>
+
+<h1>New customer portal</h1>
+
+<%= render "form", customer_portal: @customer_portal %>
+
+<br>
+
+<div>
+  <%= link_to "Back to customer portals", customer_portals_path %>
+</div>

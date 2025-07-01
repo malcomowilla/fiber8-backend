@@ -66,6 +66,11 @@ def set_tenant
     end
   end
 
+
+  def testing
+    render json: { message: 'testing' }, status: :ok
+    
+  end
   # PATCH/PUT /wireguard_peers/1 or /wireguard_peers/1.json
   def update
           @wireguard_peer = WireguardPeer.find(params[:id])

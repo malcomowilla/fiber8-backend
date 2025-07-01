@@ -9,7 +9,47 @@ set_current_tenant_through_filter
 
 before_action :set_tenant
 
+# before_action :set_qr_codes
 
+
+
+
+
+
+# # application_controller.rb
+
+
+
+
+# def set_qr_codes
+      
+#     host = request.headers['X-Subdomain']
+#     @current_account = Account.find_by(subdomain: host)
+  
+#       # @current_account = ActsAsTenant.current_tenant
+#       qr_codes_dir = Rails.root.join('public', 'qr_codes')
+      
+#       safe_subdomain = @current_account.subdomain.gsub(/[^\w\-]/, '_')  # Replace invalid characters in the subdomain
+#       qr_code_path = qr_codes_dir.join("#{safe_subdomain}_qr_code.png")
+    
+#       FileUtils.mkdir_p(qr_codes_dir) unless Dir.exist?(qr_codes_dir)
+    
+#       if File.exist?(qr_code_path)
+#         Rails.logger.info "QR code for #{@current_account.subdomain} already exists."
+#         @qr_code_url = "/qr_codes/#{safe_subdomain}_qr_code.png"
+#       else
+#         qr_png = RQRCode::QRCode.new("https://#{request.headers['X-Original-Host']}/client-login", size: 10)
+#         png_data = qr_png.as_png(offset: 0, color: '000000', shape_rendering: 'crispEdges', module_size: 10)
+    
+#         File.open(qr_code_path, 'wb') do |file|
+#           file.write(png_data)
+#         end
+    
+#         # Optionally, store the URL for the frontend
+#         @qr_code_url = "/qr_codes/#{safe_subdomain}_qr_code.png"
+#         Rails.logger.info "QR Code saved to #{qr_code_path}"
+#       end
+#     end
 
 
 

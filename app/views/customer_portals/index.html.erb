@@ -1,0 +1,16 @@
+<p style="color: green"><%= notice %></p>
+
+<% content_for :title, "Customer portals" %>
+
+<h1>Customer portals</h1>
+
+<div id="customer_portals">
+  <% @customer_portals.each do |customer_portal| %>
+    <%= render customer_portal %>
+    <p>
+      <%= link_to "Show this customer portal", customer_portal %>
+    </p>
+  <% end %>
+</div>
+
+<%= link_to "New customer portal", new_customer_portal_path %>
