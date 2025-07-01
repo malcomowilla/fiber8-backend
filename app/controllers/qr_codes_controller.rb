@@ -11,7 +11,7 @@ def make_qr_code
   end
 
   
-qr = RQRCode::QRCode.new("https://#{host}/client-login")
+qr = RQRCode::QRCode.new("https://#{host}.aitechs.co.ke/client-login")
 png = qr.as_png(size: 300)
 
 # Convert to base64 for easy display in frontend or API
