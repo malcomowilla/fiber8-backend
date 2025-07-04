@@ -11,7 +11,7 @@ class HotspotSubscriptionsController < ApplicationController
 #
 #
  def get_active_hotspot_users
-  active_sessions = RadAcct(acctstoptime: nil, framedprotocol:'')
+  active_sessions = RadAcct.where(acctstoptime: nil, framedprotocol:'')
 
 
   active_user_data = active_sessions.map do |session|
