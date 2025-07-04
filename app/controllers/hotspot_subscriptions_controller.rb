@@ -9,31 +9,35 @@ class HotspotSubscriptionsController < ApplicationController
 # }/ip/hotspot/active
 # 
 #
-#
+#RadAcct
  def get_active_hotspot_users
-  active_sessions = RadAcct.where(acctstoptime: nil, framedprotocol:'')
+  active_sessions = RadAcct.where(acctstoptime: nil, framedprotocol: '')
 
+  total_bytes = 0
 
   active_user_data = active_sessions.map do |session|
     download_bytes = session.acctinputoctets || 0
     upload_bytes = session.acctoutputoctets || 0
-    total_bytes = download_bytes + upload_bytes
+    session_total = download_bytes + upload_bytes
+    total_bytes += session_total
+
     {
       username: session.username,
       ip_address: session.framedipaddress.to_s,
       mac_address: session.callingstationid,
       up_time: format_uptime(session.acctsessiontime),
-      download: format_bytes(session.acctinputoctets),
-      upload: format_bytes(session.acctoutputoctets),
-            total_bandwidth: format_bytes(total_bytes),
-
-      nas_port: session.nasportid,
+      download: format_bytes(download_bytes),
+      upload: format_bytes(upload_bytes),
       start_time: session.acctstarttime,
-      radius: true # since it comes from radius
+      nas_port: session.nasportid
     }
   end
 
-  render json: { active_user_count: active_user_data.size, users: active_user_data }
+  render json: {
+    active_user_count: active_user_data.size,
+    total_bandwidth: format_bytes(total_bytes),
+    users: active_user_data
+  }
 end
 
 
