@@ -115,6 +115,20 @@ end
     end
 
 
+    def format_uptime(seconds)
+  return '0s' if seconds.nil?
+
+  mm, ss = seconds.divmod(60)
+  hh, mm = mm.divmod(60)
+  dd, hh = hh.divmod(24)
+
+  parts = []
+  parts << "#{dd}d" if dd > 0
+  parts << "#{hh}h" if hh > 0
+  parts << "#{mm}m" if mm > 0
+  parts << "#{ss}s"
+  parts.join(' ')
+en
     # def customize_router_data(data_array)
     #   data_array.map do |data|
     #     {
