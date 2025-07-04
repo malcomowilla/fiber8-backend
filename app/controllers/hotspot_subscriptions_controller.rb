@@ -1,5 +1,4 @@
 class HotspotSubscriptionsController < ApplicationController
-  before_action :set_hotspot_subscription, only: %i[ show edit update destroy ]
 
   set_current_tenant_through_filter
   before_action :set_tenant
@@ -17,7 +16,6 @@ def set_tenant
     # EmailConfiguration.configure(@current_account)
     EmailConfiguration.configure(@account, ENV['SYSTEM_ADMIN_EMAIL'])
 
-  Rails.logger.info "Setting tenant for app#{ActsAsTenant.current_tenant}"
   
     # set_current_tenant(@account)
   rescue ActiveRecord::RecordNotFound
