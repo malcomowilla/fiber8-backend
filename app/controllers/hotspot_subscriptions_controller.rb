@@ -1,13 +1,31 @@
 class HotspotSubscriptionsController < ApplicationController
   before_action :set_hotspot_subscription, only: %i[ show edit update destroy ]
 
+  set_current_tenant_through_filter
+  before_action :set_tenant
   # GET /hotspot_subscriptions or /hotspot_subscriptions.json
   def index
     @hotspot_subscriptions = HotspotSubscription.all
 
   end
 # }/ip/hotspot/active
-# 
+
+def set_tenant
+    host = request.headers['X-Subdomain']
+    @account = Account.find_by(subdomain: host)
+     ActsAsTenant.current_tenant = @account
+    # EmailConfiguration.configure(@current_account)
+    EmailConfiguration.configure(@account, ENV['SYSTEM_ADMIN_EMAIL'])
+
+  Rails.logger.info "Setting tenant for app#{ActsAsTenant.current_tenant}"
+  
+    # set_current_tenant(@account)
+  rescue ActiveRecord::RecordNotFound
+    render json: { error: 'Invalid tenant' }, status: :not_found
+  
+  end
+
+
 #
 #RadAcct
  def get_active_hotspot_users

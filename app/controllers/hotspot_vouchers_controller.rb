@@ -238,7 +238,10 @@ end
         phone: params[:phone],
         voucher: generate_voucher_code
       )
-  
+    ActivtyLog.create(action: 'create', ip: request.remote_ip,
+ description: "Created hotspot voucher #{@hotspot_voucher.voucher}",
+          user_agent: request.user_agent, user: current_user.username || current_user.email,
+           date: Time.current)
 
       # return render json: { error: "hotspot package required" }, status: :unprocessable_entity unless @hotspot_voucher.package.nil?
       # user_manager_user_id = get_user_manager_user_id(@hotspot_voucher.voucher)
@@ -276,10 +279,7 @@ end
           return render json: @hotspot_voucher, status: :created
           end
           
-          ActivtyLog.create(action: 'create', ip: request.remote_ip,
- description: "Created hotspot voucher #{@hotspot_voucher.voucher}",
-          user_agent: request.user_agent, user: current_user.username || current_user.email,
-           date: Time.current)
+        
   
           render json: @hotspot_voucher, status: :created
 
