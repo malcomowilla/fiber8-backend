@@ -56,6 +56,10 @@ end
       )
     )
       if @admin_setting.save
+        ActivtyLog.create(action: 'create', ip: request.remote_ip,
+ description: "Created admin setting",
+          user_agent: request.user_agent, user: current_user.username || current_user.email,
+           date: Time.current)
          render json: @admin_setting, status: :created
       else
          render json: @admin_setting.errors, status: :unprocessable_entity 

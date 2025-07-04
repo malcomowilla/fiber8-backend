@@ -70,6 +70,10 @@ if current_user
 
     )
       if  @sms_setting.save 
+        ActivtyLog.create(action: 'create', ip: request.remote_ip,
+ description: "Created SMS settings #{@sms_setting.short_code}",
+          user_agent: request.user_agent, user: current_user.username || current_user.email,
+           date: Time.current)
         render json: @sms_setting, status: :created
       else
         render json: @sms_setting.errors, status: :unprocessable_entity 
@@ -77,29 +81,7 @@ if current_user
     end
   end
 
-  # PATCH/PUT /sms_settings/1 or /sms_settings/1.json
-  # def update
-  #   respond_to do |format|
-  #     if @sms_setting.update(sms_setting_params)
-  #       format.html { redirect_to sms_setting_url(@sms_setting), notice: "Sms setting was successfully updated." }
-  #       format.json { render :show, status: :ok, location: @sms_setting }
-  #     else
-  #       format.html { render :edit, status: :unprocessable_entity }
-  #       format.json { render json: @sms_setting.errors, status: :unprocessable_entity }
-  #     end
-  #   end
-  # end
-
-  # DELETE /sms_settings/1 or /sms_settings/1.json
-  # def destroy
-  #   @sms_setting.destroy!
-
-  #   respond_to do |format|
-  #     format.html { redirect_to sms_settings_url, notice: "Sms setting was successfully destroyed." }
-  #     format.json { head :no_content }
-  #   end
-  # end
-
+  
   private
     # Use callbacks to share common setup or constraints between actions.
     def set_sms_setting

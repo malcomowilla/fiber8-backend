@@ -1,0 +1,12 @@
+<% content_for :title, "Editing activty log" %>
+
+<h1>Editing activty log</h1>
+
+<%= render "form", activty_log: @activty_log %>
+
+<br>
+
+<div>
+  <%= link_to "Show this activty log", @activty_log %> |
+  <%= link_to "Back to activty logs", activty_logs_path %>
+</div>

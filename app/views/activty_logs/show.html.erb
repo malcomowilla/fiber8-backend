@@ -1,0 +1,10 @@
+<p style="color: green"><%= notice %></p>
+
+<%= render @activty_log %>
+
+<div>
+  <%= link_to "Edit this activty log", edit_activty_log_path(@activty_log) %> |
+  <%= link_to "Back to activty logs", activty_logs_path %>
+
+  <%= button_to "Destroy this activty log", @activty_log, method: :delete %>
+</div>

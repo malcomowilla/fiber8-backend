@@ -57,6 +57,10 @@ if current_user
     @client_lead = ClientLead.new(client_lead_params)
 
       if @client_lead.save
+        ActivtyLog.create(action: 'create', ip: request.remote_ip,
+ description: "Created client lead #{@client_lead.name}",
+          user_agent: request.user_agent, user: current_user.username || current_user.email,
+           date: Time.current)
         render json: @client_lead, status: :created
       else
          render json: @client_lead.errors, status: :unprocessable_entity 
@@ -68,6 +72,10 @@ if current_user
   def update
     @client_lead = ClientLead.find_by(id: params[:id])
       if @client_lead.update(client_lead_params)
+        ActivtyLog.create(action: 'update', ip: request.remote_ip,
+ description: "Updated client lead #{@client_lead.name}",
+          user_agent: request.user_agent, user: current_user.username || current_user.email,
+           date: Time.current)
         render json: @client_lead, status: :ok
       else
         render json: @client_lead.errors, status: :unprocessable_entity 
@@ -78,6 +86,10 @@ if current_user
   # DELETE /client_leads/1 or /client_leads/1.json
   def destroy
     @client_lead = ClientLead.find(params[:id])
+    ActivtyLog.create(action: 'delete', ip: request.remote_ip,
+ description: "Deleted client lead #{@client_lead.name}",
+          user_agent: request.user_agent, user: current_user.username || current_user.email,
+           date: Time.current)
     @client_lead.destroy!
 
        head :no_content 

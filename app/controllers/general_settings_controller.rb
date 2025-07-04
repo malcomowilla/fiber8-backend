@@ -55,6 +55,10 @@ def set_tenant
     
     @general_setting = GeneralSetting.first_or_initialize(general_setting_params)
 @general_setting.update(general_setting_params)
+ActivtyLog.create(action: 'create', ip: request.remote_ip,
+ description: "Created general setting #{@general_setting.title}",
+          user_agent: request.user_agent, user: current_user.username || current_user.email,
+           date: Time.current)
       if @general_setting.save
         render json: @general_setting, status: :created
       else

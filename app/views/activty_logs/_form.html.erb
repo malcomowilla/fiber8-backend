@@ -1,0 +1,47 @@
+<%= form_with(model: activty_log) do |form| %>
+  <% if activty_log.errors.any? %>
+    <div style="color: red">
+      <h2><%= pluralize(activty_log.errors.count, "error") %> prohibited this activty_log from being saved:</h2>
+
+      <ul>
+        <% activty_log.errors.each do |error| %>
+          <li><%= error.full_message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div>
+    <%= form.label :action, style: "display: block" %>
+    <%= form.text_field :action %>
+  </div>
+
+  <div>
+    <%= form.label :subject, style: "display: block" %>
+    <%= form.text_field :subject %>
+  </div>
+
+  <div>
+    <%= form.label :description, style: "display: block" %>
+    <%= form.text_field :description %>
+  </div>
+
+  <div>
+    <%= form.label :user, style: "display: block" %>
+    <%= form.text_field :user %>
+  </div>
+
+  <div>
+    <%= form.label :date, style: "display: block" %>
+    <%= form.datetime_field :date %>
+  </div>
+
+  <div>
+    <%= form.label :account_id, style: "display: block" %>
+    <%= form.number_field :account_id %>
+  </div>
+
+  <div>
+    <%= form.submit %>
+  </div>
+<% end %>

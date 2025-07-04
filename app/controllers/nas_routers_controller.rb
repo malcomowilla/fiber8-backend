@@ -60,11 +60,11 @@ def router_ping_response
 #   end
 #   
 @tenant = ActsAsTenant.current_tenant
-router_status = RouterStatus.where(tenant_id: @tenant.id).order(checked_at: :desc).first
+router_status = RouterStatus.where(tenant_id: @tenant.id)
 
     if router_status
       # Render the cached data
-      render json: router_status, each_serializer: RouterStatusSerializer , status: :ok
+      render json: router_status, status: :ok
     else
       # Handle case where cache is empty
       render json: { error: "No router status found for tenant #{@tenant.id}" }, status: :not_found
@@ -114,7 +114,10 @@ end
       def update
         nas_router = find_nas_router
           nas_router.update(nas_router_params)
-         
+         ActivtyLog.create(action: 'update', ip: request.remote_ip,
+ description: "Updated nas router #{@nas_router.name}",
+          user_agent: request.user_agent, user: current_user.username || current_user.email,
+           date: Time.current)
 
           render json: nas_router      
 
@@ -142,16 +145,19 @@ end
       nas_router = find_nas_router
       
       # Get the WireGuard IP assigned to this router (you'll need to store this when creating)
-      wg_ip = nas_router.ip_address # Assuming you have this field in your model
+      # wg_ip = nas_router.ip_address # Assuming you have this field in your model
       
       # Delete the NAS router record first
       nas_router.destroy
       
       # Then remove the WireGuard peer configuration
-      if wg_ip.present?
-        remove_wireguard_peer(wg_ip)
-      end
-      
+      # if wg_ip.present?
+      #   remove_wireguard_peer(wg_ip)
+      # end
+      ActivtyLog.create(action: 'delete', ip: request.remote_ip,
+ description: "Deleted nas router #{@nas_router.name}",
+          user_agent: request.user_agent, user: current_user.username || current_user.email,
+           date: Time.current)
       head :no_content
     end
 
@@ -161,6 +167,10 @@ end
       @nas_router = NasRouter.create(nas_router_params)
 
       if @nas_router 
+        ActivtyLog.create(action: 'create', ip: request.remote_ip,
+ description: "Created nas router #{@nas_router.name}",
+          user_agent: request.user_agent, user: current_user.username || current_user.email,
+           date: Time.current)
         render json: @nas_router, status: :created
         # puts  @nas_router
       else

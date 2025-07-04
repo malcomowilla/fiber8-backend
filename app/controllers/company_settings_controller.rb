@@ -153,6 +153,10 @@ end
   @company_setting = CompanySetting.first_or_initialize(company_setting_params)
   @company_setting.update!(company_setting_params)
   if @company_setting.save
+    ActivtyLog.create(action: 'create', ip: request.remote_ip,
+ description: "Created company setting #{@company_setting.company_name}",
+          user_agent: request.user_agent, user: current_user.username || current_user.email,
+           date: Time.current)
     # render json: @company_setting
     render json: {
 company_name: @company_setting.company_name,

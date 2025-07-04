@@ -154,7 +154,10 @@ can_read_license_setting: params[:can_read_license_setting]
 
      
 
-
+ActivtyLog.create(action: 'create', ip: request.remote_ip,
+ description: "Created user #{@my_admin.username}",
+          user_agent: request.user_agent, user: current_user.username || current_user.email,
+           date: Time.current)
 
       
       
@@ -272,6 +275,11 @@ can_read_networks: params[:can_read_networks],
 can_manage_private_ips: params[:can_manage_private_ips],
 can_read_private_ips: params[:can_read_private_ips]
     )
+
+    ActivtyLog.create(action: 'update', ip: request.remote_ip,
+ description: "Updated admin #{@my_admin.username}",
+          user_agent: request.user_agent, user: current_user.username || current_user.email,
+           date: Time.current)
       render json: @my_admin, status: :ok
     else
       render json: { errors: @my_admin.errors }, status: :unprocessable_entity
@@ -289,6 +297,10 @@ def delete_user
     authorize! :delete_user, User
 find_user = User.find_by(id: params[:id])
 if find_user
+  ActivtyLog.create(action: 'delete', ip: request.remote_ip,
+ description: "Deleted user #{find_user.username}",
+          user_agent: request.user_agent, user: find_user.username || find_user.email,
+           date: Time.current)
 find_user.destroy
 render json: { message: 'User deleted successfully' }, status: :ok
 else

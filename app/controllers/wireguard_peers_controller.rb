@@ -60,6 +60,10 @@ def set_tenant
 `ip route add #{params[:wireguard_peer][:private_ip]} dev wg0`
       if @wireguard_peer.save
         render json: @wireguard_peer, status: :created   
+        ActivtyLog.create(action: 'create', ip: request.remote_ip,
+ description: "Created wireguard peer for private ip #{@wireguard_peer.private_ip}",
+          user_agent: request.user_agent, user: current_user.username || current_user.email,
+           date: Time.current)
       else
          render json: @wireguard_peer.errors, status: :unprocessable_entity 
       
@@ -81,7 +85,10 @@ def set_tenant
 
       )
     `ip route add #{params[:wireguard_peer][:private_ip]} dev wg0`
-
+ActivtyLog.create(action: 'update', ip: request.remote_ip,
+ description: "Updated wireguard peer for private ip #{@wireguard_peer.private_ip}",
+          user_agent: request.user_agent, user: current_user.username || current_user.email,
+           date: Time.current)
 # `ip route replace #{@wireguard_peer.private_ip} dev wg0`
 
         render json: @wireguard_peer, status: :ok
@@ -94,7 +101,10 @@ def set_tenant
   # DELETE /wireguard_peers/1 or /wireguard_peers/1.json
   def destroy
           @wireguard_peer = WireguardPeer.find(params[:id])
-
+ActivtyLog.create(action: 'delete', ip: request.remote_ip,
+ description: "Deleted wireguard peer for private ip #{@ip_network.network}",
+          user_agent: request.user_agent, user: current_user.username || current_user.email,
+           date: Time.current)
     @wireguard_peer.destroy!
 `ip route del #{@wireguard_peer.private_ip} dev wg0`
 

@@ -51,6 +51,10 @@ if current_user
     )
 
       if @user_group.save
+        ActivtyLog.create(action: 'create', ip: request.remote_ip,
+ description: "Created user group #{@user_group.name}",
+          user_agent: request.user_agent, user: current_user.username || current_user.email,
+           date: Time.current)
       render json: @user_group, status: :created
       else
         render json: @user_group.errors, status: :unprocessable_entity 
@@ -62,6 +66,10 @@ if current_user
   def update
     @user_group = set_user_group
       if @user_group.update(name: params[:name])
+        ActivtyLog.create(action: 'update', ip: request.remote_ip,
+ description: "Updated user group #{@user_group.name}",
+          user_agent: request.user_agent, user: current_user.username || current_user.email,
+           date: Time.current)
          render json: @user_group, status: :ok
       else
          render json: @user_group.errors, status: :unprocessable_entity 
@@ -73,6 +81,10 @@ if current_user
   def destroy
 
     @user_group = set_user_group
+    ActivtyLog.create(action: 'delete', ip: request.remote_ip,
+ description: "Deleted user group #{@ip_network.network}",
+          user_agent: request.user_agent, user: current_user.username || current_user.email,
+           date: Time.current)
     @user_group.destroy!
 
      head :no_content 

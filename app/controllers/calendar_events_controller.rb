@@ -65,21 +65,34 @@ if current_user
   end
 
 
-  def set_tenant
+  # def set_tenant
 
-    host = request.headers['X-Subdomain'] 
-    # Rails.logger.info("Setting tenant for host: #{host}")
+  #   host = request.headers['X-Subdomain'] 
+  #   # Rails.logger.info("Setting tenant for host: #{host}")
   
+  #   @account = Account.find_by(subdomain: host)
+  #   set_current_tenant(@account)
+  
+  #   unless @account
+  #     render json: { error: 'Invalid tenant' }, status: :not_found
+  #   end
+    
+  # end
+
+def set_tenant
+
+    host = request.headers['X-Subdomain']
     @account = Account.find_by(subdomain: host)
-    set_current_tenant(@account)
+     ActsAsTenant.current_tenant = @account
+    EmailConfiguration.configure(@account, ENV['SYSTEM_ADMIN_EMAIL'])
+    # EmailSystemAdmin.configure(@current_account, current_system_admin)
   
-    unless @account
-      render json: { error: 'Invalid tenant' }, status: :not_found
-    end
+    # set_current_tenant(@account)
+  rescue ActiveRecord::RecordNotFound
+    render json: { error: 'Invalid tenant' }, status: :not_found
+  
     
   end
-
-
 
 
   # GET /calendar_events/1/edit
@@ -105,7 +118,10 @@ if current_user
       notification_time_minutes = @calendar_event.start.in_time_zone - in_minutes.to_i.minutes
       notification_time_hrs = @calendar_event.start.in_time_zone - in_hours.to_i.hours
 
-
+ActivtyLog.create(action: 'create', ip: request.remote_ip,
+ description: "Created calendar event #{@calendar_event.title}",
+          user_agent: request.user_agent, user: current_user.username || current_user.email,
+           date: Time.current)
       FcmNotificationJob.set(wait_until:notification_time_hrs).perform_later(@calendar_event.id, @fcm_token)
       FcmNotificationJob.set(wait_until:notification_time_minutes).perform_later(@calendar_event.id, @fcm_token)
 
@@ -130,7 +146,10 @@ render json: @calendar_event, status: :created
       notification_time_minutes = @calendar_event.start.in_time_zone - in_minutes.to_i.minutes
       notification_time_hrs = @calendar_event.start.in_time_zone - in_hours.to_i.hours
 
-
+ActivtyLog.create(action: 'update', ip: request.remote_ip,
+ description: "Updated calendar event #{@calendar_event.title}",
+          user_agent: request.user_agent, user: current_user.username || current_user.email,
+           date: Time.current)
       FcmNotificationJob.set(wait_until:notification_time_hrs).perform_later(@calendar_event.id, @fcm_token)
       FcmNotificationJob.set(wait_until:notification_time_minutes).perform_later(@calendar_event.id, @fcm_token)
 
@@ -143,6 +162,10 @@ render json: @calendar_event, status: :created
   # DELETE /calendar_events/1 or /calendar_events/1.json
   def destroy
     @calendar_event = CalendarEvent.find_by(id: params[:id])
+    ActivtyLog.create(action: 'delete', ip: request.remote_ip,
+ description: "Deleted calendar event #{@calendar_event.title}",
+          user_agent: request.user_agent, user: current_user.username || current_user.email,
+           date: Time.current)
     @calendar_event.destroy
 
       head :no_content    

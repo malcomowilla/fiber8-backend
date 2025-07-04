@@ -85,6 +85,10 @@ if current_user
     )
 
       if @license_setting.save
+        ActivtyLog.create(action: 'create', ip: request.remote_ip,
+ description: "Created license setting #{@license_setting.expiry_warning_days}",
+          user_agent: request.user_agent, user: current_user.username || current_user.email,
+           date: Time.current)
          render json: @license_setting, status: :created
       else
          render json: @license_setting.errors, status: :unprocessable_entity 

@@ -33,10 +33,9 @@ if current_user
 
     host = request.headers['X-Subdomain']
     @account = Account.find_by(subdomain: host)
-    @current_account =ActsAsTenant.current_tenant 
-    EmailConfiguration.configure(@current_account, ENV['SYSTEM_ADMIN_EMAIL'])
+     ActsAsTenant.current_tenant = @account
+    EmailConfiguration.configure(@account, ENV['SYSTEM_ADMIN_EMAIL'])
     # EmailSystemAdmin.configure(@current_account, current_system_admin)
-  Rails.logger.info "Setting tenant for app#{ActsAsTenant.current_tenant}"
   
     # set_current_tenant(@account)
   rescue ActiveRecord::RecordNotFound
@@ -92,7 +91,7 @@ if current_user
 
 # Router credentials
 router_ip = '192.168.80.1'
-router_user = 'admin'
+router_user = ''
 router_password = ''
 
 # User details
@@ -190,7 +189,7 @@ router_user = 'admin'
 router_password = ''
 
 # User details
-user_mac = 'C6:3D:15:54:0F:2E'
+user_mac = ''
 user_ip = "#{host_ip}"
 username = 'admin2'
 
@@ -427,7 +426,10 @@ def create
 
     if @hotspot_package.save
     
-           
+           ActivtyLog.create(action: 'create', ip: request.remote_ip,
+ description: "Created hotspot package #{@hotspot_package.name}",
+          user_agent: request.user_agent, user: current_user.username || current_user.email,
+           date: Time.current)
         render json: @hotspot_package, status: :created
     else
    render json: @hotspot_package.errors, status: :unprocessable_entity
@@ -786,6 +788,10 @@ def update
 
   if @hotspot_package
     update_freeradius_policies(@hotspot_package)
+    ActivtyLog.create(action: 'update', ip: request.remote_ip,
+ description: "Updated hotspot package #{@hotspot_package.name}",
+          user_agent: request.user_agent, user: current_user.username || current_user.email,
+           date: Time.current)
     @hotspot_package.update(hotspot_package_params)
     render json: @hotspot_package
   else
@@ -941,7 +947,10 @@ def destroy
   if @hotspot_package.nil?
     return render json: { error: "Hotspot package not found" }, status: :not_found
   end
-
+ActivtyLog.create(action: 'delete', ip: request.remote_ip,
+ description: "Deleted hotspot package #{@hotspot_package.name}",
+          user_agent: request.user_agent, user: current_user.username || current_user.email,
+           date: Time.current)
   group_name = "hotspot_#{@hotspot_package.name.parameterize(separator: '_')}"
 
 

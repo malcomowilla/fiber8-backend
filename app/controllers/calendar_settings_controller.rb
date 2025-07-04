@@ -102,6 +102,10 @@ if current_user
     @calendar_setting = CalendarSetting.first_or_initialize(calendar_setting_params)
 @calendar_setting.update!(calendar_setting_params)
       if @calendar_setting.save
+        ActivtyLog.create(action: 'create', ip: request.remote_ip,
+ description: "Created calendar setting #{@calendar_setting.title}",
+          user_agent: request.user_agent, user: current_user.username || current_user.email,
+           date: Time.current)
         render json: @calendar_setting, status: :created
       else
         render json: @calendar_setting.errors, status: :unprocessable_entity 

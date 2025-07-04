@@ -27,6 +27,7 @@ def send_sms
  
   
   if params[:status] === 'all clients' && params[:strict_filter] === 'false' || params[:strict_filter] === false
+    
       return render json: { error: "No valid SMS provider configured" }, status: :unprocessable_entity if provider.nil?
 
        case provider

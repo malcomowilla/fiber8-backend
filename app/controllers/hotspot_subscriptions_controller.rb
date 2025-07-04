@@ -10,7 +10,31 @@ class HotspotSubscriptionsController < ApplicationController
 # 
 #
 #
+ def get_active_hotspot_users
+  active_sessions = RadAcct(acctstoptime: nil, framedprotocol:'')
 
+
+  active_user_data = active_sessions.map do |session|
+    download_bytes = session.acctinputoctets || 0
+    upload_bytes = session.acctoutputoctets || 0
+    total_bytes = download_bytes + upload_bytes
+    {
+      username: session.username,
+      ip_address: session.framedipaddress.to_s,
+      mac_address: session.callingstationid,
+      up_time: format_uptime(session.acctsessiontime),
+      download: format_bytes(session.acctinputoctets),
+      upload: format_bytes(session.acctoutputoctets),
+            total_bandwidth: format_bytes(total_bytes),
+
+      nas_port: session.nasportid,
+      start_time: session.acctstarttime,
+      radius: true # since it comes from radius
+    }
+  end
+
+  render json: { active_user_count: active_user_data.size, users: active_user_data }
+end
 
 
 # def get_active_hotspot_users
@@ -41,71 +65,34 @@ class HotspotSubscriptionsController < ApplicationController
 
 
 
-def get_active_hotspot_users
-  nas_router = NasRouter.find_by(name: params[:router_name]) || NasRouter.find_by(name: ActsAsTenant.current_tenant.router_setting)
-  return render json: { error: 'Router not found' }, status: :not_found unless nas_router
+# def get_active_hotspot_users
+#   nas_router = NasRouter.find_by(name: params[:router_name]) || NasRouter.find_by(name: ActsAsTenant.current_tenant.router_setting)
+#   return render json: { error: 'Router not found' }, status: :not_found unless nas_router
 
-  router_ip_address = nas_router.ip_address
-  router_password = nas_router.password
-  router_username = nas_router.username
+#   router_ip_address = nas_router.ip_address
+#   router_password = nas_router.password
+#   router_username = nas_router.username
 
-  uri = URI("http://#{router_ip_address}/rest/ip/hotspot/active")
-  request = Net::HTTP::Get.new(uri)
-  request.basic_auth router_username, router_password
-  response = Net::HTTP.start(uri.hostname, uri.port) do |http|
-    http.request(request)
-  end
+#   uri = URI("http://#{router_ip_address}/rest/ip/hotspot/active")
+#   request = Net::HTTP::Get.new(uri)
+#   request.basic_auth router_username, router_password
+#   response = Net::HTTP.start(uri.hostname, uri.port) do |http|
+#     http.request(request)
+#   end
 
-  if response.is_a?(Net::HTTPSuccess) 
-    json_response = JSON.parse(response.body)
-    active_user_data = customize_router_data(json_response)
+#   if response.is_a?(Net::HTTPSuccess) 
+#     json_response = JSON.parse(response.body)
+#     active_user_data = customize_router_data(json_response)
 
-    # Add the count of active users
-    active_user_count = active_user_data.size
+#     # Add the count of active users
+#     active_user_count = active_user_data.size
 
-    render json: { active_user_count: active_user_count, users: active_user_data }
-  else
-    render json: { error: 'Failed to fetch active users' }, status: :bad_gateway
-  end
-end
+#     render json: { active_user_count: active_user_count, users: active_user_data }
+#   else
+#     render json: { error: 'Failed to fetch active users' }, status: :bad_gateway
+#   end
+# end
 
-
-  # GET /hotspot_subscriptions/new
-  def new
-    @hotspot_subscription = HotspotSubscription.new
-  end
-
-  # GET /hotspot_subscriptions/1/edit
-  def edit
-  end
-
-  # POST /hotspot_subscriptions or /hotspot_subscriptions.json
-  def create
-    @hotspot_subscription = HotspotSubscription.new(hotspot_subscription_params)
-
-    respond_to do |format|
-      if @hotspot_subscription.save
-        format.html { redirect_to @hotspot_subscription, notice: "Hotspot subscription was successfully created." }
-        format.json { render :show, status: :created, location: @hotspot_subscription }
-      else
-        format.html { render :new, status: :unprocessable_entity }
-        format.json { render json: @hotspot_subscription.errors, status: :unprocessable_entity }
-      end
-    end
-  end
-
-  # PATCH/PUT /hotspot_subscriptions/1 or /hotspot_subscriptions/1.json
-  def update
-    respond_to do |format|
-      if @hotspot_subscription.update(hotspot_subscription_params)
-        format.html { redirect_to @hotspot_subscription, notice: "Hotspot subscription was successfully updated." }
-        format.json { render :show, status: :ok, location: @hotspot_subscription }
-      else
-        format.html { render :edit, status: :unprocessable_entity }
-        format.json { render json: @hotspot_subscription.errors, status: :unprocessable_entity }
-      end
-    end
-  end
 
   # DELETE /hotspot_subscriptions/1 or /hotspot_subscriptions/1.json
   def destroy
@@ -124,26 +111,26 @@ end
     end
 
 
-    def customize_router_data(data_array)
-      data_array.map do |data|
-        {
-          id: data[".id"],
-          voucher: data["user"],
-          ip_address: data["address"],
-          mac_address: data["mac-address"],
-          up_time: data["uptime"],
-          idle_time: data["idle-time"],
-          download: format_bytes(data['bytes-in'].to_i),
-          upload: format_bytes(data['bytes-out'].to_i),
-          packets_in: data['packets-in'].to_i,
-          packets_out: data['packets-out'].to_i,
-          server: data['server'],
-          login_by: data['login-by'],
-          radius: data['radius'] == 'true'
-        }
-      end
-    end
-    
+    # def customize_router_data(data_array)
+    #   data_array.map do |data|
+    #     {
+    #       id: data[".id"],
+    #       voucher: data["user"],
+    #       ip_address: data["address"],
+    #       mac_address: data["mac-address"],
+    #       up_time: data["uptime"],
+    #       idle_time: data["idle-time"],
+    #       download: format_bytes(data['bytes-in'].to_i),
+    #       upload: format_bytes(data['bytes-out'].to_i),
+    #       packets_in: data['packets-in'].to_i,
+    #       packets_out: data['packets-out'].to_i,
+    #       server: data['server'],
+    #       login_by: data['login-by'],
+    #       radius: data['radius'] == 'true'
+    #     }
+    #   end
+    # end
+   
     def format_bytes(bytes)
       units = ['B', 'KB', 'MB', 'GB', 'TB']
       return '0 B' if bytes.zero?

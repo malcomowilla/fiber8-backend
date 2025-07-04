@@ -181,7 +181,10 @@
           token = generate_token(admin_id: admin.id)
           cookies.encrypted.signed[:jwt_user] = { value: token, httponly: true,
            secure: true, exp: 24.hours.from_now.to_i, sameSite: 'strict' }
-      
+      ActivtyLog.create(action: 'login', ip: request.remote_ip,
+ description: "Logged in user #{admin.username}",
+          user_agent: request.user_agent, user: admin.username || admin.email,
+           date: Time.current)
           # Update the sign count for the stored credential
           stored_credential.update!(sign_count: webauthn_credential.sign_count)
       
@@ -240,6 +243,10 @@ def create_users
     @user = User.create(user_params)
     
   if @user.valid?
+    ActivtyLog.create(action: 'create', ip: request.remote_ip,
+ description: "Created user #{@user.username}",
+          user_agent: request.user_agent, user: current_user.username || current_user.email,
+           date: Time.current)
     # session[:account_id] =  @account.id
     render json: { user: UserSerializer.new(@user) }, status: :created
   else

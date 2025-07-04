@@ -61,67 +61,20 @@ def create_fcm_token
 
 
 def set_tenant
-
-  host = request.headers['X-Subdomain']
-  @account = Account.find_by(subdomain: host)
-
-
-  set_current_tenant(@account)
-rescue ActiveRecord::RecordNotFound
-  render json: { error: 'Invalid tenant' }, status: :not_found
-
-  
-end
-# require 'webauthn'
-
-#    before_action :set_tenant 
-#    before_action :check_expiry
-    # skip_before_action :authorized, only: [:create]
-
-
-    # def create
-    #     user = User.find_by(email: params[:email])
-    
-    # if user && user.authenticate(params[:password])
-
-            
-    #         session[:user_id] = user.id
-            
-
-    #         render json: user, status: :created
-            
-    #     else
-    #         render json: {error: 'Invalid username or password'}, status: :unauthorized
-    #     end
-    # end
-    
-# def check_expiry
-#     if Time.current - session[:activity] > 1.minutes
-
-#       session.clear
-#       render json: {error: 'u have reached ur limit'}, status: :unauthorized
-#     else
-
-#         session[:activity] = Time.current
-
-#     end
-# end
-
-    # def show
-    #     user = User.find_by(id:session[:user_id])
-    #     if user
-    #       render json: user
-    #        else
-    #           render json: { error: "Not authorized" }, status: :unauthorized
-    #           end
-    
-              
-    # end
-    # require 'webauthn'
-    # # 
-
-    # @current_account=ActsAsTenant.current_tenant 
+    host = request.headers['X-Subdomain']
+    @account = Account.find_by(subdomain: host)
+     ActsAsTenant.current_tenant = @account
     # EmailConfiguration.configure(@current_account)
+    EmailConfiguration.configure(@account, ENV['SYSTEM_ADMIN_EMAIL'])
+
+  Rails.logger.info "Setting tenant for app#{ActsAsTenant.current_tenant}"
+  
+    # set_current_tenant(@account)
+  rescue ActiveRecord::RecordNotFound
+    render json: { error: 'Invalid tenant' }, status: :not_found
+  
+  end
+
 
 
 
@@ -276,8 +229,10 @@ end
            admin.update(last_login_at: Time.current, status: 'active')
             admin.update_column(:inactive, false)
     admin.update_column(:last_activity_active, Time.zone.now)
-
-          # Update the sign count for the stored credential
+ ActivtyLog.create(action: 'login', ip: request.remote_ip,
+ description: "Logged in user #{admin.username}",
+          user_agent: request.user_agent, user: admin.username || admin.email,
+           date: Time.current)
           stored_credential.update!(sign_count: webauthn_credential.sign_count)
       
           render json: { message: 'WebAuthn authentication successful' }, status: :ok
@@ -583,27 +538,6 @@ end
 
 
 
-  # def verify_2fa
-  #   user = User.find_by(email: params[:email])
-  #   return render json: { error: 'User not found' }, status: :not_found unless user
-
-  #   code = params[:code]
-  #   totp = ROTP::TOTP.new(user.otp_secret)
-  #   if totp.verify(code, drift_behind: 15)
-
-  #     token = generate_token(user_id: user.id)
-  #     cookies.encrypted.signed[:jwt_user] = { 
-  #       value: token, 
-  #       httponly: true, 
-  #       secure: true,
-  #       sameSite: 'strict'
-  #     }
-  #     render json: user, status: :accepted
-  #   else
-  #     render json: { error: 'Invalid 2FA code' }, status: :unauthorized
-  #   end
-  # end
-
   def verify_2fa
     user = User.find_by(email: params[:email])
     return render json: { error: 'User not found' }, status: :not_found unless user
@@ -631,6 +565,8 @@ end
         secure: true,
         sameSite: 'strict'
       }
+       ActivtyLog.create(action: 'login', ip: request.remote_ip,
+          user_agent: request.user_agent, user: user.username || user.email, date: Time.current)
       render json: user, status: :accepted
     else
       render json: { error: 'Invalid 2FA code' }, status: :unauthorized
@@ -651,6 +587,10 @@ end
 
   if current_user
     current_user.update(status: 'inactive')
+    ActivtyLog.create(action: 'logout', ip: request.remote_ip,
+ description: "Logged out user #{current_user.username}",
+          user_agent: request.user_agent, user: current_user.username || current_user.email,
+           date: Time.current)
   else
     Rails.logger.warn("No current_user found during logout")
   end
@@ -708,7 +648,21 @@ if @user.locked_account == true && @user&.locked_at > 5.minutes.ago
     @user.update(last_login_at: Time.current, status: 'active')
           cookies.encrypted.signed[:jwt_user] = { value: token, httponly: true, secure: true,
          sameSite: 'strict'}
+         two_factor_passkeys = ActsAsTenant.current_tenant&.admin_setting&.enable_2fa_for_admin_passkeys
+         if two_factor_passkeys == false
+           ActivtyLog.create(action: 'login', ip: request.remote_ip,
+            description: "Logged in user #{@user.username}",
 
+          user_agent: request.user_agent, user: @user.username || @user.email, date: Time.current)
+         end
+        
+
+          two_factor_google_auth = ActsAsTenant.current_tenant&.admin_setting&.enable_2fa_google_auth
+         if two_factor_google_auth == false
+           ActivtyLog.create(action: 'login', ip: request.remote_ip,
+          user_agent: request.user_agent, user: @user.username || @user.email, date: Time.current)
+         end
+        
  @user.update_column(:inactive, false)
     @user.update_column(:last_activity_active, Time.zone.now)
 render json:@user,   status: :accepted
