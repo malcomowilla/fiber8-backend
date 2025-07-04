@@ -88,8 +88,8 @@ log_output = `journalctl -u cloudflared -n 100 --no-pager --reverse`
       Rails.logger.warn "[Tunnel Monitor] No valid Cloudflare tunnel found. Restarting services..."
 
       # Restart cloudflared and your backend service
-      # `systemctl restart cloudflared`
-      # `systemctl restart aitechs-fiber8-backend`
+      `systemctl restart cloudflared`
+      `systemctl restart aitechs-fiber8-backend`
 
       Rails.logger.info "[Tunnel Monitor] Services restarted successfully."
     else
@@ -104,8 +104,8 @@ log_output = `journalctl -u cloudflared -n 100 --no-pager --reverse`
 
 
     if log_system_status.match?(%r{Blocked hosts})
-      # `systemctl restart aitechs-fiber8-backend`
-      # Rails.logger.info "System is blocked. No action needed."
+      `systemctl restart aitechs-fiber8-backend`
+      Rails.logger.info "System is blocked. No action needed."
     end
 
 Rails.logger.info "Rehydrating wireguard"
