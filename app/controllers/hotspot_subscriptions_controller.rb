@@ -44,7 +44,7 @@ def set_tenant
       up_time: format_uptime(session.acctsessiontime),
       download: format_bytes(download_bytes),
       upload: format_bytes(upload_bytes),
-      start_time: session.acctstarttime,
+      start_time: session.acctstarttime.strftime("%B %d, %Y at %I:%M %p"),
       nas_port: session.nasportid
     }
   end
