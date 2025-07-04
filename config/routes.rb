@@ -1,4 +1,5 @@
 Rails.application.routes.draw do
+  resources :activty_logs
   resources :customer_portals
   resources :general_settings
   resources :wireguard_peers
@@ -56,6 +57,7 @@ Rails.application.routes.draw do
 mount ActionCable.server => '/cable'
 scope '/api' do
   resources :calendar_settings
+  resources :activty_logs
 
   resources :license_settings
   resources :company_leads
@@ -98,7 +100,8 @@ scope '/api' do
 
 
 end
-
+get '/api/trafic_stats', to: 'router_info#trafic_stats'
+get '/api/get_router_interface', to: 'router_info#get_router_interface'
 get '/api/allow_get_subscriber_settings', to: 'subscriber_settings#get_allow_subcriber_setting'
 get '/allow_get_subscriber_settings', to: 'subscriber_settings#get_allow_subcriber_setting'
 

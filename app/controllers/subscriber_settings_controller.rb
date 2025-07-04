@@ -58,7 +58,10 @@ end
   def create
     @subscriber_setting = SubscriberSetting.first_or_initialize(subscriber_setting_params)
     @subscriber_setting.update(subscriber_setting_params) 
-
+ActivtyLog.create(action: 'create', ip: request.remote_ip,
+ description: "Created subscriber settings #{@subscriber_setting.prefix}",
+          user_agent: request.user_agent, user: current_user.username || current_user.email,
+           date: Time.current)
       if @subscriber_setting.save
       render json: @subscriber_setting, status: :created 
       else

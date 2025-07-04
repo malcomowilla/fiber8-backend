@@ -202,7 +202,8 @@ end
 
 
   def index
-    @subscriptions = Subscription.all
+    @subscriptions = Subscription.where(subscriber_id: params[:subscriber_id])
+
     render json: @subscriptions
   end
 
@@ -283,6 +284,7 @@ end
   ppoe_username:  params[:subscription][:ppoe_username],
   ppoe_password:  params[:subscription][:ppoe_password],
   type:  params[:subscription][:type],
+  subscriber_id: params[:subscriber_id],
   network_name: params[:subscription][:network_name],
   # mac_address: params[:subscription][:mac_address],
   validity_period_units: params[:subscription][:validity_period_units],
@@ -296,6 +298,8 @@ end
     
     calculate_expiration(@subscription)
     limit_bandwidth(params[:subscription][:ip_address], params[:subscription][:package_name], params[:subscription][:ppoe_username])
+
+
       if @subscription.save
          render json: @subscription, status: :created
 
@@ -390,6 +394,7 @@ end
   
     # Update the subscription record
     if @subscription.update(subscription_params)
+      @subscription.update(subscriber_id: params[:subscriber_id])
       # If IP address has changed, update bandwidth limits
       if old_ip != @subscription.ip_address
         # Remove old bandwidth limit (if any) for the old IP

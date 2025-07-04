@@ -53,7 +53,10 @@ if current_user
   def create
 
     @ip_network = IpNetwork.new(ip_network_params)
-
+ActivtyLog.create(action: 'create', ip: request.remote_ip,
+ description: "Created ip network #{@ip_network.network}",
+          user_agent: request.user_agent, user: current_user.username || current_user.email,
+           date: Time.current)
       if @ip_network.save
         add_route_to_wireguard(@ip_network.network, @ip_network.subnet_mask)
 
@@ -83,6 +86,11 @@ if current_user
   def update
     @ip_network = set_ip_network
       if @ip_network.update(ip_network_params)
+        
+ActivtyLog.create(action: 'update', ip: request.remote_ip,
+ description: "Updated ip network #{@ip_network.network}",
+          user_agent: request.user_agent, user: current_user.username || current_user.email,
+           date: Time.current)
         render json: @ip_network
       else
          render json: @ip_network.errors, status: :unprocessable_entity 
@@ -93,6 +101,10 @@ if current_user
   # DELETE /ip_networks/1 or /ip_networks/1.json
   def destroy
     @ip_network = set_ip_network 
+    ActivtyLog.create(action: 'delete', ip: request.remote_ip,
+ description: "Deleted ip network #{@ip_network.network}",
+          user_agent: request.user_agent, user: current_user.username || current_user.email,
+           date: Time.current)
     @ip_network.destroy!
       head :no_content 
     

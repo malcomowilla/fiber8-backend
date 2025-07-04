@@ -276,7 +276,10 @@ end
           return render json: @hotspot_voucher, status: :created
           end
           
-          
+          ActivtyLog.create(action: 'create', ip: request.remote_ip,
+ description: "Created hotspot voucher #{@hotspot_voucher.voucher}",
+          user_agent: request.user_agent, user: current_user.username || current_user.email,
+           date: Time.current)
   
           render json: @hotspot_voucher, status: :created
 
@@ -355,6 +358,10 @@ end
         package: params[:package],
 
       )
+      ActivtyLog.create(action: 'update', ip: request.remote_ip,
+ description: "Updated hotspot voucher #{@hotspot_voucher.voucher}",
+          user_agent: request.user_agent, user: current_user.username || current_user.email,
+           date: Time.current)
         render json: @hotspot_voucher, status: :ok
       else
         render json: @hotspot_voucher.errors, status: :unprocessable_entity 
@@ -436,7 +443,10 @@ def destroy
 
     # ✅ Delete the HotspotVoucher record
     @hotspot_voucher.destroy!
-
+ActivtyLog.create(action: 'delete', ip: request.remote_ip,
+ description: "Deleted hotspot voucher #{@hotspot_voucher.voucher}",
+          user_agent: request.user_agent, user: current_user.username || current_user.email,
+           date: Time.current)
     render json: { message: "Hotspot voucher deleted successfully" }, status: :ok
   end
 rescue => e
@@ -1239,3 +1249,15 @@ end
 
 
 end
+
+
+
+
+
+
+
+
+
+
+
+

@@ -51,6 +51,10 @@ if current_user
     @email_setting = EmailSetting.first_or_initialize(email_setting_params)
     @email_setting.update(email_setting_params)
       if @email_setting.save
+        ActivtyLog.create(action: 'create', ip: request.remote_ip,
+ description: "Created email setting #{@email_setting.smtp_host}",
+          user_agent: request.user_agent, user: current_user.username || current_user.email,
+           date: Time.current)
        render json: @email_setting, status: :created
       else
       render json: @email_setting.errors, status: :unprocessable_entity 

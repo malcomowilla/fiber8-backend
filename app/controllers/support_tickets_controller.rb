@@ -20,7 +20,6 @@ if current_user
 
   def set_tenant
    
-  Rails.logger.info "Setting tenant for app#{ActsAsTenant.current_tenant}"
   
   
   host = request.headers['X-Subdomain']
@@ -98,15 +97,7 @@ end
   # POST /support_tickets or /support_tickets.json
   def create
     @support_ticket = SupportTicket.new(support_ticket_params)
-    # customer_name = @support_ticket.customer
-    # service_provider_name = @support_ticket.agent
-    # service_provider_by_name = ServiceProvider.find_by(name: service_provider_name)
-    # customer_by_name = Customer.find_by(name: customer_name)
-    # service_provider_email = service_provider_by_name.email
-
-    # customer_email = customer_by_name.email
-    # customers_code = customer_by_name.customer_code
-
+   
     if @support_ticket.valid?
       Rails.logger.info "current tenant in ticket settings =>#{ActsAsTenant.current_tenant.ticket_setting}"
       prefix = ActsAsTenant.current_tenant.ticket_setting.prefix
@@ -118,7 +109,10 @@ end
         
         @support_ticket.save!
         Rails.logger.info "support ticket info after save: #{@support_ticket.inspect}"
-        
+        ActivtyLog.create(action: 'create', ip: request.remote_ip,
+ description: "Created support ticket #{@support_ticket.ticket_number}",
+          user_agent: request.user_agent, user: current_user.username || current_user.email,
+           date: Time.current)
         auto_generated_number = "#{prefix}#{@support_ticket.sequence_number.to_s.rjust(minimum_digits.to_i, '0')}"
         @support_ticket.update!(
           ticket_number: auto_generated_number,
@@ -166,6 +160,10 @@ end
     support_ticket = SupportTicket.find_by(id: params[:id])
       if support_ticket.update(support_ticket_params)
         support_ticket.update(date_closed: Time.now.strftime('%Y-%m-%d %I:%M:%S %p'))
+        ActivtyLog.create(action: 'update', ip: request.remote_ip,
+ description: "Updated support ticket #{@support_ticket.ticket_number}",
+          user_agent: request.user_agent, user: current_user.username || current_user.email,
+           date: Time.current)
          render json: support_ticket, status: :ok
       else
          render json: support_ticket.errors, status: :unprocessable_entity 
@@ -176,7 +174,10 @@ end
   # DELETE /support_tickets/1 or /support_tickets/1.json
   def destroy
     @support_ticket.destroy!
-
+ActivtyLog.create(action: 'delete', ip: request.remote_ip,
+ description: "Deleted support ticket #{@support_ticket.ticket_number}",
+          user_agent: request.user_agent, user: current_user.username || current_user.email,
+           date: Time.current)
      head :no_content 
     
   end

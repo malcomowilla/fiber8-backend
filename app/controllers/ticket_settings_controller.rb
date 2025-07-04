@@ -54,6 +54,10 @@ if current_user
 
     
     if @ticket_settings.save
+      ActivtyLog.create(action: 'create', ip: request.remote_ip,
+ description: "Created ticket settings #{@ticket_settings.prefix}",
+          user_agent: request.user_agent, user: current_user.username || current_user.email,
+           date: Time.current)
       render json: @ticket_settings, status: :created
     else
       render json: @ticket_settings.errors, status: :unprocessable_entity

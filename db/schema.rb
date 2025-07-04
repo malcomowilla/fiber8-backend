@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2025_07_01_173450) do
+ActiveRecord::Schema[7.2].define(version: 2025_07_04_115818) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -48,6 +48,19 @@ ActiveRecord::Schema[7.2].define(version: 2025_07_01_173450) do
     t.bigint "blob_id", null: false
     t.string "variation_digest", null: false
     t.index ["blob_id", "variation_digest"], name: "index_active_storage_variant_records_uniqueness", unique: true
+  end
+
+  create_table "activty_logs", force: :cascade do |t|
+    t.string "action"
+    t.string "subject"
+    t.string "description"
+    t.string "user"
+    t.datetime "date"
+    t.integer "account_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.string "user_agent"
+    t.string "ip"
   end
 
   create_table "admin_settings", force: :cascade do |t|
@@ -554,6 +567,7 @@ ActiveRecord::Schema[7.2].define(version: 2025_07_01_173450) do
     t.datetime "registration_date"
     t.text "location", default: [], array: true
     t.string "password_digest"
+    t.string "node"
   end
 
   create_table "subscriptions", force: :cascade do |t|
@@ -577,6 +591,7 @@ ActiveRecord::Schema[7.2].define(version: 2025_07_01_173450) do
     t.string "network_name"
     t.string "validity_period_units"
     t.string "validity"
+    t.integer "subscriber_id"
   end
 
   create_table "support_tickets", force: :cascade do |t|

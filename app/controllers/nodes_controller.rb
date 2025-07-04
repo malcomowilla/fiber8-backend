@@ -54,6 +54,10 @@ if current_user
       longitude: params[:position][:lng],
       country: params[:country]
     )
+    ActivtyLog.create(action: 'create', ip: request.remote_ip,
+ description: "Created node #{@node.name}",
+          user_agent: request.user_agent, user: current_user.username || current_user.email,
+           date: Time.current)
 
       if @node.save
         render json: @node, status: :created
@@ -67,6 +71,10 @@ if current_user
   def update
     @node = Node.find_by(id: params[:id])
       if @node.update(node_params)
+        ActivtyLog.create(action: 'update', ip: request.remote_ip,
+ description: "Updated node #{@node.name}",
+          user_agent: request.user_agent, user: current_user.username || current_user.email,
+           date: Time.current)
          render json: @node, status: :ok
       else
          render json: @node.errors, status: :unprocessable_entity 
@@ -77,6 +85,10 @@ if current_user
   # DELETE /nodes/1 or /nodes/1.json
   def destroy
     @node = Node.find_by(id: params[:id])
+    ActivtyLog.create(action: 'delete', ip: request.remote_ip,
+ description: "Deleted node #{@node.name}",
+          user_agent: request.user_agent, user: current_user.username || current_user.email,
+           date: Time.current)
     @node.destroy!
 
        head :no_content 

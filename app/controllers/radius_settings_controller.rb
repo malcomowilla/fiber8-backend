@@ -27,9 +27,9 @@ if current_user
   def set_tenant
     host = request.headers['X-Subdomain']
     @account = Account.find_by(subdomain: host)
-    @current_account= ActsAsTenant.current_tenant 
+     ActsAsTenant.current_tenant = @account
     # EmailConfiguration.configure(@current_account)
-    EmailConfiguration.configure(@current_account, ENV['SYSTEM_ADMIN_EMAIL'])
+    EmailConfiguration.configure(@account, ENV['SYSTEM_ADMIN_EMAIL'])
 
   Rails.logger.info "Setting tenant for app#{ActsAsTenant.current_tenant}"
   
@@ -67,6 +67,10 @@ if current_user
 
 
 if @nas.save
+  ActivtyLog.create(action: 'create', ip: request.remote_ip,
+ description: "Created NAS settings #{@nas.shortname}",
+          user_agent: request.user_agent, user: current_user.username || current_user.email,
+           date: Time.current)
   render json: @nas
 else
   
