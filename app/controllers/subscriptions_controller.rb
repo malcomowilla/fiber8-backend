@@ -166,46 +166,115 @@ def format_uptime(seconds)
   end
 
 
+# def last_seen
+#   # subscriptions = Subscription.all
+#     subscriptions = Subscription.where(subscriber_id: params[:subscriber_id])
+
+#   data = subscriptions.map do |subscription|
+#     ip = subscription.ip_address.strip
+# ip = IPAddr.new(ip) # Optional, i
+# Rails.logger.info "IP: #{ip}"
+#     radacct_records = RadAcct.where(username: subscription.ppoe_username,
+#     framedipaddress: ip,
+#     framedprotocol: 'PPP'
+
+#     ).order(acctupdatetime: :desc)
+
+#     radacct = radacct_records.find { |r| r.acctstoptime.nil? } || radacct_records.first
+
+#     Rails.logger.info "radacct: #{radacct.inspect}"
+
+#     if radacct
+#       if radacct.acctstoptime.nil?
+#         {
+#           id: subscription.id,
+#           ppoe_username: subscription.ppoe_username,
+#           status: subscription.status == 'blocked' ? 'blocked' : 'online',
+#           last_seen: radacct.acctupdatetime.strftime("%B %d, %Y at %I:%M %p"),
+#           mac_adress: radacct.callingstationid
+#         }
+#       else
+#         {
+#           id: subscription.id,
+#           ppoe_username: subscription.ppoe_username,
+#           status: "offline",
+#           last_seen: radacct.acctstoptime.strftime("%B %d, %Y at %I:%M %p"),
+#           mac_adress: radacct.callingstationid
+#         }
+#       end
+#     else
+#       {
+#         id: subscription.id,
+#         ppoe_username: subscription.ppoe_username,
+#         status: "never connected",
+#         last_seen: nil
+#       }
+#     end
+#   end
+
+#   render json: data
+# end
+
 def last_seen
-  # subscriptions = Subscription.all
-    subscriptions = Subscription.where(subscriber_id: params[:subscriber_id])
+  subscriptions = Subscription.where(subscriber_id: params[:subscriber_id])
+  data = []
 
-  data = subscriptions.map do |subscription|
-    ip = subscription.ip_address.strip
-ip = IPAddr.new(ip) # Optional, i
-Rails.logger.info "IP: #{ip}"
-    radacct_records = RadAcct.where(username: subscription.ppoe_username,
-    framedipaddress: ip,
-    framedprotocol: 'PPP'
+  subscriptions.each do |subscription|
+    ip_address = subscription.ip_address.to_s.strip
+    username = subscription.ppoe_username
 
+    if ip_address.empty? || username.blank?
+      data << {
+        id: subscription.id,
+        ppoe_username: username,
+        status: "never connected",
+        last_seen: nil
+      }
+      next
+    end
+
+    begin
+      ip = IPAddr.new(ip_address)
+    rescue IPAddr::InvalidAddressError
+      data << {
+        id: subscription.id,
+        ppoe_username: username,
+        status: "never connected",
+        last_seen: nil
+      }
+      next
+    end
+
+    radacct_records = RadAcct.where(
+      username: username,
+      framedipaddress: ip,
+      framedprotocol: 'PPP'
     ).order(acctupdatetime: :desc)
 
     radacct = radacct_records.find { |r| r.acctstoptime.nil? } || radacct_records.first
 
-    Rails.logger.info "radacct: #{radacct.inspect}"
-
     if radacct
       if radacct.acctstoptime.nil?
-        {
+        data << {
           id: subscription.id,
-          ppoe_username: subscription.ppoe_username,
-          status: subscription.status == 'blocked' ? 'blocked' : 'online',
+          ppoe_username: username,
+          status: subscription.status.to_s == 'blocked' ? 'blocked' : 'online',
           last_seen: radacct.acctupdatetime.strftime("%B %d, %Y at %I:%M %p"),
           mac_adress: radacct.callingstationid
         }
       else
-        {
+        data << {
           id: subscription.id,
-          ppoe_username: subscription.ppoe_username,
+          ppoe_username: username,
           status: "offline",
           last_seen: radacct.acctstoptime.strftime("%B %d, %Y at %I:%M %p"),
           mac_adress: radacct.callingstationid
         }
       end
     else
-      {
+      data << {
         id: subscription.id,
-        ppoe_username: subscription.ppoe_username,
+        ppoe_username: username,
         status: "never connected",
         last_seen: nil
       }
@@ -214,7 +283,6 @@ Rails.logger.info "IP: #{ip}"
 
   render json: data
 end
-
 
 def block_service
   begin
