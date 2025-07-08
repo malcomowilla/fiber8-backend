@@ -3,6 +3,7 @@ class SubscriptionsController < ApplicationController
 
   # GET /subscriptions or /subscriptions.json
   require 'net/ssh'
+require 'ipaddr'
 
 set_current_tenant_through_filter
 
