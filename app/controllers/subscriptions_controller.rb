@@ -217,44 +217,48 @@ def format_uptime(seconds)
 def last_seen
   subscriptions = Subscription.where(subscriber_id: params[:subscriber_id])
 
-  data = subscriptions.map do |subscription|
-    next unless subscription.ip_address.present?
+data = subscriptions.map do |subscription|
+  next unless subscription.ip_address.present?
 
-    radacct_records = RadAcct.where(
-      framedipaddress: subscription.ip_address
-    ).order(acctupdatetime: :desc)
+  begin
+    ip = IPAddr.new(subscription.ip_address)
+  rescue IPAddr::InvalidAddressError
+    next # skip invalid IPs
+  end
 
-    radacct = radacct_records.find_by(acctstoptime: nil) || radacct_records.first
+  radacct_records = RadAcct.where(framedipaddress: ip).order(acctupdatetime: :desc)
+  radacct = radacct_records.find_by(acctstoptime: nil) || radacct_records.first
 
-    if radacct
-      if radacct.acctstoptime.nil?
-        {
-          id: subscription.id,
-          ppoe_username: subscription.pppoe_username,
-          status: subscription.status == 'blocked' ? 'blocked' : 'online',
-          last_seen: radacct.acctupdatetime.strftime("%B %d, %Y at %I:%M %p"),
-          mac_adress: radacct.callingstationid
-        }
-      else
-        {
-          id: subscription.id,
-          ppoe_username: subscription.pppoe_username,
-          status: 'offline',
-          last_seen: radacct.acctstoptime.strftime("%B %d, %Y at %I:%M %p"),
-          mac_adress: radacct.callingstationid
-        }
-      end
+  if radacct
+    if radacct.acctstoptime.nil?
+      {
+        id: subscription.id,
+        ppoe_username: subscription.ppoe_username,
+        status: subscription.status == 'blocked' ? 'blocked' : 'online',
+        last_seen: radacct.acctupdatetime.strftime("%B %d, %Y at %I:%M %p"),
+        mac_adress: radacct.callingstationid
+      }
     else
       {
         id: subscription.id,
-        ppoe_username: subscription.pppoe_username,
-        status: 'never connected',
-        last_seen: nil
+        ppoe_username: subscription.ppoe_username,
+        status: 'offline',
+        last_seen: radacct.acctstoptime.strftime("%B %d, %Y at %I:%M %p"),
+        mac_adress: radacct.callingstationid
       }
     end
-  end.compact  # Remove nils if ip_address is missing
+  else
+    {
+      id: subscription.id,
+      ppoe_username: subscription.ppoe_username,
+      status: 'never connected',
+      last_seen: nil
+    }
+  end
+end.compact
 
-  render json: data
+render json: data
+
 end
 
 
