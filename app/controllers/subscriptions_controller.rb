@@ -249,7 +249,7 @@ def last_seen
       username: username,
       framedipaddress: ip,
       framedprotocol: 'PPP'
-    ).order(acctupdatetime: :desc)
+    )
 
     radacct = radacct_records.find { |r| r.acctstoptime.nil? } || radacct_records.first
 
