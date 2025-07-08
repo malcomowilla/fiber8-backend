@@ -119,7 +119,50 @@ def get_active_pppoe_users
 end
 
 
+def format_uptime(seconds)
+  return '0s' if seconds.nil?
 
+  mm, ss = seconds.divmod(60)
+  hh, mm = mm.divmod(60)
+  dd, hh = hh.divmod(24)
+
+  parts = []
+  parts << "#{dd}d" if dd > 0
+  parts << "#{hh}h" if hh > 0
+  parts << "#{mm}m" if mm > 0
+  parts << "#{ss}s"
+  parts.join(' ')
+    end
+    # def customize_router_data(data_array)
+    #   data_array.map do |data|
+    #     {
+    #       id: data[".id"],
+    #       voucher: data["user"],
+    #       ip_address: data["address"],
+    #       mac_address: data["mac-address"],
+    #       up_time: data["uptime"],
+    #       idle_time: data["idle-time"],
+    #       download: format_bytes(data['bytes-in'].to_i),
+    #       upload: format_bytes(data['bytes-out'].to_i),
+    #       packets_in: data['packets-in'].to_i,
+    #       packets_out: data['packets-out'].to_i,
+    #       server: data['server'],
+    #       login_by: data['login-by'],
+    #       radius: data['radius'] == 'true'
+    #     }
+    #   end
+    # end
+   
+    def format_bytes(bytes)
+      units = ['B', 'KB', 'MB', 'GB', 'TB']
+      return '0 B' if bytes.zero?
+    
+      exp = (Math.log(bytes) / Math.log(1024)).to_i
+      size = bytes / (1024.0**exp)
+      "%.2f #{units[exp]}" % size
+    
+    
+  end
 
 
 def last_seen
