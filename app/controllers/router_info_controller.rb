@@ -17,7 +17,6 @@ require 'bigdecimal/util'
     # EmailConfiguration.configure(@current_account)
     EmailConfiguration.configure(@account, ENV['SYSTEM_ADMIN_EMAIL'])
 
-  Rails.logger.info "Setting tenant for app#{ActsAsTenant.current_tenant}"
   
     # set_current_tenant(@account)
   rescue ActiveRecord::RecordNotFound
@@ -29,7 +28,6 @@ require 'bigdecimal/util'
 
 
   def fetch_trafic_stats
-Rails.logger.info "Fetching trafic stats#{params[:id]}"
   router = NasRouter.find_by(id: params[:id])
 
   return [] unless router

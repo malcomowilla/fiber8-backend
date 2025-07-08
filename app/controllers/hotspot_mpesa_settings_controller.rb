@@ -70,7 +70,7 @@ if current_user
 
     )
       if @hotspot_mpesa_setting_setting.save 
-        ActivtyLog.create(action: 'create', ip: request.remote_ip,
+        ActivtyLog.create(action: 'configuration', ip: request.remote_ip,
  description: "Created hotspot mpesa setting #{@hotspot_mpesa_setting_setting.short_code}",
           user_agent: request.user_agent, user: current_user.username || current_user.email,
            date: Time.current)
