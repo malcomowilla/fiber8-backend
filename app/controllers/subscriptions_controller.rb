@@ -170,7 +170,9 @@ def last_seen
     subscriptions = Subscription.where(subscriber_id: params[:subscriber_id])
 
   data = subscriptions.map do |subscription|
-    radacct_records = RadAcct.where(username: subscription.ppoe_username).order(acctupdatetime: :desc)
+    radacct_records = RadAcct.where(username: subscription.ppoe_username,
+    framedprotocol: 'PPP'
+    ).order(acctupdatetime: :desc)
 
     radacct = radacct_records.find { |r| r.acctstoptime.nil? } || radacct_records.first
 
