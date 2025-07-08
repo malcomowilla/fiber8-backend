@@ -179,7 +179,21 @@ Rails.logger.info "IP: #{ip}"
     framedprotocol: 'PPP'
 
     ).order(acctupdatetime: :desc)
-Rails.logger.info "radacct_records: #{radacct_records.all}"
+    Rails.logger.info "RadAcct records found: #{radacct_records.count}"
+
+radacct_records.each_with_index do |record, index|
+  Rails.logger.info "Record #{index + 1}:"
+  Rails.logger.info "  ID: #{record.radacctid}"
+  Rails.logger.info "  Username: #{record.username}"
+  Rails.logger.info "  Framed IP: #{record.framedipaddress}"
+  Rails.logger.info "  Acct Start: #{record.acctstarttime}"
+  Rails.logger.info "  Acct Update: #{record.acctupdatetime}"
+  Rails.logger.info "  Acct Stop: #{record.acctstoptime}"
+  Rails.logger.info "  MAC Address: #{record.callingstationid}"
+  Rails.logger.info "  Session Time: #{record.acctsessiontime}"
+  Rails.logger.info "  Input Octets: #{record.acctinputoctets}"
+  Rails.logger.info "  Output Octets: #{record.acctoutputoctets}"
+end
     radacct = radacct_records.find { |r| r.acctstoptime.nil? } || radacct_records.first
 
     Rails.logger.info "radacct: #{radacct.inspect}"
