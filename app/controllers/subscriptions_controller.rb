@@ -179,7 +179,7 @@ Rails.logger.info "IP: #{ip}"
     framedprotocol: 'PPP'
 
     ).order(acctupdatetime: :desc)
-Rails.logger.infO "radacct_records: #{radacct_records.inspect}"
+Rails.logger.info "radacct_records: #{radacct_records.inspect}"
     radacct = radacct_records.find { |r| r.acctstoptime.nil? } || radacct_records.first
 
     Rails.logger.info "radacct: #{radacct.inspect}"
