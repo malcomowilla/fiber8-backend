@@ -174,10 +174,12 @@ def last_seen
     ip = subscription.ip_address.strip
 ip = IPAddr.new(ip) # Optional, i
 Rails.logger.info "IP: #{ip}"
-    radacct_records = RadAcct.where(username: subscription.ppoe_username,
-    framedprotocol: 'PPP'
-
-    ).order(acctupdatetime: :desc)
+   radacct_records = RadAcct.where(
+  account_id: subscription.account_id,
+  username: subscription.ppoe_username,
+  framedipaddress: ip,
+  framedprotocol: 'PPP'
+).order(acctupdatetime: :desc)
     Rails.logger.info "RadAcct records found: #{radacct_records.count}"
 
 radacct_records.each_with_index do |record, index|
