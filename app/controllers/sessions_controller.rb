@@ -228,11 +228,14 @@ def set_tenant
       
            admin.update(last_login_at: Time.current, status: 'active')
             admin.update_column(:inactive, false)
-    admin.update_column(:last_activity_active, Time.zone.now)
- ActivtyLog.create(action: 'login', ip: request.remote_ip,
- description: "Logged in user #{admin.username}",
-          user_agent: request.user_agent, user: admin.username || admin.email,
-           date: Time.current)
+    two_factor_passkeys = ActsAsTenant.current_tenant&.admin_setting&.enable_2fa_for_admin_passkeys
+         if two_factor_passkeys == true
+           ActivtyLog.create(action: 'login', ip: request.remote_ip,
+            description: "Logged in user via passkey #{admin.username || admin.email}",
+
+          user_agent: request.user_agent, user: @user.username || @user.email, date: Time.current)
+         end
+        
           stored_credential.update!(sign_count: webauthn_credential.sign_count)
       
           render json: { message: 'WebAuthn authentication successful' }, status: :ok
@@ -483,6 +486,12 @@ end
     if totp.verify(params[:code], drift_behind: 30)
       # Success – code is valid
       user.update!(otp_verified: true)
+       two_factor_google_auth = ActsAsTenant.current_tenant&.admin_setting&.enable_2fa_google_auth
+         if two_factor_google_auth == false
+           ActivtyLog.create(action: 'login', ip: request.remote_ip,
+            description: "Logged in user via totp #{@user.username || @user.email}",
+          user_agent: request.user_agent, user: @user.username || @user.email, date: Time.current)
+         end
       render json: { success: true }
     else
       render json: { success: false, error: "Invalid code" }, status: :unauthorized
@@ -565,8 +574,10 @@ end
         secure: true,
         sameSite: 'strict'
       }
-       ActivtyLog.create(action: 'login', ip: request.remote_ip,
-          user_agent: request.user_agent, user: user.username || user.email, date: Time.current)
+      #  ActivtyLog.create(action: 'login', ip: request.remote_ip,
+      #  description: "Logged in user via google authenticator #{user.username}",
+      #     user_agent: request.user_agent, user: user.username || user.email, date: Time.current)
+      #     
       render json: user, status: :accepted
     else
       render json: { error: 'Invalid 2FA code' }, status: :unauthorized
@@ -648,18 +659,29 @@ if @user.locked_account == true && @user&.locked_at > 5.minutes.ago
     @user.update(last_login_at: Time.current, status: 'active')
           cookies.encrypted.signed[:jwt_user] = { value: token, httponly: true, secure: true,
          sameSite: 'strict'}
-         two_factor_passkeys = ActsAsTenant.current_tenant&.admin_setting&.enable_2fa_for_admin_passkeys
-         if two_factor_passkeys == false
-           ActivtyLog.create(action: 'login', ip: request.remote_ip,
-            description: "Logged in user #{@user.username}",
 
+
+         two_factor_passkeys = ActsAsTenant.current_tenant&.admin_setting&.enable_2fa_for_admin_passkeys
+         if two_factor_passkeys == true
+           ActivtyLog.create(action: 'login', ip: request.remote_ip,
+            description: "Logged in user via passkeys, user=> #{@user.username}",
+
+          user_agent: request.user_agent, user: @user.username || @user.email, date: Time.current)
+         else
+            ActivtyLog.create(action: 'login', ip: request.remote_ip,
+            description: "Logged in user via password, user=> #{@user.username}",
           user_agent: request.user_agent, user: @user.username || @user.email, date: Time.current)
          end
         
 
           two_factor_google_auth = ActsAsTenant.current_tenant&.admin_setting&.enable_2fa_google_auth
-         if two_factor_google_auth == false
+         if two_factor_google_auth == true
            ActivtyLog.create(action: 'login', ip: request.remote_ip,
+            description: "Logged in user via google auth, user=> #{@user.username}",
+          user_agent: request.user_agent, user: @user.username || @user.email, date: Time.current)
+         else
+           ActivtyLog.create(action: 'login', ip: request.remote_ip,
+            description: "Logged in user via password, user=> #{@user.username}",
           user_agent: request.user_agent, user: @user.username || @user.email, date: Time.current)
          end
         

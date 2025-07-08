@@ -66,8 +66,8 @@ if current_user
 
   def reboot_router
 
-    router_setting = ActsAsTenant.current_tenant&.router_setting&.router_name
-    router = NasRouter.find_by(name: router_setting)
+    # router_setting = ActsAsTenant.current_tenant&.router_setting&.router_name
+    router = NasRouter.find_by(id: params[:id])
   
     return unless router
   

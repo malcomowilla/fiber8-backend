@@ -31,7 +31,6 @@ if current_user
     # EmailConfiguration.configure(@current_account)
     EmailConfiguration.configure(@account, ENV['SYSTEM_ADMIN_EMAIL'])
 
-  Rails.logger.info "Setting tenant for app#{ActsAsTenant.current_tenant}"
   
     # set_current_tenant(@account)
   rescue ActiveRecord::RecordNotFound
@@ -67,8 +66,8 @@ if current_user
 
 
 if @nas.save
-  ActivtyLog.create(action: 'create', ip: request.remote_ip,
- description: "Created NAS settings #{@nas.shortname}",
+  ActivtyLog.create(action: 'configuration', ip: request.remote_ip,
+ description: "Configured NAS settings #{@nas.shortname}",
           user_agent: request.user_agent, user: current_user.username || current_user.email,
            date: Time.current)
   render json: @nas

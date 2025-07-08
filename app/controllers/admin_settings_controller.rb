@@ -4,6 +4,9 @@ class AdminSettingsController < ApplicationController
 
   load_and_authorize_resource except: [:allow_get_admin_settings]
   before_action :update_last_activity
+  before_action :set_tenant
+
+  
   # GET /admin_settings or /admin_settings.json
   def index
     # @admin_settings = AdminSetting.all
@@ -13,6 +16,21 @@ class AdminSettingsController < ApplicationController
   end
 
 
+
+  def set_tenant
+
+    host = request.headers['X-Subdomain']
+    @account = Account.find_by(subdomain: host)
+     ActsAsTenant.current_tenant = @account
+    EmailConfiguration.configure(@account, ENV['SYSTEM_ADMIN_EMAIL'])
+    # EmailSystemAdmin.configure(@current_account, current_system_admin)
+  
+    # set_current_tenant(@account)
+  rescue ActiveRecord::RecordNotFound
+    render json: { error: 'Invalid tenant' }, status: :not_found
+  
+    
+  end
 
 
 def update_last_activity
@@ -56,7 +74,7 @@ end
       )
     )
       if @admin_setting.save
-        ActivtyLog.create(action: 'create', ip: request.remote_ip,
+        ActivtyLog.create(action: 'security', ip: request.remote_ip,
  description: "Created admin setting",
           user_agent: request.user_agent, user: current_user.username || current_user.email,
            date: Time.current)
@@ -67,30 +85,6 @@ end
     
   end
 
-
-
-  # PATCH/PUT /admin_settings/1 or /admin_settings/1.json
-  # def update
-  #   respond_to do |format|
-  #     if @admin_setting.update(admin_setting_params)
-  #       format.html { redirect_to @admin_setting, notice: "Admin setting was successfully updated." }
-  #       format.json { render :show, status: :ok, location: @admin_setting }
-  #     else
-  #       format.html { render :edit, status: :unprocessable_entity }
-  #       format.json { render json: @admin_setting.errors, status: :unprocessable_entity }
-  #     end
-  #   end
-  # end
-
-  # DELETE /admin_settings/1 or /admin_settings/1.json
-  # def destroy
-  #   @admin_setting.destroy!
-
-  #   respond_to do |format|
-  #     format.html { redirect_to admin_settings_path, status: :see_other, notice: "Admin setting was successfully destroyed." }
-  #     format.json { head :no_content }
-  #   end
-  # end
 
   private
     # Use callbacks to share common setup or constraints between actions.

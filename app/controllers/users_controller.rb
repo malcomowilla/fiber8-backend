@@ -181,10 +181,14 @@
           token = generate_token(admin_id: admin.id)
           cookies.encrypted.signed[:jwt_user] = { value: token, httponly: true,
            secure: true, exp: 24.hours.from_now.to_i, sameSite: 'strict' }
-      ActivtyLog.create(action: 'login', ip: request.remote_ip,
- description: "Logged in user #{admin.username}",
-          user_agent: request.user_agent, user: admin.username || admin.email,
-           date: Time.current)
+     two_factor_passkeys = ActsAsTenant.current_tenant&.admin_setting&.enable_2fa_for_admin_passkeys
+         if two_factor_passkeys == true
+           ActivtyLog.create(action: 'login', ip: request.remote_ip,
+            description: "Logged in user via passkey #{admin.username || admin.email}",
+
+          user_agent: request.user_agent, user: @user.username || @user.email, date: Time.current)
+         end
+        
           # Update the sign count for the stored credential
           stored_credential.update!(sign_count: webauthn_credential.sign_count)
       
