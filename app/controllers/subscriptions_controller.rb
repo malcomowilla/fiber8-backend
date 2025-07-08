@@ -165,100 +165,52 @@ def format_uptime(seconds)
   end
 
 
-# def last_seen
-#   # subscriptions = Subscription.all
-#     subscriptions = Subscription.where(subscriber_id: params[:subscriber_id])
-
-#   data = subscriptions.map do |subscription|
-#     radacct_records = RadAcct.where(username: subscription.ppoe_username,
-#     framedipaddress: subscription.ip_address,
-#     framedprotocol: 'PPP'
-
-#     ).order(acctupdatetime: :desc)
-
-#     radacct = radacct_records.find { |r| r.acctstoptime.nil? } || radacct_records.first
-
-#     Rails.logger.info "radacct: #{radacct.inspect}"
-
-#     if radacct
-#       if radacct.acctstoptime.nil?
-#         {
-#           id: subscription.id,
-#           ppoe_username: subscription.ppoe_username,
-#           status: subscription.status == 'blocked' ? 'blocked' : 'online',
-#           last_seen: radacct.acctupdatetime.strftime("%B %d, %Y at %I:%M %p"),
-#           mac_adress: radacct.callingstationid
-#         }
-#       else
-#         {
-#           id: subscription.id,
-#           ppoe_username: subscription.ppoe_username,
-#           status: "offline",
-#           last_seen: radacct.acctstoptime.strftime("%B %d, %Y at %I:%M %p"),
-#           mac_adress: radacct.callingstationid
-#         }
-#       end
-#     else
-#       {
-#         id: subscription.id,
-#         ppoe_username: subscription.ppoe_username,
-#         status: "never connected",
-#         last_seen: nil
-#       }
-#     end
-#   end
-
-#   render json: data
-# end
-
-
-
-
 def last_seen
-  subscriptions = Subscription.where(subscriber_id: params[:subscriber_id])
+  # subscriptions = Subscription.all
+    subscriptions = Subscription.where(subscriber_id: params[:subscriber_id])
 
-data = subscriptions.map do |subscription|
-  next unless subscription.ip_address.present?
+  data = subscriptions.map do |subscription|
+        ip = IPAddr.new(subscription.ip_address)
 
-  begin
-    ip = IPAddr.new(subscription.ip_address)
-  rescue IPAddr::InvalidAddressError
-    next # skip invalid IPs
-  end
+    radacct_records = RadAcct.where(username: subscription.ppoe_username,
+    framedipaddress: ip,
+    framedprotocol: 'PPP'
 
-  radacct_records = RadAcct.where(framedipaddress: ip).order(acctupdatetime: :desc)
-  radacct = radacct_records.find_by(acctstoptime: nil) || radacct_records.first
+    ).order(acctupdatetime: :desc)
 
-  if radacct
-    if radacct.acctstoptime.nil?
-      {
-        id: subscription.id,
-        ppoe_username: subscription.ppoe_username,
-        status: subscription.status == 'blocked' ? 'blocked' : 'online',
-        last_seen: radacct.acctupdatetime.strftime("%B %d, %Y at %I:%M %p"),
-        mac_adress: radacct.callingstationid
-      }
+    radacct = radacct_records.find { |r| r.acctstoptime.nil? } || radacct_records.first
+
+    Rails.logger.info "radacct: #{radacct.inspect}"
+
+    if radacct
+      if radacct.acctstoptime.nil?
+        {
+          id: subscription.id,
+          ppoe_username: subscription.ppoe_username,
+          status: subscription.status == 'blocked' ? 'blocked' : 'online',
+          last_seen: radacct.acctupdatetime.strftime("%B %d, %Y at %I:%M %p"),
+          mac_adress: radacct.callingstationid
+        }
+      else
+        {
+          id: subscription.id,
+          ppoe_username: subscription.ppoe_username,
+          status: "offline",
+          last_seen: radacct.acctstoptime.strftime("%B %d, %Y at %I:%M %p"),
+          mac_adress: radacct.callingstationid
+        }
+      end
     else
       {
         id: subscription.id,
         ppoe_username: subscription.ppoe_username,
-        status: 'offline',
-        last_seen: radacct.acctstoptime.strftime("%B %d, %Y at %I:%M %p"),
-        mac_adress: radacct.callingstationid
+        status: "never connected",
+        last_seen: nil
       }
     end
-  else
-    {
-      id: subscription.id,
-      ppoe_username: subscription.ppoe_username,
-      status: 'never connected',
-      last_seen: nil
-    }
   end
-end.compact
 
-render json: data
-
+  render json: data
 end
 
 
