@@ -175,7 +175,6 @@ def last_seen
 ip = IPAddr.new(ip) # Optional, i
 Rails.logger.info "IP: #{ip}"
     radacct_records = RadAcct.where(username: subscription.ppoe_username,
-    framedipaddress: ip,
     framedprotocol: 'PPP'
 
     ).order(acctupdatetime: :desc)
