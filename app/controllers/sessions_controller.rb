@@ -233,7 +233,7 @@ def set_tenant
            ActivtyLog.create(action: 'login', ip: request.remote_ip,
             description: "Logged in user via passkey #{admin.username || admin.email}",
 
-          user_agent: request.user_agent, user: @user.username || @user.email, date: Time.current)
+          user_agent: request.user_agent, user: admin.username || admin.email, date: Time.current)
          end
         
           stored_credential.update!(sign_count: webauthn_credential.sign_count)
