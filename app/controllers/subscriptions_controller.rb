@@ -215,48 +215,48 @@ def format_uptime(seconds)
 
 
 def last_seen
-  subscription = Subscription.find_by(subscriber_id: params[:subscriber_id])
+  subscriptions = Subscription.where(subscriber_id: params[:subscriber_id])
 
-  unless subscription
-    return render json: { error: 'Subscription not found' }, status: :not_found
-  end
+  data = subscriptions.map do |subscription|
+    next unless subscription.ip_address.present?
 
-  radacct_records = RadAcct.where(
-    framedipaddress: subscription.ip_address,
-    framedprotocol: 'PPP'
-  ).order(acctupdatetime: :desc)
+    radacct_records = RadAcct.where(
+      framedipaddress: subscription.ip_address
+    ).order(acctupdatetime: :desc)
 
-  radacct = radacct_records.find_by(acctstoptime: nil) || radacct_records.first
+    radacct = radacct_records.find_by(acctstoptime: nil) || radacct_records.first
 
-  data = if radacct
-    if radacct.acctstoptime.nil?
-      {
-        id: subscription.id,
-        ppoe_username: subscription.ppoe_username,
-        status: subscription.status == 'blocked' ? 'blocked' : 'online',
-        last_seen: radacct.acctupdatetime.strftime("%B %d, %Y at %I:%M %p"),
-        mac_adress: radacct.callingstationid
-      }
+    if radacct
+      if radacct.acctstoptime.nil?
+        {
+          id: subscription.id,
+          ppoe_username: subscription.pppoe_username,
+          status: subscription.status == 'blocked' ? 'blocked' : 'online',
+          last_seen: radacct.acctupdatetime.strftime("%B %d, %Y at %I:%M %p"),
+          mac_adress: radacct.callingstationid
+        }
+      else
+        {
+          id: subscription.id,
+          ppoe_username: subscription.pppoe_username,
+          status: 'offline',
+          last_seen: radacct.acctstoptime.strftime("%B %d, %Y at %I:%M %p"),
+          mac_adress: radacct.callingstationid
+        }
+      end
     else
       {
         id: subscription.id,
-        ppoe_username: subscription.ppoe_username,
-        status: 'offline',
-        last_seen: radacct.acctstoptime.strftime("%B %d, %Y at %I:%M %p"),
-        mac_adress: radacct.callingstationid
+        ppoe_username: subscription.pppoe_username,
+        status: 'never connected',
+        last_seen: nil
       }
     end
-  else
-    {
-      id: subscription.id,
-      ppoe_username: subscription.ppoe_username,
-      status: 'never connected',
-      last_seen: nil
-    }
-  end
+  end.compact  # Remove nils if ip_address is missing
 
   render json: data
 end
+
 
 def block_service
   begin
