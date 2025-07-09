@@ -775,9 +775,11 @@ end
       download_limit = package&.download_limit
       upload_limit = package&.upload_limit
       begin
+           nas = IpNetwork.find_by(params[:subscription][:network_name]).nas
+
         # MikroTik SSH connection details
-        router_setting = ActsAsTenant.current_tenant&.router_setting&.router_name
-        router = NasRouter.find_by(name: router_setting)
+        # router_setting = ActsAsTenant.current_tenant&.router_setting&.router_name
+        router = NasRouter.find_by(name: nas)
     
         return unless router
     
