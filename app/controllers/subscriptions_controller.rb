@@ -31,6 +31,7 @@ def set_current_tenant
   # EmailSystemAdmin.configure(@current_account, current_system_admin)
 
   # set_current_tenant(@account)
+  Rails.logger.info "set_current_tenant subscriptions => #{ActsAsTenant.current_tenant.inspect}"
 rescue ActiveRecord::RecordNotFound
   render json: { error: 'Invalid tenant' }, status: :not_found
 
