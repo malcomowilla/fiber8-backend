@@ -133,14 +133,6 @@ end
       return
     end
 
-
-
-
-
-
-
-
-
     uri = URI("https://sms.textsms.co.ke/api/services/sendsms")
     sms_params = {
       username: sms_setting&.api_key,
@@ -178,20 +170,6 @@ end
       render json: { error: response.body }, status: :internal_server_error
     end
   end
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

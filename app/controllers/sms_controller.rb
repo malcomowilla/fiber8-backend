@@ -116,8 +116,7 @@ end
 def get_text_sms_balance(selected_provider)
   api_key = SmsSetting.find_by(sms_provider: selected_provider)&.api_key
   partnerId = SmsSetting.find_by(sms_provider: selected_provider)&.partnerID
-Rails.logger.info "api_key found #{api_key}"
-Rails.logger.info "api_secret found #{api_key}"
+
 
   uri = URI("https://sms.textsms.co.ke/api/services/getbalance")  
   params = {

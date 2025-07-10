@@ -95,65 +95,116 @@ end
 
 
   # POST /support_tickets or /support_tickets.json
-  def create
-    @support_ticket = SupportTicket.new(support_ticket_params)
+#   def create
+#     @support_ticket = SupportTicket.new(support_ticket_params)
    
-    if @support_ticket.valid?
-      Rails.logger.info "current tenant in ticket settings =>#{ActsAsTenant.current_tenant.ticket_setting}"
-      prefix = ActsAsTenant.current_tenant.ticket_setting.prefix
-      minimum_digits = ActsAsTenant.current_tenant.ticket_setting.minimum_digits
+#     if @support_ticket.valid?
+#       prefix = ActsAsTenant.current_tenant&.ticket_setting.prefix
+#       minimum_digits = ActsAsTenant.current_tenant&.ticket_setting.minimum_digits
       
+
+
+#        unless prefix.present? && minimum_digits.present?
+#       return render json: { error: "Please create a ticket number for the account" }, status: :unprocessable_entity
+#     end
+
+#       # if prefix.blank? && minimum_digits.blank?
+#       # render json: { error: "Please create a ticket number for the account" }
+        
+#       # end
    
 
-      # return render json: { error: "Prefix and digit not found for the account" } unless prefix.blank? && minimum_digits.blank?
+#       # return render json: { error: "Please create a ticket number for the account" } unless prefix.blank? && minimum_digits.blank?
         
-        @support_ticket.save!
-        Rails.logger.info "support ticket info after save: #{@support_ticket.inspect}"
-        ActivtyLog.create(action: 'create', ip: request.remote_ip,
- description: "Created support ticket #{@support_ticket.ticket_number}",
-          user_agent: request.user_agent, user: current_user.username || current_user.email,
-           date: Time.current)
-        auto_generated_number = "#{prefix}#{@support_ticket.sequence_number.to_s.rjust(minimum_digits.to_i, '0')}"
-        @support_ticket.update!(
-          ticket_number: auto_generated_number,
-          date_of_creation: Time.now.strftime('%Y-%m-%d %I:%M:%S %p')
-        )
+#         @support_ticket.save!
+#         Rails.logger.info "support ticket info after save: #{@support_ticket.inspect}"
+#         ActivtyLog.create(action: 'create', ip: request.remote_ip,
+#  description: "Created support ticket #{@support_ticket.ticket_number}",
+#           user_agent: request.user_agent, user: current_user.username || current_user.email,
+#            date: Time.current)
+#         auto_generated_number = "#{prefix}#{@support_ticket.sequence_number.to_s.rjust(minimum_digits.to_i, '0')}"
+#         @support_ticket.update!(
+#           ticket_number: auto_generated_number,
+#           date_of_creation: Time.now.strftime('%Y-%m-%d %I:%M:%S %p')
+#         )
         
-# ticket_created_at = @support_ticket.date_of_creation.strftime('%Y-%m-%d %I:%M:%S %p')
-# customer_portal = request.headers['X-Original-Host']
+# # ticket_created_at = @support_ticket.date_of_creation.strftime('%Y-%m-%d %I:%M:%S %p')
+# # customer_portal = request.headers['X-Original-Host']
 
-# company_name = ActsAsTenant.current_tenant.company_setting.company_name 
-# customer_support_email = ActsAsTenant.current_tenant.company_setting.customer_support_email 
-
-
-# service_provider,
-#     ticket_number, ticket_created_at, 
-#     customer_email, issue_description, ticket_status, ticket_priority,
-#     customer_code, customer_portal_link, company_name,
-#     customer_support_email
-
-# ServiceProviderTicketMailer.send_ticket_email(@support_ticket.agent ,@support_ticket.ticket_number,
-# ticket_created_at,customer_email, @support_ticket.issue_description, @support_ticket.status,
-# @support_ticket.priority, customers_code, customer_portal, company_name, customer_support_email,
-# service_provider_email).deliver_now
-
-#  SubscriberTicketMailer.send_ticket(@support_ticket.ticket_number,
-#  ticket_created_at,customer_email, @support_ticket.issue_description, @support_ticket.status,
-#  @support_ticket.priority, customers_code, customer_portal, company_name, customer_support_email).deliver_now
+# # company_name = ActsAsTenant.current_tenant.company_setting.company_name 
+# # customer_support_email = ActsAsTenant.current_tenant.company_setting.customer_support_email 
 
 
+# # service_provider,
+# #     ticket_number, ticket_created_at, 
+# #     customer_email, issue_description, ticket_status, ticket_priority,
+# #     customer_code, customer_portal_link, company_name,
+# #     customer_support_email
 
-        render json: @support_ticket, status: :created
+# # ServiceProviderTicketMailer.send_ticket_email(@support_ticket.agent ,@support_ticket.ticket_number,
+# # ticket_created_at,customer_email, @support_ticket.issue_description, @support_ticket.status,
+# # @support_ticket.priority, customers_code, customer_portal, company_name, customer_support_email,
+# # service_provider_email).deliver_now
+
+# #  SubscriberTicketMailer.send_ticket(@support_ticket.ticket_number,
+# #  ticket_created_at,customer_email, @support_ticket.issue_description, @support_ticket.status,
+# #  @support_ticket.priority, customers_code, customer_portal, company_name, customer_support_email).deliver_now
+
+
+
+#         render json: @support_ticket, status: :created
       
-    else
-      render json: @support_ticket.errors, status: :unprocessable_entity 
-    end
+#     else
+#       render json: @support_ticket.errors, status: :unprocessable_entity 
+#     end
     
 
 
 
-  end
+#   end
 
+def create
+  @support_ticket = SupportTicket.new(support_ticket_params)
+
+  if @support_ticket.valid?
+    tenant = ActsAsTenant.current_tenant
+    ticket_setting = tenant&.ticket_setting
+
+    # unless ticket_setting && ticket_setting.prefix.present? && ticket_setting.minimum_digits.present?
+    #   return render json: { error: "Please create a ticket number for the account" }, status: :unprocessable_entity
+    # end
+
+
+
+    prefix = ticket_setting&.prefix
+    minimum_digits = ticket_setting&.minimum_digits
+
+    @support_ticket.save!
+    Rails.logger.info "support ticket info after save: #{@support_ticket.inspect}"
+
+    ActivtyLog.create(
+      action: 'create',
+      ip: request.remote_ip,
+      description: "Created support ticket #{@support_ticket.ticket_number}",
+      user_agent: request.user_agent,
+      user: current_user.username || current_user.email,
+      date: Time.current
+    )
+
+    auto_generated_number = "#{prefix}#{@support_ticket.sequence_number.to_s.rjust(minimum_digits.to_i, '0')}"
+
+    @support_ticket.update!(
+      # ticket_number: auto_generated_number,
+      ticket_number: (prefix.blank? || minimum_digits.blank?) ? SecureRandom.hex(2) : auto_generated_number,
+
+      date_of_creation: Time.now.strftime('%Y-%m-%d %I:%M:%S %p')
+    )
+
+    render json: @support_ticket, status: :created
+  else
+    render json: @support_ticket.errors, status: :unprocessable_entity
+  end
+end
 
 
   def update
