@@ -2,6 +2,7 @@ class AcsTestingController < ApplicationController
  def index
     uri = URI("http://102.221.35.92:7347/devices?_limit=10") # Update host/port if needed
 
+    
     begin
       response = Net::HTTP.get_response(uri)
 
