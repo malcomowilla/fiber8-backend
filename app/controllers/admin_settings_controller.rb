@@ -3,6 +3,8 @@ class AdminSettingsController < ApplicationController
 
 
   load_and_authorize_resource except: [:allow_get_admin_settings]
+    set_current_tenant_through_filter
+
   before_action :update_last_activity
   before_action :set_tenant
 

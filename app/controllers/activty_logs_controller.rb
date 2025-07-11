@@ -1,5 +1,7 @@
 class ActivtyLogsController < ApplicationController
   before_action :set_activty_log, only: %i[ show edit update destroy ]
+    set_current_tenant_through_filter
+
   before_action :set_tenant
 
   # GET /activty_logs or /activty_logs.json
