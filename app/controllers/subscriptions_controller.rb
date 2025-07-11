@@ -796,21 +796,6 @@ end
 
                   
     
-       router_name = params[:router_name]
-  
-      
-        nas_router = NasRouter.find_by(name: router_name)
-      if nas_router
-        router_ip_address = nas_router.ip_address
-          router_password = nas_router.password
-         router_username = nas_router.username
-      
-      else
-      
-      Rails.logger.info 'router not found'
-      end
-  
-  
   
   
       request_body={
@@ -823,7 +808,7 @@ end
       }
   
   
-      uri = URI("http://#{router_ip_address}/rest/queue/simple/add")
+      uri = URI("http://#{router_ip}/rest/queue/simple/add")
 
       request = Net::HTTP::Post.new(uri)
   
