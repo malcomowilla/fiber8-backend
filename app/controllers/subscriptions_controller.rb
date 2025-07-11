@@ -796,7 +796,7 @@ end
               Rails.logger.info "router password #{router_password}"
 
         # Connect via SSH to MikroTik
-        Net::SSH.start(router_ip, router_username, password: router_password, verify_host_key: :never) do |ssh|
+        Net::SSH.start(router_ip, router_username, password: router_password) do |ssh|
           # Command to limit the bandwidth (4M/4M)
           command = "/queue simple add name=aitechs_limit_#{ppoe_username} target=#{ip_address} max-limit=#{download_limit}M/#{upload_limit}M comment=aitechs_limit_#{ppoe_username}"
           
