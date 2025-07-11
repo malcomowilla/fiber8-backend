@@ -784,17 +784,21 @@ end
         # router_setting = ActsAsTenant.current_tenant&.router_setting&.router_name
         router = NasRouter.find_by(name: nas)
           Rails.logger.info "limit_bandwidth#{router.inspect}"
+          Rails.logger.info "limit user #{ppoe_username}"
 
         return unless router
     
         router_ip = router.ip_address
         router_username = router.username
         router_password = router.password 
-    
+              Rails.logger.info "router ip #{router_ip}"
+              Rails.logger.info "router username #{router_username}"
+              Rails.logger.info "router password #{router_password}"
+
         # Connect via SSH to MikroTik
         Net::SSH.start(router_ip, router_username, password: router_password, verify_host_key: :never) do |ssh|
           # Command to limit the bandwidth (4M/4M)
-          command = "/queue simple add name=aitechs_limit_#{ppoe_username} target=#{ip_address} max-limit=#{download_limit}M/#{upload_limit}M"
+          command = "/queue simple add name=aitechs_limit_#{ppoe_username} target=#{ip_address} max-limit=#{download_limit}M/#{upload_limit}M comment=aitechs_limit_#{ppoe_username}"
           
           # Execute the command
           ssh.exec!(command)
