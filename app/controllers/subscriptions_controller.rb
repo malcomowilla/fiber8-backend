@@ -196,7 +196,7 @@ radacct_records.each_with_index do |record, index|
   Rails.logger.info "  Input Octets: #{record.acctinputoctets}"
   Rails.logger.info "  Output Octets: #{record.acctoutputoctets}"
 end
-    radacct = radacct_records.find { |r| r.acctstoptime.nil? } || radacct_records.first
+    radacct = radacct_records.find { |r| r.acctstoptime.nil? } 
 
     Rails.logger.info "radacct: #{radacct.inspect}"
 
@@ -207,7 +207,8 @@ end
           ppoe_username: subscription.ppoe_username,
           status: subscription.status == 'blocked' ? 'blocked' : 'online',
           last_seen: radacct.acctupdatetime.strftime("%B %d, %Y at %I:%M %p"),
-          mac_adress: radacct.callingstationid
+          mac_adress: radacct.callingstationid,
+          ip_address: radacct.framedipaddress
         }
       else
         {
