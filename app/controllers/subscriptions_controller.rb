@@ -807,7 +807,7 @@ end
       "max-limit": "#{download_limit}M/#{upload_limit}M",
       # "total-max-limit": upload_limit,
       "name": "aitechs_limit_#{ppoe_username}",
-      "comment": "#{ppoe_username}",
+      "comment": "#{subscriber_name}",
       }
   
   
