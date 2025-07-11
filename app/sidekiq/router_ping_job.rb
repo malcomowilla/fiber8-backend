@@ -105,18 +105,27 @@ class RouterPingJob
 
   def perform
     Account.find_each do |tenant| # Iterate over all tenants
-      # ActsAsTenant.with_tenant(tenant) do
+      ActsAsTenant.with_tenant(tenant) do
+              subscriptions = Subscription.where.not(ip_address: [nil, ''])
+              subscriptions.each do |subscription|
         # Process RadAcct records with nil account_id
-        nil_radacct_count = RadAcct.unscoped.where(account_id: nil).count
+        nil_radacct_count = RadAcct.unscoped.where(
+        
+          framedipaddress: subscription.ip_address,
+          account_id: nil
+        ).count
         Rails.logger.info "Found #{nil_radacct_count} RadAcct records with nil account_id for tenant #{tenant.id}"
 
-        RadAcct.unscoped.where(account_id: nil).find_each do |radacct|
+        RadAcct.unscoped.where(account_id: nil,
+        framedipaddress: subscription.ip_address,
+        ).find_each do |radacct|
           begin
             radacct.update!(account_id: tenant.id)
           rescue => e
             Rails.logger.error "Failed to update radacct with id #{radacct.id}: #{e.message}"
           end
-        # end
+        end
+        end
 
         # Check router status
         nas_routers = NasRouter.all

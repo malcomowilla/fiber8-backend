@@ -173,7 +173,7 @@ def last_seen
 
   data = subscriptions.map do |subscription|
     ipstrip = subscription.ip_address.strip
-ip = IPAddr.new(ipstrip) # Optional, i
+ip = IPAddr.new(ipstrip) 
 Rails.logger.info "IP: #{ip}"
     radacct_records = RadAcct.where(username: subscription.ppoe_username,
     framedprotocol: 'PPP',
