@@ -450,7 +450,7 @@ end
     
     calculate_expiration(@subscription)
     limit_bandwidth(params[:subscription][:ip_address], 
-    params[:subscription][:package_name], params[:subscription][:ppoe_username], @subsription.subscriber.name)
+    params[:subscription][:package_name], params[:subscription][:ppoe_username], @subscription.subscriber.name)
 
 
       if @subscription.save
@@ -556,7 +556,7 @@ end
         
         # Limit bandwidth for the new IP
         limit_bandwidth(@subscription.ip_address, @subscription.package, @subscription.ppoe_username,
-        @subsription.subscriber.name
+        @subscription.subscriber.name
         )
       end
   
