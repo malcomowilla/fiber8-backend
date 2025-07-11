@@ -196,7 +196,8 @@ radacct_records.each_with_index do |record, index|
   Rails.logger.info "  Input Octets: #{record.acctinputoctets}"
   Rails.logger.info "  Output Octets: #{record.acctoutputoctets}"
 end
-    radacct = radacct_records.find { |r| r.acctstoptime.nil? } 
+    # radacct = radacct_records.find { |r| r.acctstoptime.nil? } 
+radacct = radacct_records.find { |r| r.acctstoptime.nil? } || radacct_records.first
 
     Rails.logger.info "radacct: #{radacct.inspect}"
 
