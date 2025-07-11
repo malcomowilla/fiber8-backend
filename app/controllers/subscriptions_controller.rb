@@ -774,7 +774,6 @@ end
 
 
     def limit_bandwidth(ip_address, package, ppoe_username)
-      
       package = Package.find_by(name: package)
       download_limit = package&.download_limit
       upload_limit = package&.upload_limit
@@ -784,7 +783,8 @@ end
         # MikroTik SSH connection details
         # router_setting = ActsAsTenant.current_tenant&.router_setting&.router_name
         router = NasRouter.find_by(name: nas)
-    
+          Rails.logger.info "limit_bandwidt#{router.inspect}"
+
         return unless router
     
         router_ip = router.ip_address
