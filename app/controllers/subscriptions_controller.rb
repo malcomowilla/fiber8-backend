@@ -449,7 +449,8 @@ end
    
     
     calculate_expiration(@subscription)
-    limit_bandwidth(params[:subscription][:ip_address], params[:subscription][:package_name], params[:subscription][:ppoe_username])
+    limit_bandwidth(params[:subscription][:ip_address], 
+    params[:subscription][:package_name], params[:subscription][:ppoe_username], @subsription.subcriber.name)
 
 
       if @subscription.save
@@ -554,7 +555,9 @@ end
         
         
         # Limit bandwidth for the new IP
-        limit_bandwidth(@subscription.ip_address, @subscription.package, @subscription.ppoe_username)
+        limit_bandwidth(@subscription.ip_address, @subscription.package, @subscription.ppoe_username,
+        @subsription.subcriber.name
+        )
       end
   
       # calculate_expiration(@subscription)
@@ -773,7 +776,7 @@ end
 
 
 
-    def limit_bandwidth(ip_address, package, ppoe_username)
+    def limit_bandwidth(ip_address, package, ppoe_username, subscriber_name)
       package = Package.find_by(name: package)
       download_limit = package&.download_limit
       upload_limit = package&.upload_limit
