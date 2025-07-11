@@ -112,11 +112,11 @@ class RouterPingJob
         nil_radacct_count = RadAcct.unscoped.where(
         
           framedipaddress: subscription.ip_address,
-          account_id: nil
+          # account_id: nil
         ).count
         Rails.logger.info "Found #{nil_radacct_count} RadAcct records with nil account_id for tenant #{tenant.id}"
 
-        RadAcct.unscoped.where(account_id: nil,
+        RadAcct.unscoped.where(
         framedipaddress: subscription.ip_address,
         ).find_each do |radacct|
           begin
