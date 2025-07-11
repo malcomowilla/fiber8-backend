@@ -143,21 +143,7 @@ class RouterPingJob
               Rails.logger.warn "Ping failed: #{output}"
             end
 
-        #      cache_data = RouterStatus.first_or_initialize(
-        #     tenant_id: tenant.id,
-        #     ip: ip_address,
-        #    reachable: reachable,
-        #      response: output,
-        #  checked_at: Time.current
-        #   )
-        #   cache_data.update(
-        #     tenant_id: tenant.id,
-        #     ip: ip_address,
-        #     reachable: reachable,
-        #     response: output,
-        #   checked_at: Time.current
-
-        #    )
+       
         RouterStatus.find_or_initialize_by(
               tenant_id: tenant.id,
               ip: ip_address
