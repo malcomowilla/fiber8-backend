@@ -778,12 +778,12 @@ end
       download_limit = package&.download_limit
       upload_limit = package&.upload_limit
       begin
-           nas = IpNetwork.find_by(params[:subscription][:network_name]).nas
+           nas = IpNetwork.find_by(title: params[:subscription][:network_name]).nas
 
         # MikroTik SSH connection details
         # router_setting = ActsAsTenant.current_tenant&.router_setting&.router_name
         router = NasRouter.find_by(name: nas)
-          Rails.logger.info "limit_bandwidt#{router.inspect}"
+          Rails.logger.info "limit_bandwidth#{router.inspect}"
 
         return unless router
     
