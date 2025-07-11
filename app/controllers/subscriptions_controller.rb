@@ -777,7 +777,6 @@ end
       package = Package.find_by(name: package)
       download_limit = package&.download_limit
       upload_limit = package&.upload_limit
-      begin
            nas = IpNetwork.find_by(title: params[:subscription][:network_name]).nas
 
         # MikroTik SSH connection details
@@ -795,16 +794,57 @@ end
               Rails.logger.info "router username #{router_username}"
               Rails.logger.info "router password #{router_password}"
 
-        # Connect via SSH to MikroTik
-        Net::SSH.start(router_ip, router_username, password: router_password) do |ssh|
-          # Command to limit the bandwidth (4M/4M)
-          command = "/queue simple add name=aitechs_limit_#{ppoe_username} target=#{ip_address} max-limit=#{download_limit}M/#{upload_limit}M comment=aitechs_limit_#{ppoe_username}"
-          
-          # Execute the command
-          ssh.exec!(command)
-        end
-      rescue StandardError => e
-        Rails.logger.error "Error limiting bandwidth for IP #{ip_address}: #{e.message}"
+                  
+    
+       router_name = params[:router_name]
+  
+      
+        nas_router = NasRouter.find_by(name: router_name)
+      if nas_router
+        router_ip_address = nas_router.ip_address
+          router_password = nas_router.password
+         router_username = nas_router.username
+      
+      else
+      
+      Rails.logger.info 'router not found'
+      end
+  
+  
+  
+  
+      request_body={
+       
+      "target": "#{ip_address}",
+      "max-limit": "#{download_limit}M/#{upload_limit}M",
+      # "total-max-limit": upload_limit,
+      "name": "aitechs_limit_#{ppoe_username}",
+      "comment": "#{ppoe_username}",
+      }
+  
+  
+      uri = URI("http://#{router_ip_address}/rest/queue/simple/add")
+
+      request = Net::HTTP::Post.new(uri)
+  
+      request.basic_auth router_username, router_password
+      request.body = request_body.to_json
+      request['Content-Type'] = 'application/json'
+  
+  
+  
+      response = Net::HTTP.start(uri.hostname, uri.port) do |http|
+        http.request(request)
+      end
+  
+      if response.is_a?(Net::HTTPSuccess)
+        
+        data = JSON.parse(response.body)
+        return data['ret']
+  
+  
+      else
+        Rails.logger.info "Failed to  create subscriber: #{response.code} - #{response.message}"
       end
     end
 
