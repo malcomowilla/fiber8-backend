@@ -34,7 +34,7 @@ module Fiber8backend
           # For development/staging - parse from cloudflared logs
           logs = `journalctl -u cloudflared -n 100 --no-pager --reverse` 
           match = logs.match(/https:\/\/([a-z0-9-]+\.trycloudflare\.com)/)
-          match ? match[1] : 'default.trycloudflare.com'
+          match ? match[1] : "*.trycloudflare.com"
         
       end
     end
