@@ -103,10 +103,10 @@ log_output = `journalctl -u cloudflared -n 100 --no-pager --reverse`
     # log_system_status.match?(%r{Blocked hosts})
 
 
-    if log_system_status.match?(%r{Blocked hosts})
-      `systemctl restart aitechs-fiber8-backend`
-      Rails.logger.info "System is blocked. No action needed."
-    end
+    # if log_system_status.match?(%r{Blocked hosts})
+    #   `systemctl restart aitechs-fiber8-backend`
+    #   Rails.logger.info "System is blocked. No action needed."
+    # end
 
 Rails.logger.info "Rehydrating wireguard"
     WireguardPeer.find_each do |peer|

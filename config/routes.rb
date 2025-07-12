@@ -282,8 +282,8 @@ post '/subscriber', to: "subscribers#create"
 post '/api/subscriber', to: "subscribers#create"
 patch '/update_subscriber/:id', to: 'subscribers#update'
 patch '/api/update_subscriber/:id', to: 'subscribers#update'
-delete '/delete_subscriber/:id', to: 'subscribers#delete'
-delete '/api/delete_subscriber/:id', to: 'subscribers#delete'
+delete '/delete_subscriber/:id', to: 'subscribers#destroy'
+delete '/api/delete_subscriber/:id', to: 'subscribers#destroy'
 post '/update_general_settings', to: "subscribers#update_general_settings"
 post '/api/update_general_settings', to: "subscribers#update_general_settings"
 patch 'update_hotspot_package/:id', to: 'hotspot_packages#update'

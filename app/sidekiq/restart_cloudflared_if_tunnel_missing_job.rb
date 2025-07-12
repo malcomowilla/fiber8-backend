@@ -6,10 +6,6 @@ class RestartCloudflaredIfTunnelMissingJob
     log_output = `journalctl -u cloudflared -n 100 --no-pager --reverse`
 
 
-
-
-
-
     unless log_output.match?(%r{https://[a-z0-9-]+\.trycloudflare\.com})
       Rails.logger.warn "[Tunnel Monitor] No valid Cloudflare tunnel found. Restarting services..."
 
