@@ -168,6 +168,7 @@ def format_uptime(seconds)
 
 
 def last_seen
+  # subscriptions = Subscription.all
     subscriptions = Subscription.where(subscriber_id: params[:subscriber_id])
 
   data = subscriptions.map do |subscription|
