@@ -216,7 +216,9 @@ radacct = radacct_records.find { |r| r.acctstoptime.nil? } || radacct_records.fi
           id: subscription.id,
           ppoe_username: subscription.ppoe_username,
           status: "offline",
-          last_seen: radacct.acctstoptime.strftime("%B %d, %Y at %I:%M %p"),
+          # last_seen: radacct.acctstoptime.strftime("%B %d, %Y at %I:%M %p"),
+         last_seen: radacct.acctstoptime&.strftime("%B %d, %Y at %I:%M %p") || radacct.acctupdatetime&.strftime("%B %d, %Y at %I:%M %p"),
+
           mac_adress: radacct.callingstationid
         }
       end
