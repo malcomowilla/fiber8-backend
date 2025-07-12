@@ -87,12 +87,22 @@ def get_active_pppoe_users
   all_active_user_data = []
 
   subscriptions.each do |subscription|
-    active_sessions = RadAcct.where(
-      acctstoptime: nil,
-      framedprotocol: 'PPP',
-      username: subscription.ppoe_username,
-      framedipaddress: subscription.ip_address
-    )
+    # active_sessions = RadAcct.where(
+    #   acctstoptime: nil,
+    #   framedprotocol: 'PPP',
+    #   username: subscription.ppoe_username,
+    #   framedipaddress: subscription.ip_address,
+      
+    # )
+
+
+active_sessions = RadAcct.where(
+  acctstoptime: nil,
+  framedprotocol: 'PPP',
+  username: subscription.ppoe_username,
+  framedipaddress: subscription.ip_address
+).where('acctupdatetime > ?', 3.minutes.ago)
+ .order(acctupdatetime: :desc)
 
     active_sessions.each do |session|
       download_bytes = session.acctinputoctets || 0
