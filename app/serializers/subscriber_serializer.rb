@@ -7,6 +7,16 @@ class SubscriberSerializer < ActiveModel::Serializer
 
 
 
+   def status
+        if self.object.subscriptions.exists?
+         self.object.status = 'active'
+         else
+            self.object.status = 'no subscription'
+        end
+
+      
+   end
+
    def phone_number
     "#{self.object.phone_number}"
    end
