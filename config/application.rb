@@ -30,10 +30,11 @@ module Fiber8backend
 
     def self.current_loophole_url
   @current_loophole_url ||= begin
-     output = File.read("/var/log/loophole.log")
+    logs = `journalctl -u loophole -n 200 --no-pager`.strip
+    #  output = File.read("/var/log/loophole.log")
 
-    match = output.match(%r{https://([a-z0-9\-]+\.loophole\.site)})
-    match ? match[1] : "*.loophole.site"
+    match = logs.match(%r{https://([a-z0-9\-]+\.loophole\.site)})
+    match ? match[1] : nil
   end
 end
     Rails.application.config.middleware.delete Rack::Attack

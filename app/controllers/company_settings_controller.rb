@@ -184,10 +184,10 @@ logo_url: @company_settings&.logo&.attached? ? rails_blob_url(@company_settings.
    
 
   def fetch_loophole_tunnel_hostname
-  # log_output = `journalctl -u loophole -n 200 --no-pager`.strip
-    output = File.read("/var/log/loophole.log")
+  log_output = `journalctl -u loophole -n 200 --no-pager`.strip
+    # output = File.read("/var/log/loophole.log")
 
-  match = output.match(%r{https://([a-z0-9\-]+\.loophole\.site)})
+  match = log_output.match(%r{https://([a-z0-9\-]+\.loophole\.site)})
   match ? match[1] : nil
 end
 
