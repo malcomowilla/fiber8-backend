@@ -1003,8 +1003,8 @@ Rails.logger.info 'router not found'
 
 
 
-  def delete
-    found_subscriber = set_subscriber
+  def destroy
+    found_subscriber = Subscriber.find_by(id: params[:id])
     ActivtyLog.create(action: 'delete', ip: request.remote_ip,
  description: "Deleted subscriber #{found_subscriber.name}",
           user_agent: request.user_agent, user: current_user.username || current_user.email,

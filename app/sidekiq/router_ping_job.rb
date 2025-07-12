@@ -104,6 +104,11 @@ class RouterPingJob
   queue_as :default
 
   def perform
+
+
+
+
+    
     Account.find_each do |tenant| # Iterate over all tenants
       ActsAsTenant.with_tenant(tenant) do
               subscriptions = Subscription.where.not(ip_address: [nil, ''])
@@ -126,6 +131,10 @@ class RouterPingJob
           end
         end
         end
+
+
+
+
 
         # Check router status
         nas_routers = NasRouter.all
