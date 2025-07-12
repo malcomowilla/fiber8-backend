@@ -78,7 +78,7 @@ config.action_mailer.smtp_settings = {
   # Don't care if the mailer can't send.
   config.action_mailer.raise_delivery_errors = false
   # config.hosts << "solving-choice-dutch-utah.trycloudflare.com" 
-    config.hosts << '/[a-z0-9\-]+\.loophole\.site/'
+      config.hosts << /\A[a-z0-9\-]+\.loophole\.site\z/
 
 
   config.action_mailer.perform_caching = false
