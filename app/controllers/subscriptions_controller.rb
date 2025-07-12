@@ -80,6 +80,33 @@ end
 #   }
 # end
 
+
+
+
+
+def get_total_bandwidth_and_online_users
+  total_bytes = 0
+
+  active_sessions = RadAcct.where(
+    acctstoptime: nil,
+    framedprotocol: 'PPP'
+  )
+
+  active_user_count = active_sessions.count
+
+  total_bytes = active_sessions.sum("(COALESCE(acctinputoctets, 0) + COALESCE(acctoutputoctets, 0))")
+
+  render json: {
+    active_user_count: active_user_count,
+    total_bandwidth: format_bytes(total_bytes)
+  }
+end
+
+
+
+
+
+
 def get_active_pppoe_users
   subscriptions = Subscription.where(subscriber_id: params[:subscriber_id])
 

@@ -184,12 +184,10 @@ logo_url: @company_settings&.logo&.attached? ? rails_blob_url(@company_settings.
    
 
   def fetch_loophole_tunnel_hostname
-  log_output = `journalctl -u loophole -n 50 --no-pager | grep -oP 'https://[a-zA-Z0-9\\-]+\\.loophole\\.site' | tail -1`
-
+  log_output = `journalctl -u loophole -n 200 --no-pager`.strip
   match = log_output.match(%r{https://([a-z0-9\-]+\.loophole\.site)})
-  match[1] if match
+  match ? match[1] : nil
 end
-  
 
     # Only allow a list of trusted parameters through.
     def company_setting_params
