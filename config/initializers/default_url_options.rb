@@ -1,6 +1,6 @@
 
 
 Rails.application.routes.default_url_options = {
-  host: '102.221.35.116',
+  host: '102.221.35.92',
   protocol: 'http'
 }
