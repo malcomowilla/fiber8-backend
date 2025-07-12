@@ -28,17 +28,13 @@ module Fiber8backend
 
 
 
-    def self.current_cloudflare_url
-      @current_cloudflare_url ||= begin
-       
-          # For development/staging - parse from cloudflared logs
-          logs = `journalctl -u cloudflared -n 100 --no-pager --reverse` 
-          match = logs.match(/https:\/\/([a-z0-9-]+\.trycloudflare\.com)/)
-          match ? match[1] : "*.trycloudflare.com"
-        
-      end
-    end
-
+    def self.current_loophole_url
+  @current_loophole_url ||= begin
+    logs = `journalctl -u loophole -n 50 --no-pager | grep -oP 'https://[a-zA-Z0-9\\-]+\\.loophole\\.site' | tail -1`.strip
+    match = logs.match(%r{https://([a-z0-9\-]+\.loophole\.site)})
+    match ? match[1] : "*.loophole.site"
+  end
+end
     Rails.application.config.middleware.delete Rack::Attack
 
 config.middleware.use SetTenant

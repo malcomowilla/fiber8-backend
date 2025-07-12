@@ -38,7 +38,7 @@ end
 
   # GET /company_settings or /company_settings.json
   def index
-    tunnel_host = fetch_cloudflare_tunnel_hostname
+    tunnel_host = fetch_loophole_tunnel_hostname
 
     # @company_settings = CompanySetting.first
      @account = ActsAsTenant.current_tenant
@@ -90,7 +90,7 @@ end
 
 
   def allow_get_company_settings  
-    tunnel_host = fetch_cloudflare_tunnel_hostname
+    tunnel_host = fetch_loophole_tunnel_hostname
 
     # account = Account.find_or_create_by(subdomain: host)
     # ActsAsTenant.current_tenant = account
@@ -147,7 +147,7 @@ end
 
   # POST /company_settings or /company_settings.json
   def create
-    tunnel_host = fetch_cloudflare_tunnel_hostname
+    tunnel_host = fetch_loophole_tunnel_hostname
 
     
   @company_setting = CompanySetting.first_or_initialize(company_setting_params)
@@ -183,15 +183,12 @@ logo_url: @company_settings&.logo&.attached? ? rails_blob_url(@company_settings.
   private
    
 
-  def fetch_cloudflare_tunnel_hostname
-    # log_output = `journalctl -u cloudflared -n 100 --no-pager`
-    log_output = `journalctl -u cloudflared -n 100 --no-pager --reverse`
+  def fetch_loophole_tunnel_hostname
+  log_output = `journalctl -u loophole -n 50 --no-pager | grep -oP 'https://[a-zA-Z0-9\\-]+\\.loophole\\.site' | tail -1`
 
-
-    match = log_output.match(%r{https://([a-z0-9-]+\.trycloudflare\.com)})
-    match[1] if match
-    # Rails.logger.info "Cloudflare tunnel hostname: #{match[1]}"
-  end
+  match = log_output.match(%r{https://([a-z0-9\-]+\.loophole\.site)})
+  match[1] if match
+end
   
 
     # Only allow a list of trusted parameters through.
