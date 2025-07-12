@@ -68,7 +68,7 @@ config.time_zone = 'Africa/Nairobi'
     # config.force_ssl = true
     # Rails.application.routes.default_url_options[:host] = 'solving-choice-dutch-utah.trycloudflare.com'
     config.hosts << current_loophole_url
-    Rails.application.routes.default_url_options[:host] = current_cloudflare_url
+    Rails.application.routes.default_url_options[:host] = current_loophole_url
 # config.hosts = nil
     config.middleware.use ActionDispatch::Cookies
     # puts("Loading cookies session store options")
