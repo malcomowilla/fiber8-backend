@@ -30,8 +30,10 @@ module Fiber8backend
 
     def self.current_loophole_url
   @current_loophole_url ||= begin
-    logs = `journalctl -u loophole -n 200 --no-pager`.strip
-    match = logs.match(%r{https://([a-z0-9\-]+\.loophole\.site)})
+    # logs = `journalctl -u loophole -n 200 --no-pager`.strip
+     output = File.read("/var/log/loophole.log")
+
+    match = output.match(%r{https://([a-z0-9\-]+\.loophole\.site)})
     match ? match[1] : "*.loophole.site"
   end
 end
