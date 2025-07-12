@@ -168,7 +168,6 @@ def format_uptime(seconds)
 
 
 def last_seen
-  # subscriptions = Subscription.all
     subscriptions = Subscription.where(subscriber_id: params[:subscriber_id])
 
   data = subscriptions.map do |subscription|
@@ -202,7 +201,7 @@ radacct = radacct_records.find { |r| r.acctstoptime.nil? } || radacct_records.fi
     Rails.logger.info "radacct: #{radacct.inspect}"
 
     if radacct
-      if radacct.acctstoptime.nil?
+      if radacct.acctstoptime.nil? && radacct.acctupdatetime > 10.minutes.ago
         {
           id: subscription.id,
           ppoe_username: subscription.ppoe_username,
