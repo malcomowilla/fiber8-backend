@@ -85,8 +85,6 @@ end
 
 
 def get_total_bandwidth_and_online_users
-  total_bytes = 0
-
   active_sessions = RadAcct.where(
     acctstoptime: nil,
     framedprotocol: 'PPP'
@@ -94,11 +92,15 @@ def get_total_bandwidth_and_online_users
 
   active_user_count = active_sessions.count
 
-  total_bytes = active_sessions.sum("(COALESCE(acctinputoctets, 0) + COALESCE(acctoutputoctets, 0))")
+  total_download = active_sessions.sum("COALESCE(acctinputoctets, 0)")
+  total_upload   = active_sessions.sum("COALESCE(acctoutputoctets, 0)")
+  total_bytes    = total_download + total_upload
 
   render json: {
     active_user_count: active_user_count || 0,
-    total_bandwidth: format_bytes(total_bytes)
+    total_bandwidth: format_bytes(total_bytes),
+    total_download: format_bytes(total_download),
+    total_upload: format_bytes(total_upload)
   }
 end
 
