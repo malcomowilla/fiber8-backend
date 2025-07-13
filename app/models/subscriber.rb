@@ -13,6 +13,9 @@ after_create :update_subscriber_status
   end
 
 
+
+  
+
     def update_subscriber_status
     if self.subscriptions.exists?
       self.update_column(:status, 'active')
