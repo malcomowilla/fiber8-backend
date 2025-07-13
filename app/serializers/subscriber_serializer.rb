@@ -27,11 +27,11 @@ class SubscriberSerializer < ActiveModel::Serializer
   online = object.subscriptions.any? do |subscription|
     next unless subscription.ip_address.present?
 
-    RadAcct.exists?(
+    RadAcct.where(
       acctstoptime: nil,
       framedprotocol: 'PPP',
       framedipaddress: subscription.ip_address
-    ).where('acctupdatetime > ?', threshold_time)
+    ).where('acctupdatetime > ?', threshold_time).exists?
   end
 
   online ? "online" : "offline"
