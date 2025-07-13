@@ -7,15 +7,35 @@ class SubscriberSerializer < ActiveModel::Serializer
 
 
 
-   def status
-        if self.object.subscriptions.exists?
-         self.object.status = 'active'
-         else
-            self.object.status = 'no subscription'
-        end
+   # def status
+   #      if self.object.subscriptions.exists?
+   #       self.object.status = 'active'
+   #       else
+   #          self.object.status = 'no subscription'
+   #      end
 
       
-   end
+   # end
+
+
+
+  def status
+  return "offline" unless object.subscriptions.any?
+
+  threshold_time = 3.minutes.ago
+
+  online = object.subscriptions.any? do |subscription|
+    next unless subscription.ip_address.present?
+
+    RadAcct.exists?(
+      acctstoptime: nil,
+      framedprotocol: 'PPP',
+      framedipaddress: subscription.ip_address
+    ).where('acctupdatetime > ?', threshold_time)
+  end
+
+  online ? "online" : "offline"
+end
 
    def phone_number
     "#{self.object.phone_number}"
