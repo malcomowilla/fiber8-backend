@@ -183,7 +183,7 @@ def set_tenant
   @account = Account.find_by(subdomain: host)
   ActsAsTenant.current_tenant = @account
   # set_current_tenant(@account)
-  Rails.logger.info "Setting tenant for app subscribers#{ActsAsTenant.current_tenant.subdomain}"
+  # Rails.logger.info "Setting tenant for app subscribers#{ActsAsTenant.current_tenant.subdomain}"
   EmailConfiguration.configure(@account, ENV['SYSTEM_ADMIN_EMAIL'])
 
   # set_current_tenant(@account)
