@@ -505,8 +505,29 @@ end
 
     
     calculate_expiration(@subscription)
+
+
+      nas = IpNetwork.find_by(title: params[:subscription][:network_name]).nas
+
+     
+        router = NasRouter.find_by(name: nas)
+
+  ip_address = router.ip_address
+          Rails.logger.info "Pinging router at #{ip_address} for tenant"
+
+            output, status = Open3.capture2e("ping -c 3 #{ip_address}")
+            reachable = status.success?
+
+            if reachable
+              Rails.logger.info "Ping successful: #{output}"
+
     limit_bandwidth(params[:subscription][:ip_address], 
     params[:subscription][:package_name], params[:subscription][:ppoe_username], @subscription.subscriber.name)
+
+            else
+              Rails.logger.warn "Ping failed: #{output}"
+
+            end
 
 
       if @subscription.save
@@ -609,11 +630,28 @@ end
         # Remove old bandwidth limit (if any) for the old IP
         remove_bandwidth_limit(old_ip)
         
-        
-        # Limit bandwidth for the new IP
-        limit_bandwidth(@subscription.ip_address, @subscription.package, @subscription.ppoe_username,
+       nas = IpNetwork.find_by(title: params[:subscription][:network_name]).nas
+
+     
+        router = NasRouter.find_by(name: nas)
+
+  ip_address = router.ip_address
+          Rails.logger.info "Pinging router at #{ip_address} for tenant"
+
+            output, status = Open3.capture2e("ping -c 3 #{ip_address}")
+            reachable = status.success?
+
+            if reachable
+              Rails.logger.info "Ping successful: #{output}"
+
+    limit_bandwidth(@subscription.ip_address, @subscription.package, @subscription.ppoe_username,
         @subscription.subscriber.name
         )
+            else
+              Rails.logger.warn "Ping failed: #{output}"
+              
+            end
+
       end
   
       # calculate_expiration(@subscription)
