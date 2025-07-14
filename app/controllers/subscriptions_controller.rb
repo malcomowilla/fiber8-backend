@@ -488,7 +488,8 @@ end
   network_name: params[:subscription][:network_name],
   # mac_address: params[:subscription][:mac_address],
   validity_period_units: params[:subscription][:validity_period_units],
-  validity:  params[:subscription][:validity]
+  validity:  params[:subscription][:validity],
+  service_type: params[:subscription][:service_type]
 
     )
 
