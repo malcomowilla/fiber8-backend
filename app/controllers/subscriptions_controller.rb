@@ -449,6 +449,13 @@ end
       render json: { error: "Username and password are required" }, status: :unprocessable_entity
       return
     end
+
+
+
+    if params[:subscription][:service_type].blank? || params[:subscription][:service_type].blank?
+      render json: { error: "Service type is required" }, status: :unprocessable_entity
+      return
+    end
   
     # Check uniqueness manually
     if Subscription.exists?(ppoe_username: params[:subscription][:ppoe_username])
@@ -485,9 +492,17 @@ end
 
     )
 
+    if params[:subscription][:service_type] == 'dhcp'
+      create_dhcp_credentials_radius(params[:subscription][:ip_address], params[:subscription][:mac_address], 
+      params[:subscription][:package_name])
+
+    elsif params[:subscription][:service_type] == 'pppoe'
+
     create_pppoe_credentials_radius(params[:subscription][:ppoe_password], 
     params[:subscription][:ppoe_username], params[:subscription][:package_name],  params[:subscription][:ip_address])
    
+    end
+
     
     calculate_expiration(@subscription)
     limit_bandwidth(params[:subscription][:ip_address], 
@@ -717,15 +732,55 @@ end
           expiration_check.assign_attributes(op: ':=', value: expiration_time)
           expiration_check.save!
         end
-
-
-
-       
       end
-      
-      
-      
       end
+
+
+
+
+      def create_dhcp_credentials_radius(service_ip, mac_or_identifier, package)
+  # Assume mac_or_identifier = MAC address or device name
+
+  dhcp_package = "dhcp_#{package.parameterize(separator: '_')}"
+
+  # Assign static IP via RadReply
+  rad_reply = RadReply.find_or_initialize_by(username: mac_or_identifier, radiusattribute: 'Framed-IP-Address')
+  rad_reply.assign_attributes(op: '=', value: service_ip)
+  rad_reply.save!
+
+  # Assign group if needed (for bandwidth control etc.)
+  user_group = RadUserGroup.find_or_initialize_by(username: mac_or_identifier, groupname: dhcp_package)
+  user_group.assign_attributes(priority: 1)
+  user_group.save!
+
+  # Set expiration if package has one
+  pkg = Package.find_by(name: package)
+  validity = pkg&.validity
+  units = pkg&.validity_period_units
+
+  expiration_time = case units
+                    when 'days' then Time.current + validity.days
+                    when 'hours' then Time.current + validity.hours
+                    when 'minutes' then Time.current + validity.minutes
+                    end&.strftime("%d %b %Y %H:%M:%S")
+
+  if expiration_time
+    expiration_check = RadCheck.find_or_initialize_by(username: mac_or_identifier, radiusattribute: 'Expiration')
+
+    expiration_check.assign_attributes(op: ':=', value: expiration_time)
+    expiration_check.save!
+  end
+end
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -831,9 +886,9 @@ end
 
         return unless router
     
-        router_ip = router.ip_address
-        router_username = router.username
-        router_password = router.password 
+        router_ip = router.&ip_address
+        router_username = router&.username
+        router_password = router&.password 
               Rails.logger.info "router ip #{router_ip}"
               Rails.logger.info "router username #{router_username}"
               Rails.logger.info "router password #{router_password}"
@@ -914,7 +969,8 @@ end
     def subscription_params
       params.require(:subscription).permit(:name, :phone_number, :package, :status, 
       :last_subscribed, :expiry, :ip_address,
-       :ppoe_username, :ppoe_password, :type, :network_name, :mac_address, :validity_period_units, :validity)
+       :ppoe_username, :ppoe_password, :type, :network_name, :mac_address, 
+       :validity_period_units, :validity, :service_type, :mac_address)
     end
 
    
