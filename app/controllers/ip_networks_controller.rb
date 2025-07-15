@@ -77,7 +77,7 @@ ActivtyLog.create(action: 'create', ip: request.remote_ip,
     system(command)
     unless $?.success?
       Rails.logger.error "❌ Failed to add route: #{command}"
-      render json: { error: "Failed to add route: #{command}" }, status: :unprocessable_entity
+      # render json: { error: "Failed to add route: #{command}" }, status: :unprocessable_entity
     end
   end
 
