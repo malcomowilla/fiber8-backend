@@ -451,6 +451,13 @@ end
     end
 
 
+     if params[:subscription][:expiration_date].blank?
+
+      render json: { error: "Expiration date is required" }, status: :unprocessable_entity
+      return
+      
+    end
+
 
     if params[:subscription][:service_type].blank? || params[:subscription][:service_type].blank?
       render json: { error: "Service type is required" }, status: :unprocessable_entity
@@ -630,7 +637,7 @@ RadCheck.where(username: @subscription.mac_address ).destroy_all
     end
 
 
-    if @subscription.expiration_date.blank?
+    if params[:subscription][:expiration_date].blank?
 
       render json: { error: "Expiration date is required" }, status: :unprocessable_entity
       return
