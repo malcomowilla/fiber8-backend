@@ -779,12 +779,12 @@ if @subscription.service_type == 'dhcp'
                         end&.strftime("%d %b %Y %H:%M:%S")
     
       # Create or update Expiration in RadGroupCheck
-      # if expiration_time
+      if expiration_time
 
           expiration_check = RadGroupCheck.find_or_initialize_by(groupname: pppoe_username, radiusattribute: 'Expiration')
           expiration_check.assign_attributes(op: ':=', value: expiration_time)
           expiration_check.save!
-        # end
+        end
       
       end
 
