@@ -683,7 +683,21 @@ RadCheck.where(username: @subscription.mac_address, radiusattribute: 'Expiration
         # Remove old bandwidth limit (if any) for the old IP
         remove_bandwidth_limit(old_ip)
         
-       nas = IpNetwork.find_by(title: params[:subscription][:network_name]).nas
+      
+
+
+if params[:subscription][:service_type] == 'dhcp'
+      create_dhcp_credentials_radius(params[:subscription][:ip_address], params[:subscription][:mac_address], 
+      params[:subscription][:package_name])
+
+    elsif params[:subscription][:service_type] == 'pppoe'
+
+    create_pppoe_credentials_radius(params[:subscription][:ppoe_password], 
+    params[:subscription][:ppoe_username], params[:subscription][:package_name],  params[:subscription][:ip_address])
+   
+    end
+
+     nas = IpNetwork.find_by(title: params[:subscription][:network_name]).nas
 
      
         router = NasRouter.find_by(name: nas)
