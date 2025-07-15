@@ -489,23 +489,25 @@ end
   # mac_address: params[:subscription][:mac_address],
   validity_period_units: params[:subscription][:validity_period_units],
   validity:  params[:subscription][:validity],
+  expiration_date:  params[:subscription][:expiration_date],
   service_type: params[:subscription][:service_type]
 
     )
 
     if params[:subscription][:service_type] == 'dhcp'
       create_dhcp_credentials_radius(params[:subscription][:ip_address], params[:subscription][:mac_address], 
-      params[:subscription][:package_name])
+      params[:subscription][:package_name], params[:subscription][:expiration_date])
 
     elsif params[:subscription][:service_type] == 'pppoe'
 
     create_pppoe_credentials_radius(params[:subscription][:ppoe_password], 
-    params[:subscription][:ppoe_username], params[:subscription][:package_name],  params[:subscription][:ip_address])
+    params[:subscription][:ppoe_username], params[:subscription][:package_name], 
+     params[:subscription][:ip_address], params[:subscription][:expiration_date])
    
     end
 
     
-    calculate_expiration(@subscription)
+    # calculate_expiration(@subscription)
 
 
       nas = IpNetwork.find_by(title: params[:subscription][:network_name]).nas
@@ -682,7 +684,7 @@ if @subscription.service_type == 'dhcp'
             reachable = status.success?
 
             if reachable
-              Rails.logger.info "Ping successful: #{output}"
+              Rails.logger.info "Ping successful : #{output}"
 
     limit_bandwidth(@subscription.ip_address, @subscription.package, @subscription.ppoe_username,
         @subscription.subscriber.name
@@ -737,12 +739,10 @@ if @subscription.service_type == 'dhcp'
     
 
 
-    def create_pppoe_credentials_radius(pppoe_password, pppoe_username, package, pppoe_ip)
+    def create_pppoe_credentials_radius(pppoe_password, pppoe_username, package,
+       pppoe_ip, expiration_date)
 
       pppoe_package = "pppoe_#{package.parameterize(separator: '_')}"
-
- 
-  
 
     rad_reply = RadReply.find_or_initialize_by(username: pppoe_username,
      radiusattribute: 'Framed-IP-Address')
@@ -756,10 +756,6 @@ if @subscription.service_type == 'dhcp'
       rad_check.assign_attributes(op: ':=', value: pppoe_password)
       rad_check.save!
 
-    
-
-      
-    
       # Create or update RadUserGroup (package)
        user_group = RadUserGroup.find_or_initialize_by(username: pppoe_username, groupname: pppoe_package)
 
@@ -768,30 +764,25 @@ if @subscription.service_type == 'dhcp'
       user_group.save!
     
       # Get package validity
-      pkg = Package.find_by(name: package)
-      validity_period_units = pkg&.validity_period_units
-      validity = pkg&.validity
+      
+     if expiration_date
+    # Format the expiration date for FreeRADIUS (typically in format like "Jul 15 2025 15:38:53")
+    formatted_expiration = expiration_date.strftime("%b %d %Y %H:%M:%S")
     
-      expiration_time = case validity_period_units
-                        when 'days' then Time.current + validity.days
-                        when 'hours' then Time.current + validity.hours
-                        when 'minutes' then Time.current + validity.minutes
-                        end&.strftime("%d %b %Y %H:%M:%S")
-    
-      # Create or update Expiration in RadGroupCheck
-      if expiration_time
-
-          expiration_check = RadGroupCheck.find_or_initialize_by(groupname: pppoe_username, radiusattribute: 'Expiration')
-          expiration_check.assign_attributes(op: ':=', value: expiration_time)
-          expiration_check.save!
-        end
+    expiration_check = RadCheck.find_or_initialize_by(
+      username: pppoe_username,
+      radiusattribute: 'Expiration'
+    )
+    expiration_check.assign_attributes(op: ':=', value: formatted_expiration)
+    expiration_check.save!
+  end
       
       end
 
 
 
 
-      def create_dhcp_credentials_radius(service_ip, mac_or_identifier, package)
+      def create_dhcp_credentials_radius(service_ip, mac_or_identifier, package, expiration_date)
   # Assume mac_or_identifier = MAC address or device name
 
   dhcp_package = "dhcp_#{package.parameterize(separator: '_')}"
@@ -807,34 +798,19 @@ if @subscription.service_type == 'dhcp'
   user_group.save!
 
   # Set expiration if package has one
-  pkg = Package.find_by(name: package)
-  validity = pkg&.validity
-  units = pkg&.validity_period_units
-
-  expiration_time = case units
-                    when 'days' then Time.current + validity.days
-                    when 'hours' then Time.current + validity.hours
-                    when 'minutes' then Time.current + validity.minutes
-                    end&.strftime("%d %b %Y %H:%M:%S")
-
-  if expiration_time
-    expiration_check = RadCheck.find_or_initialize_by(username: mac_or_identifier, radiusattribute: 'Expiration')
-
-    expiration_check.assign_attributes(op: ':=', value: expiration_time)
+ 
+ if expiration_date
+    # Format the expiration date for FreeRADIUS (typically in format like "Jul 15 2025 15:38:53")
+    formatted_expiration = expiration_date.strftime("%b %d %Y %H:%M:%S")
+    
+    expiration_check = RadCheck.find_or_initialize_by(
+      username: pppoe_username,
+      radiusattribute: 'Expiration'
+    )
+    expiration_check.assign_attributes(op: ':=', value: formatted_expiration)
     expiration_check.save!
   end
 end
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -1015,15 +991,11 @@ end
 
 
 
-# "burst-limit": "any",
-#   "burst-threshold": "any",
-#   "burst-time": "any",
-    # Only allow a list of trusted parameters through.
     def subscription_params
       params.require(:subscription).permit(:name, :phone_number, :package, :status, 
       :last_subscribed, :expiry, :ip_address,
        :ppoe_username, :ppoe_password, :type, :network_name, :mac_address, 
-       :validity_period_units, :validity, :service_type, :mac_address)
+       :validity_period_units, :validity, :service_type, :mac_address, :expiration_date)
     end
 
    

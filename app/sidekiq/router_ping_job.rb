@@ -132,10 +132,6 @@ class RouterPingJob
         end
         end
 
-
-
-
-
         # Check router status
         nas_routers = NasRouter.all
         nas_routers.each do |nas_router|
