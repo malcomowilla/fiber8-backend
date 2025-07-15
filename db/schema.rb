@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2025_07_14_112708) do
+ActiveRecord::Schema[7.2].define(version: 2025_07_15_153853) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -596,6 +596,7 @@ ActiveRecord::Schema[7.2].define(version: 2025_07_14_112708) do
     t.integer "subscriber_id"
     t.string "service_type"
     t.string "mac_address"
+    t.datetime "expiration_date"
   end
 
   create_table "support_tickets", force: :cascade do |t|

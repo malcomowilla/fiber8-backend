@@ -10,12 +10,14 @@ class SubscriptionExpirationJob
         
 
 
-        expired_ppoe_subscriptions = Subscription.where("expiry <= ?", DateTime.current)
+        expired_ppoe_subscriptions = Subscription.where("expiration_date <= ?", DateTime.current)
 
         expired_ppoe_subscriptions.find_each do |subscription|
           begin
-            router_setting = ActsAsTenant.current_tenant&.router_setting&.router_name
-    router = NasRouter.find_by(name: router_setting)
+    # router = NasRouter.find_by(name: router_setting)
+
+ routers = NasRouter.all
+        routers.each do |nas_router|
 
     return unless router
 
@@ -37,7 +39,7 @@ class SubscriptionExpirationJob
             Rails.logger.error("Error blocking #{subscription.ppoe_username}: #{e.message}")
           end
         end
-
+      end
         
 
       end
