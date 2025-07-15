@@ -707,9 +707,8 @@ if @subscription.service_type == 'dhcp'
       end
   
       # calculate_expiration(@subscription)
-       calculate_expiration_update(@subscription)
-      create_pppoe_credentials_radius(params[:subscription][:ppoe_password], 
-      params[:subscription][:ppoe_username], params[:subscription][:package_name],  params[:subscription][:ip_address])
+      #  calculate_expiration_update(@subscription)
+    
       remove_pppoe_connection(params[:subscription][:ppoe_username])
       render json: @subscription, status: :ok
     else
