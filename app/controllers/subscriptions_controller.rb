@@ -707,8 +707,8 @@ if @subscription.service_type == 'dhcp'
         @subscription.subscriber.name
         )
             else
-              Rails.logger.warn "Ping failed: #{output}"
-              
+              # Rails.logger.warn "Ping failed: #{output}"
+              render json: { error: "Ping failed: #{output}" }, status: :ok
             end
 
       end
