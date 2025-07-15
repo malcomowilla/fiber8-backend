@@ -708,7 +708,7 @@ if @subscription.service_type == 'dhcp'
         )
             else
               # Rails.logger.warn "Ping failed: #{output}"
-              render json: { error: "Ping failed: #{output}" }, status: :ok
+              render json: { error: "Ping failed router not reachable: #{output}" }, status: :ok
             end
 
       end
@@ -1011,7 +1011,8 @@ end
       params.require(:subscription).permit(:name, :phone_number, :package, :status, 
       :last_subscribed, :expiry, :ip_address,
        :ppoe_username, :ppoe_password, :type, :network_name, :mac_address, 
-       :validity_period_units, :validity, :service_type, :mac_address, :expiration_date)
+       :validity_period_units, :validity, :service_type, :mac_address,
+        :expiration_date, :package_name)
     end
 
    
