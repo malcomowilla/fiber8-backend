@@ -484,7 +484,7 @@ end
     @subscription = Subscription.create(
       
     # params[:subscription][:name],
-    package: params[:subscription][:package_name],
+    package_name: params[:subscription][:package_name],
     phone_number: params[:subscription][:phone_number],
   status:  params[:subscription][:status],
   ip_address: params[:subscription][:ip_address],
