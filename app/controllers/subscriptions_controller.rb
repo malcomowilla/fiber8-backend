@@ -996,7 +996,7 @@ end
 
         return unless router
     
-        router_ip = router.&ip_address
+        router_ip = router&.ip_address
         router_username = router&.username
         router_password = router&.password 
               Rails.logger.info "router ip #{router_ip}"
