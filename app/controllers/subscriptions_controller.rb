@@ -624,9 +624,17 @@ RadCheck.where(username: @subscription.mac_address ).destroy_all
   def update
 
     @subscription = set_subscription
-    if params[:subscription][:ppoe_username].blank? || params[:subscription][:ppoe_password].blank?
+    if @subscription.ppoe_username.blank? || @subscription.ppoe_password.blank?
       render json: { error: "Username and password are required" }, status: :unprocessable_entity
       return
+    end
+
+
+    if @subscription.expiration_date.blank?
+
+      render json: { error: "Expiration date is required" }, status: :unprocessable_entity
+      return
+      
     end
   
     # Check uniqueness manually
