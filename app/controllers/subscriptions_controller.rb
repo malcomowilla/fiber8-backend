@@ -662,18 +662,19 @@ RadCheck.where(username: @subscription.mac_address ).destroy_all
 
 
 if @subscription.service_type == 'dhcp'
-      create_dhcp_credentials_radius(params[:subscription][:ip_address], params[:subscription][:mac_address], 
-      params[:subscription][:package_name], params[:subscription][:expiration_date])
+      create_dhcp_credentials_radius(@subscription.ip_address,
+       @subscription.mac_address,
+      @subscription.package_name, @subscription.expiration_date)
 
     elsif @subscription.service_type == 'pppoe'
 
-    create_pppoe_credentials_radius(params[:subscription][:ppoe_password], 
-    params[:subscription][:ppoe_username], params[:subscription][:package_name], 
-     params[:subscription][:ip_address], params[:subscription][:expiration_date])
+    create_pppoe_credentials_radius(@subscription.ppoe_password,
+    @subscription.ppoe_username, @subscription.package_name,
+    @subscription.ip_address, @subscription.expiration_date)
    
     end
 
-     nas = IpNetwork.find_by(title: params[:subscription][:network_name]).nas
+     nas = IpNetwork.find_by(title: @subscription.network_name).nas
 
      
         router = NasRouter.find_by(name: nas)
