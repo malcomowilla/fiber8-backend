@@ -663,12 +663,13 @@ RadCheck.where(username: @subscription.mac_address ).destroy_all
 
 if @subscription.service_type == 'dhcp'
       create_dhcp_credentials_radius(params[:subscription][:ip_address], params[:subscription][:mac_address], 
-      params[:subscription][:package_name])
+      params[:subscription][:package_name], params[:subscription][:expiration_date])
 
     elsif @subscription.service_type == 'pppoe'
 
     create_pppoe_credentials_radius(params[:subscription][:ppoe_password], 
-    params[:subscription][:ppoe_username], params[:subscription][:package_name],  params[:subscription][:ip_address])
+    params[:subscription][:ppoe_username], params[:subscription][:package_name], 
+     params[:subscription][:ip_address], params[:subscription][:expiration_date])
    
     end
 
