@@ -787,15 +787,15 @@ stdout_and_stderr, status = Open3.capture2e("ping -c 3 #{ip_address}")
     ).update!(priority: 1)
 
     # ✅ Expiration
-    if expiration_date.present?
-      formatted_expiration = Time.parse(expiration_date.to_s).strftime("%b %d %Y %H:%M:%S")
+    # if expiration_date.present?
+    #   formatted_expiration = Time.parse(expiration_date.to_s).strftime("%b %d %Y %H:%M:%S")
 
-      rad_check = RadCheck.find_or_initialize_by(
-        username: pppoe_username,
-        radiusattribute: 'Expiration'
-      )
-      rad_check.update!(op: ':=', value: formatted_expiration)
-    end
+    #   rad_check = RadCheck.find_or_initialize_by(
+    #     username: pppoe_username,
+    #     radiusattribute: 'Expiration'
+    #   )
+    #   rad_check.update!(op: ':=', value: formatted_expiration)
+    # end
   end
 end
 
