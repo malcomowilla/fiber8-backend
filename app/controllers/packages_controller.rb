@@ -292,7 +292,6 @@ if current_user
                 end
                 
 
-                
                 if params[:package][:name].blank?
                   render json: { error: "package name is required" }, status: :unprocessable_entity
                   return
@@ -320,7 +319,7 @@ if current_user
                   # Call the method to update FreeRADIUS policies after saving the package
                   update_freeradius_policies(@package)
                   ActivtyLog.create(action: 'create', ip: request.remote_ip,
- description: "Created package #{package.name}",
+ description: "Created package #{@package.name}",
           user_agent: request.user_agent, user: current_user.username || current_user.email,
            date: Time.current)
                   render json: @package, serializer: PackageSerializer
@@ -772,7 +771,7 @@ def delete
     return render json: { error: "pppoe package not found" }, status: :not_found
   end
 
-  group_name = "pppoe_#{@package.name.parameterize(separator: '_')}"
+  group_name = "#{@package.name.parameterize(separator: '_')}"
 
 
   ActiveRecord::Base.transaction do
@@ -1105,7 +1104,7 @@ def update_freeradius_policies(package)
   # return unless package.is_a?(PppoePackage)
 
   # Define the group name for PPPOE package
-  group_name = "pppoe_#{package.name.parameterize(separator: '_')}"
+  group_name = "#{package.name.parameterize(separator: '_')}"
 
   ActiveRecord::Base.transaction do
     # ✅ Update or create speed limits in RadGroupReply for PPPOE
@@ -1142,7 +1141,8 @@ end
         :upload_burst_limit,
         :package,
         :download_burst_limit,  :validity_period_units, :router_name,
-        :ip_pool
+        :ip_pool, :daily_charge, :burst_threshold_download, :burst_threshold_upload, :burst_time,
+        :burst_upload_speed, :burst_download_speed, :aggregation
          )
       end
   

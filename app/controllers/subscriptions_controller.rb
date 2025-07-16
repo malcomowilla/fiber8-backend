@@ -758,7 +758,7 @@ if @subscription.service_type == 'dhcp'
     def create_pppoe_credentials_radius(pppoe_password, pppoe_username, package,
        pppoe_ip, expiration_date)
 
-      pppoe_package = "pppoe_#{package.parameterize(separator: '_')}"
+      pppoe_package = "#{package.parameterize(separator: '_')}"
 
     rad_reply = RadReply.find_or_initialize_by(username: pppoe_username,
      radiusattribute: 'Framed-IP-Address')
@@ -801,7 +801,7 @@ if @subscription.service_type == 'dhcp'
       def create_dhcp_credentials_radius(service_ip, mac_or_identifier, package, expiration_date)
   # Assume mac_or_identifier = MAC address or device name
 
-  dhcp_package = "dhcp_#{package.parameterize(separator: '_')}"
+  dhcp_package = "#{package.parameterize(separator: '_')}"
 
   # Assign static IP via RadReply
   rad_reply = RadReply.find_or_initialize_by(username: mac_or_identifier, radiusattribute: 'Framed-IP-Address')
