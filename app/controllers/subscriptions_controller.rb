@@ -705,6 +705,9 @@ if @subscription.service_type == 'dhcp'
     limit_bandwidth(@subscription.ip_address, @subscription.package, @subscription.ppoe_username,
         @subscription.subscriber.name
         )
+
+              remove_pppoe_connection(params[:subscription][:ppoe_username])
+
             else
                Rails.logger.warn "Ping failed: #{stderr.presence || stdout.presence || 'No response'}"
   render json: { error: "Ping failed, router not reachable: #{stderr.presence || stdout.presence || 'No response'}" }, status: :ok
@@ -716,7 +719,6 @@ if @subscription.service_type == 'dhcp'
       # calculate_expiration(@subscription)
       #  calculate_expiration_update(@subscription)
     
-      remove_pppoe_connection(params[:subscription][:ppoe_username])
       render json: @subscription, status: :ok
     else
       render json: @subscription.errors, status: :unprocessable_entity
