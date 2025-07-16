@@ -691,33 +691,29 @@ if @subscription.service_type == 'dhcp'
    
     end
 
-#      nas = IpNetwork.find_by(title: @subscription.network_name).nas
+     nas = IpNetwork.find_by(title: @subscription.network_name).nas
 
      
-#         router = NasRouter.find_by(name: nas)
+        router = NasRouter.find_by(name: nas)
 
-#   ip_address = router.ip_address
-#           Rails.logger.info "Pinging router at #{ip_address} for tenant"
+  ip_address = router.ip_address
+          Rails.logger.info "Pinging router at #{ip_address} for tenant"
 
-# stdout_and_stderr, status = Open3.capture2e("ping -c 3 #{ip_address}")
+stdout_and_stderr, status = Open3.capture2e("ping -c 3 #{ip_address}")
 
-  #           if status && status.success?
-  # Rails.logger.info "Ping successful: #{stdout_and_stderr}"
-
-  #   limit_bandwidth(@subscription.ip_address, @subscription.package, @subscription.ppoe_username,
-  #       @subscription.subscriber.name
-  #       )
+            if status && status.success?
+  remove_pppoe_connection(@subscription.ppoe_username)
 
 
-  #           else
+            else
          
-  # Rails.logger.warn "Ping failed: #{stdout_and_stderr.presence || 'No response'}"
-  # render json: { error: "Ping failed, router not reachable: #{stdout_and_stderr.presence || 'No response'}" }, status: :ok
-  # return
+  Rails.logger.warn "Ping failed: #{stdout_and_stderr.presence || 'No response'}"
+  render json: { error: "Ping failed, router not reachable: #{stdout_and_stderr.presence || 'No response'}" }, status: :ok
+  return
 
             
 
-  #     end
+      end
   
       # calculate_expiration(@subscription)
       #  calculate_expiration_update(@subscription)
@@ -737,8 +733,11 @@ if @subscription.service_type == 'dhcp'
 
     def remove_pppoe_connection(ppoe_username)
       begin
-        router_setting = ActsAsTenant.current_tenant&.router_setting&.router_name
-        router = NasRouter.find_by(name: router_setting)
+        
+     nas = IpNetwork.find_by(title: @subscription.network_name).nas
+
+     
+        router = NasRouter.find_by(name: nas)
       
         return unless router
         
