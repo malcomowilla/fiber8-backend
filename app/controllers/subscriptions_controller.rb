@@ -761,45 +761,39 @@ stdout_and_stderr, status = Open3.capture2e("ping -c 3 #{ip_address}")
     
 
 
-    def create_pppoe_credentials_radius(pppoe_password, pppoe_username, package,
-       pppoe_ip, expiration_date)
+   def create_pppoe_credentials_radius(pppoe_password, pppoe_username, package, pppoe_ip, expiration_date)
+  pppoe_package = package.parameterize(separator: '_')
 
-      pppoe_package = "#{package.parameterize(separator: '_')}"
+  ActiveRecord::Base.transaction do
+    # ✅ Framed-IP-Address
+    RadReply.find_or_initialize_by(
+      username: pppoe_username,
+      radiusattribute: 'Framed-IP-Address'
+    ).update!(op: '=', value: pppoe_ip)
 
-    rad_reply = RadReply.find_or_initialize_by(username: pppoe_username,
-     radiusattribute: 'Framed-IP-Address')
-     rad_reply.assign_attributes(op: '=', value: pppoe_ip)
-  rad_reply.save! 
+    # ✅ PPPoE Password
+    RadCheck.find_or_initialize_by(
+      username: pppoe_username,
+      radiusattribute: 'Cleartext-Password'
+    ).update!(op: ':=', value: pppoe_password)
 
+    # ✅ RadUserGroup
+    RadUserGroup.find_or_initialize_by(
+      username: pppoe_username,
+      groupname: pppoe_package
+    ).update!(priority: 1)
 
-      # Create or update RadCheck (password)
-      rad_check = RadCheck.find_or_initialize_by(username: pppoe_username, 
-      radiusattribute: 'Cleartext-Password')
-      rad_check.assign_attributes(op: ':=', value: pppoe_password)
-      rad_check.save!
+    # ✅ Expiration
+    if expiration_date.present?
+      formatted_expiration = Time.parse(expiration_date.to_s).strftime("%b %d %Y %H:%M:%S")
 
-      # Create or update RadUserGroup (package)
-       user_group = RadUserGroup.find_or_initialize_by(username: pppoe_username, groupname: pppoe_package)
-
-
-      user_group.assign_attributes(groupname: pppoe_package, priority: 1)
-      user_group.save!
-    
-      # Get package validity
-      
-    if expiration_date
-  parsed_expiration = Time.parse(expiration_date.to_s) # Or DateTime.parse(...)
-  formatted_expiration = parsed_expiration.strftime("%b %d %Y %H:%M:%S")
-
-  expiration_check = RadCheck.find_or_initialize_by(
-    username: pppoe_username,
-    radiusattribute: 'Expiration'
-  )
-  expiration_check.assign_attributes(op: ':=', value: formatted_expiration)
-  expiration_check.save!
+      RadCheck.find_or_initialize_by(
+        username: pppoe_username,
+        radiusattribute: 'Expiration'
+      ).update!(op: ':=', value: formatted_expiration)
+    end
+  end
 end
-      
-      end
 
 
 
