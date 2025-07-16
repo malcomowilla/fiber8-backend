@@ -691,6 +691,10 @@ if @subscription.service_type == 'dhcp'
    
     end
 
+
+
+
+
 #      nas = IpNetwork.find_by(title: @subscription.network_name).nas
 
      
@@ -716,8 +720,11 @@ if @subscription.service_type == 'dhcp'
 #       end
     remove_pppoe_connection(@subscription.ppoe_username)
 
-      # calculate_expiration(@subscription)
-      #  calculate_expiration_update(@subscription)
+    expiration_time = Time.parse(@subscription.expiration_date.to_s)
+if expiration_time > Time.current
+  remove_blocked_list_user_expiration_date_if_extended(@subscription)
+end
+   
     
       render json: @subscription, status: :ok
       return
@@ -866,6 +873,29 @@ end
       }
     end
     
+
+    def remove_blocked_list_user_expiration_date_if_extended(subscription)
+       begin
+            
+     nas = IpNetwork.find_by(title: @subscription.network_name).nas
+
+     
+        router = NasRouter.find_by(name: nas)
+    
+            if router
+              Net::SSH.start(router.ip_address, router.username, password: router.password, verify_host_key: :never, non_interactive: true) do |ssh|
+                ssh.exec!("ip firewall address-list remove [find list=aitechs_blocked_list address=#{subscription.ip_address}]")
+                subscription.update!(status: 'online')
+                puts "Removed #{subscription.ip_address} from aitechs_blocked_list"
+              end
+            end
+          rescue => e
+            puts "Error unblocking IP: #{e.message}"
+          end
+        
+    end
+
+
 
     def calculate_expiration_update(subscription)
       return nil unless subscription.validity.present? && subscription.validity_period_units.present?
