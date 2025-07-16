@@ -284,7 +284,7 @@ def block_service
 
         router = NasRouter.find_by(name: nas)
 
-return unless router
+return render  json: { error: "No router found" }, status: :not_found unless router
   ip_address =  params[:subscription][:ip_address],
   ppoe_username = params[:subscription][:ppoe_username],
 
