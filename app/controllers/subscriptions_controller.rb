@@ -528,19 +528,18 @@ end
   ip_address = router.ip_address
           Rails.logger.info "Pinging router at #{ip_address} for tenant"
 
-            stdout, stderr, status  = Open3.capture2e("ping -c 3 #{ip_address}")
+stdout_and_stderr, status = Open3.capture2e("ping -c 3 #{ip_address}")
 
             if status && status.success?
-              Rails.logger.info "Ping successful: #{stdout}"
+  Rails.logger.info "Ping successful: #{stdout_and_stderr}"
 
     limit_bandwidth(params[:subscription][:ip_address], 
     params[:subscription][:package_name], params[:subscription][:ppoe_username], @subscription.subscriber.name)
 
             else
-                Rails.logger.warn "Ping failed: #{stderr.presence || stdout.presence || 'No response'}"
-
-                render json: { error: "Ping failed, router not reachable: #{stderr.presence || stdout.presence || 'No response'}" }, status: :ok
-
+                 Rails.logger.warn "Ping failed: #{stdout_and_stderr.presence || 'No response'}"
+  render json: { error: "Ping failed, router not reachable: #{stdout_and_stderr.presence || 'No response'}" }, status: :ok
+  return
 
             end
 
@@ -698,10 +697,10 @@ if @subscription.service_type == 'dhcp'
   ip_address = router.ip_address
           Rails.logger.info "Pinging router at #{ip_address} for tenant"
 
-            stdout, stderr, status = Open3.capture2e("ping -c 3 #{ip_address}")
+stdout_and_stderr, status = Open3.capture2e("ping -c 3 #{ip_address}")
 
             if status && status.success?
-              Rails.logger.info "Ping successful : #{output}"
+  Rails.logger.info "Ping successful: #{stdout_and_stderr}"
 
     limit_bandwidth(@subscription.ip_address, @subscription.package, @subscription.ppoe_username,
         @subscription.subscriber.name
@@ -710,8 +709,10 @@ if @subscription.service_type == 'dhcp'
               remove_pppoe_connection(params[:subscription][:ppoe_username])
 
             else
-               Rails.logger.warn "Ping failed: #{stderr.presence || stdout.presence || 'No response'}"
-  render json: { error: "Ping failed, router not reachable: #{stderr.presence || stdout.presence || 'No response'}" }, status: :ok
+         
+  Rails.logger.warn "Ping failed: #{stdout_and_stderr.presence || 'No response'}"
+  render json: { error: "Ping failed, router not reachable: #{stdout_and_stderr.presence || 'No response'}" }, status: :ok
+  return
 
             end
 
