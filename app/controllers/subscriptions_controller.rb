@@ -298,7 +298,7 @@ Rails.logger.info "router password #{router_password}"
     # SSH into MikroTik router
     Net::SSH.start(router_ip, router_username , password: router_password, verify_host_key: :never, non_interactive: true) do |ssh|
       # Add the user's IP address to the MikroTik Address List
-      ssh.exec!("ip firewall address-list add list=aitechs_blocked_list address=#{params[:subscription][:ip_address]} comment=#{params[:subscription][:ppoe_username]}")
+      ssh.exec!("ip firewall address-list add list=aitechs_blocked_list address=#{params[:subscription][:ip_address]} comment=blocke_#{params[:subscription][:ppoe_username]}")
 
       puts "Blocked #{ppoe_username} (#{ip_address}) on MikroTik."
 render json: { message: "Blocked #{ppoe_username} (#{ip_address}) on MikroTik." }
