@@ -527,18 +527,19 @@ end
   ip_address = router.ip_address
           Rails.logger.info "Pinging router at #{ip_address} for tenant"
 
-            output, status = Open3.capture2e("ping -c 3 #{ip_address}")
-            reachable = status.success?
+            stdout, stderr, status  = Open3.capture2e("ping -c 3 #{ip_address}")
 
-            if reachable
+            if status.success?
               Rails.logger.info "Ping successful: #{output}"
 
     limit_bandwidth(params[:subscription][:ip_address], 
     params[:subscription][:package_name], params[:subscription][:ppoe_username], @subscription.subscriber.name)
 
             else
-              Rails.logger.warn "Ping failed: #{output}"
-              render json: { error: "Ping failed router not reachable: #{output}" }, status: :ok
+                Rails.logger.warn "Ping failed: #{stderr.presence || stdout.presence || 'No response'}"
+
+                render json: { error: "Ping failed, router not reachable: #{stderr.presence || stdout.presence || 'No response'}" }, status: :ok
+
 
             end
 
@@ -696,18 +697,18 @@ if @subscription.service_type == 'dhcp'
   ip_address = router.ip_address
           Rails.logger.info "Pinging router at #{ip_address} for tenant"
 
-            output, status = Open3.capture2e("ping -c 3 #{ip_address}")
-            reachable = status.success?
+            stdout, stderr, status = Open3.capture2e("ping -c 3 #{ip_address}")
 
-            if reachable
+            if status.success?
               Rails.logger.info "Ping successful : #{output}"
 
     limit_bandwidth(@subscription.ip_address, @subscription.package, @subscription.ppoe_username,
         @subscription.subscriber.name
         )
             else
-              # Rails.logger.warn "Ping failed: #{output}"
-              render json: { error: "Ping failed router not reachable: #{output}" }, status: :ok
+               Rails.logger.warn "Ping failed: #{stderr.presence || stdout.presence || 'No response'}"
+  render json: { error: "Ping failed, router not reachable: #{stderr.presence || stdout.presence || 'No response'}" }, status: :ok
+
             end
 
       end
