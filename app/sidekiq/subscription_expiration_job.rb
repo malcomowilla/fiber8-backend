@@ -17,15 +17,14 @@ class SubscriptionExpirationJob
     # router = NasRouter.find_by(name: router_setting)
 
  routers = NasRouter.all
-        routers.each do |nas_router|
+        routers.each do |router|
 
-    return unless router
 
     router_ip = router.ip_address
     router_username = router.username
     router_password = router.password 
             # SSH into MikroTik router
-            Net::SSH.start(router_ip, router_username , password: router_password) do |ssh|
+            Net::SSH.start(router_ip, router_username , password: router_password, verify_host_key: :never, non_interactive: true) do |ssh|
               # Add the user's IP address to the MikroTik Address List
               ssh.exec!("ip firewall address-list add list=aitechs_blocked_list address=#{subscription.ip_address} comment=#{subscription.ppoe_username}")
         
