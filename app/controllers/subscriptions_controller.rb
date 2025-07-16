@@ -4,6 +4,8 @@ class SubscriptionsController < ApplicationController
   # GET /subscriptions or /subscriptions.json
   require 'net/ssh'
 require 'ipaddr'
+require 'open3'
+
 
 set_current_tenant_through_filter
 
@@ -536,6 +538,7 @@ end
 
             else
               Rails.logger.warn "Ping failed: #{output}"
+              render json: { error: "Ping failed router not reachable: #{output}" }, status: :ok
 
             end
 
@@ -658,10 +661,6 @@ RadCheck.where(username: @subscription.mac_address ).destroy_all
       return false
     end
 
-
-
-
-    
   
     old_ip = @subscription.ip_address # store the old IP
   

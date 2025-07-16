@@ -317,7 +317,7 @@ if current_user
                 
                 if @package.save
                   # Call the method to update FreeRADIUS policies after saving the package
-                  update_freeradius_policies(@package)
+                  # update_freeradius_policies(@package)
                   ActivtyLog.create(action: 'create', ip: request.remote_ip,
  description: "Created package #{@package.name}",
           user_agent: request.user_agent, user: current_user.username || current_user.email,
@@ -597,7 +597,7 @@ if current_user
  package = Package.find_by(id: params[:id])
                           if package
                             package.update(package_params)
-                            update_freeradius_policies(package)
+                            # update_freeradius_policies(package)
                             ActivtyLog.create(action: 'update', ip: request.remote_ip,
  description: "Updated package #{package.name}",
           user_agent: request.user_agent, user: current_user.username || current_user.email,
