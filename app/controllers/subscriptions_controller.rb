@@ -766,16 +766,19 @@ stdout_and_stderr, status = Open3.capture2e("ping -c 3 #{ip_address}")
 
   ActiveRecord::Base.transaction do
     # ✅ Framed-IP-Address
-    RadReply.find_or_initialize_by(
+     rad_reply = RadReply.find_or_initialize_by(
       username: pppoe_username,
       radiusattribute: 'Framed-IP-Address'
-    ).update!(op: '=', value: pppoe_ip)
+
+    )
+    rad_reply.update!(op: '=', value: pppoe_ip)
 
     # ✅ PPPoE Password
-    RadCheck.find_or_initialize_by(
+    rad_check = RadCheck.find_or_initialize_by(
       username: pppoe_username,
       radiusattribute: 'Cleartext-Password'
-    ).update!(op: ':=', value: pppoe_password)
+    )
+    rad_check.update!(op: ':=', value: pppoe_password)
 
     # ✅ RadUserGroup
     RadUserGroup.find_or_initialize_by(
@@ -787,10 +790,11 @@ stdout_and_stderr, status = Open3.capture2e("ping -c 3 #{ip_address}")
     if expiration_date.present?
       formatted_expiration = Time.parse(expiration_date.to_s).strftime("%b %d %Y %H:%M:%S")
 
-      RadCheck.find_or_initialize_by(
+      rad_check = RadCheck.find_or_initialize_by(
         username: pppoe_username,
         radiusattribute: 'Expiration'
-      ).update!(op: ':=', value: formatted_expiration)
+      )
+      rad_check.update!(op: ':=', value: formatted_expiration)
     end
   end
 end
