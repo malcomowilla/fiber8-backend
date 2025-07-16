@@ -292,9 +292,7 @@ subscription = Subscription.find_by(ppoe_username: ppoe_username)
 router_ip = router.ip_address
 router_username = router.username
 router_password = router.password 
-Rails.logger.info "router ip #{router_ip}"
-Rails.logger.info "router username #{router_username}"
-Rails.logger.info "router password #{router_password}"
+
     # SSH into MikroTik router
     Net::SSH.start(router_ip, router_username , password: router_password, verify_host_key: :never, non_interactive: true) do |ssh|
       # Add the user's IP address to the MikroTik Address List
@@ -721,7 +719,7 @@ if @subscription.service_type == 'dhcp'
     remove_pppoe_connection(@subscription.ppoe_username)
 
     expiration_time = Time.parse(@subscription.expiration_date.to_s)
-if expiration_time > Time.current
+if expiration_time > Time.current && @subscription.status == 'blocked'
   remove_blocked_list_user_expiration_date_if_extended(@subscription)
 end
    
