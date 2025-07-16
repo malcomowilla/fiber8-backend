@@ -216,7 +216,7 @@ def last_seen
     ipstrip = subscription.ip_address.strip
 ip = IPAddr.new(ipstrip) 
 Rails.logger.info "IP: #{ip}"
-    radacct_records = RadAcct.where(username: subscription.ppoe_username,
+    radacct_records = RadAcct.where(
     framedprotocol: 'PPP',
     framedipaddress: subscription.ip_address,
     username: subscription.ppoe_username,
@@ -530,8 +530,8 @@ end
 
             stdout, stderr, status  = Open3.capture2e("ping -c 3 #{ip_address}")
 
-            if status.success?
-              Rails.logger.info "Ping successful: #{output}"
+            if status && status.success?
+              Rails.logger.info "Ping successful: #{stdout}"
 
     limit_bandwidth(params[:subscription][:ip_address], 
     params[:subscription][:package_name], params[:subscription][:ppoe_username], @subscription.subscriber.name)
@@ -700,7 +700,7 @@ if @subscription.service_type == 'dhcp'
 
             stdout, stderr, status = Open3.capture2e("ping -c 3 #{ip_address}")
 
-            if status.success?
+            if status && status.success?
               Rails.logger.info "Ping successful : #{output}"
 
     limit_bandwidth(@subscription.ip_address, @subscription.package, @subscription.ppoe_username,
