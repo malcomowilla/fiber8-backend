@@ -520,28 +520,28 @@ end
     # calculate_expiration(@subscription)
 
 
-      nas = IpNetwork.find_by(title: params[:subscription][:network_name]).nas
+#       nas = IpNetwork.find_by(title: params[:subscription][:network_name]).nas
 
      
-        router = NasRouter.find_by(name: nas)
+#         router = NasRouter.find_by(name: nas)
 
-  ip_address = router.ip_address
-          Rails.logger.info "Pinging router at #{ip_address} for tenant"
+#   ip_address = router.ip_address
+#           Rails.logger.info "Pinging router at #{ip_address} for tenant"
 
-stdout_and_stderr, status = Open3.capture2e("ping -c 3 #{ip_address}")
+# stdout_and_stderr, status = Open3.capture2e("ping -c 3 #{ip_address}")
 
-            if status && status.success?
-  Rails.logger.info "Ping successful: #{stdout_and_stderr}"
+#             if status && status.success?
+#   Rails.logger.info "Ping successful: #{stdout_and_stderr}"
 
-    limit_bandwidth(params[:subscription][:ip_address], 
-    params[:subscription][:package_name], params[:subscription][:ppoe_username], @subscription.subscriber.name)
+#     limit_bandwidth(params[:subscription][:ip_address], 
+#     params[:subscription][:package_name], params[:subscription][:ppoe_username], @subscription.subscriber.name)
 
-            else
-                 Rails.logger.warn "Ping failed: #{stdout_and_stderr.presence || 'No response'}"
-  render json: { error: "Ping failed, router not reachable: #{stdout_and_stderr.presence || 'No response'}" }, status: :ok
-  return
+#             else
+#                  Rails.logger.warn "Ping failed: #{stdout_and_stderr.presence || 'No response'}"
+#   render json: { error: "Ping failed, router not reachable: #{stdout_and_stderr.presence || 'No response'}" }, status: :ok
+#   return
 
-            end
+#             end
 
 
       if @subscription.save
@@ -664,16 +664,13 @@ RadCheck.where(username: @subscription.mac_address ).destroy_all
     end
 
   
-    old_ip = @subscription.ip_address # store the old IP
+    # old_ip = @subscription.ip_address # store the old IP
   
     # Update the subscription record
     if @subscription.update(subscription_params)
       @subscription.update(subscriber_id: params[:subscriber_id])
       # If IP address has changed, update bandwidth limits
-      if old_ip != @subscription.ip_address
-        # Remove old bandwidth limit (if any) for the old IP
-        remove_bandwidth_limit(old_ip)
-        
+      
       
 
 
@@ -690,34 +687,33 @@ if @subscription.service_type == 'dhcp'
    
     end
 
-     nas = IpNetwork.find_by(title: @subscription.network_name).nas
+#      nas = IpNetwork.find_by(title: @subscription.network_name).nas
 
      
-        router = NasRouter.find_by(name: nas)
+#         router = NasRouter.find_by(name: nas)
 
-  ip_address = router.ip_address
-          Rails.logger.info "Pinging router at #{ip_address} for tenant"
+#   ip_address = router.ip_address
+#           Rails.logger.info "Pinging router at #{ip_address} for tenant"
 
-stdout_and_stderr, status = Open3.capture2e("ping -c 3 #{ip_address}")
+# stdout_and_stderr, status = Open3.capture2e("ping -c 3 #{ip_address}")
 
-            if status && status.success?
-  Rails.logger.info "Ping successful: #{stdout_and_stderr}"
+  #           if status && status.success?
+  # Rails.logger.info "Ping successful: #{stdout_and_stderr}"
 
-    limit_bandwidth(@subscription.ip_address, @subscription.package, @subscription.ppoe_username,
-        @subscription.subscriber.name
-        )
+  #   limit_bandwidth(@subscription.ip_address, @subscription.package, @subscription.ppoe_username,
+  #       @subscription.subscriber.name
+  #       )
 
-              remove_pppoe_connection(params[:subscription][:ppoe_username])
 
-            else
+  #           else
          
-  Rails.logger.warn "Ping failed: #{stdout_and_stderr.presence || 'No response'}"
-  render json: { error: "Ping failed, router not reachable: #{stdout_and_stderr.presence || 'No response'}" }, status: :ok
-  return
+  # Rails.logger.warn "Ping failed: #{stdout_and_stderr.presence || 'No response'}"
+  # render json: { error: "Ping failed, router not reachable: #{stdout_and_stderr.presence || 'No response'}" }, status: :ok
+  # return
 
-            end
+            
 
-      end
+  #     end
   
       # calculate_expiration(@subscription)
       #  calculate_expiration_update(@subscription)
