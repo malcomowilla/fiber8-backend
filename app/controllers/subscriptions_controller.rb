@@ -691,30 +691,31 @@ if @subscription.service_type == 'dhcp'
    
     end
 
-     nas = IpNetwork.find_by(title: @subscription.network_name).nas
+#      nas = IpNetwork.find_by(title: @subscription.network_name).nas
 
      
-        router = NasRouter.find_by(name: nas)
+#         router = NasRouter.find_by(name: nas)
 
-  ip_address = router.ip_address
-          Rails.logger.info "Pinging router at #{ip_address} for tenant"
+#   ip_address = router.ip_address
+#           Rails.logger.info "Pinging router at #{ip_address} for tenant"
 
-stdout_and_stderr, status = Open3.capture2e("ping -c 3 #{ip_address}")
+# stdout_and_stderr, status = Open3.capture2e("ping -c 3 #{ip_address}")
 
-            if status && status.success?
-  remove_pppoe_connection(@subscription.ppoe_username)
+#             if status && status.success?
+#   remove_pppoe_connection(@subscription.ppoe_username)
 
 
-            else
+#             else
          
-  Rails.logger.warn "Ping failed: #{stdout_and_stderr.presence || 'No response'}"
-  render json: { error: "Ping failed, router not reachable: #{stdout_and_stderr.presence || 'No response'}" }, status: :ok
-  return
+#   Rails.logger.warn "Ping failed: #{stdout_and_stderr.presence || 'No response'}"
+#   render json: { error: "Ping failed, router not reachable: #{stdout_and_stderr.presence || 'No response'}" }, status: :ok
+#   return
 
             
 
-      end
-  
+#       end
+    remove_pppoe_connection(@subscription.ppoe_username)
+
       # calculate_expiration(@subscription)
       #  calculate_expiration_update(@subscription)
     
@@ -746,7 +747,7 @@ stdout_and_stderr, status = Open3.capture2e("ping -c 3 #{ip_address}")
         router_password = router.password 
         
         # Connect via SSH to MikroTik
-        Net::SSH.start(router_ip, router_username, password: router_password, verify_host_key: :never) do |ssh|
+        Net::SSH.start(router_ip, router_username, password: router_password, verify_host_key: :never, non_interactive: true) do |ssh|
           # Correct command to remove active PPPoE session based on pppoe_username
           command = "/ppp active remove [find name=#{ppoe_username}]"
           
