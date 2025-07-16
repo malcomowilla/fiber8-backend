@@ -784,17 +784,17 @@ if @subscription.service_type == 'dhcp'
     
       # Get package validity
       
-     if expiration_date
-    # Format the expiration date for FreeRADIUS (typically in format like "Jul 15 2025 15:38:53")
-    formatted_expiration = expiration_date.strftime("%b %d %Y %H:%M:%S")
-    
-    expiration_check = RadCheck.find_or_initialize_by(
-      username: pppoe_username,
-      radiusattribute: 'Expiration'
-    )
-    expiration_check.assign_attributes(op: ':=', value: formatted_expiration)
-    expiration_check.save!
-  end
+    if expiration_date
+  parsed_expiration = Time.parse(expiration_date.to_s) # Or DateTime.parse(...)
+  formatted_expiration = parsed_expiration.strftime("%b %d %Y %H:%M:%S")
+
+  expiration_check = RadCheck.find_or_initialize_by(
+    username: pppoe_username,
+    radiusattribute: 'Expiration'
+  )
+  expiration_check.assign_attributes(op: ':=', value: formatted_expiration)
+  expiration_check.save!
+end
       
       end
 
