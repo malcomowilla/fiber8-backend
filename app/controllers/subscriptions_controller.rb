@@ -545,11 +545,12 @@ stdout_and_stderr, status = Open3.capture2e("ping -c 3 #{ip_address}")
 
 
       if @subscription.save
-         render json: @subscription, status: :created
-
+render json: @subscription, status: :created
+  return
 
       else
-     render json: @subscription.errors, status: :unprocessable_entity 
+         render json: @subscription.errors, status: :unprocessable_entity
+  return
       end
     
 
@@ -722,6 +723,7 @@ stdout_and_stderr, status = Open3.capture2e("ping -c 3 #{ip_address}")
       #  calculate_expiration_update(@subscription)
     
       render json: @subscription, status: :ok
+      return
     else
       render json: @subscription.errors, status: :unprocessable_entity
     end
