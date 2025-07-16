@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2025_07_15_181448) do
+ActiveRecord::Schema[7.2].define(version: 2025_07_16_111858) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -427,6 +427,14 @@ ActiveRecord::Schema[7.2].define(version: 2025_07_15_181448) do
     t.string "ppoe_profile_id"
     t.string "package"
     t.string "wifi_package"
+    t.string "daily_charge"
+    t.string "burst_upload_speedburst_download_speed"
+    t.string "burst_threshold_download"
+    t.string "burst_threshold_upload"
+    t.string "burst_time"
+    t.string "burst_upload_speed"
+    t.string "burst_download_speed"
+    t.string "aggregation"
   end
 
   create_table "pp_poe_plans", force: :cascade do |t|
