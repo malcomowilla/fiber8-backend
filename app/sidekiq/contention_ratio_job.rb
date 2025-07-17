@@ -49,7 +49,7 @@ class ContentionRatioJob
             "max-limit": "#{shared_upload}M/#{shared_download}M",
             # "burst-threshold": "#{package.burst_threshold_upload}/#{package.burst_threshold_download}",
             "burst-limit": "#{package.burst_upload_speed}M/#{package.burst_download_speed}M",
-            "burst-time": package.burst_time.to_s
+            "burst-time": "#{package.burst_time}/#{package.burst_time}"
           }
 
           add_queue(router_ip, router_username, router_password, payload)
