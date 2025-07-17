@@ -22,19 +22,19 @@ class SubscriberSerializer < ActiveModel::Serializer
   def status
   return "offline" unless object.subscriptions.any?
 
-  threshold_time = 3.minutes.ago
+  # threshold_time = 3.minutes.ago
 
-  online = object.subscriptions.any? do |subscription|
-    next unless subscription.ip_address.present?
+  # online = object.subscriptions.any? do |subscription|
+  #   next unless subscription.ip_address.present?
 
-    RadAcct.where(
-      acctstoptime: nil,
-      framedprotocol: 'PPP',
-      framedipaddress: subscription.ip_address
-    ).where('acctupdatetime > ?', threshold_time).exists?
-  end
+  #   RadAcct.where(
+  #     acctstoptime: nil,
+  #     framedprotocol: 'PPP',
+  #     framedipaddress: subscription.ip_address
+  #   ).where('acctupdatetime > ?', threshold_time).exists?
+  # end
 
-  online ? "online" : "offline"
+  # online ? "online" : "offline"
 end
 
    def phone_number
