@@ -119,7 +119,7 @@ NasRouter.all.each do |router|
             target: target_ip,
             "max-limit": "#{shared_upload}M/#{shared_download}M",
             # "burst-threshold": "#{package.burst_threshold_upload}/#{package.burst_threshold_download}",
-            "burst-limit": "#{package.burst_upload_speed}/#{package.burst_download_speed}",
+            "burst-limit": "#{package.burst_upload_speed}M/#{package.burst_download_speed}M",
             "burst-time": package.burst_time.to_s
           }
 
