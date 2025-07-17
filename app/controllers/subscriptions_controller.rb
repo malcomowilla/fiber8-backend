@@ -581,10 +581,10 @@ RadCheck.where(username: @subscription.mac_address ).destroy_all
   
       RadCheck.where(username: @subscription.ppoe_username).destroy_all
       RadGroupCheck.where(groupname: @subscription.ppoe_username).destroy_all
-      RadGroupCheck.where(groupname: @subscription.ppoe_password).destroy_all
+      # RadGroupCheck.where(groupname: @subscription.ppoe_password).destroy_all
 
-      RadUserGroup.where(username: @subscription.ppoe_username).destroy_all
-      RadUserGroup.where(username: @subscription.ppoe_password).destroy_all
+      # RadUserGroup.where(username: @subscription.ppoe_username).destroy_all
+      # RadUserGroup.where(username: @subscription.ppoe_password).destroy_all
  
   
   #     # ✅ Delete the HotspotVoucher record
@@ -730,7 +730,7 @@ end
 
 
    def create_pppoe_credentials_radius(pppoe_password, pppoe_username, package, pppoe_ip, expiration_date)
-  pppoe_package = package.parameterize(separator: '_')
+  # pppoe_package = package.parameterize(separator: '_')
 
   ActiveRecord::Base.transaction do
     # ✅ Framed-IP-Address
@@ -763,7 +763,7 @@ end
       def create_dhcp_credentials_radius(service_ip, mac_or_identifier, package, expiration_date)
   # Assume mac_or_identifier = MAC address or device name
 
-  dhcp_package = "#{package.parameterize(separator: '_')}"
+  # dhcp_package = "#{package.parameterize(separator: '_')}"
 
     ActiveRecord::Base.transaction do
 
@@ -776,9 +776,9 @@ end
   rad_reply.update!(op: '=', value: service_ip)
 
   # Assign group if needed (for bandwidth control etc.)
-  user_group = RadUserGroup.find_or_initialize_by(username: mac_or_identifier, groupname: dhcp_package)
-  # user_group.assign_attributes(priority: 1)
-  user_group.update!(username: mac_or_identifier)
+  # user_group = RadUserGroup.find_or_initialize_by(username: mac_or_identifier, groupname: dhcp_package)
+  # # user_group.assign_attributes(priority: 1)
+  # user_group.update!(username: mac_or_identifier)
 
 end
 
