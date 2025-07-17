@@ -764,8 +764,8 @@ end
     # ✅ RadUserGroup
     RadUserGroup.find_or_initialize_by(
       username: pppoe_username,
-      groupname: pppoe_package
-    ).update!(priority: 1)
+     
+    ).update!(priority: 1, groupname: pppoe_package)
 
     # ✅ Expiration
     # if expiration_date.present?
