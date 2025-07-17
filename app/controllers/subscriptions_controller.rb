@@ -218,7 +218,7 @@ ip = IPAddr.new(ipstrip)
 Rails.logger.info "IP: #{ip}"
     radacct_records = RadAcct.where(
     framedprotocol: 'PPP',
-    framedipaddress: subscription.ip_address,
+    # framedipaddress: subscription.ip_address,
     username: subscription.ppoe_username,
 
     ).order(acctupdatetime: :desc)
