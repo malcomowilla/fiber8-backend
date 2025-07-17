@@ -40,7 +40,7 @@ class ContentionRatioJob
             # Add queue (no check for existing queue)
             limit_cmd  = "queue simple add name=#{queue_name} target=#{target_ip} max-limit=#{shared_upload}M/#{shared_download}M burst-threshold=#{package.burst_threshold_upload}/#{package.burst_threshold_download} burst-time=#{package.burst_time} burst-limit=#{package.burst_upload_speed}/#{package.burst_download_speed}"
             
-         
+         Rails.logger.info "[ContentionRatioJob] Adding queue for user #{user[:username]} on router #{router.name}: #{limit_cmd}"
 
             ssh.exec!(limit_cmd)
           end
