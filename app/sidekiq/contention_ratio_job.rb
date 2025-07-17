@@ -29,7 +29,7 @@ class ContentionRatioJob
             download_limit = package.download_limit.to_f
             upload_limit = package.upload_limit.to_f
 
-            # Calculate shared speed
+
             shared_download = (download_limit / aggregation_ratio).round(2)
             shared_upload = (upload_limit / aggregation_ratio).round(2)
 
@@ -70,5 +70,8 @@ end
   end.compact
 end
 end
+
+
+
 
 
