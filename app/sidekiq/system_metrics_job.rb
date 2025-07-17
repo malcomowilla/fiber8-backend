@@ -184,7 +184,7 @@ log_output = `journalctl -u loophole -n 200 --no-page`
 
 
     unless log_output.match(%r{https://([a-z0-9\-]+\.loophole\.site)})
-      Rails.logger.warn "[Tunnel Monitor] No valid Cloudflare tunnel found. Restarting services..."
+      # Rails.logger.warn "[Tunnel Monitor] No valid Cloudflare tunnel found. Restarting services..."
 
       # Restart cloudflared and your backend service
       `systemctl restart loophole`
@@ -210,7 +210,7 @@ log_output = `journalctl -u loophole -n 200 --no-page`
     #   Rails.logger.info "System is blocked. No action needed."
     # end
 
-Rails.logger.info "Rehydrating wireguard"
+# Rails.logger.info "Rehydrating wireguard"
     WireguardPeer.find_each do |peer|
       # `wg set wg0 peer #{peer.public_key} allowed-ips #{peer.allowed_ips}, 192.168.50.47/32`
         if peer.private_ip.nil?
@@ -232,7 +232,7 @@ Rails.logger.info "Rehydrating wireguard"
 
 
         unless RUBY_PLATFORM =~ /linux/
-          Rails.logger.info "SystemMetricsJob skipped: Not running on a linux system."
+          # Rails.logger.info "SystemMetricsJob skipped: Not running on a linux system."
           
           sys = SystemMetric.first_or_initialize(
             cpu_usage: '0%',
@@ -308,7 +308,7 @@ Rails.logger.info "Rehydrating wireguard"
        
 
         # Log metrics for debugging
-        Rails.logger.info "System Metrics: #{metrics}"
+        # Rails.logger.info "System Metrics: #{metrics}"
 
         # Save to database
         sys = SystemMetric.first_or_initialize(
@@ -336,7 +336,7 @@ Rails.logger.info "Rehydrating wireguard"
           account_id: ActsAsTenant.current_tenant.id
         ) 
 
-        Rails.logger.info "System Metrics saved: #{sys.inspect}"
+        # Rails.logger.info "System Metrics saved: #{sys.inspect}"
       end
     end
   end
