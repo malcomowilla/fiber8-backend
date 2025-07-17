@@ -128,7 +128,7 @@ class RouterPingJob
           username: subscription.ppoe_username,
           # account_id: nil
         ).count
-        Rails.logger.info "Found #{nil_radacct_count} RadAcct records with nil account_id for tenant #{tenant.id}"
+        # Rails.logger.info "Found #{nil_radacct_count} RadAcct records with nil account_id for tenant #{tenant.id}"
 
         RadAcct.unscoped.where(
         framedipaddress: subscription.ip_address,
@@ -137,7 +137,7 @@ class RouterPingJob
           begin
             radacct.update!(account_id: tenant.id)
           rescue => e
-            Rails.logger.error "Failed to update radacct with id #{radacct.id}: #{e.message}"
+            # Rails.logger.error "Failed to update radacct with id #{radacct.id}: #{e.message}"
           end
         end
         end
@@ -153,9 +153,9 @@ class RouterPingJob
             reachable = status.success?
 
             if reachable
-              Rails.logger.info "Ping successful: #{output}"
+              # Rails.logger.info "Ping successful: #{output}"
             else
-              Rails.logger.warn "Ping failed: #{output}"
+              # Rails.logger.warn "Ping failed: #{output}"
             end
 
        
@@ -167,10 +167,10 @@ class RouterPingJob
               response: output,
               checked_at: Time.current
             )
-            Rails.logger.info "Router status updated for tenant #{tenant.id}"
+            # Rails.logger.info "Router status updated for tenant #{tenant.id}"
           rescue StandardError => e
-            Rails.logger.error "RouterPingJob failed for tenant #{tenant.id}: #{e.message}"
-            Rails.logger.error e.backtrace.join("\n")
+            # Rails.logger.error "RouterPingJob failed for tenant #{tenant.id}: #{e.message}"
+            # Rails.logger.error e.backtrace.join("\n")
           end
         end
       end
