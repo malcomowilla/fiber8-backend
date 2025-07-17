@@ -93,7 +93,7 @@ NasRouter.all.each do |router|
           subscription   = Subscription.find_by(ppoe_username: pppoe_username)
           next unless subscription
 
-          package = Package.find_by(name: subscription.package_name, router_name: router.name)
+          package = Package.find_by(name: subscription.package_name)
           next unless package&.aggregation.present?
 
           aggregation_ratio = package.aggregation.to_i
