@@ -765,7 +765,7 @@ end
     RadUserGroup.find_or_initialize_by(
       username: pppoe_username,
       groupname: pppoe_package
-    ).update!(username: pppoe_username, groupname: pppoe_package, priority: 1)
+    ).update!(priority: 1)
 
     # ✅ Expiration
     # if expiration_date.present?
@@ -801,7 +801,7 @@ end
   # Assign group if needed (for bandwidth control etc.)
   user_group = RadUserGroup.find_or_initialize_by(username: mac_or_identifier, groupname: dhcp_package)
   # user_group.assign_attributes(priority: 1)
-  user_group.update!(username: mac_or_identifier, groupname: dhcp_package, priority: 1)
+  user_group.update!(username: mac_or_identifier)
 
   # Set expiration if package has one
  
