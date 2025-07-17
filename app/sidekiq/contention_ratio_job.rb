@@ -1,5 +1,7 @@
 class ContentionRatioJob
   include Sidekiq::Job
+    queue_as :default
+
 
   def perform
     routers = NasRouter.all
@@ -10,7 +12,7 @@ class ContentionRatioJob
         router_username = router.username
         router_password = router.password
 
-        Net::SSH.start(router_ip, router_username, password: router_password, verify_host_key: :never) do |ssh|
+        Net::SSH.start(router_ip, router_username, password: router_password, verify_host_key: :never, non_interactive: true) do |ssh|
 
           # Fetch active PPPoE users
           active_users_raw = ssh.exec!('/ppp active print detail without-paging')
