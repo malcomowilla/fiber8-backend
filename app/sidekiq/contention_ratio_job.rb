@@ -56,7 +56,7 @@ class ContentionRatioJob
           Rails.logger.info "[ContentionRatioJob] Queue added for #{queue_name}"
         end
       rescue => e
-        Rails.logger.error "[ContentionRatioJob] Error for router #{router.name}: #{e.message}"
+        Rails.logger.info "[ContentionRatioJob] Error for router #{router.name}: #{e.message}"
       end
     end
   end
@@ -73,7 +73,7 @@ class ContentionRatioJob
 
     JSON.parse(res.body)
   rescue => e
-    Rails.logger.error "Failed to fetch active users: #{e.message}"
+    Rails.logger.info "Failed to fetch active users: #{e.message}"
     []
   end
 
@@ -86,7 +86,7 @@ class ContentionRatioJob
 
     res.is_a?(Net::HTTPSuccess) && JSON.parse(res.body).any?
   rescue => e
-    Rails.logger.error "Failed to check queue #{queue_name} existence: #{e.message}"
+    Rails.logger.info "Failed to check queue #{queue_name} existence: #{e.message}"
     false
   end
 
