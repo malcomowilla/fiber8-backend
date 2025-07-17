@@ -40,11 +40,18 @@ class ContentionRatioJob
             next if target_ip.blank?
 
             # Add queue (no check for existing queue)
-            limit_cmd  = "queue simple add name=#{queue_name} target=#{target_ip} max-limit=#{shared_upload}M/#{shared_download}M burst-threshold=#{package.burst_threshold_upload}/#{package.burst_threshold_download} burst-time=#{package.burst_time} burst-limit=#{package.burst_upload_speed}/#{package.burst_download_speed}"
-            
-         Rails.logger.info "[ContentionRatioJob] Adding queue for user #{user[:username]} on router #{router.name}: #{limit_cmd}"
+          # Check if queue already exists
+check_cmd = "/queue simple print where name=#{queue_name}"
+existing_queue = ssh.exec!(check_cmd)
 
-            ssh.exec!(limit_cmd)
+if existing_queue.blank?
+  limit_cmd  = "/queue simple add name=#{queue_name} target=#{target_ip} max-limit=#{shared_upload}M/#{shared_download}M burst-threshold=#{package.burst_threshold_upload}/#{package.burst_threshold_download} burst-time=#{package.burst_time} burst-limit=#{package.burst_upload_speed}/#{package.burst_download_speed}"
+  Rails.logger.info "[ContentionRatioJob] Adding queue for user #{user[:username]} on router #{router.name}: #{limit_cmd}"
+  ssh.exec!(limit_cmd)
+else
+  Rails.logger.info "[ContentionRatioJob] Queue already exists for user #{user[:username]}, skipping add."
+end
+
           end
         end
       rescue => e
@@ -56,12 +63,12 @@ class ContentionRatioJob
   private
 
   # Parses usernames from MikroTik output
-  def parse_active_pppoe_users(raw_output)
-    raw_output.lines.map do |line|
-      if line.include?("user=")
-        match = line.match(/name="(?<username>[^"]+)"/)
-        { username: match[:username] } if match
-      end
-    end.compact
-  end
+ def parse_active_pppoe_users(raw_output)
+  raw_output.lines.map do |line|
+    match = line.match(/name="(?<username>[^"]+)"/)
+    { username: match[:username] } if match
+  end.compact
 end
+end
+
+
