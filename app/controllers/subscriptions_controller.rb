@@ -716,11 +716,12 @@ if @subscription.service_type == 'dhcp'
             
 
 #       end
-    remove_pppoe_connection(@subscription.ppoe_username)
+RemoveConnectionJob.perform_later(@subscription.ppoe_username, @subscription)
+    # remove_pppoe_connection(@subscription.ppoe_username)
 
     expiration_time = Time.parse(@subscription.expiration_date.to_s)
 if expiration_time > Time.current && @subscription.status == 'blocked'
-  remove_blocked_list_user_expiration_date_if_extended(@subscription)
+  RemoveBlockedListExtendedJob.perform_later(@subscription)
 end
    
     
@@ -737,33 +738,6 @@ end
     end
 
 
-    def remove_pppoe_connection(ppoe_username)
-      begin
-        
-     nas = IpNetwork.find_by(title: @subscription.network_name).nas
-
-     
-        router = NasRouter.find_by(name: nas)
-      
-        return unless router
-        
-        router_ip = router.ip_address
-        router_username = router.username
-        router_password = router.password 
-        
-        # Connect via SSH to MikroTik
-        Net::SSH.start(router_ip, router_username, password: router_password, verify_host_key: :never, non_interactive: true) do |ssh|
-          # Correct command to remove active PPPoE session based on pppoe_username
-          command = "/ppp active remove [find name=#{ppoe_username}]"
-          
-          # Execute the command
-          ssh.exec!(command)
-        end
-      rescue StandardError => e
-        Rails.logger.error "Error removing PPPoE connection for username #{ppoe_username}: #{e.message}"
-      end
-    end
-    
 
 
    def create_pppoe_credentials_radius(pppoe_password, pppoe_username, package, pppoe_ip, expiration_date)
@@ -872,28 +846,7 @@ end
     end
     
 
-    def remove_blocked_list_user_expiration_date_if_extended(subscription)
-       begin
-            
-     nas = IpNetwork.find_by(title: @subscription.network_name).nas
-
-     
-        router = NasRouter.find_by(name: nas)
-    
-            if router
-              Net::SSH.start(router.ip_address, router.username, password: router.password, verify_host_key: :never, non_interactive: true) do |ssh|
-                ssh.exec!("ip firewall address-list remove [find list=aitechs_blocked_list address=#{subscription.ip_address}]")
-                subscription.update!(status: 'online')
-                puts "Removed #{subscription.ip_address} from aitechs_blocked_list"
-              end
-            end
-          rescue => e
-            puts "Error unblocking IP: #{e.message}"
-          end
-        
-    end
-
-
+   
 
     def calculate_expiration_update(subscription)
       return nil unless subscription.validity.present? && subscription.validity_period_units.present?
