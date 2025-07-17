@@ -44,6 +44,10 @@ Sidekiq.configure_server do |config|
   },
 
 
+  'contention_ratio_job' => {
+    'class' => 'ContentionRatioJob',
+    'cron' => '* * * * *'
+  },
 
 
   'router_ping_job' => {
