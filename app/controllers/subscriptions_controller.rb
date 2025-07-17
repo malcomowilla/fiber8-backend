@@ -225,19 +225,6 @@ Rails.logger.info "IP: #{ip}"
 
     Rails.logger.info "RadAcct records found: #{radacct_records.count}"
 
-radacct_records.each_with_index do |record, index|
-  Rails.logger.info "Record #{index + 1}:"
-  Rails.logger.info "  ID: #{record.radacctid}"
-  Rails.logger.info "  Username: #{record.username}"
-  Rails.logger.info "  Framed IP: #{record.framedipaddress}"
-  Rails.logger.info "  Acct Start: #{record.acctstarttime}"
-  Rails.logger.info "  Acct Update: #{record.acctupdatetime}"
-  Rails.logger.info "  Acct Stop: #{record.acctstoptime}"
-  Rails.logger.info "  MAC Address: #{record.callingstationid}"
-  Rails.logger.info "  Session Time: #{record.acctsessiontime}"
-  Rails.logger.info "  Input Octets: #{record.acctinputoctets}"
-  Rails.logger.info "  Output Octets: #{record.acctoutputoctets}"
-end
     # radacct = radacct_records.find { |r| r.acctstoptime.nil? } 
 radacct = radacct_records.find { |r| r.acctstoptime.nil? } || radacct_records.first
 
@@ -754,30 +741,19 @@ end
     )
     rad_reply.update!(op: '=', value: pppoe_ip)
 
-    # ✅ PPPoE Password
     rad_check = RadCheck.find_or_initialize_by(
       username: pppoe_username,
       radiusattribute: 'Cleartext-Password'
     )
     rad_check.update!(op: ':=', value: pppoe_password)
 
-    # ✅ RadUserGroup
-    rad_user_group = RadUserGroup.find_or_initialize_by(
-      username: pppoe_username,
+    # rad_user_group = RadUserGroup.find_or_initialize_by(
+    #   username: pppoe_username,
      
-    )
-    rad_user_group.update!(priority: 1, groupname: pppoe_package)
+    # )
+    # rad_user_group.update!(priority: 1, groupname: pppoe_package)
 
-    # ✅ Expiration
-    # if expiration_date.present?
-    #   formatted_expiration = Time.parse(expiration_date.to_s).strftime("%b %d %Y %H:%M:%S")
-
-    #   rad_check = RadCheck.find_or_initialize_by(
-    #     username: pppoe_username,
-    #     radiusattribute: 'Expiration'
-    #   )
-    #   rad_check.update!(op: ':=', value: formatted_expiration)
-    # end
+    
   end
 end
 
@@ -804,19 +780,6 @@ end
   # user_group.assign_attributes(priority: 1)
   user_group.update!(username: mac_or_identifier)
 
-  # Set expiration if package has one
- 
-#  if expiration_date
-#     # Format the expiration date for FreeRADIUS (typically in format like "Jul 15 2025 15:38:53")
-#     formatted_expiration = expiration_date.strftime("%b %d %Y %H:%M:%S")
-    
-#     expiration_check = RadCheck.find_or_initialize_by(
-#       username: pppoe_username,
-#       radiusattribute: 'Expiration'
-#     )
-#     expiration_check.assign_attributes(op: ':=', value: formatted_expiration)
-#     expiration_check.save!
-#   end
 end
 
 
