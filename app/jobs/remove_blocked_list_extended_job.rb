@@ -3,7 +3,7 @@
     require 'net/ssh'
     require 'ipaddr'
     require 'open3'
-    
+
 
     def perform(subscription)
       begin
@@ -26,6 +26,8 @@
           
           # Execute the command
           ssh.exec!(command)
+          subscription.update!(status: 'online')
+          puts "UnBlocked #{subscription.ppoe_username} (#{subscription.ip_address}) on MikroTik."
         end
       rescue StandardError => e
         Rails.logger.error "Error removing PPPoE connection for username #{subscription.ppoe_username}: #{e.message}"
