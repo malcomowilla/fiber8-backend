@@ -38,6 +38,12 @@ Sidekiq.configure_server do |config|
 },
 
 
+'lock_account_job' => {
+  'class' => 'LockAccountJob',
+  'cron' => '* * * * *'
+},
+
+
   'hotspot_expiration_job' => {
     'class' => 'HotspotExpirationJob',
     'cron' => '* * * * *'
