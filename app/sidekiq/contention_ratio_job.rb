@@ -25,7 +25,6 @@ class ContentionRatioJob
           package = Package.find_by(name: subscription.package_name)
           next unless package&.aggregation.present?
 
-          aggregation_ratio = package.aggregation.to_i
   same_package_users = active_users.count do |u|
     sub = Subscription.find_by(ppoe_username: u['name'])
     sub&.package_name == subscription.package_name
@@ -39,7 +38,7 @@ class ContentionRatioJob
 
           shared_download = (download_limit / same_package_users).round(2)
   shared_upload   = (upload_limit / same_package_users).round(2)
-          queue_name = "queue_#{pppoe_username}"
+          queue_name = "queue_#{pppoe_username}_#{subscription.subscriber.name}"
           target_ip  = subscription.ip_address
           next if target_ip.blank?
 
