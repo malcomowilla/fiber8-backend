@@ -113,69 +113,31 @@ class RouterPingJob
     Account.find_each do |tenant| # Iterate over all tenants
       ActsAsTenant.with_tenant(tenant) do
 
-
-        #       subscriptions = Subscription.where.not(ip_address: [nil, ''])
-        #       subscriptions.each do |subscription|
-        # # Process RadAcct records with nil account_id
-        # nil_radacct_count = RadAcct.unscoped.where(
         
-        #   framedipaddress: subscription.ip_address,
-        #   username: subscription.ppoe_username,
-        #   # account_id: nil
-        # ).count
-        # Rails.logger.info "Found #{nil_radacct_count} RadAcct records with nil account_id for tenant #{tenant.id}"
-
-        # RadAcct.unscoped.where(
-        # framedipaddress: subscription.ip_address,
-        # username: subscription.ppoe_username
-        # ).find_each do |radacct|
-        #   begin
-        #     radacct.update!(account_id: tenant.id)
-        #   rescue => e
-        #     # Rails.logger.error "Failed to update radacct with id #{radacct.id}: #{e.message}"
-        #   end
-        # end
-        # end
-
-
-          subscriptions = Subscription.where.not(ip_address: [nil, ''])
-
-subscriptions.each do |subscription|
-  # ✅ Process RadAcct records with nil account_id
-  nil_radacct_count = RadAcct.unscoped.where(
-    framedipaddress: subscription.ip_address,
-    username: subscription.ppoe_username,
-    account_id: nil
-  ).count
-
-  Rails.logger.info "Found #{nil_radacct_count} RadAcct records with nil account_id for subscription #{subscription.id}"
-
-  RadAcct.unscoped.where(
-    framedipaddress: subscription.ip_address,
-    username: subscription.ppoe_username,
-    account_id: nil
-  ).find_each do |radacct|
-    begin
-      # ✅ Assign account_id
-      tenant = subscription.account
-      radacct.update!(account_id: tenant.id) if tenant
-
-      # ✅ Sticky MAC logic — create Radcheck only if not set
-      if subscription.mac_adress.blank? && radacct.callingstationid.present?
-        subscription.update(mac_adress: radacct.callingstationid)
-
-        Radcheck.find_or_create_by!(
+              subscriptions = Subscription.where.not(ip_address: [nil, ''])
+              subscriptions.each do |subscription|
+        # Process RadAcct records with nil account_id
+        nil_radacct_count = RadAcct.unscoped.where(
+        
+          framedipaddress: subscription.ip_address,
           username: subscription.ppoe_username,
-          attribute: 'Calling-Station-Id',
-          op: '==',
-          value: radacct.callingstationid
-        )
-      end
-    rescue => e
-      Rails.logger.error "Failed to update RadAcct ID #{radacct.id}: #{e.message}"
-    end
-  end
-end
+          # account_id: nil
+        ).count
+        Rails.logger.info "Found #{nil_radacct_count} RadAcct records with nil account_id for tenant #{tenant.id}"
+
+        RadAcct.unscoped.where(
+        framedipaddress: subscription.ip_address,
+        username: subscription.ppoe_username
+        ).find_each do |radacct|
+          begin
+            radacct.update!(account_id: tenant.id)
+          rescue => e
+            # Rails.logger.error "Failed to update radacct with id #{radacct.id}: #{e.message}"
+          end
+        end
+        end
+
+
 
 
 
