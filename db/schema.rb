@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2025_07_16_111858) do
+ActiveRecord::Schema[7.2].define(version: 2025_07_18_155116) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -435,6 +435,7 @@ ActiveRecord::Schema[7.2].define(version: 2025_07_16_111858) do
     t.string "burst_upload_speed"
     t.string "burst_download_speed"
     t.string "aggregation"
+    t.string "subscription"
   end
 
   create_table "pp_poe_plans", force: :cascade do |t|
@@ -540,6 +541,7 @@ ActiveRecord::Schema[7.2].define(version: 2025_07_16_111858) do
     t.boolean "enable_customer_portal", default: false
     t.string "installation_fee"
     t.boolean "subscriber_welcome_message"
+    t.boolean "lock_account_to_mac"
   end
 
   create_table "subscribers", force: :cascade do |t|

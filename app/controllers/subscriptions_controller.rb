@@ -216,12 +216,26 @@ def last_seen
     ipstrip = subscription.ip_address.strip
 ip = IPAddr.new(ipstrip) 
 Rails.logger.info "IP: #{ip}"
+
     radacct_records = RadAcct.where(
     framedprotocol: 'PPP',
     # framedipaddress: subscription.ip_address,
     username: subscription.ppoe_username,
 
     ).order(acctupdatetime: :desc)
+
+if subscription.mac_adress.blank? && acct&.callingstationid.present?
+  subscription.update(mac_adress: acct.callingstationid)
+
+  # Also create radcheck entry to enforce sticky MAC
+  Radcheck.find_or_create_by!(
+    username: subscription.pppoe_username,
+    attribute: 'Calling-Station-Id',
+    op: '==',
+    value: radacct_records.callingstationid
+  )
+end
+    
 
     Rails.logger.info "RadAcct records found: #{radacct_records.count}"
 
@@ -263,6 +277,9 @@ radacct = radacct_records.find { |r| r.acctstoptime.nil? } || radacct_records.fi
 
   render json: data
 end
+
+
+
 
 
 def block_service
