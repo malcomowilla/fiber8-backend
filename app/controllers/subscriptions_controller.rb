@@ -226,7 +226,7 @@ Rails.logger.info "IP: #{ip}"
 
 
   # Also create radcheck entry to enforce sticky MAC
-  rad_check = Radcheck.find_by!(
+  rad_check = RadCheck.find_by!(
     username: subscription.ppoe_username,
     radiusattribute: 'Calling-Station-Id',
     
