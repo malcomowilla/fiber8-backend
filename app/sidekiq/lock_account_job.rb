@@ -5,7 +5,7 @@ class LockAccountJob
 
 
   def perform
-    RadAcct.where(framedprotocol: 'PPP').find_each do |radacct|
+    RadAcct.where.not(callingstationid: [nil, '']).where(framedprotocol: 'PPP').find_each do |radacct|
       subscription = Subscription.find_by(pppoe_username: radacct.username)
 
       next unless subscription
@@ -17,7 +17,7 @@ Rails.logger.info "Locked MAC address for subscription #{subscription.mac_adress
       # Create the Radcheck rule to lock MAC
       Radcheck.find_or_create_by!(
         username: subscription.ppoe_username,
-        attribute: 'Calling-Station-Id',
+        radiusattribute: 'Calling-Station-Id',
         op: '==',
         value: radacct.callingstationid
       )
