@@ -265,13 +265,32 @@ class ContentionRatioJob
     raise "Failed to add queue: #{res.body}" unless res.is_a?(Net::HTTPSuccess)
   end
 
-  def remove_queue(ip, username, password, queue_name)
-    uri = URI("http://#{ip}/rest/queue/simple/remove?name=#{URI.encode_www_form_component(queue_name)}")
-    req = Net::HTTP::Post.new(uri, 'Content-Type' => 'application/json')
+def remove_queue(ip, username, password, queue_name)
+  # Step 1: Fetch all queues
+  queues = fetch_all_queues(ip, username, password)
 
-    req.basic_auth(username, password)
+  # Step 2: Find the one with matching name
+  queue = queues.find { |q| q['name'] == queue_name }
 
-    res = Net::HTTP.start(uri.hostname, uri.port) { |http| http.request(req) }
-    raise "Failed to remove queue #{queue_name}: #{res.body}" unless res.is_a?(Net::HTTPSuccess)
+  unless queue
+    Rails.logger.info "Queue #{queue_name} not found, skipping removal."
+    return
   end
+
+  queue_id = queue['.id']
+  uri = URI("http://#{ip}/rest/queue/simple/remove")
+  req = Net::HTTP::Post.new(uri, 'Content-Type' => 'application/json')
+  req.basic_auth(username, password)
+  req.body = { '.id' => queue_id }.to_json
+
+  res = Net::HTTP.start(uri.hostname, uri.port) { |http| http.request(req) }
+
+  unless res.is_a?(Net::HTTPSuccess)
+    raise "Failed to remove queue #{queue_name}: #{res.body}"
+  end
+end
+
+
+
+  
 end
