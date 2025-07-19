@@ -5,7 +5,7 @@ class LockAccountJob
 
 
   def perform
-    RadAcct.where.not(callingstationid: [nil, '']).where(framedprotocol: 'PPP').find_each do |radacct|
+    RadAcct.where(framedprotocol: 'PPP').find_each do |radacct|
       subscription = Subscription.find_by(pppoe_username: radacct.username)
 
       next unless subscription
