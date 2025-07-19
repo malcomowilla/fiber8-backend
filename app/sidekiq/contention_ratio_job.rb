@@ -192,7 +192,7 @@ class ContentionRatioJob
           Rails.logger.info "[ContentionRatioJob] Queue added for #{queue_name}"
         end
 
-
+Rails.logger.info "existing_queues: #{existing_queues}"
          existing_queues.each do |queue|
   queue_name = queue['name']
   next unless queue_name.start_with?('queue_')
