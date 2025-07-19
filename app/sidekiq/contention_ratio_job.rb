@@ -135,7 +135,50 @@ class ContentionRatioJob
 
 
 
-          existing_queues = fetch_all_queues(router_ip, router_username, router_password)
+        
+
+
+        active_users.each do |user|
+          pppoe_username = user['name']
+          subscription   = Subscription.find_by(ppoe_username: pppoe_username)
+          next unless subscription
+
+          package = Package.find_by(name: subscription.package_name)
+          next unless package&.aggregation.present?
+
+          # Count users with the same package name
+          same_package_users = active_users.count do |u|
+            sub = Subscription.find_by(ppoe_username: u['name'])
+            sub&.package_name == subscription.package_name
+          end
+
+
+          
+          same_package_users = [same_package_users, 1].max
+
+          download_limit = package.download_limit.to_f
+          upload_limit   = package.upload_limit.to_f
+
+          shared_download = (download_limit / same_package_users).round(2)
+          shared_upload   = (upload_limit / same_package_users).round(2)
+
+
+
+          
+          queue_name = "queue_#{pppoe_username}_#{subscription.subscriber.name}".gsub(/\s+/, '_')
+          target_ip  = subscription.ip_address
+          next if target_ip.blank?
+
+          
+          # Step 2: Skip if queue already exists
+          if queue_exists?(router_ip, router_username, router_password, queue_name)
+            Rails.logger.info "[ContentionRatioJob] Queue exists for #{queue_name}, skipping."
+            # next
+          end
+
+
+
+            existing_queues = fetch_all_queues(router_ip, router_username, router_password)
 
         existing_queues.each do |queue|
           queue_name = queue['name']
@@ -153,41 +196,6 @@ class ContentionRatioJob
       end
     end
   end
-
-
-        active_users.each do |user|
-          pppoe_username = user['name']
-          subscription   = Subscription.find_by(ppoe_username: pppoe_username)
-          next unless subscription
-
-          package = Package.find_by(name: subscription.package_name)
-          next unless package&.aggregation.present?
-
-          # Count users with the same package name
-          same_package_users = active_users.count do |u|
-            sub = Subscription.find_by(ppoe_username: u['name'])
-            sub&.package_name == subscription.package_name
-          end
-
-          same_package_users = [same_package_users, 1].max
-
-          download_limit = package.download_limit.to_f
-          upload_limit   = package.upload_limit.to_f
-
-          shared_download = (download_limit / same_package_users).round(2)
-          shared_upload   = (upload_limit / same_package_users).round(2)
-
-          queue_name = "queue_#{pppoe_username}_#{subscription.subscriber.name}".gsub(/\s+/, '_')
-          target_ip  = subscription.ip_address
-          next if target_ip.blank?
-
-          # Step 2: Skip if queue already exists
-          if queue_exists?(router_ip, router_username, router_password, queue_name)
-            Rails.logger.info "[ContentionRatioJob] Queue exists for #{queue_name}, skipping."
-            next
-          end
-
-          # Step 3: Add new queue
           payload = {
             name: queue_name,
             target: target_ip,
