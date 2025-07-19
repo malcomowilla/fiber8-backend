@@ -187,10 +187,14 @@ class ContentionRatioJob
           next unless queue_name&.start_with?('queue_')
 
           username_part = queue_name.split('_')[1] # Extract PPPoE username
-          next if active_usernames.include?(username_part)
+          # next if active_usernames.include?(username_part)
 
-          remove_queue(router_ip, router_username, router_password, queue_name)
-          Rails.logger.info "[ContentionRatioJob] Removed stale queue #{queue_name}"
+          # remove_queue(router_ip, router_username, router_password, queue_name)
+          # Rails.logger.info "[ContentionRatioJob] Removed stale queue #{queue_name}"
+          unless active_usernames.include?(username_part)
+  remove_queue(router_ip, router_username, router_password, queue_name)
+  Rails.logger.info "[ContentionRatioJob] Removed stale queue #{queue_name}"
+end
         end
 
       rescue => e
