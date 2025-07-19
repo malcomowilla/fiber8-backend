@@ -3,6 +3,8 @@ class LockAccountJob
   queue_as :default
 
   def perform
+     Account.find_each do |tenant|
+      ActsAsTenant.with_tenant(tenant) do
     RadAcct.where(framedprotocol: 'PPP').where.not(callingstationid: [nil, '']).find_each do |radacct|
       subscription = Subscription.find_by(ppoe_username: radacct.username)
       next unless subscription
@@ -23,6 +25,7 @@ class LockAccountJob
       # Create RadCheck to enforce sticky MAC
       RadCheck.create!(
         username: subscription.ppoe_username,
+        account_id: subscription.account_id,
         radiusattribute: 'Calling-Station-Id',
         op: '==',
         value: radacct.callingstationid
@@ -30,7 +33,8 @@ class LockAccountJob
     end
   end
 end
-
+end
+end
 
 
 
