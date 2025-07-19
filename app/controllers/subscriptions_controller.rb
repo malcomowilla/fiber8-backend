@@ -227,6 +227,8 @@ def format_uptime(seconds)
 
 
 def last_seen
+         lock_account_to_mac = ActsAsTenant.current_tenant&.subscriber_setting&.lock_account_to_mac
+
   # subscriptions = Subscription.all
     subscriptions = Subscription.where(subscriber_id: params[:subscriber_id])
 
@@ -266,7 +268,7 @@ radacct = radacct_records.find { |r| r.acctstoptime.nil? } || radacct_records.fi
           ppoe_username: subscription.ppoe_username,
           status: subscription.status == 'blocked' ? 'blocked' : 'online',
           last_seen: radacct.acctupdatetime.strftime("%B %d, %Y at %I:%M %p"),
-          mac_adress: rad_check&.value,
+          mac_adress:  lock_account_to_mac ? rad_check&.value : radacct&.callingstationid,
           ip_address: radacct.framedipaddress
         }
       else
@@ -276,8 +278,9 @@ radacct = radacct_records.find { |r| r.acctstoptime.nil? } || radacct_records.fi
           status: "offline",
           # last_seen: radacct.acctstoptime.strftime("%B %d, %Y at %I:%M %p"),
          last_seen: radacct.acctstoptime&.strftime("%B %d, %Y at %I:%M %p") || radacct.acctupdatetime&.strftime("%B %d, %Y at %I:%M %p"),
+          mac_adress:  lock_account_to_mac ? rad_check&.value : radacct&.callingstationid,
 
-          mac_adress: rad_check&.value
+          # mac_adress: rad_check&.value
         }
       end
     else
