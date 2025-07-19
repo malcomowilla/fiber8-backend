@@ -101,6 +101,8 @@ scope '/api' do
 
 end
 
+
+post '/api/delete_radcheck', to: 'subscriptions#delete_radcheck'
 get '/api/get_total_bandwidth_and_online_users', to: 'subscriptions#get_total_bandwidth_and_online_users'
 get '/api/get_active_pppoe_users', to: 'subscriptions#get_active_pppoe_users'
 get '/get_active_pppoe_users', to: 'subscriptions#get_active_pppoe_users'
