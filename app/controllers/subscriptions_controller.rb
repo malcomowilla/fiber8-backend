@@ -266,7 +266,7 @@ radacct = radacct_records.find { |r| r.acctstoptime.nil? } || radacct_records.fi
           ppoe_username: subscription.ppoe_username,
           status: subscription.status == 'blocked' ? 'blocked' : 'online',
           last_seen: radacct.acctupdatetime.strftime("%B %d, %Y at %I:%M %p"),
-          mac_adress: rad_check.value,
+          mac_adress: rad_check&.value,
           ip_address: radacct.framedipaddress
         }
       else
