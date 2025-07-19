@@ -10,6 +10,7 @@ class LockAccountJob
 
       next unless subscription
       next if subscription.mac_adress.present? # Already locked
+      next if radacct.callingstationid.blank?
 
       # Save the MAC address to the subscription
       subscription.update(mac_adress: radacct.callingstationid)
