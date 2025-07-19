@@ -110,11 +110,19 @@ end
 
 def delete_radcheck
   username = params[:username]
-  RadCheck.find_by!(
+  radcheck = RadCheck.find_by!(
     username: username,
     radiusattribute: 'Calling-Station-Id',
     
   ).destroy
+  if radcheck
+render json: { message: "radcheck deleted successfully" }, status: :ok
+  
+    
+  else
+    
+    render json: { error: "radcheck not found" }, status: :not_found
+  end
 end
 
 
