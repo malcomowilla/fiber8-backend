@@ -40,7 +40,11 @@ Sidekiq.configure_server do |config|
 
 'lock_account_job' => {
   'class' => 'LockAccountJob',
-  'cron' => '* * * * *'
+  'cron': '*/2 * * * *'
+
+    # 'cron': '*/3 * * * *'
+
+  # 'cron' => '* * * * *'
 },
 
 
