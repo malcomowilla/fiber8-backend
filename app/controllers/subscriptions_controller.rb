@@ -108,6 +108,16 @@ end
 
 
 
+def delete_radcheck
+  username = params[:username]
+  RadCheck.find_by!(
+    username: username,
+    radiusattribute: 'Calling-Station-Id',
+    
+  ).destroy
+end
+
+
 
 
 
