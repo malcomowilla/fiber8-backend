@@ -224,17 +224,17 @@ Rails.logger.info "IP: #{ip}"
 
     ).order(acctupdatetime: :desc)
 
-if subscription.mac_adress.blank? && acct&.callingstationid.present?
-  subscription.update(mac_adress: acct.callingstationid)
+# if subscription.mac_adress.blank? && acct&.callingstationid.present?
+#   subscription.update(mac_adress: acct.callingstationid)
 
-  # Also create radcheck entry to enforce sticky MAC
-  Radcheck.find_or_create_by!(
-    username: subscription.pppoe_username,
-    attribute: 'Calling-Station-Id',
-    op: '==',
-    value: radacct_records.callingstationid
-  )
-end
+#   # Also create radcheck entry to enforce sticky MAC
+#   Radcheck.find_or_create_by!(
+#     username: subscription.pppoe_username,
+#     attribute: 'Calling-Station-Id',
+#     op: '==',
+#     value: radacct_records.callingstationid
+#   )
+# end
     
 
     Rails.logger.info "RadAcct records found: #{radacct_records.count}"

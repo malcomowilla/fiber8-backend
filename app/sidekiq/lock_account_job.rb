@@ -2,10 +2,10 @@ class LockAccountJob
   include Sidekiq::Job
   queue_as :default
 
-  
+
 
   def perform
-    RadAcct.where.not(callingstationid: [nil, '']).find_each do |radacct|
+    RadAcct.where.not(callingstationid: [nil, '']).where(framedprotocol: 'PPP').find_each do |radacct|
       subscription = Subscription.find_by(pppoe_username: radacct.username)
 
       next unless subscription
