@@ -5,6 +5,9 @@ class LockAccountJob
   def perform
      Account.find_each do |tenant|
       ActsAsTenant.with_tenant(tenant) do
+
+       lock_account_to_mac = ActsAsTenant.current_tenant&.subscriber_setting&.lock_account_to_mac
+       if lock_account_to_mac
     RadAcct.where(framedprotocol: 'PPP').where.not(callingstationid: [nil, '']).find_each do |radacct|
       subscription = Subscription.find_by(ppoe_username: radacct.username)
       next unless subscription
@@ -35,6 +38,8 @@ class LockAccountJob
   end
 end
 end
+end
+
 end
 
 
