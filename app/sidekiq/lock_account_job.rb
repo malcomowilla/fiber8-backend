@@ -12,7 +12,8 @@ class LockAccountJob
       # Only proceed if RadCheck is not already created
       existing_check = RadCheck.find_by(
         username: subscription.ppoe_username,
-        radiusattribute: 'Calling-Station-Id'
+        radiusattribute: 'Calling-Station-Id',
+        account_id: subscription.account_id
       )
       next if existing_check.present?
 
