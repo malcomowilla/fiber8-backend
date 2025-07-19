@@ -17,7 +17,7 @@ class LockAccountJob
       # Save the MAC if not already stored
       if subscription.mac_address.blank?
         subscription.update(mac_address: radacct.callingstationid)
-        Rails.logger.info "MAC locked on subscription #{subscription.id}: #{subscription.mac_adress}"
+        Rails.logger.info "MAC locked on subscription #{subscription.id}: #{subscription.mac_address}"
       end
 
       # Create RadCheck to enforce sticky MAC
