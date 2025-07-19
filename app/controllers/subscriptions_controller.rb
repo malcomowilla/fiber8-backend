@@ -224,17 +224,14 @@ Rails.logger.info "IP: #{ip}"
 
     ).order(acctupdatetime: :desc)
 
-# if subscription.mac_adress.blank? && acct&.callingstationid.present?
-#   subscription.update(mac_adress: acct.callingstationid)
 
-#   # Also create radcheck entry to enforce sticky MAC
-#   Radcheck.find_or_create_by!(
-#     username: subscription.pppoe_username,
-#     attribute: 'Calling-Station-Id',
-#     op: '==',
-#     value: radacct_records.callingstationid
-#   )
-# end
+  # Also create radcheck entry to enforce sticky MAC
+  rad_check = Radcheck.find_by!(
+    username: subscription.ppoe_username,
+    attribute: 'Calling-Station-Id',
+    
+  )
+
     
 
     Rails.logger.info "RadAcct records found: #{radacct_records.count}"
@@ -251,7 +248,7 @@ radacct = radacct_records.find { |r| r.acctstoptime.nil? } || radacct_records.fi
           ppoe_username: subscription.ppoe_username,
           status: subscription.status == 'blocked' ? 'blocked' : 'online',
           last_seen: radacct.acctupdatetime.strftime("%B %d, %Y at %I:%M %p"),
-          mac_adress: radacct.callingstationid,
+          mac_adress: rad_check.value,
           ip_address: radacct.framedipaddress
         }
       else
@@ -262,7 +259,7 @@ radacct = radacct_records.find { |r| r.acctstoptime.nil? } || radacct_records.fi
           # last_seen: radacct.acctstoptime.strftime("%B %d, %Y at %I:%M %p"),
          last_seen: radacct.acctstoptime&.strftime("%B %d, %Y at %I:%M %p") || radacct.acctupdatetime&.strftime("%B %d, %Y at %I:%M %p"),
 
-          mac_adress: radacct.callingstationid
+          mac_adress: rad_check.value
         }
       end
     else
