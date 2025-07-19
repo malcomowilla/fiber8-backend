@@ -13,7 +13,7 @@ class LockAccountJob
 
       # Save the MAC address to the subscription
       subscription.update(mac_adress: radacct.callingstationid)
-
+Rails.logger.info "Locked MAC address for subscription #{subscription.mac_adress}"
       # Create the Radcheck rule to lock MAC
       Radcheck.find_or_create_by!(
         username: subscription.ppoe_username,
