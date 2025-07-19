@@ -187,7 +187,7 @@ class ContentionRatioJob
           next unless queue_name&.start_with?('queue_')
 
           username_part = queue_name.split('_')[1] # Extract PPPoE username
-          next if active_usernames.include?(username_part)
+          next if !active_usernames.include?(username_part)
 
           remove_queue(router_ip, router_username, router_password, queue_name)
           Rails.logger.info "[ContentionRatioJob] Removed stale queue #{queue_name}"
@@ -216,6 +216,7 @@ class ContentionRatioJob
   end
 
   def fetch_all_queues(ip, username, password)
+    Rails.logger.info "Fetching all queues from #{ip}"
     uri = URI("http://#{ip}/rest/queue/simple")
     req = Net::HTTP::Get.new(uri)
     req.basic_auth(username, password)
