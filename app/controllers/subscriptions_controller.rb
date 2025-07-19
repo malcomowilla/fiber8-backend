@@ -244,7 +244,7 @@ Rails.logger.info "IP: #{ip}"
 
 
   # Also create radcheck entry to enforce sticky MAC
-  rad_check = RadCheck.find_by!(
+  rad_check = RadCheck.find_by(
     username: subscription.ppoe_username,
     radiusattribute: 'Calling-Station-Id',
     
@@ -277,7 +277,7 @@ radacct = radacct_records.find { |r| r.acctstoptime.nil? } || radacct_records.fi
           # last_seen: radacct.acctstoptime.strftime("%B %d, %Y at %I:%M %p"),
          last_seen: radacct.acctstoptime&.strftime("%B %d, %Y at %I:%M %p") || radacct.acctupdatetime&.strftime("%B %d, %Y at %I:%M %p"),
 
-          mac_adress: rad_check.value
+          mac_adress: rad_check&.value
         }
       end
     else
