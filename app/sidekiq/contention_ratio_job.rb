@@ -133,6 +133,28 @@ class ContentionRatioJob
 
         active_usernames = active_users.map { |u| u['name'] }
 
+
+
+          existing_queues = fetch_all_queues(router_ip, router_username, router_password)
+
+        existing_queues.each do |queue|
+          queue_name = queue['name']
+          next unless queue_name&.start_with?('queue_')
+
+          username_part = queue_name.split('_')[1] # Extract PPPoE username
+          next if !active_usernames.include?(username_part)
+
+          remove_queue(router_ip, router_username, router_password, queue_name)
+          Rails.logger.info "[ContentionRatioJob] Removed stale queue #{queue_name}"
+        end
+
+      rescue => e
+        Rails.logger.info "[ContentionRatioJob] Error for router #{router.name}: #{e.message}"
+      end
+    end
+  end
+
+
         active_users.each do |user|
           pppoe_username = user['name']
           subscription   = Subscription.find_by(ppoe_username: pppoe_username)
@@ -180,24 +202,7 @@ class ContentionRatioJob
         end
 
         # Step 4: Clean up stale queues (those not in the active list)
-        existing_queues = fetch_all_queues(router_ip, router_username, router_password)
-
-        existing_queues.each do |queue|
-          queue_name = queue['name']
-          next unless queue_name&.start_with?('queue_')
-
-          username_part = queue_name.split('_')[1] # Extract PPPoE username
-          next if !active_usernames.include?(username_part)
-
-          remove_queue(router_ip, router_username, router_password, queue_name)
-          Rails.logger.info "[ContentionRatioJob] Removed stale queue #{queue_name}"
-        end
-
-      rescue => e
-        Rails.logger.info "[ContentionRatioJob] Error for router #{router.name}: #{e.message}"
-      end
-    end
-  end
+      
 
   private
 
