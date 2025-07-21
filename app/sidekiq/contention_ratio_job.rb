@@ -111,7 +111,6 @@
 # end
 
 
-
 require 'net/http'
 require 'uri'
 require 'json'
@@ -129,31 +128,44 @@ class ContentionRatioJob
 
         # Step 1: Fetch active PPPoE users
         active_users = fetch_active_users(router_ip, router_username, router_password)
+        active_usernames = active_users.map { |u| u['name'].to_s.strip }
+
+        Rails.logger.info "[ContentionRatioJob] Active usernames: #{active_usernames}"
+
+        # Step 2: Always fetch existing queues
+        existing_queues = fetch_all_queues(router_ip, router_username, router_password)
+        Rails.logger.info "[ContentionRatioJob] Existing queues: #{existing_queues.map { |q| q['name'] }}"
+
+        # Step 3: Remove queues with no matching active user
+        existing_queues.each do |queue|
+          queue_name = queue['name']
+          Rails.logger.info "[ContentionRatioJob] Checking queue: #{queue_name}"
+
+          pppoe_username = queue_name.split('_')[1].to_s.strip
+
+          unless active_usernames.include?(pppoe_username)
+            Rails.logger.info "[ContentionRatioJob] Removing stale queue: #{queue_name} (pppoe_username: #{pppoe_username})"
+            remove_queue(router_ip, router_username, router_password, queue_name)
+          end
+        end
+
+        # Step 4: Only proceed to create queues if there are active users
         next if active_users.blank?
 
-        active_usernames = active_users.map { |u| u['name'] }
-
-
-Rails.logger.info "active_usernames: #{active_usernames}"
-        
-
-
         active_users.each do |user|
-          pppoe_username = user['name']
+          pppoe_username = user['name'].to_s.strip
           subscription   = Subscription.find_by(ppoe_username: pppoe_username)
           next unless subscription
 
           package = Package.find_by(name: subscription.package_name)
           next unless package&.aggregation.present?
 
-          # Count users with the same package name
+          # Count active users with same package
           same_package_users = active_users.count do |u|
-            sub = Subscription.find_by(ppoe_username: u['name'])
+            sub = Subscription.find_by(ppoe_username: u['name'].to_s.strip)
             sub&.package_name == subscription.package_name
           end
 
-
-          
           same_package_users = [same_package_users, 1].max
 
           download_limit = package.download_limit.to_f
@@ -162,25 +174,15 @@ Rails.logger.info "active_usernames: #{active_usernames}"
           shared_download = (download_limit / same_package_users).round(2)
           shared_upload   = (upload_limit / same_package_users).round(2)
 
-
-
-          
           queue_name = "queue_#{pppoe_username}"
           target_ip  = subscription.ip_address
           next if target_ip.blank?
 
-          
-          # Step 2: Skip if queue already exists
           if queue_exists?(router_ip, router_username, router_password, queue_name)
-            Rails.logger.info "ContentionRatioJob Queue exists for #{queue_name}, skipping."
-            Rails.logger.info "active_usernames: #{active_usernames}"
-
+            Rails.logger.info "[ContentionRatioJob] Queue exists for #{queue_name}, skipping."
             next
           end
 
-
-
-          
           payload = {
             name: queue_name,
             target: target_ip,
@@ -188,82 +190,16 @@ Rails.logger.info "active_usernames: #{active_usernames}"
             "burst-threshold": "#{package.burst_threshold_upload}M/#{package.burst_threshold_download}M",
             "burst-limit": "#{package.burst_upload_speed}M/#{package.burst_download_speed}M",
             "burst-time": "#{package.burst_time}/#{package.burst_time}",
-            "comment": "#{subscription.subscriber.name}"
+            comment: subscription.subscriber.name
           }
 
-          add_queue(router_ip, router_username, router_password, payload, active_usernames)
-          Rails.logger.info "ContentionRatioJob Queue added for #{queue_name}"
-          Rails.logger.info "active_usernames: #{active_usernames}"
+          add_queue(router_ip, router_username, router_password, payload)
+          Rails.logger.info "[ContentionRatioJob] Queue added for #{queue_name}"
         end
 
-
-        #   existing_queues = fetch_all_queues(router_ip, router_username, router_password)
-
-        # existing_queues.each do |queue|
-        #    queue_name = queue['name']
-        #   # next unless queue_name&.start_with?('queue_')
-
-        #   # username_part = queue_name.split('_')[1] # Extract PPPoE username
-        #   # next if active_usernames.include?(username_part)
-
-        #   # remove_queue(router_ip, router_username, router_password, queue_name)
-        #   # Rails.logger.info "[ContentionRatioJob] Removed stale queue #{queue_name}"
-        #   if queue_name.start_with?('queue_')
-        #     username_part = queue_name.split('_')[1] # Extract PPPoE username
-        #     if !active_usernames.include?(username_part)
-        #       Rails.logger.info "[ContentionRatioJob] Removing stale queue #{queue_name}"
-        #       remove_queue(router_ip, router_username, router_password, queue_name)
-        #     end
-              
-        #   end
-        # end
-existing_queues = fetch_all_queues(router_ip, router_username, router_password)
-Rails.logger.info "existing_queues removing queues: #{existing_queues}"
-
-existing_queues.each do |queue|
-  queue_name = queue['name']
-  Rails.logger.info "existing_queues queue_name removing queues: #{queue_name}"
-
-  # Extract PPPoE username from the queue name
-  pppoe_username = queue_name.split('_')[1].to_s.strip
-
-  # Check if this PPPoE username exists in active_users
-  found = false
-  active_users.each do |user|
-      Rails.logger.info "existing_queues queue_name removing queues fetching active users map: #{pppoe_username}"
-
-    active_user = user['name'].to_s.strip
-          Rails.logger.info "existing_queues queue_name removing queues fetching active users map: #{active_user}"
-
-    if active_user === pppoe_username
-      found = true
-    else
-      found = false
-    end
-  end
-
-  Rails.logger.info "existing_queues queue_name removing queues found1: #{found}"
-  unless found
-    Rails.logger.info "[ContentionRatioJob] Removing stale queue: #{queue_name} (pppoe_username: #{pppoe_username})"
-    remove_queue(router_ip, router_username, router_password, queue_name)
-  end
-end
-
-
-
-
-
-
       rescue => e
-        Rails.logger.info "ContentionRatioJob Error for router #{router.name}: #{e.message}"
-        Rails.logger.info "active_usernames: #{active_usernames}"
-        # Rails.logger.info "active_usernames: #{pppoe_username}"
-
-
+        Rails.logger.info "[ContentionRatioJob] Error for router #{router.name}: #{e.message}"
       end
-
-
-
     end
   end
 
@@ -279,12 +215,11 @@ end
 
     JSON.parse(res.body)
   rescue => e
-    Rails.logger.info "Failed to fetch active users: #{e.message}"
+    Rails.logger.info "[ContentionRatioJob] Failed to fetch active users: #{e.message}"
     []
   end
 
   def fetch_all_queues(ip, username, password)
-    Rails.logger.info "Fetching all queues from #{ip}"
     uri = URI("http://#{ip}/rest/queue/simple")
     req = Net::HTTP::Get.new(uri)
     req.basic_auth(username, password)
@@ -294,7 +229,7 @@ end
 
     JSON.parse(res.body)
   rescue => e
-    Rails.logger.info "Failed to fetch all queues: #{e.message}"
+    Rails.logger.info "[ContentionRatioJob] Failed to fetch queues: #{e.message}"
     []
   end
 
@@ -306,50 +241,37 @@ end
     res = Net::HTTP.start(uri.hostname, uri.port) { |http| http.request(req) }
     res.is_a?(Net::HTTPSuccess) && JSON.parse(res.body).any?
   rescue => e
-    Rails.logger.info "Failed to check if queue exists: #{e.message}"
+    Rails.logger.info "[ContentionRatioJob] Failed to check queue existence: #{e.message}"
     false
   end
 
-  def add_queue(ip, username, password, payload, active_usernames)
+  def add_queue(ip, username, password, payload)
     uri = URI("http://#{ip}/rest/queue/simple/add")
     req = Net::HTTP::Post.new(uri, 'Content-Type' => 'application/json')
     req.basic_auth(username, password)
     req.body = payload.to_json
 
     res = Net::HTTP.start(uri.hostname, uri.port) { |http| http.request(req) }
-    
-    raise "Failed to add queue: #{res.body}" unless res.is_a?(Net::HTTPSuccess)
-    Rails.logger.info "active_usernames: #{active_usernames}"
-
-
+    raise "[ContentionRatioJob] Failed to add queue: #{res.body}" unless res.is_a?(Net::HTTPSuccess)
   end
 
-def remove_queue(ip, username, password, queue_name)
-  # Step 1: Fetch all queues
-  queues = fetch_all_queues(ip, username, password)
+  def remove_queue(ip, username, password, queue_name)
+    queues = fetch_all_queues(ip, username, password)
+    queue  = queues.find { |q| q['name'] == queue_name }
 
-  # Step 2: Find the one with matching name
-  queue = queues.find { |q| q['name'] == queue_name }
+    unless queue
+      Rails.logger.info "[ContentionRatioJob] Queue #{queue_name} not found, skipping removal."
+      return
+    end
 
-  unless queue
-    Rails.logger.info "Queue #{queue_name} not found, skipping removal."
-    return
+    queue_id = queue['.id']
+    uri = URI("http://#{ip}/rest/queue/simple/remove")
+    req = Net::HTTP::Post.new(uri, 'Content-Type' => 'application/json')
+    req.basic_auth(username, password)
+    req.body = { '.id' => queue_id }.to_json
+
+    res = Net::HTTP.start(uri.hostname, uri.port) { |http| http.request(req) }
+
+    raise "[ContentionRatioJob] Failed to remove queue #{queue_name}: #{res.body}" unless res.is_a?(Net::HTTPSuccess)
   end
-
-  queue_id = queue['.id']
-  uri = URI("http://#{ip}/rest/queue/simple/remove")
-  req = Net::HTTP::Post.new(uri, 'Content-Type' => 'application/json')
-  req.basic_auth(username, password)
-  req.body = { '.id' => queue_id }.to_json
-
-  res = Net::HTTP.start(uri.hostname, uri.port) { |http| http.request(req) }
-
-  unless res.is_a?(Net::HTTPSuccess)
-    raise "Failed to remove queue #{queue_name}: #{res.body}"
-  end
-end
-
-
-
-  
 end
