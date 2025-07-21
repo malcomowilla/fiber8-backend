@@ -253,7 +253,7 @@ Rails.logger.info "existing_queues: #{existing_queues}"
   next unless queue_name.start_with?('queue_')
 
   match = queue_name.match(/^queue_(.+?)_/)
-  pppoe_username = match[1]
+  pppoe_username = match
  Rails.logger.info "pppoe_username: #{pppoe_username}"
 end
         # Rails.logger.info "active_usernames: #{pppoe_username}"
