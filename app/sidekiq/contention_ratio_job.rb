@@ -161,9 +161,10 @@ end
 blocked_ips = fetch_ip_firewal_adres_list.map { |entry| entry['address'].to_s.strip }
 Rails.logger.info "[ContentionRatioJob] IPs in aitechs_blocked_list: #{blocked_ips}"
 
-blocked_ips.each do |entry|
-  unless active_user_ip .include?(entry)
-    remove_from_address_list(router_ip, router_username, router_password, entry['.id'], entry)
+fetch_ip_firewal_adres_list.each do |entry|
+  ip = entry['address'].to_s.strip
+  unless active_user_ip.include?(ip)
+    remove_from_address_list(router_ip, router_username, router_password, entry['.id'], ip)
   end
 end
 
