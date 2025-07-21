@@ -114,6 +114,7 @@
 require 'net/http'
 require 'uri'
 require 'json'
+ require 'net/ssh'
 
 class ContentionRatioJob
   include Sidekiq::Job
@@ -254,19 +255,37 @@ end
 
 
 
-  def fetch_ip_firewal_adres_list(ip, username, password)
-    uri = URI("http://#{ip}/rest/ip/firewall/address-list")
-    req = Net::HTTP::Get.new(uri)
-    req.basic_auth(username, password)
 
-    res = Net::HTTP.start(uri.hostname, uri.port) { |http| http.request(req) }
-    return [] unless res.is_a?(Net::HTTPSuccess)
+def fetch_ip_firewal_adres_list(ip, username, password)
+  list_entries = []
 
-    JSON.parse(res.body)
-  rescue => e
-    Rails.logger.info "[ContentionRatioJob] Failed to fetch adres list: #{e.message}"
-    []
+  Net::SSH.start(ip, username, password: password, non_interactive: true) do |ssh|
+    # Run the MikroTik command to get the address list
+    output = ssh.exec!("ip firewall address-list print without-paging")
+    Rails.logger.info "[ContentionRatioJob] Raw SSH output from address-list: #{output}"
+
+    # Parse output line by line
+    output.each_line do |line|
+      next unless line.include?("address")
+
+      # Extract values using regex
+      match = line.match(/(?<id>\d+)\s+list=(?<list>[^\s]+)\s+address=(?<address>[^\s]+)/)
+      next unless match
+
+      list_entries << {
+        '.id' => match[:id],
+        'list' => match[:list],
+        'address' => match[:address]
+      }
+    end
   end
+
+  list_entries
+rescue => e
+  Rails.logger.info "[ContentionRatioJob] SSH Error fetching address list: #{e.message}"
+  []
+end
+
 
 
   def queue_exists?(ip, username, password, queue_name)
