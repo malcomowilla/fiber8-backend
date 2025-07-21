@@ -224,7 +224,7 @@ Rails.logger.info "existing_queues: #{existing_queues}"
    queue_name = queue['name']
 pppoe_username = queue_name.split('_')[1]
 
-    unless active_usernames.include?(pppoe_username)
+    unless active_usernames === pppoe_username
       Rails.logger.info "ContentionRatioJob Removing stale queue #{queue_name}"
       Rails.logger.info "active_usernames ppoe: #{pppoe_username}"
       remove_queue(router_ip, router_username, router_password, queue_name)
@@ -241,7 +241,7 @@ pppoe_username = queue_name.split('_')[1]
       rescue => e
         Rails.logger.info "ContentionRatioJob Error for router #{router.name}: #{e.message}"
         Rails.logger.info "active_usernames: #{active_usernames}"
-        Rails.logger.info "active_usernames: #{pppoe_username}"
+        # Rails.logger.info "active_usernames: #{pppoe_username}"
 
 
       end
