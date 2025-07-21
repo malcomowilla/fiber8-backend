@@ -222,6 +222,7 @@ existing_queues = fetch_all_queues(router_ip, router_username, router_password)
 Rails.logger.info "existing_queues removing queues: #{existing_queues}"
          existing_queues.each do |queue|
    queue_name = queue['name']
+   Rails.logger.info "existing_queues queue_name removing queues: #{queue_name}"
 pppoe_username = queue_name.split('_')[1]
 
     unless active_usernames.any? { |u| u === pppoe_username }
