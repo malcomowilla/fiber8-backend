@@ -165,7 +165,7 @@ Rails.logger.info "active_usernames: #{active_usernames}"
 
 
           
-          queue_name = "queue_#{pppoe_username}_#{subscription.subscriber.name}".gsub(/\s+/, '_')
+          queue_name = "queue_#{pppoe_username}"
           target_ip  = subscription.ip_address
           next if target_ip.blank?
 
@@ -187,13 +187,13 @@ Rails.logger.info "active_usernames: #{active_usernames}"
             "max-limit": "#{shared_upload}M/#{shared_download}M",
             "burst-threshold": "#{package.burst_threshold_upload}M/#{package.burst_threshold_download}M",
             "burst-limit": "#{package.burst_upload_speed}M/#{package.burst_download_speed}M",
-            "burst-time": "#{package.burst_time}/#{package.burst_time}"
+            "burst-time": "#{package.burst_time}/#{package.burst_time}",
+            "comment": "#{subscription.subscriber.name}"
           }
 
           add_queue(router_ip, router_username, router_password, payload)
           Rails.logger.info "[ContentionRatioJob] Queue added for #{queue_name}"
           Rails.logger.info "active_usernames: #{active_usernames}"
-
         end
 
 
@@ -227,7 +227,7 @@ Rails.logger.info "existing_queues: #{existing_queues}"
   match = queue_name.match(/^queue_(.+?)_/)
   if match
     pppoe_username = match[1]
-    unless active_usernames.include?(pppoe_username)
+    unless !active_usernames.include?(pppoe_username)
       Rails.logger.info "[ContentionRatioJob] Removing stale queue #{queue_name}"
       remove_queue(router_ip, router_username, router_password, queue_name)
     end
