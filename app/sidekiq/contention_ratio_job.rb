@@ -217,21 +217,31 @@ Rails.logger.info "active_usernames: #{active_usernames}"
               
         #   end
         # end
-
 existing_queues = fetch_all_queues(router_ip, router_username, router_password)
 Rails.logger.info "existing_queues removing queues: #{existing_queues}"
-         existing_queues.each do |queue|
-   queue_name = queue['name']
-   Rails.logger.info "existing_queues queue_name removing queues: #{queue_name}"
-pppoe_username = queue_name.split('_')[1]
-  remove_queue(router_ip, router_username, router_password, queue_name)
 
-    unless active_usernames.any? { |u| u === pppoe_username }
-  remove_queue(router_ip, router_username, router_password, queue_name)
-  Rails.logger.info "ContentionRatioJob Removing stale queue #{queue_name}"
-end
+existing_queues.each do |queue|
+  queue_name = queue['name']
+  Rails.logger.info "existing_queues queue_name removing queues: #{queue_name}"
 
+  # Extract PPPoE username from the queue name
+  pppoe_username = queue_name.split('_')[1].to_s.strip
+
+  # Check if this PPPoE username exists in active_users
+  found = false
+  active_users.each do |user|
+    active_user = user['name'].to_s.strip
+    if active_user === pppoe_username
+      found = true
+      break
+    end
   end
+
+  unless found
+    Rails.logger.info "[ContentionRatioJob] Removing stale queue: #{queue_name} (pppoe_username: #{pppoe_username})"
+    remove_queue(router_ip, router_username, router_password, queue_name)
+  end
+end
 
 
 
