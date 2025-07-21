@@ -264,18 +264,23 @@ def fetch_ip_firewal_adres_list(ip, username, password)
     Rails.logger.info "[ContentionRatioJob] Raw SSH output from address-list: #{output}"
 
     output.each_line do |line|
-      next unless line.match?(/aitechs_blocked_list/)
+      next unless line.include?('list=aitechs_blocked_list') && line.include?('address=')
 
-      # Match example line like: "3 aitechs_blocked_list  10.254.206.13   2025-07-17 22:46:02"
-      match = line.strip.match(/^\d+\s+(?<list>\S+)\s+(?<address>\d+\.\d+\.\d+\.\d+)/)
+      entry = {}
 
-      if match
-        list_entries << {
-          'list' => match[:list],
-          'address' => match[:address],
-          '.id' => line.strip.split.first # use line number as ID
-        }
+      # Extract key-value pairs from line
+      line.strip.split.each do |pair|
+        key, value = pair.split('=', 2)
+        entry[key] = value if key && value
       end
+
+      list_entries << {
+        'list' => entry['list'],
+        'address' => entry['address'],
+        'comment' => entry['comment'],
+        # We use full line as a fallback ID since MikroTik doesn't expose real `.id` via SSH
+        '.id' => line.strip
+      } if entry['list'] == 'aitechs_blocked_list'
     end
   end
 
@@ -284,6 +289,7 @@ rescue => e
   Rails.logger.info "[ContentionRatioJob] SSH Error fetching address list: #{e.message}"
   []
 end
+
 
   def queue_exists?(ip, username, password, queue_name)
     uri = URI("http://#{ip}/rest/queue/simple/find?name=#{URI.encode_www_form_component(queue_name)}")
