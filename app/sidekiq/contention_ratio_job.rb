@@ -221,19 +221,15 @@ Rails.logger.info "active_usernames: #{active_usernames}"
 existing_queues = fetch_all_queues(router_ip, router_username, router_password)
 Rails.logger.info "existing_queues: #{existing_queues}"
          existing_queues.each do |queue|
-  queue_name = queue['name']
-  next unless queue_name.start_with?('queue_')
+   queue_name = queue['name']
+pppoe_username = queue_name.split('_')[1]
 
-  match = queue_name.match(/^queue_(.+?)_/)
-  if match
-    pppoe_username = match[1]
     unless active_usernames.include?(pppoe_username)
       Rails.logger.info "ContentionRatioJob Removing stale queue #{queue_name}"
+      Rails.logger.info "active_usernames ppoe: #{pppoe_username}"
       remove_queue(router_ip, router_username, router_password, queue_name)
     end
   end
-end
-
 
 
 
@@ -245,18 +241,7 @@ end
       rescue => e
         Rails.logger.info "ContentionRatioJob Error for router #{router.name}: #{e.message}"
         Rails.logger.info "active_usernames: #{active_usernames}"
-
-existing_queues = fetch_all_queues(router_ip, router_username, router_password)
-Rails.logger.info "existing_queues: #{existing_queues}"
-         existing_queues.each do |queue|
-  queue_name = queue['name']
-  next unless queue_name.start_with?('queue_')
-
-  match = queue_name.match(/^queue_(.+?)_/)
-  pppoe_username = match
- Rails.logger.info "pppoe_username: #{queue_name}"
-end
-        # Rails.logger.info "active_usernames: #{pppoe_username}"
+        Rails.logger.info "active_usernames: #{pppoe_username}"
 
 
       end
