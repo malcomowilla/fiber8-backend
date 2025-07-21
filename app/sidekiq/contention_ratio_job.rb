@@ -260,23 +260,22 @@ def fetch_ip_firewal_adres_list(ip, username, password)
   list_entries = []
 
   Net::SSH.start(ip, username, password: password, non_interactive: true) do |ssh|
-    # Run the MikroTik command to get the address list
-    output = ssh.exec!("ip firewall address-list print without-paging")
+    output = ssh.exec!("ip firewall address-list print without-paging terse")
     Rails.logger.info "[ContentionRatioJob] Raw SSH output from address-list: #{output}"
 
-    # Parse output line by line
     output.each_line do |line|
-      next unless line.include?("address")
+      next unless line.match?(/aitechs_blocked_list/)
 
-      # Extract values using regex
-      match = line.match(/(?<id>\d+)\s+list=(?<list>[^\s]+)\s+address=(?<address>[^\s]+)/)
-      next unless match
+      # Match example line like: "3 aitechs_blocked_list  10.254.206.13   2025-07-17 22:46:02"
+      match = line.strip.match(/^\d+\s+(?<list>\S+)\s+(?<address>\d+\.\d+\.\d+\.\d+)/)
 
-      list_entries << {
-        '.id' => match[:id],
-        'list' => match[:list],
-        'address' => match[:address]
-      }
+      if match
+        list_entries << {
+          'list' => match[:list],
+          'address' => match[:address],
+          '.id' => line.strip.split.first # use line number as ID
+        }
+      end
     end
   end
 
@@ -285,8 +284,6 @@ rescue => e
   Rails.logger.info "[ContentionRatioJob] SSH Error fetching address list: #{e.message}"
   []
 end
-
-
 
   def queue_exists?(ip, username, password, queue_name)
     uri = URI("http://#{ip}/rest/queue/simple/find?name=#{URI.encode_www_form_component(queue_name)}")
