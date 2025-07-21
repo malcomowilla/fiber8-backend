@@ -237,7 +237,8 @@ existing_queues.each do |queue|
 
     if active_user === pppoe_username
       found = true
-      break
+    else
+      found = false
     end
   end
 
