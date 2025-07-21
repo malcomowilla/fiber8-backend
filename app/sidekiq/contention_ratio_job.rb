@@ -153,6 +153,12 @@ class ContentionRatioJob
 fetch_ip_firewal_adres_list = fetch_ip_firewal_adres_list(router_ip, router_username, router_password)
 Rails.logger.info "[ContentionRatioJob] Fetched adres list: #{fetch_ip_firewal_adres_list}"
 
+fetch_ip_firewal_adres_list = fetch_ip_firewal_adres_list.select do |entry|
+  entry['list'].to_s.strip == 'aitechs_blocked_list'
+end
+
+blocked_ips = fetch_ip_firewal_adres_list.map { |entry| entry['address'].to_s.strip }
+Rails.logger.info "[ContentionRatioJob] IPs in aitechs_blocked_list: #{blocked_ips}"
 
         next if active_users.blank?
         Rails.logger.info "ContentionRatioJob Active users: #{active_users}"
