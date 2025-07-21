@@ -191,7 +191,7 @@ Rails.logger.info "active_usernames: #{active_usernames}"
             "comment": "#{subscription.subscriber.name}"
           }
 
-          add_queue(router_ip, router_username, router_password, payload)
+          add_queue(router_ip, router_username, router_password, payload, active_usernames)
           Rails.logger.info "ContentionRatioJob Queue added for #{queue_name}"
           Rails.logger.info "active_usernames: #{active_usernames}"
         end
@@ -235,6 +235,8 @@ Rails.logger.info "existing_queues: #{existing_queues}"
 end
       rescue => e
         Rails.logger.info "ContentionRatioJob Error for router #{router.name}: #{e.message}"
+        Rails.logger.info "active_usernames: #{active_usernames}"
+
       end
 
 
@@ -285,14 +287,17 @@ end
     false
   end
 
-  def add_queue(ip, username, password, payload)
+  def add_queue(ip, username, password, payload, active_usernames)
     uri = URI("http://#{ip}/rest/queue/simple/add")
     req = Net::HTTP::Post.new(uri, 'Content-Type' => 'application/json')
     req.basic_auth(username, password)
     req.body = payload.to_json
 
     res = Net::HTTP.start(uri.hostname, uri.port) { |http| http.request(req) }
+    
     raise "Failed to add queue: #{res.body}" unless res.is_a?(Net::HTTPSuccess)
+    Rails.logger.info "active_usernames: #{active_usernames}"
+
 
   end
 
