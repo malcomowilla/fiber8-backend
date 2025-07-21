@@ -230,6 +230,8 @@ existing_queues.each do |queue|
   # Check if this PPPoE username exists in active_users
   found = false
   active_users.each do |user|
+      Rails.logger.info "existing_queues queue_name removing queues fetching active users map: #{queue_name}"
+
     active_user = user['name'].to_s.strip
     if active_user === pppoe_username
       found = true
