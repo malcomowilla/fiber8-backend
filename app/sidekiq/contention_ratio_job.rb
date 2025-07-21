@@ -235,12 +235,13 @@ existing_queues.each do |queue|
     active_user = user['name'].to_s.strip
           Rails.logger.info "existing_queues queue_name removing queues fetching active users map: #{active_user}"
 
-    if active_user === pppoe_username
+    if !active_user === pppoe_username
       found = true
       break
     end
   end
 
+  Rails.logger.info "existing_queues queue_name removing queues found1: #{found}"
   unless found
     Rails.logger.info "[ContentionRatioJob] Removing stale queue: #{queue_name} (pppoe_username: #{pppoe_username})"
     remove_queue(router_ip, router_username, router_password, queue_name)
