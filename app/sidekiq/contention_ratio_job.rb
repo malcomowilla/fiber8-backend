@@ -163,7 +163,10 @@ Rails.logger.info "[ContentionRatioJob] IPs in aitechs_blocked_list: #{blocked_i
 
 fetch_ip_firewal_adres_list.each do |entry|
   ip = entry['address'].to_s.strip
+  Rails.logger.info "[ContentionRatioJob] IDs in aitechs_blocked_list: #{entry['.id']}"
+
   unless active_user_ip.include?(ip)
+    
     remove_from_address_list(router_ip, router_username, router_password, entry['.id'], ip)
   end
 end
