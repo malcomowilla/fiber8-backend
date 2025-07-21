@@ -134,7 +134,7 @@ class ContentionRatioJob
         active_usernames = active_users.map { |u| u['name'] }
 
 
-
+Rails.logger.info "active_usernames: #{active_usernames}"
         
 
 
