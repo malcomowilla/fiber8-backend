@@ -151,6 +151,22 @@ class ContentionRatioJob
 
 
 
+# Step 4: Remove any active IP that is not in 'aitechs_blocked_list' from address list
+firewall_address_list = fetch_ip_firewal_adres_list(router_ip, router_username, router_password)
+
+# Only consider entries in 'aitechs_blocked_list'
+blocked_entries = firewall_address_list.select { |entry| entry['list'] == 'aitechs_blocked_list' }
+blocked_ips = blocked_entries.map { |entry| entry['address'].to_s.strip }
+
+Rails.logger.info "[ContentionRatioJob] IPs in aitechs_blocked_list: #{blocked_ips}"
+
+# Remove IPs from aitechs_blocked_list if not currently active
+blocked_entries.each do |entry|
+  ip = entry['address'].to_s.strip
+  unless active_users_ip.include?(ip)
+    remove_from_address_list(router_ip, router_username, router_password, entry['.id'], ip)
+  end
+end
 
         next if active_users.blank?
         Rails.logger.info "ContentionRatioJob Active users: #{active_users}"
@@ -274,6 +290,38 @@ class ContentionRatioJob
     res = Net::HTTP.start(uri.hostname, uri.port) { |http| http.request(req) }
     raise "[ContentionRatioJob] Failed to add queue: #{res.body}" unless res.is_a?(Net::HTTPSuccess)
   end
+
+
+
+
+def remove_from_address_list(ip, username, password, id, address)
+  uri = URI("http://#{ip}/rest/ip/firewall/address-list/remove")
+  req = Net::HTTP::Post.new(uri, 'Content-Type' => 'application/json')
+  req.basic_auth(username, password)
+  req.body = { '.id' => id }.to_json
+
+  res = Net::HTTP.start(uri.hostname, uri.port) { |http| http.request(req) }
+
+  if res.is_a?(Net::HTTPSuccess)
+    Rails.logger.info "[ContentionRatioJob] Removed IP #{address} from aitechs_blocked_list"
+  else
+    Rails.logger.info "[ContentionRatioJob] Failed to remove IP #{address}: #{res.body}"
+  end
+rescue => e
+  Rails.logger.info "[ContentionRatioJob] Exception removing IP #{address}: #{e.message}"
+end
+
+
+
+
+
+
+
+
+
+
+
+
 
   def remove_queue(ip, username, password, queue_name)
     queues = fetch_all_queues(ip, username, password)
