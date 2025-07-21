@@ -129,6 +129,7 @@ class ContentionRatioJob
         # Step 1: Fetch active PPPoE users
         active_users = fetch_active_users(router_ip, router_username, router_password)
         active_usernames = active_users.map { |u| u['name'].to_s.strip }
+         active_user_ip = active_users.map { |u| u['address'].to_s.strip }
         
         Rails.logger.info "ContentionRatioJob Active usernames: #{active_usernames}"
 
@@ -161,7 +162,7 @@ blocked_ips = fetch_ip_firewal_adres_list.map { |entry| entry['address'].to_s.st
 Rails.logger.info "[ContentionRatioJob] IPs in aitechs_blocked_list: #{blocked_ips}"
 
 blocked_ips.each do |entry|
-  unless active_users_ip.include?(entry)
+  unless active_user_ip .include?(entry)
     remove_from_address_list(router_ip, router_username, router_password, entry['.id'], entry)
   end
 end
