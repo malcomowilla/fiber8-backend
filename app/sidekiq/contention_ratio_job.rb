@@ -158,9 +158,8 @@ firewall_address_list = fetch_ip_firewal_adres_list(router_ip, router_username, 
 # Only consider entries in 'aitechs_blocked_list'
 blocked_entries = firewall_address_list.select { |entry| entry['list'] == 'aitechs_blocked_list' }
 blocked_ips = blocked_entries.map { |entry| entry['address'].to_s.strip }
-Rails.logger.info "[ContentionRatioJob] IPs in aitechs_blocked_list: #{blocked_entries}"
 
-Rails.logger.info "[ContentionRatioJob] IPs in aitechs_blocked_list: #{blocked_entries}"
+Rails.logger.info "[ContentionRatioJob] IPs in aitechs_blocked_list: #{blocked_ips}"
 
 Rails.logger.info "[ContentionRatioJob] IPs in aitechs_blocked_list: #{firewall_address_list}"
 
@@ -263,27 +262,23 @@ def fetch_ip_firewal_adres_list(ip, username, password)
   list_entries = []
 
   Net::SSH.start(ip, username, password: password, non_interactive: true) do |ssh|
-    output = ssh.exec!("ip firewall address-list print without-paging terse")
+    # Run the MikroTik command to get the address list
+    output = ssh.exec!("ip firewall address-list print without-paging")
     Rails.logger.info "[ContentionRatioJob] Raw SSH output from address-list: #{output}"
 
+    # Parse output line by line
     output.each_line do |line|
-      next unless line.include?('list=aitechs_blocked_list') && line.include?('address=')
+      next unless line.include?("address")
 
-      entry = {}
-
-      # Extract key-value pairs from line
-      line.strip.split.each do |pair|
-        key, value = pair.split('=', 2)
-        entry[key] = value if key && value
-      end
+      # Extract values using regex
+      match = line.match(/(?<id>\d+)\s+list=(?<list>[^\s]+)\s+address=(?<address>[^\s]+)/)
+      next unless match
 
       list_entries << {
-        'list' => entry['list'],
-        'address' => entry['address'],
-        'comment' => entry['comment'],
-        # We use full line as a fallback ID since MikroTik doesn't expose real `.id` via SSH
-        '.id' => line.strip
-      } if entry['list'] == 'aitechs_blocked_list'
+        '.id' => match[:id],
+        'list' => match[:list],
+        'address' => match[:address]
+      }
     end
   end
 
@@ -292,6 +287,7 @@ rescue => e
   Rails.logger.info "[ContentionRatioJob] SSH Error fetching address list: #{e.message}"
   []
 end
+
 
 
   def queue_exists?(ip, username, password, queue_name)
