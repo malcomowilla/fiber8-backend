@@ -130,27 +130,28 @@ class ContentionRatioJob
         active_users = fetch_active_users(router_ip, router_username, router_password)
         active_usernames = active_users.map { |u| u['name'].to_s.strip }
 
-        Rails.logger.info "[ContentionRatioJob] Active usernames: #{active_usernames}"
+        Rails.logger.info "ContentionRatioJob Active usernames: #{active_usernames}"
 
         # Step 2: Always fetch existing queues
         existing_queues = fetch_all_queues(router_ip, router_username, router_password)
-        Rails.logger.info "[ContentionRatioJob] Existing queues: #{existing_queues.map { |q| q['name'] }}"
+        Rails.logger.info "ContentionRatioJob Existing queues: #{existing_queues.map { |q| q['name'] }}"
 
         # Step 3: Remove queues with no matching active user
         existing_queues.each do |queue|
           queue_name = queue['name']
-          Rails.logger.info "[ContentionRatioJob] Checking queue: #{queue_name}"
+          Rails.logger.info "ContentionRatioJob Checking queue: #{queue_name}"
 
           pppoe_username = queue_name.split('_')[1].to_s.strip
 
           unless active_usernames.include?(pppoe_username)
-            Rails.logger.info "[ContentionRatioJob] Removing stale queue: #{queue_name} (pppoe_username: #{pppoe_username})"
+            Rails.logger.info "ContentionRatioJob Removing stale queue: #{queue_name} (pppoe_username: #{pppoe_username})"
             remove_queue(router_ip, router_username, router_password, queue_name)
           end
         end
 
         # Step 4: Only proceed to create queues if there are active users
         next if active_users.blank?
+        Rails.logger.info "ContentionRatioJob Active users: #{active_users}"
 
         active_users.each do |user|
           pppoe_username = user['name'].to_s.strip
