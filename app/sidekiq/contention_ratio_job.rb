@@ -269,6 +269,7 @@ def fetch_ip_firewal_adres_list(ip, username, password)
     # Parse output line by line
     output.each_line do |line|
       next unless line.include?("address")
+      Rails.logger.info "[ContentionRatioJob] Raw SSH output from address-list: #{line}"
 
       # Extract values using regex
       match = line.match(/(?<id>\d+)\s+list=(?<list>[^\s]+)\s+address=(?<address>[^\s]+)/)
@@ -281,8 +282,10 @@ def fetch_ip_firewal_adres_list(ip, username, password)
       }
     end
   end
+      Rails.logger.info "[ContentionRatioJob] Raw SSH output from address-list: #{list_entries}"
 
   list_entries
+
 rescue => e
   Rails.logger.info "[ContentionRatioJob] SSH Error fetching address list: #{e.message}"
   []
