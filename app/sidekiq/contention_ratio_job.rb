@@ -235,6 +235,17 @@ Rails.logger.info "existing_queues: #{existing_queues}"
 end
 
 
+
+
+
+
+
+
+
+      rescue => e
+        Rails.logger.info "ContentionRatioJob Error for router #{router.name}: #{e.message}"
+        Rails.logger.info "active_usernames: #{active_usernames}"
+
 existing_queues = fetch_all_queues(router_ip, router_username, router_password)
 Rails.logger.info "existing_queues: #{existing_queues}"
          existing_queues.each do |queue|
@@ -243,12 +254,15 @@ Rails.logger.info "existing_queues: #{existing_queues}"
 
   match = queue_name.match(/^queue_(.+?)_/)
   pppoe_username = match[1]
+ Rails.logger.info "pppoe_username: #{pppoe_username}"
+end
+        # Rails.logger.info "active_usernames: #{pppoe_username}"
 
-      rescue => e
-        Rails.logger.info "ContentionRatioJob Error for router #{router.name}: #{e.message}"
-        Rails.logger.info "active_usernames: #{active_usernames}"
-        Rails.logger.info "active_usernames: #{pppoe_username}"
+
       end
+
+
+
     end
   end
 
