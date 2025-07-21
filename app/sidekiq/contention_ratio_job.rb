@@ -149,7 +149,6 @@ class ContentionRatioJob
           end
         end
 
-        # Step 4: Only proceed to create queues if there are active users
         next if active_users.blank?
         Rails.logger.info "ContentionRatioJob Active users: #{active_users}"
 
