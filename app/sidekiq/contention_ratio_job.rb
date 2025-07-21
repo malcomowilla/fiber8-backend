@@ -153,7 +153,11 @@ firewall_address_list = fetch_ip_firewal_adres_list(router_ip, router_username, 
 
 # Only consider entries in 'aitechs_blocked_list'
 blocked_entries = firewall_address_list.select { |entry| entry['list'] == 'aitechs_blocked_list' }
+Rails.logger.info "[ContentionRatioJob] IPs in aitechs_blocked_list: #{blocked_entries}"
+Rails.logger.info "[ContentionRatioJob] IPs in aitechs_blocked_list: #{firewall_address_list}"
+
 blocked_ips = blocked_entries.map { |entry| entry['address'].to_s.strip }
+
 
 Rails.logger.info "[ContentionRatioJob] IPs in aitechs_blocked_list: #{blocked_ips}"
 
