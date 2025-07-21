@@ -219,17 +219,11 @@ Rails.logger.info "active_usernames: #{active_usernames}"
         # end
 
 existing_queues = fetch_all_queues(router_ip, router_username, router_password)
-Rails.logger.info "existing_queues: #{existing_queues}"
+Rails.logger.info "existing_queues removing queues: #{existing_queues}"
          existing_queues.each do |queue|
    queue_name = queue['name']
 pppoe_username = queue_name.split('_')[1]
 
-    # unless active_usernames === pppoe_username
-    #   Rails.logger.info "ContentionRatioJob Removing stale queue #{queue_name}"
-    #   Rails.logger.info "active_usernames ppoe: #{pppoe_username}"
-    #   remove_queue(router_ip, router_username, router_password, queue_name)
-    # end
-    
     unless active_usernames.any? { |u| u === pppoe_username }
   remove_queue(router_ip, router_username, router_password, queue_name)
   Rails.logger.info "ContentionRatioJob Removing stale queue #{queue_name}"
