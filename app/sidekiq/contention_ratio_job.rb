@@ -173,6 +173,8 @@ Rails.logger.info "active_usernames: #{active_usernames}"
           # Step 2: Skip if queue already exists
           if queue_exists?(router_ip, router_username, router_password, queue_name)
             Rails.logger.info "[ContentionRatioJob] Queue exists for #{queue_name}, skipping."
+            Rails.logger.info "active_usernames: #{active_usernames}"
+
             next
           end
 
@@ -190,6 +192,8 @@ Rails.logger.info "active_usernames: #{active_usernames}"
 
           add_queue(router_ip, router_username, router_password, payload)
           Rails.logger.info "[ContentionRatioJob] Queue added for #{queue_name}"
+          Rails.logger.info "active_usernames: #{active_usernames}"
+
         end
 
 
