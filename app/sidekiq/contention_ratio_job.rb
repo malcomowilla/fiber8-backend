@@ -150,7 +150,8 @@ class ContentionRatioJob
         end
 
 
-
+fetch_ip_firewal_adres_list = fetch_ip_firewal_adres_list(router_ip, router_username, router_password)
+Rails.logger.info "[ContentionRatioJob] Fetched adres list: #{fetch_ip_firewal_adres_list}"
 
 
         next if active_users.blank?
