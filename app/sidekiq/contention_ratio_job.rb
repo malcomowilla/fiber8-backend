@@ -172,7 +172,7 @@ Rails.logger.info "active_usernames: #{active_usernames}"
           
           # Step 2: Skip if queue already exists
           if queue_exists?(router_ip, router_username, router_password, queue_name)
-            Rails.logger.info "[ContentionRatioJob] Queue exists for #{queue_name}, skipping."
+            Rails.logger.info "ContentionRatioJob Queue exists for #{queue_name}, skipping."
             Rails.logger.info "active_usernames: #{active_usernames}"
 
             next
@@ -192,7 +192,7 @@ Rails.logger.info "active_usernames: #{active_usernames}"
           }
 
           add_queue(router_ip, router_username, router_password, payload)
-          Rails.logger.info "[ContentionRatioJob] Queue added for #{queue_name}"
+          Rails.logger.info "ContentionRatioJob Queue added for #{queue_name}"
           Rails.logger.info "active_usernames: #{active_usernames}"
         end
 
@@ -228,13 +228,13 @@ Rails.logger.info "existing_queues: #{existing_queues}"
   if match
     pppoe_username = match[1]
     unless !active_usernames.include?(pppoe_username)
-      Rails.logger.info "[ContentionRatioJob] Removing stale queue #{queue_name}"
+      Rails.logger.info "ContentionRatioJob Removing stale queue #{queue_name}"
       remove_queue(router_ip, router_username, router_password, queue_name)
     end
   end
 end
       rescue => e
-        Rails.logger.info "[ContentionRatioJob] Error for router #{router.name}: #{e.message}"
+        Rails.logger.info "ContentionRatioJob Error for router #{router.name}: #{e.message}"
       end
 
 
@@ -293,6 +293,7 @@ end
 
     res = Net::HTTP.start(uri.hostname, uri.port) { |http| http.request(req) }
     raise "Failed to add queue: #{res.body}" unless res.is_a?(Net::HTTPSuccess)
+
   end
 
 def remove_queue(ip, username, password, queue_name)
