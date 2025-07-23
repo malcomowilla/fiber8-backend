@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2025_07_18_155116) do
+ActiveRecord::Schema[7.2].define(version: 2025_07_23_111206) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -241,16 +241,17 @@ ActiveRecord::Schema[7.2].define(version: 2025_07_18_155116) do
   end
 
   create_table "hotspot_plans", force: :cascade do |t|
-    t.string "name"
-    t.string "hotspot_subscribers"
+    t.string "name", default: "Free Trial"
+    t.string "hotspot_subscribers", default: "unlimited"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.integer "account_id"
-    t.datetime "expiry_days"
     t.string "billing_cycle"
-    t.string "status"
+    t.string "status", default: "active"
     t.boolean "condition"
     t.datetime "expiry"
+    t.string "price", default: "0"
+    t.integer "expiry_days", default: 3
   end
 
   create_table "hotspot_settings", force: :cascade do |t|
@@ -290,6 +291,7 @@ ActiveRecord::Schema[7.2].define(version: 2025_07_18_155116) do
     t.boolean "minimal", default: false
     t.boolean "simple", default: false
     t.boolean "default_template", default: false
+    t.boolean "pepea"
   end
 
   create_table "hotspot_vouchers", force: :cascade do |t|
@@ -306,6 +308,17 @@ ActiveRecord::Schema[7.2].define(version: 2025_07_18_155116) do
     t.string "user_profile_id"
     t.string "shared_users"
     t.datetime "sms_sent_at"
+  end
+
+  create_table "invoices", force: :cascade do |t|
+    t.string "invoice_number"
+    t.datetime "invoice_date"
+    t.datetime "due_date"
+    t.string "total"
+    t.string "status"
+    t.integer "account_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
   end
 
   create_table "ip_networks", force: :cascade do |t|
@@ -439,16 +452,17 @@ ActiveRecord::Schema[7.2].define(version: 2025_07_18_155116) do
   end
 
   create_table "pp_poe_plans", force: :cascade do |t|
-    t.string "maximum_pppoe_subscribers"
+    t.string "maximum_pppoe_subscribers", default: "unlimited"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.string "name"
+    t.string "name", default: "Free Trial"
     t.datetime "expiry"
     t.integer "account_id"
-    t.datetime "expiry_days"
     t.string "billing_cycle"
-    t.string "status"
+    t.string "status", default: "active"
     t.boolean "condition"
+    t.string "price", default: "0"
+    t.integer "expiry_days", default: 3
   end
 
   create_table "prefix_and_digits", force: :cascade do |t|

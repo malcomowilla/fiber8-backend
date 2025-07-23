@@ -69,7 +69,8 @@ flat: params[:hotspot_templates][:flat],
 minimal: params[:hotspot_templates][:minimal],
 simple: params[:hotspot_templates][:simple],
 default_template: params[:hotspot_templates][:default_template],
-default: params[:hotspot_templates][:default]
+default: params[:hotspot_templates][:default],
+pepea: params[:hotspot_templates][:pepea]
     )
     @hotspot_template.update(
       name: params[:hotspot_templates][:name],
@@ -81,7 +82,9 @@ default: params[:hotspot_templates][:default]
       minimal: params[:hotspot_templates][:minimal],
       simple: params[:hotspot_templates][:simple],
       default_template: params[:hotspot_templates][:default_template],
-      default: params[:hotspot_templates][:default]
+      default: params[:hotspot_templates][:default],
+      pepea: params[:hotspot_templates][:pepea]
+
     )
       if @hotspot_template.save
          render json:@hotspot_template, status: :created
@@ -124,7 +127,7 @@ default: params[:hotspot_templates][:default]
     def hotspot_template_params
       params.permit(:name,:preview_image, :sleekspot, :attractive, 
       :clean, :default, :flat, :minimal, :simple, :default_template, 
-      :default_template)
+      :default_template, :pepea)
     end
 
 

@@ -82,7 +82,7 @@ if current_user
 
     @user_group = set_user_group
     ActivtyLog.create(action: 'delete', ip: request.remote_ip,
- description: "Deleted user group #{@ip_network.network}",
+ description: "Deleted user group #{@user_group.name}",
           user_agent: request.user_agent, user: current_user.username || current_user.email,
            date: Time.current)
     @user_group.destroy!

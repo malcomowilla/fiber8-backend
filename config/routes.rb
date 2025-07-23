@@ -1,4 +1,5 @@
 Rails.application.routes.draw do
+  resources :invoices
   resources :activty_logs
   resources :customer_portals
   resources :general_settings

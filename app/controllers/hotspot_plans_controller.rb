@@ -10,12 +10,18 @@ load_and_authorize_resource except: [:allow_get_current_hotspot_plan, :index, :c
 
 
 
-  def index
-    @plans = HotspotPlan.all
-    render json:@plans, each_serializer: HotspotPlanSerializer
-  end
+  # def index
+  #   @plans = HotspotPlan.all
+  #   render json:@plans
+  # end
 
 
+def index
+  plans = HotspotPlan.all
+
+ 
+  render json: plans
+end
 
 
 
@@ -25,8 +31,25 @@ load_and_authorize_resource except: [:allow_get_current_hotspot_plan, :index, :c
   
 
   def get_current_hotspot_plan
-    @plans = HotspotPlan.all
-    render json: @plans,each_serializer: HotspotPlanSerializer
+    # @plans = HotspotPlan.all
+    # render json: @plans,each_serializer: HotspotPlanSerializer
+     plans = HotspotPlan.all
+
+  if plans.empty?
+    default_plan = HotspotPlan.create!(
+      name: "Free Trial",
+      hotspot_subscribers: "unlimited",
+      price: "0",
+      expiry_days: 3,
+      billing_cycle: "trial",
+      status: "active",
+      condition: false,
+      # account_id: ActsAsTenant.current_tenant.id
+    )
+    plans = [default_plan]
+  end
+
+  render json: plans, each_serializer: HotspotPlanSerializer
   end
 
 
@@ -102,11 +125,11 @@ load_and_authorize_resource except: [:allow_get_current_hotspot_plan, :index, :c
   def set_tenant
     host = request.headers['X-Subdomain']
     @account = Account.find_by(subdomain: host)
-    @current_account= ActsAsTenant.current_tenant 
-    EmailConfiguration.configure(@current_account, ENV['SYSTEM_ADMIN_EMAIL'])
+    ActsAsTenant.current_tenant = @account
+    EmailConfiguration.configure(@account, ENV['SYSTEM_ADMIN_EMAIL'])
     # EmailSystemAdmin.configure(@current_account, current_system_admin)
   
-    Rails.logger.info "set_current_tenant #{ActsAsTenant.current_tenant.inspect}"
+    # Rails.logger.info "set_current_tenant #{ActsAsTenant.current_tenant.inspect}"
     # set_current_tenant(@account)
   rescue ActiveRecord::RecordNotFound
     render json: { error: 'Invalid tenant' }, status: :not_found

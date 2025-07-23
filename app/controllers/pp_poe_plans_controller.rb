@@ -14,9 +14,25 @@ load_and_authorize_resource except: [:allow_get_current_plan, :index, :create]
 
 
   def get_current_plan
-    @plans = PpPoePlan.all
-    render json: @plans,each_serializer: PpPoePlanSerializer
-    
+    # @plans = PpPoePlan.all
+    # render json: @plans,each_serializer: PpPoePlanSerializer
+      plans = PpPoePlan.all
+
+  if plans.empty?
+    default_plan = PpPoePlan.create!(
+      name: "Free Trial",
+      maximum_pppoe_subscribers: "unlimited",
+      price: "0",
+      expiry_days: 3,
+      billing_cycle: "trial",
+      status: "active",
+      condition: false,
+      expiry: Time.current + 3.days  # ✅ Keep as datetime, NOT string
+    )
+    plans = [default_plan]
+  end
+
+  render json: plans, each_serializer: PpPoePlanSerializer
   end
 
 
@@ -78,11 +94,10 @@ load_and_authorize_resource except: [:allow_get_current_plan, :index, :create]
   def set_tenant
     host = request.headers['X-Subdomain']
     @account = Account.find_by(subdomain: host)
-    @current_account= ActsAsTenant.current_tenant 
-    EmailConfiguration.configure(@current_account, ENV['SYSTEM_ADMIN_EMAIL'])
+     ActsAsTenant.current_tenant = @account
+    EmailConfiguration.configure(@account, ENV['SYSTEM_ADMIN_EMAIL'])
     # EmailSystemAdmin.configure(@current_account, current_system_admin)
   
-    Rails.logger.info "set_current_tenant #{ActsAsTenant.current_tenant.inspect}"
     # set_current_tenant(@account)
   rescue ActiveRecord::RecordNotFound
     render json: { error: 'Invalid tenant' }, status: :not_found
