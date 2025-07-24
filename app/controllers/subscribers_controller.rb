@@ -219,7 +219,7 @@ end
 
    def subscribers_offline
     # current_account = ActsAsTenant.current_tenant
-    total_subscribers = Subscriber.status(:offline).count
+    total_subscribers = Subscriber.where(status: 'offline').count
     render json: { total_subscribers: total_subscribers }
   end
   
