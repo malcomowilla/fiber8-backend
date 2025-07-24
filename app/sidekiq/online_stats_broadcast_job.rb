@@ -6,6 +6,8 @@ class OnlineStatsBroadcastJob
   queue_as :default
 
   def perform
+    Rails.logger.info "Broadcasting online stats for #{tenant.subdomain}"
+
     Account.find_each do |tenant| # Iterate over all tenants
       ActsAsTenant.with_tenant(tenant) do
 Rails.logger.info "Broadcasting online stats for #{tenant.subdomain}"
