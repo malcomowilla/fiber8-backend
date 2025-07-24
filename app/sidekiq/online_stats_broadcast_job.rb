@@ -14,7 +14,7 @@ Rails.logger.info "Broadcasting online stats for #{tenant.subdomain}"
     active_sessions = RadAcct.where(
       acctstoptime: nil,
       framedprotocol: 'PPP',
-      # account_id: ActsAsTenant.current_tenant.id
+      account_id: ActsAsTenant.current_tenant.id
     ).where('acctupdatetime > ?', 3.minutes.ago)
 
     total_download = active_sessions.sum("COALESCE(acctinputoctets, 0)")
@@ -31,9 +31,9 @@ end
 
 end
 
-# rescue => e
-#     Rails.logger.error "ActionCable Broadcast Failed: #{e.class} - #{e.message}"
-#     Rails.logger.error e.backtrace.join("\n")
-#     raise e # still let Sidekiq retry if needed
+rescue => e
+    Rails.logger.error "ActionCable Broadcast Failed: #{e.class} - #{e.message}"
+    Rails.logger.error e.backtrace.join("\n")
+    raise e # still let Sidekiq retry if needed
   
 end
