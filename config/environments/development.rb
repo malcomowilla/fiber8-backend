@@ -128,8 +128,19 @@ config.active_storage.service = :local
 #   %r{https://.*\.aitechs\.co\.ke},
 #   %r{http://.*\.aitechs\.co\.ke} # optional for http
 # ]
-config.action_cable.url = "ws://localhost:3000/cable"
-  config.action_cable.allowed_request_origins = [ "http://localhost:3000", /http:\/\/localhost:\d+/ ]
+config.action_cable.url = "ws://localhost:4000/cable"
+  config.action_cable.allowed_request_origins = [
+    'http://localhost:3000',
+    'http://127.0.0.1:3000',
+    'ws://localhost:3000',
+    'ws://127.0.0.1:3000',
+    'ws://127.0.0.1:4000',
+    'http://localhost:4000/',
+    'ws://localhost:4000/cable',
+    /http:\/\/localhost:\d+/,
+    /http:\/\/localhost:\d+/,
+    /http:\/\/127\.0\.0\.1:\d+/
+]
 end
 
 
