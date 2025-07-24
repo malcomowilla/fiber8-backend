@@ -137,6 +137,8 @@ config.action_cable.url = "wss://localhost:3000/cable"
     'ws://127.0.0.1:4000',
     'http://localhost:4000/',
     'ws://localhost:4000/cable',
+      'https://fiber8.aitechs.co.ke',
+
     /http:\/\/localhost:\d+/,
     /http:\/\/localhost:\d+/,
     /http:\/\/127\.0\.0\.1:\d+/,
