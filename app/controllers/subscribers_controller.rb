@@ -214,6 +214,14 @@ end
     total_subscribers = Subscriber.count
     render json: { total_subscribers: total_subscribers }
   end
+
+
+
+   def subscribers_offline
+    # current_account = ActsAsTenant.current_tenant
+    total_subscribers = Subscriber.status(:offline).count
+    render json: { total_subscribers: total_subscribers }
+  end
   
   # POST /subscribers or /subscribers.json
 #   def create

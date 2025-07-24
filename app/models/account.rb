@@ -18,6 +18,7 @@ class Account < ApplicationRecord
     has_one :hotspot_setting, dependent: :destroy
     has_many :ip_pools, dependent: :destroy
     has_one :pp_poe_plan, dependent: :destroy
+    
     has_one :license_setting, dependent: :destroy
     has_one :hotspot_plan, dependent: :destroy
     has_one :calendar_setting, dependent: :destroy

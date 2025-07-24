@@ -5,28 +5,16 @@ class PpPoePlanSerializer < ActiveModel::Serializer
   belongs_to :account
 
 
-  # def expiry
-  #   object.expiry.strftime("%B %d, %Y at %I:%M %p") if object.expiry.present?
-  # end
-
 def expiry
-  if object.expiry.present?
-    object.expiry.strftime("%B %d, %Y at %I:%M %p")
-  else
-    # Use created_at + expiry_days (default to 3 days)
-    days = object.expiry_days.presence || 3
-    fallback_expiry = object.created_at + days.to_i.days
-    fallback_expiry.strftime("%B %d, %Y at %I:%M %p")
-  end
+     days = object.expiry_days
+    expiry = object.created_at + days.days
+    expiry.strftime("%B %d, %Y at %I:%M %p")
+    
+  
 end
+   
 
-   def expiry_days
-    object.expiry_days.presence || 3
-  end
-
-   def maximum_pppoe_subscribers
-    object.maximum_pppoe_subscribers.presence || "unlimited"
-  end
+   
 
   def name
  object.name.presence || "Free Trial"

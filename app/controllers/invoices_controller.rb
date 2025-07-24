@@ -1,24 +1,48 @@
 class InvoicesController < ApplicationController
   before_action :set_invoice, only: %i[ show edit update destroy ]
 
+
+  set_current_tenant_through_filter
+
+  before_action :set_tenant
+
+  before_action :update_last_activity
+
+
+
+
+
+
+
+   def update_last_activity
+if current_user
+      current_user.update!(last_activity_active: Time.current)
+    end
+    
+  end
+
+
+  def set_tenant
+    host = request.headers['X-Subdomain']
+    @account = Account.find_by(subdomain: host)
+    ActsAsTenant.current_tenant = @account
+    EmailConfiguration.configure(@account, ENV['SYSTEM_ADMIN_EMAIL'])
+    # EmailSystemAdmin.configure(@current_account, current_system_admin)
+  
+    # set_current_tenant(@account)
+  rescue ActiveRecord::RecordNotFound
+    render json: { error: 'Invalid tenant' }, status: :not_found
+  
+    
+  end
+
   # GET /invoices or /invoices.json
   def index
     @invoices = Invoice.all
+    render json: @invoices
   end
 
-  # GET /invoices/1 or /invoices/1.json
-  def show
-  end
-
-  # GET /invoices/new
-  def new
-    @invoice = Invoice.new
-  end
-
-  # GET /invoices/1/edit
-  def edit
-  end
-
+  #
   # POST /invoices or /invoices.json
   def create
     @invoice = Invoice.new(invoice_params)
