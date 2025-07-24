@@ -40,57 +40,57 @@ Sidekiq.configure_server do |config|
 
 
 
-'restart_cloudflared_if_tunnel_missing_job' => {
-  'class' => 'RestartCloudflaredIfTunnelMissingJob',
-  'cron' => '* * * * *'
-},
+# 'restart_cloudflared_if_tunnel_missing_job' => {
+#   'class' => 'RestartCloudflaredIfTunnelMissingJob',
+#   'cron' => '* * * * *'
+# },
 
 
 
-'lock_account_job' => {
-  'class' => 'LockAccountJob',
-  'cron': '*/2 * * * *'
+# 'lock_account_job' => {
+#   'class' => 'LockAccountJob',
+#   'cron': '*/2 * * * *'
 
-    # 'cron': '*/3 * * * *'
+#     # 'cron': '*/3 * * * *'
 
-  # 'cron' => '* * * * *'
-},
-
-
-  'hotspot_expiration_job' => {
-    'class' => 'HotspotExpirationJob',
-    'cron' => '* * * * *'
-  },
+#   # 'cron' => '* * * * *'
+# },
 
 
-  'contention_ratio_job' => {
-    'class' => 'ContentionRatioJob',
-    'cron' => '* * * * *'
-  },
+#   'hotspot_expiration_job' => {
+#     'class' => 'HotspotExpirationJob',
+#     'cron' => '* * * * *'
+#   },
 
 
-  'router_ping_job' => {
-    'class' => 'RouterPingJob',
-    'cron' => '* * * * *' # Run every 4 minutes
-  },
+#   'contention_ratio_job' => {
+#     'class' => 'ContentionRatioJob',
+#     'cron' => '* * * * *'
+#   },
+
+
+#   'router_ping_job' => {
+#     'class' => 'RouterPingJob',
+#     'cron' => '* * * * *' # Run every 4 minutes
+#   },
       
-  'subscription_expiration_job' => {
-          'class' => 'SubscriptionExpirationJob',
-          'cron' => '* * * * *', # Every minute
-        },
+#   'subscription_expiration_job' => {
+#           'class' => 'SubscriptionExpirationJob',
+#           'cron' => '* * * * *', # Every minute
+#         },
 
 
 
-'system_metrics_job' => {
-  'class' => 'SystemMetricsJob',
-  'cron' => '* * * * *' # Run every minute
-},
+# 'system_metrics_job' => {
+#   'class' => 'SystemMetricsJob',
+#   'cron' => '* * * * *' # Run every minute
+# },
 
 
-'inactivity_check_job' => {
-  'class' => 'InactivityCheckJob',
-  'cron' => '* * * * *'
-},
+# 'inactivity_check_job' => {
+#   'class' => 'InactivityCheckJob',
+#   'cron' => '* * * * *'
+# },
 
   
    
