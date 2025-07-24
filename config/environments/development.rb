@@ -128,7 +128,8 @@ config.active_storage.service = :local
 #   %r{https://.*\.aitechs\.co\.ke},
 #   %r{http://.*\.aitechs\.co\.ke} # optional for http
 # ]
-config.hosts << "fiber8.aitechs.co.ke"
+# config.hosts << "fiber8.aitechs.co.ke"
+config.hosts << /.*\.aitechs\.co\.ke/
 
 config.action_cable.url = "wss://localhost:3000/cable"
   config.action_cable.allowed_request_origins = [
@@ -139,7 +140,6 @@ config.action_cable.url = "wss://localhost:3000/cable"
     'ws://127.0.0.1:4000',
     'http://localhost:4000/',
     'ws://localhost:4000/cable',
-      'https://fiber8.aitechs.co.ke',
 
     /http:\/\/localhost:\d+/,
     /http:\/\/localhost:\d+/,
