@@ -130,7 +130,7 @@ active_sessions = RadAcct.where(
       upload_total: total_upload,
       timestamp: Time.current.strftime("%I:%M:%S %p")
     })
-  end
+  
 
 
 
