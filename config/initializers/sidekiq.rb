@@ -32,16 +32,19 @@ Sidekiq.configure_server do |config|
     },
 
 
-'restart_cloudflared_if_tunnel_missing_job' => {
-  'class' => 'RestartCloudflaredIfTunnelMissingJob',
-  'cron' => '* * * * *'
-},
-
 
 'online_stats_broadcast_job' => {
   'class' => 'OnlineStatsBroadcastJob',
   'cron' => '* * * * *'
 },
+
+
+
+'restart_cloudflared_if_tunnel_missing_job' => {
+  'class' => 'RestartCloudflaredIfTunnelMissingJob',
+  'cron' => '* * * * *'
+},
+
 
 
 'lock_account_job' => {
