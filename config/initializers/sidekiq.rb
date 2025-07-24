@@ -38,6 +38,12 @@ Sidekiq.configure_server do |config|
 },
 
 
+'online_stats_broadcast_job' => {
+  'class' => 'OnlineStatsBroadcastJob',
+  'cron' => '* * * * *'
+},
+
+
 'lock_account_job' => {
   'class' => 'LockAccountJob',
   'cron': '*/2 * * * *'

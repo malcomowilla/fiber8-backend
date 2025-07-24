@@ -1,104 +1,45 @@
-# module ApplicationCable
-#   class Connection < ActionCable::Connection::Base
-
-#   rescue_from StandardError, with: :connection_error
-#     identified_by :current_user
-
-
-#     def connect
-#       self.current_user = find_verified_user
-#     end
-
-#     private
-#       def find_verified_user
-#         if verified_user = User.find_by(id: cookies.encrypted[:user_id])
-#           verified_user
-#         else
-#           reject_unauthorized_connection
-#         end
-#       end
-#       private
-#       def connection_error(e)
-#         SomeExternalBugtrackingService.notify(e)
-#       end
-#   end
-# end
-
 module ApplicationCable
   class Connection < ActionCable::Connection::Base
-    rescue_from StandardError, with: :report_error
+    identified_by :current_account
 
-    identified_by :current_user
-
-
-    
-     
-    # def connect
-    #   session = cookies.encrypted['_fiber8backend_session']
-    #   user_id = session['user_id'] if session.present?
-
-    #   self.current_user = (user_id.present? && User.find_by(id: user_id))
-
-    #   reject_unauthorized_connection unless current_user
-
-         
-
-    # end
-
-
-    # def connect
-    #   self.current_user = find_verified_user
-    #   ActsAsTenant.current_tenant = current_user.account
-
-    # end
-
-    # private
-    #   def find_verified_user
-    #     if verified_user = User.find_by(id: cookies.encrypted['_fiber8backend_session']['user_id'])
-    #       verified_user
-    #     else
-    #       reject_unauthorized_connection
-    #     end
-    #   end
-
-
-
-
-    # def connect
-    #   session = cookies.encrypted['_fiber8backend_session']
-    #   user_id = session['user_id']
-    #   account_id = session['account_id']
-
-    #   if user_id.present? && account_id.present?
-    #     # Fetch the User object using user_id
-        
-    #     user = User.find_by(id: user_id)
-    #     account = Account.find_by(id: account_id)
-
-    #     # Set the current_user if user is found
-    #     if user
-    #       self.current_user = user
-
-    #       ActsAsTenant.with_tenant(current_user.account) do
-    #         # Additional connection logic here
-    #       end
-          
-    #     else
-    #       # Reject the connection if user is not found
-    #       reject_unauthorized_connection
-    #     end
-    #   else
-    #     # Reject the connection if user_id is not present in session
-    #     reject_unauthorized_connection
-    #   end
-    # end
-
-
-
+    def connect
+      self.current_account = find_verified_account
+      logger.add_tags 'ActionCable', current_account.class.name, current_account.id
+    rescue StandardError
+      reject_unauthorized_connection
+    end
 
     private
-    def report_error(e)
-      SomeExternalBugtrackingService.notify(e)
+
+    def find_verified_account
+      # Check for admin JWT
+      admin_token = cookies.encrypted.signed[:jwt_user]
+      if admin_token
+        begin
+          decoded_token = JWT.decode(admin_token, ENV['JWT_SECRET'], true, algorithm: 'HS256')
+          user_id = decoded_token[0]['user_id']
+          return User.find_by(id: user_id) if user_id
+        rescue JWT::DecodeError
+          # Token decode failed
+        end
+      end
+
+      # Check for customer JWT
+      customer_token = cookies.encrypted.signed[:customer_jwt]
+      if customer_token
+        begin
+          decoded_token = JWT.decode(customer_token, ENV['JWT_SECRET'], true, algorithm: 'HS256')
+          customer_id = decoded_token[0]['customer_id']
+          return Customer.find_by(id: customer_id) if customer_id
+        rescue JWT::DecodeError
+          # Token decode failed
+        end
+      end
+
+      # Reject connection if neither admin nor customer is found
+      reject_unauthorized_connection
     end
   end
 end
+
+
