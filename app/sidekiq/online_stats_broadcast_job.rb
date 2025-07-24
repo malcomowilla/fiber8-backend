@@ -1,7 +1,8 @@
 
 
 
-class OnlineStatsBroadcastJob < ApplicationJob
+class OnlineStatsBroadcastJob 
+  include Sidekiq::Job
   queue_as :default
 
   def perform
