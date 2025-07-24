@@ -139,7 +139,9 @@ config.action_cable.url = "ws://localhost:4000/cable"
     'ws://localhost:4000/cable',
     /http:\/\/localhost:\d+/,
     /http:\/\/localhost:\d+/,
-    /http:\/\/127\.0\.0\.1:\d+/
+    /http:\/\/127\.0\.0\.1:\d+/,
+    /https?:\/\/(www\.)?aitechs\.co\.ke/
+
 ]
 end
 
