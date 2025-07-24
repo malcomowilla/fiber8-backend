@@ -18,11 +18,6 @@ Rails.logger.info "Broadcasting online stats for"
     total_download = active_sessions.sum("COALESCE(acctinputoctets, 0)")
     total_upload   = active_sessions.sum("COALESCE(acctoutputoctets, 0)")
 
-    ActionCable.server.broadcast("online_stats_channel", {
-      active_user_count: active_sessions.count,
-      download_total: total_download,
-      upload_total: total_upload,
-      timestamp: Time.current.strftime("%I:%M:%S %p")
-    })
+    ActionCable.server.broadcast("online_stats_channel",content: 'hello test')
   end
 end
