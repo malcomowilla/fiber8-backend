@@ -100,9 +100,10 @@ def get_total_bandwidth_and_online_users
 
 
  ActionCable.server.broadcast("online_stats_channel", {
-      active_user_count: active_sessions.count,
-      download_total: total_download,
-      upload_total: total_upload,
+     active_user_count: active_user_count || 0,
+    total_bandwidth: format_bytes(total_bytes),
+    total_download: format_bytes(total_download),
+    total_upload: format_bytes(total_upload)
       timestamp: Time.current.strftime("%I:%M:%S %p")
     })
 

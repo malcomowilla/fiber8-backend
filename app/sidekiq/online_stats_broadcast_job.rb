@@ -11,6 +11,8 @@ class OnlineStatsBroadcastJob
     Account.find_each do |tenant| # Iterate over all tenants
       ActsAsTenant.with_tenant(tenant) do
 Rails.logger.info "Broadcasting online stats for #{tenant.subdomain}"
+Rails.logger.info "Account ID: #{tenant.id}"
+
     active_sessions = RadAcct.where(
       acctstoptime: nil,
       framedprotocol: 'PPP',
@@ -20,6 +22,7 @@ Rails.logger.info "Broadcasting online stats for #{tenant.subdomain}"
 
     total_download = active_sessions.sum("COALESCE(acctinputoctets, 0)")
     total_upload   = active_sessions.sum("COALESCE(acctoutputoctets, 0)")
+Rails.logger.info "Account ID: #{tenant.id}"
 
     ActionCable.server.broadcast("online_stats_channel", {
       active_user_count: active_sessions.count,
