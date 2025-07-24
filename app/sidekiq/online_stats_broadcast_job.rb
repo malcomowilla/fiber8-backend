@@ -14,7 +14,7 @@ Rails.logger.info "Broadcasting online stats for #{tenant.subdomain}"
     active_sessions = RadAcct.where(
       acctstoptime: nil,
       framedprotocol: 'PPP',
-      account_id: tenant.id
+      account_id: ActsAsTenant.current_tenant.id
     ).where('acctupdatetime > ?', 3.minutes.ago)
 
     total_download = active_sessions.sum("COALESCE(acctinputoctets, 0)")
