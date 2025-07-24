@@ -5,19 +5,15 @@ class OnlineStatsBroadcastJob
   include Sidekiq::Job
   queue_as :default
 
+  
   def perform
-    Rails.logger.info "Broadcasting online stats "
+    stats = generate_stats # however you get the stats
 
-    
-Rails.logger.info "Broadcasting online stats for"
-    active_sessions = RadAcct.where(
-      acctstoptime: nil,
-      framedprotocol: 'PPP',
-    ).where('acctupdatetime > ?', 3.minutes.ago)
+    ActionCable.server.broadcast("online_stats_channel", { stats: stats })
 
-    total_download = active_sessions.sum("COALESCE(acctinputoctets, 0)")
-    total_upload   = active_sessions.sum("COALESCE(acctoutputoctets, 0)")
-
-    ActionCable.server.broadcast("online_stats_channel",content: 'hello test')
+  rescue => e
+    Rails.logger.error "ActionCable Broadcast Failed: #{e.class} - #{e.message}"
+    Rails.logger.error e.backtrace.join("\n")
+    raise e # still let Sidekiq retry if needed
   end
 end
