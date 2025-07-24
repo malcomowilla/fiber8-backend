@@ -113,13 +113,6 @@ class RouterPingJob
     Account.find_each do |tenant| # Iterate over all tenants
       ActsAsTenant.with_tenant(tenant) do
 
-
-
-
-
-
-
-
         
               subscriptions = Subscription.where.not(ip_address: [nil, ''])
               subscriptions.each do |subscription|
@@ -128,13 +121,14 @@ class RouterPingJob
         
           framedipaddress: subscription.ip_address,
           username: subscription.ppoe_username,
-          # account_id: nil
+          account_id: nil
         ).count
         Rails.logger.info "Found #{nil_radacct_count} RadAcct records with nil account_id for tenant #{tenant.id}"
 
         RadAcct.unscoped.where(
         framedipaddress: subscription.ip_address,
-        username: subscription.ppoe_username
+        username: subscription.ppoe_username,
+        account_id: nil
         ).find_each do |radacct|
           begin
             radacct.update!(account_id: tenant.id)
