@@ -104,7 +104,6 @@ def get_total_bandwidth_and_online_users
     total_bandwidth: format_bytes(total_bytes),
     total_download: format_bytes(total_download),
     total_upload: format_bytes(total_upload)
-      timestamp: Time.current.strftime("%I:%M:%S %p")
     })
 
   render json: {
