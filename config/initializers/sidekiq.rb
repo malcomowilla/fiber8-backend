@@ -34,7 +34,7 @@ Sidekiq.configure_server do |config|
 
 
 'online_stats_broadcast_job' => {
-  'class' => 'OnlineStatsBroadcastJob',
+  'class' => 'OnlineStatsBroadcastJob ',
   'cron' => '* * * * *'
 },
 
