@@ -9,7 +9,7 @@ class OnlineStatsBroadcastJob
     Rails.logger.info "Broadcasting online stats "
 
     
-Rails.logger.info "Broadcasting online stats for #{tenant.subdomain}"
+Rails.logger.info "Broadcasting online stats for"
     active_sessions = RadAcct.where(
       acctstoptime: nil,
       framedprotocol: 'PPP',
