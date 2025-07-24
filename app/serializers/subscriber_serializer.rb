@@ -35,7 +35,7 @@ class SubscriberSerializer < ActiveModel::Serializer
     ).where('acctupdatetime > ?', threshold_time).exists?
   end
 
-  online ? "online" : "offline"
+  online ? object.update(status: 'online') : object.update(status: 'offline')
 end
 
    def phone_number
