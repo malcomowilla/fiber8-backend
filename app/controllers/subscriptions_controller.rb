@@ -98,6 +98,14 @@ def get_total_bandwidth_and_online_users
   total_upload   = active_sessions.sum("COALESCE(acctoutputoctets, 0)")
   total_bytes    = total_download + total_upload
 
+
+ ActionCable.server.broadcast("online_stats_channel", {
+      active_user_count: active_sessions.count,
+      download_total: total_download,
+      upload_total: total_upload,
+      timestamp: Time.current.strftime("%I:%M:%S %p")
+    })
+
   render json: {
     active_user_count: active_user_count || 0,
     total_bandwidth: format_bytes(total_bytes),
