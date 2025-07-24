@@ -7,7 +7,7 @@ class OnlineStatsBroadcastJob
 
   
   def perform
-    stats = generate_stats # however you get the stats
+    # stats = generate_stats # however you get the stats
 
     ActionCable.server.broadcast("online_stats_channel", { stats: stats })
 
