@@ -180,6 +180,15 @@ active_sessions = RadAcct.where(
     end
   end
 
+
+
+ActionCable.server.broadcast("online_stats_channel", {
+     active_user_count: all_active_user_data.size,
+    total_bandwidth: format_bytes(total_bytes),
+    users: all_active_user_data,
+    })
+
+
   render json: {
     active_user_count: all_active_user_data.size,
     total_bandwidth: format_bytes(total_bytes),
@@ -301,6 +310,9 @@ radacct = radacct_records.find { |r| r.acctstoptime.nil? } || radacct_records.fi
     end
   end
 
+  ActionCable.server.broadcast("online_stats_channel", {
+     data: data
+    })
   render json: data
 end
 
