@@ -122,13 +122,14 @@ config.active_storage.service = :local
   config.action_controller.raise_on_missing_callback_actions = false
 
   # config.force_ssl = true
-config.action_cable.url = nil # ← Let frontend handle it dynamically
+# config.action_cable.url = nil # ← Let frontend handle it dynamically
 
-config.action_cable.allowed_request_origins = [
-  %r{https://.*\.aitechs\.co\.ke},
-  %r{http://.*\.aitechs\.co\.ke} # optional for http
-]
-
+# config.action_cable.allowed_request_origins = [
+#   %r{https://.*\.aitechs\.co\.ke},
+#   %r{http://.*\.aitechs\.co\.ke} # optional for http
+# ]
+config.action_cable.url = "ws://localhost:3000/cable"
+  config.action_cable.allowed_request_origins = [ "http://localhost:3000", /http:\/\/localhost:\d+/ ]
 end
 
 
