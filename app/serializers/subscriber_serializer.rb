@@ -20,7 +20,8 @@ class SubscriberSerializer < ActiveModel::Serializer
 
 
   def status
-  return "offline" unless object.subscriptions.any?
+    
+  return object.update(status: 'offline') if object.subscriptions.empty?
 
   threshold_time = 3.minutes.ago
 
