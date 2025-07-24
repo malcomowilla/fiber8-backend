@@ -7,10 +7,8 @@ class OnlineStatsBroadcastJob
 
   def perform
     Rails.logger.info "Broadcasting online stats "
-
     # Account.find_each do |tenant| # Iterate over all tenants
     #   ActsAsTenant.with_tenant(tenant) do
-Rails.logger.info "Broadcasting online stats for #{tenant.subdomain}"
     active_sessions = RadAcct.where(
       acctstoptime: nil,
       framedprotocol: 'PPP',
