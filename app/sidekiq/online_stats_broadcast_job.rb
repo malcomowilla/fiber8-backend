@@ -16,7 +16,7 @@ Rails.logger.info "Account ID: #{tenant.id}"
     active_sessions = RadAcct.where(
       acctstoptime: nil,
       framedprotocol: 'PPP',
-   account_id: tenant.id # safer than ActsAsTenant.current_tenant.id
+  #  account_id: tenant.id # safer than ActsAsTenant.current_tenant.id
 
     ).where('acctupdatetime > ?', 3.minutes.ago)
 
@@ -28,7 +28,7 @@ Rails.logger.info "Account ID: #{tenant.id}"
       active_user_count: active_sessions.count,
       download_total: total_download,
       upload_total: total_upload,
-      timestamp: Time.current.strftime("%I:%M:%S %p")
+      # timestamp: Time.current.strftime("%I:%M:%S %p")
     })
   end
 end
