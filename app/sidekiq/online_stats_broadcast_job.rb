@@ -9,7 +9,7 @@ class OnlineStatsBroadcastJob
   def perform
     # stats = generate_stats # however you get the stats
 
-    ActionCable.server.broadcast("online_stats_channel", { stats: stats })
+    ActionCable.server.broadcast("online_stats_channel", { content: 'hello test' })
 
   rescue => e
     Rails.logger.error "ActionCable Broadcast Failed: #{e.class} - #{e.message}"
