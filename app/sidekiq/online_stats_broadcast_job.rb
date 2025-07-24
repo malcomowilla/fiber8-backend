@@ -35,9 +35,5 @@ end
 
 end
 
-rescue => e
-    Rails.logger.error "ActionCable Broadcast Failed: #{e.class} - #{e.message}"
-    Rails.logger.error e.backtrace.join("\n")
-    raise e # still let Sidekiq retry if needed
-  
+
 end
