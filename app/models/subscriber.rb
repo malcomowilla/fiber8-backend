@@ -3,14 +3,14 @@ class Subscriber < ApplicationRecord
     auto_increment :sequence_number
         has_secure_password(validations: false)
 has_many :subscriptions, dependent: :destroy
-      before_create :set_default_status
+      # before_create :set_default_status
 
-after_create :update_subscriber_status
+# after_create :update_subscriber_status
 
 
-      def set_default_status
-    self.status ||= 'no subscription'
-  end
+  #     def set_default_status
+  #   self.status ||= 'no subscription'
+  # end
 
 
 
