@@ -19,15 +19,19 @@ load_and_authorize_resource except: [:allow_get_current_plan, :index, :create]
       plans = PpPoePlan.all
 
   if plans.empty?
-    default_plan = PpPoePlan.create!(
+    default_plan = PpPoePlan.first_or_initialize(
       name: "Free Trial",
       maximum_pppoe_subscribers: "unlimited",
       price: "0",
       expiry_days: 3,
-      billing_cycle: "trial",
       status: "active",
-      condition: false,
-      expiry: Time.current + 3.days  # ✅ Keep as datetime, NOT string
+    )
+    default_plan.update(
+       name: "Free Trial",
+      maximum_pppoe_subscribers: "unlimited",
+      price: "0",
+      expiry_days: 3,
+      status: "active",
     )
     plans = [default_plan]
   end
@@ -50,29 +54,21 @@ load_and_authorize_resource except: [:allow_get_current_plan, :index, :create]
       name: params[:plan][:name],
       maximum_pppoe_subscribers: params[:plan][:maximum_pppoe_subscribers],
       expiry_days: params[:plan][:expiry_days],
-      billing_cycle: params[:plan][:billing_cycle],
-      condition: false
+      status: "active",
+      price: params[:plan][:price],
+      # billing_cycle: params[:plan][:billing_cycle],
+      # condition: false
     )
 
    account_id = Account.find_by(subdomain: params[:plan][:company_name])
 
 # Rails.logger.info "account_id: #{account_id.inspect}"
-   validity_period_units = 'days'
    # @my_admin.password = generate_secure_password(16)
    # @my_admin.password_confirmation = generate_secure_password(16)
-   expiry_days = params[:plan][:expiry_days]
     
    # Calculate expiration time
-   expiration_time = case validity_period_units.downcase
-                     when 'days'
-                       Time.current + expiry_days.days
-                   
-                    
-                     else
-                       nil
-                     end
-                     expiry_time_update = expiration_time.strftime("%B %d, %Y at %I:%M %p")
-                     @plan.update!(account_id: account_id.id, expiry: expiry_time_update)
+  
+           @plan.update!(account_id: account_id.id)
 
 
                      
@@ -80,8 +76,10 @@ load_and_authorize_resource except: [:allow_get_current_plan, :index, :create]
       name: params[:plan][:name],
       maximum_pppoe_subscribers: params[:plan][:maximum_pppoe_subscribers],
       expiry_days: params[:plan][:expiry_days],
-      billing_cycle: params[:plan][:billing_cycle],
-      condition: false
+       status: "active",
+      price: params[:plan][:price],
+      # billing_cycle: params[:plan][:billing_cycle],
+      # condition: false
     )
     if @plan.save
       render json: @plan, status: :created

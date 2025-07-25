@@ -80,7 +80,7 @@ Invoice.create(
 Invoice.create(
   invoice_number: generate_invoice_number,
   invoice_date: Time.current,
-    due_date:   @hotspot_plan.created_at + @hotspot_plan.expiry_days.days,
+    due_date:  @hotspot_plan.created_at + @hotspot_plan.expiry_days.days,
   invoice_desciption: @hotspot_plan.name,
   total: @hotspot_plan.price,
   status: "paid",

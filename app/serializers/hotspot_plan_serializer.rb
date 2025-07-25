@@ -11,7 +11,6 @@ class HotspotPlanSerializer < ActiveModel::Serializer
   #   object.expiry.strftime("%B %d, %Y at %I:%M %p") if object.expiry.present?
   # end
 
-
 def expiry
      days = object.expiry_days
     expiry = object.created_at + days.days

@@ -36,15 +36,20 @@ end
      plans = HotspotPlan.all
 
   if plans.empty?
-    default_plan = HotspotPlan.create!(
+    default_plan = HotspotPlan.first_or_initialize(
       name: "Free Trial",
       hotspot_subscribers: "unlimited",
       price: "0",
       expiry_days: 3,
-      billing_cycle: "trial",
       status: "active",
-      condition: false,
       # account_id: ActsAsTenant.current_tenant.id
+    )
+    default_plan.update(
+       name: "Free Trial",
+      hotspot_subscribers: "unlimited",
+      price: "0",
+      expiry_days: 3,
+      status: "active",
     )
     plans = [default_plan]
   end
@@ -63,8 +68,10 @@ end
       name: params[:plan][:name],
       hotspot_subscribers: params[:plan][:hotspot_subscribers],
       expiry_days: params[:plan][:expiry_days],
-      billing_cycle: params[:plan][:billing_cycle],
-      condition: false
+      status: "active",
+      price: params[:plan][:price],
+      # billing_cycle: params[:plan][:billing_cycle],
+      # condition: false
     )
 
 
@@ -75,30 +82,22 @@ end
    # @my_admin.password = generate_secure_password(16)
    # @my_admin.password_confirmation = generate_secure_password(16)
    # 
-   validity_period_units = 'days'
    # @my_admin.password = generate_secure_password(16)
    # @my_admin.password_confirmation = generate_secure_password(16)
-   expiry_days = params[:plan][:expiry_days]
     
    # Calculate expiration time
-   expiration_time = case validity_period_units.downcase
-                     when 'days'
-                       Time.current + expiry_days.days
-                   
-                    
-                     else
-                       nil
-                     end
+  
 
-                     expiry_time_update = expiration_time.strftime("%B %d, %Y at %I:%M %p")
-   @plan.update!(account_id: account_id&.id, expiry:  expiry_time_update)
+   @plan.update!(account_id: account_id&.id)
 
     @plan.update(
       name: params[:plan][:name],
       hotspot_subscribers: params[:plan][:hotspot_subscribers],
       expiry_days: params[:plan][:expiry_days],
-      billing_cycle: params[:plan][:billing_cycle],
-      condition: false
+      status: "active",
+            price: params[:plan][:price],
+
+     
     )
     if @plan.save
       render json: @plan, status: :created
@@ -114,7 +113,7 @@ end
       name: params[:plan][:name],
       hotspot_subscribers: params[:plan][:hotspot_subscribers],
       expiry_days: params[:plan][:expiry_days],
-      billing_cycle: params[:plan][:billing_cycle]
+      # billing_cycle: params[:plan][:billing_cycle]
     )
       render json: @plan
     else
