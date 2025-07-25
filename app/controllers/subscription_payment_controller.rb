@@ -37,12 +37,14 @@ class SubscriptionPaymentController < ApplicationController
       maximum_pppoe_subscribers: params[:plan][:maximum_pppoe_subscribers],
       expiry_days: params[:plan][:expiry_days],
       price: params[:plan][:price],
+      status: "active",
     )
 @plan.update(
      name: params[:plan][:name],
       maximum_pppoe_subscribers: params[:plan][:maximum_pppoe_subscribers],
       expiry_days: params[:plan][:expiry_days],
        price: params[:plan][:price],
+       status: "active",
 )
 
 Invoice.create(
@@ -67,12 +69,14 @@ Invoice.create(
       hotspot_subscribers: params[:plan][:hotspot_subscribers],
       expiry_days: params[:plan][:expiry_days],
        price: params[:plan][:price],
+       status: "active",
     )
 @hotspot_plan.update(
    name: params[:plan][:name],
       hotspot_subscribers: params[:plan][:hotspot_subscribers],
       expiry_days: params[:plan][:expiry_days],
        price: params[:plan][:price],
+       status: "active",
 )
 
 
