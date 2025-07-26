@@ -325,9 +325,23 @@ end
 # ")
 hotspot_package = "hotspot_#{package.parameterize(separator: '_')}"
 
-RadCheck.create(username: hotspot_voucher, radiusattribute: 'Cleartext-Password', op: ':=', value: hotspot_voucher)  
-RadCheck.create(username: hotspot_voucher, radiusattribute: 'Simultaneous-Use', op: ':=', value: shared_users.to_s)  
-RadUserGroup.create(username: hotspot_voucher, groupname: hotspot_package, priority: 1) 
+# rad_check = RadCheck.find_or_initialize_by(
+#       username: pppoe_username,
+#       radiusattribute: 'Cleartext-Password'
+#     )
+#     rad_check.update!(op: ':=', value: pppoe_password)
+
+radcheck = RadCheck.find_or_initialize_by(username: hotspot_voucher, radiusattribute: 
+'Cleartext-Password')  
+
+radcheck.update!(op: ':=', value: hotspot_voucher)
+
+radcheck_simultanesous_use = RadCheck.find_or_initialize_by(username: hotspot_voucher, radiusattribute: 
+'Simultaneous-Use')
+radcheck_simultanesous_use.update!(op: ':=',  value: shared_users.to_s)
+
+rad_user_group = RadUserGroup.find_or_initialize_by(username: hotspot_voucher, groupname: hotspot_package, priority: 1)
+rad_user_group.update!(username: hotspot_voucher, groupname: hotspot_package, priority: 1)
 
 validity_period_units = HotspotPackage.find_by(name: package).validity_period_units
 validity = HotspotPackage.find_by(name: package).validity
@@ -354,14 +368,22 @@ end
 
   # PATCH/PUT /hotspot_vouchers/1 or /hotspot_vouchers/1.json
   def update
+      @hotspot_voucher = set_hotspot_voucher
+
       if @hotspot_voucher.update(
         package: params[:package],
+        shared_users: params[:shared_users],
+        phone: params[:phone],
 
       )
       ActivtyLog.create(action: 'update', ip: request.remote_ip,
  description: "Updated hotspot voucher #{@hotspot_voucher.voucher}",
           user_agent: request.user_agent, user: current_user.username || current_user.email,
            date: Time.current)
+
+          create_voucher_radcheck(@hotspot_voucher.voucher, @hotspot_voucher.package,
+           @hotspot_voucher.shared_users)
+
         render json: @hotspot_voucher, status: :ok
       else
         render json: @hotspot_voucher.errors, status: :unprocessable_entity 
