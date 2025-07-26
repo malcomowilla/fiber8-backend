@@ -38,9 +38,46 @@ subscriptions.each do |subscription|
 end
 
 
+        blocked_ppoe_subscriptions = Subscription.where(status: 'blocked')
+        blocked_ppoe_subscriptions.find_each do |subscription|
+          
+
+             begin
+    # router = NasRouter.find_by(name: router_setting)
+
+ routers = NasRouter.all
+        routers.each do |router|
+
+
+    router_ip = router.ip_address
+    router_username = router.username
+    router_password = router.password 
+            # SSH into MikroTik router
+            Net::SSH.start(router_ip, router_username , password: router_password, verify_host_key: :never, non_interactive: true) do |ssh|
+              # Add the user's IP address to the MikroTik Address List
+              ssh.exec!("ip firewall address-list add list=aitechs_blocked_list address=#{subscription.ip_address} comment=#{subscription.ppoe_username}")
+        
+              Rails.logger.info "Blocked #{subscription.ppoe_username} (#{subscription.ip_address}) on MikroTik."
+        Rails.logger.info("Blocked #{subscription.ppoe_username} (#{subscription.ip_address}) on MikroTik.")
+              # Update subscription status in DB
+              subscription.update!(status: 'blocked')
+            end
+          rescue => e
+            puts "Error blocking #{subscription.ppoe_username}: #{e.message}"
+            Rails.logger.info("Error blocking #{subscription.ppoe_username}: #{e.message}")
+          end
+
+          
+        end
+        end
+
+
+
+
+
+
 
         expired_ppoe_subscriptions = Subscription.where("expiration_date <= ?", DateTime.current)
-
         expired_ppoe_subscriptions.find_each do |subscription|
           begin
     # router = NasRouter.find_by(name: router_setting)
@@ -66,11 +103,17 @@ end
             puts "Error blocking #{subscription.ppoe_username}: #{e.message}"
             Rails.logger.info("Error blocking #{subscription.ppoe_username}: #{e.message}")
           end
+
+          
         end
       end
         
 
-      end
+    
+
+
+
+    end
       end
 
 
