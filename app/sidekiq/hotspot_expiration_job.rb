@@ -21,7 +21,7 @@ hotspot_subscriptions.each do |subscription|
 
   if expired_hotspot
     # Deny login by adding reject if not already there
-    RadCheck.create(
+    RadCheck.find_or_create_by!(
       username: subscription.voucher,
       radiusattribute: 'Auth-Type',
       account_id: subscription.account_id,

@@ -19,7 +19,7 @@ subscriptions.each do |subscription|
 
   if expired_pppoe
     # Deny login by adding reject if not already there
-    RadCheck.create(
+    RadCheck.find_or_create_by!(
       username: subscription.ppoe_username,
       radiusattribute: 'Auth-Type',
       account_id: subscription.account_id,
