@@ -21,7 +21,7 @@ subscriptions.each do |subscription|
     # Deny login by adding reject if not already there
     RadCheck.find_or_create_by!(
       username: subscription.ppoe_username,
-      attribute: 'Auth-Type',
+      radiusattribute: 'Auth-Type',
       op: ':=',
       value: 'Reject'
     )
@@ -29,7 +29,7 @@ subscriptions.each do |subscription|
     # Allow login by removing the reject entry if it exists
     RadCheck.where(
       username: subscription.ppoe_username,
-      attribute: 'Auth-Type',
+      radiusattribute: 'Auth-Type',
       value: 'Reject'
     ).destroy_all
   end
