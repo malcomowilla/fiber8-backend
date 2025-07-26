@@ -15,7 +15,7 @@ subscriptions.each do |subscription|
   # Fetch the PPPoE plan linked to this subscription/account
   plan = tenant&.pp_poe_plan
 
-  expired_pppoe = plan&.expiry.present? && plan.expiry <= Time.current
+  expired_pppoe = plan&.expiry.present? && plan.expiry >= Time.current
 
   if expired_pppoe
     # Deny login by adding reject if not already there

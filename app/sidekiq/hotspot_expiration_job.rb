@@ -17,7 +17,7 @@ hotspot_subscriptions.each do |subscription|
   # Fetch the PPPoE plan linked to this subscription/account
   plan = tenant&.hotspot_plan
 
-  expired_hotspot = plan&.expiry.present? && plan.expiry <= Time.current
+  expired_hotspot = plan&.expiry.present? && plan.expiry >= Time.current
 
   if expired_hotspot
     # Deny login by adding reject if not already there
