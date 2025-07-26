@@ -9,9 +9,37 @@ class HotspotExpirationJob
 
 
         expired_vouchers = HotspotVoucher.where("expiration <= ? AND status != ?", Time.current, 'expired')
+        hotspot_subscriptions = HotspotVoucher.all
 
+hotspot_subscriptions.each do |subscription|
+  next unless subscription.voucher.present?
 
+  # Fetch the PPPoE plan linked to this subscription/account
+  plan = tenant&.hotspot_plan
+
+  expired_hotspot = plan&.expiry.present? && plan.expiry <= Time.current
+
+  if expired_hotspot
+    # Deny login by adding reject if not already there
+    Radcheck.find_or_create_by!(
+      username: subscription.voucher,
+      attribute: 'Auth-Type',
+      op: ':=',
+      value: 'Reject'
+    )
+  else
+    # Allow login by removing the reject entry if it exists
+    Radcheck.where(
+      username: subscription.voucher,
+      attribute: 'Auth-Type',
+      value: 'Reject'
+    ).destroy_all
+  end
+end
+     
         expired_vouchers.each do |voucher|
+
+          
           logout_hotspot_user(voucher)
           voucher.update!(status: 'expired') # Mark as expired in DB
 

@@ -128,7 +128,7 @@ class RouterPingJob
         RadAcct.unscoped.where(
         framedipaddress: subscription.ip_address,
         username: subscription.ppoe_username,
-        account_id: nil
+        # account_id: nil
         ).find_each do |radacct|
           begin
             radacct.update!(account_id: tenant.id)

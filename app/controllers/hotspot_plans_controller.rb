@@ -35,6 +35,7 @@ end
     # render json: @plans,each_serializer: HotspotPlanSerializer
      plans = HotspotPlan.all
 
+
   if plans.empty?
     default_plan = HotspotPlan.first_or_initialize(
       name: "Free Trial",
@@ -42,7 +43,8 @@ end
       price: "0",
       expiry_days: 3,
       status: "active",
-      # account_id: ActsAsTenant.current_tenant.id
+        expiry:  Time.current + 3.days
+
     )
     default_plan.update(
        name: "Free Trial",
@@ -50,6 +52,8 @@ end
       price: "0",
       expiry_days: 3,
       status: "active",
+              expiry: Time.current + 3.days
+
     )
     plans = [default_plan]
   end
@@ -64,12 +68,16 @@ end
   end
 
   def create
+    expiry_days = params[:plan][:expiry_days]
+
     @plan = HotspotPlan.first_or_initialize(
       name: params[:plan][:name],
       hotspot_subscribers: params[:plan][:hotspot_subscribers],
       expiry_days: params[:plan][:expiry_days],
       status: "active",
       price: params[:plan][:price],
+             expiry: Time.current + expiry_days.days
+
       # billing_cycle: params[:plan][:billing_cycle],
       # condition: false
     )
@@ -96,6 +104,8 @@ end
       expiry_days: params[:plan][:expiry_days],
       status: "active",
             price: params[:plan][:price],
+              expiry: Time.current + expiry_days.days
+
 
      
     )

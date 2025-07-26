@@ -1,6 +1,6 @@
 
 
-class SetTenant
+class SetTenantPpoe 
   def initialize(app)
     @app = app
   end
@@ -16,44 +16,46 @@ class SetTenant
 
     admin_sensitive_paths = [
     
-      'radius_settings',
-      'get_ticket_settings',
-      'all_sms',
-      'get_tickets',
-      'sms_settings',
-      'sms_provider_settings',
+#       'radius_settings',
+#       # 'get_ticket_settings',
+#       'all_sms',
+#       'get_tickets',
+#       'get_package',
+#       'sms_settings',
+#       'sms_provider_settings',
 
+# 'get_all_admins',
 
-'delete_subscriber/:id',
-'update_subscriber',
-'delete_hotspot_package/:id',
-      'subscribers/import',
-      'update_hotspot_package/:id',
-'router_settings',
-      'update_package/:id',
-      'package/:id',
+'delete_subscriber',
+# 'update_subscriber',
+      # 'subscribers',
+      # 'update_hotspot_package',
+# 'router_settings',
+      'update_package',
+      'package',
       
+# 'subscribers',
+# 'total_subscribers',
+# 'subscribers_offline',
+# 'get_package',
+# 'delete_user',
 
-'delete_user/:id',
-'update_router/:id',
-'delete_router/:id',
-      'company_settings',
-'create_router',
-'logout',
-'create_ticket',
-'update_ticket',
-      'login_with_hotspot_voucher',
+      # 'company_settings',
+# 'create_router',
+# 'logout',
+
+      # 'login_with_hotspot_voucher',
 'create_package',
-  'restart_service',
-      'block_service',
-      'client_leads',
-      'calendar_events',
-      'send_sms',
+#   'restart_service',
+#       'block_service',
+#       'client_leads',
+#       'calendar_events',
+#       'send_sms',
       
-      'reboot_router',
-      'wireguard/generate_config',
-      'sign_in',
-      'wireguard/generate_config'
+#       'reboot_router',
+      # 'wireguard',
+      # 'sign_in',
+      
 
 
 
@@ -92,7 +94,7 @@ class SetTenant
 
         # Check for expired plans
         if license_expired?(account)
-          error_message = "License expired for account #{account.subdomain}. Please renew your license."
+          error_message = "License expired for account #{account.subdomain}. Please renew your license for pppoe license"
           Rails.logger.error error_message
           return [402, { 'Content-Type' => 'application/json' }, [{ error: error_message }.to_json]]
         end
@@ -120,10 +122,9 @@ class SetTenant
     # expired_hotspot = account.hotspot_plan.present? && account.hotspot_plan.expiry <= Time.current
 
     # expired_pppoe || expired_hotspot
-     expired_pppoe = account.pp_poe_plan&.expiry.present? && account.pp_poe_plan.expiry <= Time.current
-  expired_hotspot = account.hotspot_plan&.expiry.present? && account.hotspot_plan.expiry <= Time.current
+     expired_pppoe = account.pp_poe_plan&.expiry&.present? && account&.pp_poe_plan&.expiry >= Time.current
 
-  expired_pppoe || expired_hotspot
+  expired_pppoe
   end
 end
 

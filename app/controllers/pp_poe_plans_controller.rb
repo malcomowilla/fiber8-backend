@@ -25,6 +25,8 @@ load_and_authorize_resource except: [:allow_get_current_plan, :index, :create]
       price: "0",
       expiry_days: 3,
       status: "active",
+       expiry: Time.current + 3.days
+
     )
     default_plan.update(
        name: "Free Trial",
@@ -32,6 +34,8 @@ load_and_authorize_resource except: [:allow_get_current_plan, :index, :create]
       price: "0",
       expiry_days: 3,
       status: "active",
+       expiry: Time.current + 3.days
+
     )
     plans = [default_plan]
   end
@@ -49,13 +53,14 @@ load_and_authorize_resource except: [:allow_get_current_plan, :index, :create]
   end
 
   def create
-
+expiry_days = params[:plan][:expiry_days]
     @plan = PpPoePlan.first_or_initialize(
       name: params[:plan][:name],
       maximum_pppoe_subscribers: params[:plan][:maximum_pppoe_subscribers],
       expiry_days: params[:plan][:expiry_days],
       status: "active",
       price: params[:plan][:price],
+       expiry:   Time.current + expiry_days.days
       # billing_cycle: params[:plan][:billing_cycle],
       # condition: false
     )
@@ -78,6 +83,8 @@ load_and_authorize_resource except: [:allow_get_current_plan, :index, :create]
       expiry_days: params[:plan][:expiry_days],
        status: "active",
       price: params[:plan][:price],
+             expiry:   Time.current + expiry_days.days
+
       # billing_cycle: params[:plan][:billing_cycle],
       # condition: false
     )

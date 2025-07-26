@@ -30,6 +30,8 @@ class SubscriptionPaymentController < ApplicationController
 
   def make_subscription_payment
     plan_type = params[:plan_type]
+expiry_days = params[:plan][:expiry_days]
+
 
     if plan_type == 'pppoe'
         @plan = PpPoePlan.first_or_initialize(
@@ -38,6 +40,8 @@ class SubscriptionPaymentController < ApplicationController
       expiry_days: params[:plan][:expiry_days],
       price: params[:plan][:price],
       status: "active",
+  expiry:  Time.current + expiry_days.days
+
     )
 @plan.update(
      name: params[:plan][:name],
@@ -45,15 +49,20 @@ class SubscriptionPaymentController < ApplicationController
       expiry_days: params[:plan][:expiry_days],
        price: params[:plan][:price],
        status: "active",
+         expiry:  Time.current + expiry_days.days
+
+
 )
 
 Invoice.create(
   invoice_number: generate_invoice_number,
   invoice_date: Time.current,
-  due_date:   @plan.created_at + @plan.expiry_days.days,
+  due_date:   Time.current + expiry_days.days,
   invoice_desciption: @plan.name,
   total: @plan.price,
   status: "paid",
+
+
 )
     if @plan.save
 
@@ -70,6 +79,8 @@ Invoice.create(
       expiry_days: params[:plan][:expiry_days],
        price: params[:plan][:price],
        status: "active",
+         expiry:  Time.current + expiry_days.days
+
     )
 @hotspot_plan.update(
    name: params[:plan][:name],
@@ -77,6 +88,9 @@ Invoice.create(
       expiry_days: params[:plan][:expiry_days],
        price: params[:plan][:price],
        status: "active",
+         expiry:  Time.current + expiry_days.days
+
+
 )
 
 
@@ -84,10 +98,12 @@ Invoice.create(
 Invoice.create(
   invoice_number: generate_invoice_number,
   invoice_date: Time.current,
-    due_date:  @hotspot_plan.created_at + @hotspot_plan.expiry_days.days,
+      due_date:  Time.current + expiry_days.days,
   invoice_desciption: @hotspot_plan.name,
   total: @hotspot_plan.price,
   status: "paid",
+
+
 )
 
     if  @hotspot_plan.save

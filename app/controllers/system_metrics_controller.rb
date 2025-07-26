@@ -39,31 +39,6 @@ if current_user
   end
 
 
-  # def reboot_router
-  #   router_setting = ActsAsTenant.current_tenant&.router_setting&.router_name
-  #   router = NasRouter.find_by(name: router_setting)
-
-  #   return unless router
-
-  #   router_ip = router.ip_address
-  #   router_username = router.username
-  #   router_password = router.password 
-
-
-  #   begin
-  #     Net::SSH.start(router_ip, router_username, password: router_password, verify_host_key: :never) do |ssh|
-  #       ssh.exec!('system reboot; :put "y"')  # Auto-confirm reboot
-  #     end
-  #     Rails.logger.info "MikroTik router at #{router_ip } is rebooting."
-  #     render json: { message: 'Router is rebooting' }, status: :ok
-  #     { success: true, message: "Router is rebooting." }
-  #   rescue StandardError => e
-  #     Rails.logger.error "Failed to reboot router: #{e.message}"
-  #     render json: {error: 'Failed to reboot router'}, status: :unprocessable_entity  
-  #     { success: false, error: e.message }
-  #   end
-  # end
-
   def reboot_router
 
     # router_setting = ActsAsTenant.current_tenant&.router_setting&.router_name

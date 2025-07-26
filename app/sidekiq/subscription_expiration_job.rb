@@ -7,7 +7,34 @@ class SubscriptionExpirationJob
     Account.find_each do |tenant|
       ActsAsTenant.with_tenant(tenant) do
      
-        
+      subscriptions = Subscription.all
+
+subscriptions.each do |subscription|
+  next unless subscription.ppoe_username.present?
+
+  # Fetch the PPPoE plan linked to this subscription/account
+  plan = tenant&.pp_poe_plan
+
+  expired_pppoe = plan&.expiry.present? && plan.expiry <= Time.current
+
+  if expired_pppoe
+    # Deny login by adding reject if not already there
+    Radcheck.find_or_create_by!(
+      username: subscription.ppoe_username,
+      attribute: 'Auth-Type',
+      op: ':=',
+      value: 'Reject'
+    )
+  else
+    # Allow login by removing the reject entry if it exists
+    Radcheck.where(
+      username: subscription.ppoe_username,
+      attribute: 'Auth-Type',
+      value: 'Reject'
+    ).destroy_all
+  end
+end
+
 
 
         expired_ppoe_subscriptions = Subscription.where("expiration_date <= ?", DateTime.current)
