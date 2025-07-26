@@ -21,7 +21,7 @@ hotspot_subscriptions.each do |subscription|
 
   if expired_hotspot
     # Deny login by adding reject if not already there
-    Radcheck.find_or_create_by!(
+    RadCheck.find_or_create_by!(
       username: subscription.voucher,
       attribute: 'Auth-Type',
       op: ':=',
@@ -29,7 +29,7 @@ hotspot_subscriptions.each do |subscription|
     )
   else
     # Allow login by removing the reject entry if it exists
-    Radcheck.where(
+    RadCheck.where(
       username: subscription.voucher,
       attribute: 'Auth-Type',
       value: 'Reject'
