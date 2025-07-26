@@ -760,7 +760,7 @@ if @subscription.service_type == 'dhcp'
             
 
 #       end
-RemoveConnectionJob.perform_later(@subscription.ppoe_username, @subscription)
+# RemoveConnectionJob.perform_later(@subscription.ppoe_username, @subscription)
     # remove_pppoe_connection(@subscription.ppoe_username)
 
     expiration_time = Time.parse(@subscription.expiration_date.to_s)
