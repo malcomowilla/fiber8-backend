@@ -22,6 +22,7 @@ subscriptions.each do |subscription|
     RadCheck.create(
       username: subscription.ppoe_username,
       radiusattribute: 'Auth-Type',
+      account_id: subscription.account_id,
       op: ':=',
       value: 'Reject'
     )
@@ -30,6 +31,7 @@ subscriptions.each do |subscription|
     RadCheck.where(
       username: subscription.ppoe_username,
       radiusattribute: 'Auth-Type',
+      account_id: subscription.account_id,
       value: 'Reject'
     ).destroy_all
   end

@@ -24,6 +24,7 @@ hotspot_subscriptions.each do |subscription|
     RadCheck.create(
       username: subscription.voucher,
       radiusattribute: 'Auth-Type',
+      account_id: subscription.account_id,
       op: ':=',
       value: 'Reject'
     )
@@ -31,6 +32,7 @@ hotspot_subscriptions.each do |subscription|
     # Allow login by removing the reject entry if it exists
     RadCheck.where(
       username: subscription.voucher,
+      account_id: subscription.account_id,
       radiusattribute: 'Auth-Type',
       value: 'Reject'
     ).destroy_all
