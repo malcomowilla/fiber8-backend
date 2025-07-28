@@ -9,7 +9,7 @@ private
 
 def restrict_tunnel_access
   # Allow only Active Storage image serving
-  return if request.path.start_with?("/rails/active_storage")
+  return if request.path.start_with?("/rails/active_storage") || request.path.start_with?("/api")
 
   # Allow internal API access from your frontend (by origin header or token)
   allowed_origins = [
