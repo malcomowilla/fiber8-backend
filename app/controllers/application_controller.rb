@@ -2,32 +2,19 @@ class ApplicationController < ActionController::Base
 
     set_current_tenant_through_filter
 before_action :set_time_zone
+before_action :block_loophole_requests
 
-before_action :restrict_tunnel_access
+def block_loophole_requests
+  loophole_hosts = [
+    /.*\.loophole\.site/,
+    /.*\.loca\.lt/ # another Loophole alias
+  ]
 
-private
-
-def restrict_tunnel_access
-  # Always allow Active Storage routes
-  return if request.path.start_with?("/rails/active_storage")
-
-  # Allow API requests ONLY from trusted origins
-  if request.path.start_with?("/api")
-    allowed_origins = [
-      "https://fiber8.aitechs.co.ke",  # Your production frontend
-      "http://localhost:3000"          # For local dev
-    ]
-
-    # Allow if request comes from known frontend
-    return if allowed_origins.include?(request.headers["X-Subdomain"])
-
-    # Alternatively, check for a trusted API token (optional)
-    return if request.headers["X-Api-Key"] == ENV["FRONTEND_API_KEY"]
+  if loophole_hosts.any? { |regex| request.host =~ regex || request.referer.to_s =~ regex }
+    head :forbidden
   end
-
-  # Block all other requests
-  head :not_found
 end
+
 
 
 
