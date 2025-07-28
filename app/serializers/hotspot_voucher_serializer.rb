@@ -7,11 +7,13 @@ def expiration
 end
 
  def speed_limit
-  upload_limit = HotspotPackage.where(package_name: self.object.package).upload_limit
-   download_limit =  HotspotPackage.where(package_name: self.object.package).download_limit
+  package = HotspotPackage.find_by(package_name: self.object.package)
 
-   "#{upload_limit}M/#{download_limit}M" || "Unlimited"
-
+  if package && package.upload_limit && package.download_limit
+    "#{package.upload_limit}M/#{package.download_limit}M"
+  else
+    "Unlimited"
+  end
 end
 
 def status
