@@ -62,7 +62,6 @@ config.time_zone = 'Africa/Nairobi'
     # config.active_job.queue_adapter = :sidekiq
     # Configuration for the application, engines, and railties goes here.
     config.active_job.queue_adapter = :async
-    config.api_only = true
 
     # These settings can be overridden in specific environments using the files
     # in config/environments, which are processed later.
