@@ -13,7 +13,7 @@ def restrict_tunnel_access
 
   # Allow internal API access from your frontend (by origin header or token)
   allowed_origins = [
-    "https://your-frontend-app.com", # replace with your frontend origin
+    "https://fiber8.aitechs.co.ke",  # allow production
     "http://localhost:3000"          # allow during development
   ]
   
