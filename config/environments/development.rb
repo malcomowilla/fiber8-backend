@@ -152,6 +152,7 @@ end
 
 
 
+config.consider_all_requests_local = false
 
 
 
