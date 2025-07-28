@@ -8,22 +8,26 @@ before_action :restrict_tunnel_access
 private
 
 def restrict_tunnel_access
-  # Allow only Active Storage image serving
-  return if request.path.start_with?("/rails/active_storage") || request.path.start_with?("/api")
+  # Always allow Active Storage routes
+  return if request.path.start_with?("/rails/active_storage")
 
-  # Allow internal API access from your frontend (by origin header or token)
-  allowed_origins = [
-    "https://fiber8.aitechs.co.ke",  # allow production
-    "http://localhost:3000"          # allow during development
-  ]
-  
-  if allowed_origins.include?(request.headers["Origin"])
-    return
+  # Allow API requests ONLY from trusted origins
+  if request.path.start_with?("/api")
+    allowed_origins = [
+      "https://fiber8.aitechs.co.ke",  # Your production frontend
+      "http://localhost:3000"          # For local dev
+    ]
+
+    # Allow if request comes from known frontend
+    return if allowed_origins.include?(request.headers["X-Subdomain"])
+
+    # Alternatively, check for a trusted API token (optional)
+    return if request.headers["X-Api-Key"] == ENV["FRONTEND_API_KEY"]
   end
 
+  # Block all other requests
   head :not_found
 end
-
 
 
 
