@@ -103,6 +103,7 @@ scope '/api' do
 
 end
 
+post '/make_subscription_payment', to: 'subscription_payment#make_subscription_payment'
 
 get '/api/subscribers_offline', to: 'subscribers#subscribers_offline'
 post '/api/make_subscription_payment', to: 'subscription_payment#make_subscription_payment'

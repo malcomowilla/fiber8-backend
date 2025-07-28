@@ -48,7 +48,7 @@ config.action_mailer.smtp_settings = {
   config.eager_load = false
 
   # Show full error reports.
-  config.consider_all_requests_local = false
+  config.consider_all_requests_local = true
 
   # Enable server timing
   config.server_timing = true
