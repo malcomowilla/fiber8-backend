@@ -3,6 +3,26 @@ class ApplicationController < ActionController::Base
     set_current_tenant_through_filter
 before_action :set_time_zone
 
+before_action :restrict_tunnel_access
+
+private
+
+def restrict_tunnel_access
+  # Allow only Active Storage image serving
+  return if request.path.start_with?("/rails/active_storage")
+
+  # Allow internal API access from your frontend (by origin header or token)
+  allowed_origins = [
+    "https://your-frontend-app.com", # replace with your frontend origin
+    "http://localhost:3000"          # allow during development
+  ]
+  
+  if allowed_origins.include?(request.headers["Origin"])
+    return
+  end
+
+  head :not_found
+end
 
 
 
