@@ -7,7 +7,7 @@ def expiration
 end
 
  def speed_limit
-  package = HotspotPackage.find_by(package_name: self.object.package)
+  package = HotspotPackage.find_by(name: self.object.package)
 
   if package && package.upload_limit && package.download_limit
     "#{package.upload_limit}M/#{package.download_limit}M"
