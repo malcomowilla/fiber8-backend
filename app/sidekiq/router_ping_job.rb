@@ -128,7 +128,7 @@ class RouterPingJob
         RadAcct.unscoped.where(
         framedipaddress: subscription.ip_address,
         username: subscription.ppoe_username,
-        # account_id: nil
+        account_id: nil
         ).find_each do |radacct|
           begin
             radacct.update!(account_id: tenant.id)
@@ -137,6 +137,36 @@ class RouterPingJob
           end
         end
         end
+
+
+
+
+
+
+   hotspot_subscriptions = HotspotVoucher.where.not(voucher: [nil, ''])
+               hotspot_subscriptions.each do |subscription|
+        # Process RadAcct records with nil account_id
+        nil_radacct_count = RadAcct.unscoped.where(
+        
+          username: subscription.voucher,
+          account_id: nil
+        ).count
+        Rails.logger.info "Found #{nil_radacct_count} RadAcct records with nil account_id for tenant otspot voucher #{tenant.id}"
+
+        RadAcct.unscoped.where(
+           username: subscription.voucher,
+        account_id: nil
+        ).find_each do |radacct|
+          begin
+            radacct.update!(account_id: tenant.id)
+          rescue => e
+            # Rails.logger.error "Failed to update radacct with id #{radacct.id}: #{e.message}"
+          end
+        end
+        end
+
+
+
 
 
 
