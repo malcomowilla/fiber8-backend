@@ -25,21 +25,24 @@ def set_tenant
 
 
  def check_session
-  username = params[:username]
- 
+  ip = params[:ip]
 
-  HotspotVoucher.where('expiration > ?', Time.current).find_each do |voucher|
-    if voucher.voucher == username 
+  # Step 1: Check if there's an active session in radacct (acctstoptime is nil = session still active)
+  session = RadAcct.find_by(framedipaddress: ip, framedprotocol: '')
+
+  if session
+    voucher = HotspotVoucher.find_by(voucher: session.username)
+
+    if voucher && voucher.expiration > Time.current
       return render json: {
         session_active: true,
-        username: voucher.voucher,
+        username: voucher.voucher
       }
     end
   end
 
   render json: { session_active: false }
 end
-#
 #RadAcct
  def get_active_hotspot_users
   active_sessions = RadAcct.where(acctstoptime: nil, framedprotocol: '')
