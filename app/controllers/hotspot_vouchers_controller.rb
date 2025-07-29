@@ -355,7 +355,7 @@ when 'minutes' then Time.current + validity.minutes
 end&.strftime("%d %b %Y %H:%M:%S")
 
 if expiration_time
-  rad_check = RadGroupCheck.find_or_initialize_by(groupname: hotspot_voucher, radiusattribute: 'Expiration')
+  rad_check = RadCheck.find_or_initialize_by(username: hotspot_voucher, radiusattribute: 'Expiration')
   rad_check.update!(op: ':=', value: expiration_time)
 end
   
