@@ -103,6 +103,8 @@ scope '/api' do
 
 end
 
+
+get '/api/check_session', to: 'hotspot_subscriptions#check_session'
 post '/make_subscription_payment', to: 'subscription_payment#make_subscription_payment'
 
 get '/api/subscribers_offline', to: 'subscribers#subscribers_offline'
