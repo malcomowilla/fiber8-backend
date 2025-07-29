@@ -38,12 +38,11 @@ subscriptions.each do |subscription|
 end
 
 
-        blocked_ppoe_subscriptions = Subscription.where(status: 'blocked')
+        blocked_ppoe_subscriptions = Subscription.where(status: 'blocked') 
         blocked_ppoe_subscriptions.find_each do |subscription|
           
 
              begin
-    # router = NasRouter.find_by(name: router_setting)
 
  routers = NasRouter.all
         routers.each do |router|
@@ -53,12 +52,28 @@ end
     router_username = router.username
     router_password = router.password 
             # SSH into MikroTik router
+             
+              is_online = RadAcct.where(
+      acctstoptime: nil,
+      framedprotocol: 'PPP',
+      framedipaddress: subscription.ip_address
+    ).where('acctupdatetime > ?', threshold_time).exists?
+
+
             Net::SSH.start(router_ip, router_username , password: router_password, verify_host_key: :never, non_interactive: true) do |ssh|
-              # Add the user's IP address to the MikroTik Address List
-              ssh.exec!("ip firewall address-list add list=aitechs_blocked_list address=#{subscription.ip_address} comment=#{subscription.ppoe_username}")
-        
-              Rails.logger.info "Blocked #{subscription.ppoe_username} (#{subscription.ip_address}) on MikroTik."
+
+              if is_online
+                  Rails.logger.info "Blocked #{subscription.ppoe_username} (#{subscription.ip_address}) on MikroTik."
         Rails.logger.info("Blocked #{subscription.ppoe_username} (#{subscription.ip_address}) on MikroTik.")
+             ssh.exec!("ip firewall address-list add list=aitechs_blocked_list address=#{subscription.ip_address} comment=#{subscription.ppoe_username}")
+
+              else
+                Rails.logger.info "User #{subscription.ppoe_username} (#{subscription.ip_address}) is offline, not blocking."
+                Rails.logger.info("User #{subscription.ppoe_username} (#{subscription.ip_address}) is offline, not blocking.")
+              end
+
+        
+            
               # Update subscription status in DB
               subscription.update!(status: 'blocked')
             end
