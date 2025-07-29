@@ -1,7 +1,7 @@
 class HotspotVouchersController < ApplicationController
   # before_action :set_hotspot_voucher, only: %i[ show edit update destroy ]
 
-load_and_authorize_resource except: [:login_with_hotspot_voucher]
+load_and_authorize_resource except: [:login_with_hotspot_voucher, :make_payment]
 
 
   set_current_tenant_through_filter
@@ -62,7 +62,7 @@ def make_payment
   phone_number = params[:phone_number]
   amount = params[:amount]
   shortcode = ActsAsTenant.current_tenant&.hotspot_mpesa_setting.short_code
-  callback_url = "https://df2a-105-163-1-122.ngrok-free.app/customer_mpesa_stk_payments"
+  # callback_url = "https://df2a-105-163-1-122.ngrok-free.app/customer_mpesa_stk_payments"
   passkey = ActsAsTenant.current_tenant&.hotspot_mpesa_setting.passkey
   consumer_key = ActsAsTenant.current_tenant&.hotspot_mpesa_setting.consumer_key
   consumer_secret = ActsAsTenant.current_tenant&.hotspot_mpesa_setting.consumer_secret
