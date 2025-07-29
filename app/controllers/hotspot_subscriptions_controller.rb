@@ -24,7 +24,7 @@ def set_tenant
   end
 
 
- def check_sessions
+ def check_session
   username = params[:username]
  
 
