@@ -57,7 +57,7 @@ end
       acctstoptime: nil,
       framedprotocol: 'PPP',
       framedipaddress: subscription.ip_address
-    ).where('acctupdatetime > ?', threshold_time).exists?
+    ).where('acctupdatetime > ?', 3.minutes.ago).exists?
 
 
             Net::SSH.start(router_ip, router_username , password: router_password, verify_host_key: :never, non_interactive: true) do |ssh|
