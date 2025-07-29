@@ -103,11 +103,23 @@ end
 
     router_ip = router.ip_address
     router_username = router.username
-    router_password = router.password 
+    router_password = router.password
+    
+      is_online = RadAcct.where(
+      acctstoptime: nil,
+      framedprotocol: 'PPP',
+      framedipaddress: subscription.ip_address
+    ).where('acctupdatetime > ?', 3.minutes.ago).exists?
             # SSH into MikroTik router
             Net::SSH.start(router_ip, router_username , password: router_password, verify_host_key: :never, non_interactive: true) do |ssh|
               # Add the user's IP address to the MikroTik Address List
-              ssh.exec!("ip firewall address-list add list=aitechs_blocked_list address=#{subscription.ip_address} comment=#{subscription.ppoe_username}")
+              if is_online
+                ssh.exec!("ip firewall address-list add list=aitechs_blocked_list address=#{subscription.ip_address} comment=#{subscription.ppoe_username}")
+                Rails.logger.info "Blocked #{subscription.ppoe_username} (#{subscription.ip_address}) on MikroTik."
+
+              else
+                Rails.logger.info "User #{subscription.ppoe_username} (#{subscription.ip_address}) is offline, not blocking."
+              end
         
               Rails.logger.info "Blocked #{subscription.ppoe_username} (#{subscription.ip_address}) on MikroTik."
         Rails.logger.info("Blocked #{subscription.ppoe_username} (#{subscription.ip_address}) on MikroTik.")
@@ -128,7 +140,12 @@ end
 
 
 
+
+      
     end
+
+
+
       end
 
 
