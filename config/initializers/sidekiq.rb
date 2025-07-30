@@ -31,7 +31,10 @@ Sidekiq.configure_server do |config|
       'cron' => '* * * * *'
     },
 
-
+'generate_clients_conf_job' => {
+  'class' => 'GenerateClientsConfJob',
+  'cron' => '* * * * *'
+},
 
 'online_stats_broadcast_job' => {
   'class' => 'OnlineStatsBroadcastJob',
