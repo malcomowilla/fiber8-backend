@@ -41,10 +41,16 @@ Rails.logger.info "IP from check session: #{ip}"
         username: voucher.voucher,
         ip: ip
       }
+    else
+
+      return render json: {
+        session_active: false,
+        username: voucher.voucher,
+        ip: ip
+      }
     end
   end
 
-  render json: { session_active: false }
 end
 #RadAcct
  def get_active_hotspot_users
