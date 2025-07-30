@@ -24,6 +24,7 @@ class SetTenantHotspot
       'hotspot_vouchers',
 'hotspot_packages',
 'hotspot_templates',
+'get_active_hotspot_users',
 
       'update_hotspot_package',
       
@@ -46,7 +47,7 @@ class SetTenantHotspot
 
 
     path_segments = request.path.split('/').reject(&:empty?)
-    target_path = path_segments[1] # Skip 'api' prefix
+    target_path = path_segments[1] || path_segments[0] # Skip 'api' prefix
 
     # Rails.logger.info "Skipping inactivity check for non-admin path target path: #{request.path.split('/').reject(&:empty?)[1]}"
     #  Rails.logger.info "Skipping inactivity check for non-admin path2: #{request.path.split('/').reject(&:empty?)}"

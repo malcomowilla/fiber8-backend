@@ -27,12 +27,13 @@ class SetTenantPpoe
 # 'get_all_admins',
 
 'delete_subscriber',
-# 'update_subscriber',
+ 'update_subscriber',
       # 'subscribers',
       # 'update_hotspot_package',
 # 'router_settings',
       'update_package',
       'package',
+      'import',
       
 # 'subscribers',
 # 'total_subscribers',
@@ -67,7 +68,7 @@ class SetTenantPpoe
 
 
     path_segments = request.path.split('/').reject(&:empty?)
-    target_path = path_segments[1] # Skip 'api' prefix
+    target_path = path_segments[1] || path_segments[0] # Skip 'api' prefix
 
     # Rails.logger.info "Skipping inactivity check for non-admin path target path: #{request.path.split('/').reject(&:empty?)[1]}"
     #  Rails.logger.info "Skipping inactivity check for non-admin path2: #{request.path.split('/').reject(&:empty?)}"
@@ -122,7 +123,7 @@ class SetTenantPpoe
     # expired_hotspot = account.hotspot_plan.present? && account.hotspot_plan.expiry <= Time.current
 
     # expired_pppoe || expired_hotspot
-     expired_pppoe = account.pp_poe_plan&.expiry&.present? && account&.pp_poe_plan&.expiry >= Time.current
+     expired_pppoe = account.pp_poe_plan&.expiry&.present? && account&.pp_poe_plan&.expiry <= Time.current
 
   expired_pppoe
   end
