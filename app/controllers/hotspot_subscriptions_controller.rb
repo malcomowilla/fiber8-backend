@@ -30,8 +30,8 @@ def set_tenant
 
 Rails.logger.info "IP from check session: #{ip}"
   # Step 1: Check if there's an active session in radacct (acctstoptime is nil = session still active)
-  session = RadAcct.find_by(framedipaddress: ip, framedprotocol: '') || RadAcct.find_by(callingstationid: mac, framedprotocol: '')
-
+session = RadAcct.where(framedipaddress: ip, acctstoptime: nil).order(acctupdatetime: :desc).first ||
+          RadAcct.where(callingstationid: mac, acctstoptime: nil).order(acctupdatetime: :desc).first
   if session
     voucher = HotspotVoucher.find_by(voucher: session.username)
 
