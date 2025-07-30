@@ -472,7 +472,6 @@ def login_with_hotspot_voucher
     router_username = nas_router.username
 
 
-
   command = "/ip hotspot active login user=#{params[:voucher]} password=#{params[:voucher]} ip=#{params[:ip]}"
 
   begin
