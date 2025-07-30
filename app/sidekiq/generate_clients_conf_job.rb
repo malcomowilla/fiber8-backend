@@ -5,10 +5,12 @@ class GenerateClientsConfJob
   include Sidekiq::Job
 
   def perform
+     Account.find_each do |tenant|
+      ActsAsTenant.with_tenant(tenant) do
     Rails.logger.info "Generating clients.conf"
     File.open('/etc/freeradius/3.0/clients.conf', 'w') do |f|
       Na.find_each do |nas|
-        next if nas.nasname.blank? || nas.secret.blank?
+        # next if nas.nasname.blank? || nas.secret.blank?
 
         f.puts <<~CLIENT
           client #{nas.shortname.presence || "client_#{nas.id}"} {
@@ -20,4 +22,6 @@ class GenerateClientsConfJob
       end
     end
   end
+end
+end
 end
