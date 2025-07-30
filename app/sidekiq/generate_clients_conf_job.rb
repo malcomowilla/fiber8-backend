@@ -3,13 +3,14 @@
 # app/jobs/generate_clients_conf_job.rb
 class GenerateClientsConfJob
   include Sidekiq::Job
+  queue_as :default
 
   def perform
      Account.find_each do |tenant|
       ActsAsTenant.with_tenant(tenant) do
     Rails.logger.info "Generating clients.conf"
     File.open('/etc/freeradius/3.0/clients.conf', 'w') do |f|
-      
+
       Na.find_each do |nas|
         # next if nas.nasname.blank? || nas.secret.blank?
 
