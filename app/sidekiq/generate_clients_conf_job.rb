@@ -6,11 +6,10 @@ class GenerateClientsConfJob
   queue_as :default
 
   def perform
-    
     Rails.logger.info "Generating clients.conf"
     File.open('/etc/freeradius/3.0/clients.conf', 'w') do |f|
       Na.find_each do |nas|
-        # next if nas.nasname.blank? || nas.secret.blank?
+        next if nas.nasname.blank? || nas.secret.blank?
 
         f.puts <<~CLIENT
           client #{nas.shortname.presence || "client_#{nas.id}"} {
