@@ -58,7 +58,7 @@ if current_user
         else
           @nas = Na.first_or_initialize(shortname: params[:shortname], 
     nasname: params[:ipaddr], secret: params[:secret] )
-
+ GenerateClientsConfJob.perform_async
 @nas.update(
  shortname: params[:shortname], 
     nasname: params[:ipaddr], secret: params[:secret]
