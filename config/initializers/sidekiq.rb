@@ -25,16 +25,18 @@ Sidekiq.configure_server do |config|
   config.on(:startup) do
     schedule = {
 
+    
+ 'tickets_job' => {
+      'class' => 'TicketsJob',
+      'cron' => '* * * * *'
+    },
 
     'rehydrate_wireguard_job' => {
       'class' => 'RehydrateWireguardJob',
       'cron' => '* * * * *'
     },
 
-    'tickets_job' => {
-      'class' => 'TicketsJob',
-      'cron' => '* * * * *'
-    },
+   
 
 'generate_clients_conf_job' => {
   'class' => 'GenerateClientsConfJob',
