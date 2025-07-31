@@ -85,7 +85,24 @@ rescue ActiveRecord::RecordNotFound
     render json: { total_tickets: total_tickets }
   end
     
-  
+  def open_tickets
+    open_tickets = SupportTicket.where(status: 'Open').count
+    render json: { open_tickets: open_tickets }
+  end
+
+
+  def solved_tickets
+    solved_tickets = SupportTicket.where(status: 'Resolved').count
+    render json: { solved_tickets: solved_tickets }
+    
+  end
+
+
+  def high_priority_tickets
+    high_priority_tickets = SupportTicket.where(priority: 'Urgent').count
+    render json: { high_priority_tickets: high_priority_tickets }
+    
+  end
 
 
 def get_specific_ticket

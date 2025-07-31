@@ -103,7 +103,16 @@ scope '/api' do
 
 end
 
+get '/api/high_priority_tickets', to: 'support_tickets#high_priority_tickets'
+get '/high_priority_tickets', to: 'support_tickets#high_priority_tickets'
+get '/api/solved_tickets', to: 'support_tickets#solved_tickets'
+get '/solved_tickets', to: 'support_tickets#solved_tickets'
+get '/api/open_tickets', to: 'support_tickets#open_tickets'
+get '/open_tickets', to: 'support_tickets#open_tickets'
 
+get '/total_tickets', to: 'support_tickets#total_tickets'
+
+get '/api/total_tickets', to: 'support_tickets#total_tickets'
 get '/api/check_session', to: 'hotspot_subscriptions#check_session'
 post '/make_subscription_payment', to: 'subscription_payment#make_subscription_payment'
 
