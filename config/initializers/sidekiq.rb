@@ -25,7 +25,7 @@ Sidekiq.configure_server do |config|
   config.on(:startup) do
     schedule = {
 
-    
+
  'tickets_job' => {
       'class' => 'TicketsJob',
       'cron' => '* * * * *'
@@ -43,10 +43,10 @@ Sidekiq.configure_server do |config|
   'cron' => '* * * * *'
 },
 
-'online_stats_broadcast_job' => {
-  'class' => 'OnlineStatsBroadcastJob',
-  'cron' => '* * * * *'
-},
+# 'online_stats_broadcast_job' => {
+#   'class' => 'OnlineStatsBroadcastJob',
+#   'cron' => '* * * * *'
+# },
 
 
 
