@@ -34,15 +34,13 @@ class TicketsJob
       ActsAsTenant.with_tenant(tenant) do
         Rails.logger.info "TicketsJob started for #{tenant.subdomain}"
 
-        tickets = SupportTicket.all
-
-        tickets_data = tickets.map do |ticket|
-          {
-            id: ticket.id,
-            status: ticket.status,
-            ticket_number: ticket.ticket_number
-          }
-        end
+        # Collect ticket stats
+        tickets_data = {
+          total_tickets: SupportTicket.count,
+          open_tickets: SupportTicket.where(status: 'Open').count,
+          solved_tickets: SupportTicket.where(status: 'Resolved').count,
+          high_priority_tickets: SupportTicket.where(priority: 'Urgent').count
+        }
 
         # Broadcast to the TicketsChannel for this tenant
         TicketsChannel.broadcast_to(
@@ -52,7 +50,12 @@ class TicketsJob
             timestamp: Time.current
           }
         )
+
+        Rails.logger.info "Broadcasted tickets data for #{tenant.subdomain}"
       end
     end
   end
 end
+
+
+
