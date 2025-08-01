@@ -4,17 +4,24 @@ class ApplicationController < ActionController::Base
 before_action :set_time_zone
 before_action :block_loophole_requests
 
+
+
+
 def block_loophole_requests
   loophole_hosts = [
+    /\A102\.221\.35\.92\z/, # Match exact IP as string
     /.*\.loophole\.site/,
-    /.*\.loca\.lt/ # another Loophole alias
+    /.*\.loca\.lt/
   ]
 
-  if loophole_hosts.any? { |regex| request.host =~ regex || request.referer.to_s =~ regex }
+  # Match against request.host and referer host
+  host = request.host
+  referer_host = URI.parse(request.referer).host rescue nil
+
+  if loophole_hosts.any? { |pattern| host =~ pattern || (referer_host && referer_host =~ pattern) }
     head :forbidden
   end
 end
-
 
 
 

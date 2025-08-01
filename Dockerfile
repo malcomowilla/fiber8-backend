@@ -83,7 +83,7 @@ RUN apt-get update -qq && \
       nodejs \
       yarn \
     && rm -rf /var/lib/apt/lists/*
-    
+
 WORKDIR /app
 
 # Install bundler early to speed up future builds
@@ -91,7 +91,7 @@ RUN gem install bundler
 
 # Copy gem files and install gems
 COPY Gemfile Gemfile.lock ./
-RUN bundle install --jobs 4 --retry 3
+RUN bundle install 
 
 # Copy the rest of the app
 COPY . .
