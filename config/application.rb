@@ -4,7 +4,7 @@ require "rails/all"
 require_relative '../app/middleware/set_tenant_ppoe'
 require_relative '../app/middleware/check_inactivity'
 require_relative '../app/middleware/set_tenant_hotspot'
-require_relative './app/middleware/block_loophole'
+require_relative '../app/middleware/block_loophole'
 
 # require_relative '../app/middleware/blocked_user'
 
