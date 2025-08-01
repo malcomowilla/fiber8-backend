@@ -17,7 +17,7 @@ def block_loophole_requests
     head :forbidden
   end
 
-
+end
 
 
 # def block_loophole_requests
