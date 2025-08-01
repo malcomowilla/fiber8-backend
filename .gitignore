@@ -40,6 +40,8 @@
 kamal/secrets.key
 /kamal/secrets.key
 /kamal.env
+/config/credentials/kamal.yml.enc
+
 /config/credentials/production.key
 /config/master.key
 .env
