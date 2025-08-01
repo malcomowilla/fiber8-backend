@@ -98,7 +98,7 @@ COPY . .
 # Precompile assets and bootsnap cache
 ENV RAILS_ENV=production
 RUN SECRET_KEY_BASE_DUMMY=1 ./bin/rails assets:precompile
-RUN bundle exec bootsnap precompile --compile-all
+RUN bundle exec bootsnap precompile 
 
 # -------------------------------
 # Runtime stage
