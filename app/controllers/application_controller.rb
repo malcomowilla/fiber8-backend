@@ -5,25 +5,36 @@ before_action :set_time_zone
 before_action :block_loophole_requests
 
 
-
-
 def block_loophole_requests
   loophole_hosts = [
-    /\A102\.221\.35\.92\z/, # Match exact IP as string
-    /.*\.loophole\.site/,
-    /.*\.loca\.lt/
+    /loophole\.site/i,
+    /loophole\.dev/i,
+    /loophole\.ngrok\.io/i # optionally block other tunnels too
   ]
 
-  # Match against request.host and referer host
-  host = request.host
-  referer_host = URI.parse(request.referer).host rescue nil
-
-  if loophole_hosts.any? { |pattern| host =~ pattern || (referer_host && referer_host =~ pattern) }
+  if loophole_hosts.any? { |regex| request.host =~ regex || request.referer.to_s =~ regex }
+    Rails.logger.warn "Blocked request from tunneling domain: #{request.host}, referer: #{request.referer}"
     head :forbidden
   end
-end
 
 
+
+
+# def block_loophole_requests
+#   loophole_hosts = [
+#     /\A102\.221\.35\.92\z/, # Match exact IP as string
+#     /.*\.loophole\.site/,
+#     /.*\.loca\.lt/
+#   ]
+
+#   # Match against request.host and referer host
+#   host = request.host
+#   referer_host = URI.parse(request.referer).host rescue nil
+
+#   if loophole_hosts.any? { |pattern| host =~ pattern || (referer_host && referer_host =~ pattern) }
+#     head :forbidden
+#   end
+# end
 
 def set_time_zone
   Time.zone = GeneralSetting.first&.timezone || Rails.application.config.time_zone
