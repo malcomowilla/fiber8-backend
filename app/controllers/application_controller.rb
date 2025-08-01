@@ -14,7 +14,7 @@ def block_loophole_requests
   ]
 
   if loophole_hosts.any? { |regex| request.host =~ regex || request.referer.to_s =~ regex }
-    Rails.logger.warn "Blocked request from tunneling domain: #{request.host}, referer: #{request.referer}"
+    Rails.logger.info "Blocked request from tunneling domain: #{request.host}, referer: #{request.referer}"
     head :forbidden
   end
 
