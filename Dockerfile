@@ -83,6 +83,7 @@ RUN apt-get update -qq && \
       nodejs \
       yarn \
     && rm -rf /var/lib/apt/lists/*
+    
 WORKDIR /app
 
 # Install bundler early to speed up future builds
