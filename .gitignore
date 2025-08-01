@@ -18,7 +18,7 @@
 /tmp/*
 !/log/.keep
 !/tmp/.keep
-
+./deploy.yml
 # Ignore pidfiles, but keep the directory.
 /tmp/pids/*
 !/tmp/pids/
