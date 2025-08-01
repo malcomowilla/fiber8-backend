@@ -41,3 +41,5 @@ kamal/secrets.key
 kamal/secrets.key
 kamal.env
 config/master.key
+.env
+config/deploy.yml
