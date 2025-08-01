@@ -38,8 +38,9 @@
 
 /config/credentials/production.key
 kamal/secrets.key
-kamal/secrets.key
-kamal.env
-config/master.key
+/kamal/secrets.key
+/kamal.env
+/config/credentials/production.key
+/config/master.key
 .env
-config/deploy.yml
+/config/deploy.yml
