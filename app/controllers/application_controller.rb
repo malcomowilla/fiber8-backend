@@ -8,7 +8,7 @@ before_action :block_loophole_requests
 def block_loophole_requests
   Rails.logger.info "Blocking loophole requests"
   loophole_hosts = [
-    /fiber8\.aitechs/i,
+    /loophole\.site/i,
     /loophole\.dev/i,
     /loophole\.ngrok\.io/i # optionally block other tunnels too
   ]

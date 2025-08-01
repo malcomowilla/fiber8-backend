@@ -4,6 +4,8 @@ require "rails/all"
 require_relative '../app/middleware/set_tenant_ppoe'
 require_relative '../app/middleware/check_inactivity'
 require_relative '../app/middleware/set_tenant_hotspot'
+require_relative './app/middleware/block_loophole'
+
 # require_relative '../app/middleware/blocked_user'
 
 
@@ -43,6 +45,9 @@ end
 config.middleware.use SetTenantPpoe
 config.middleware.use SetTenantHotspot
 config.middleware.use CheckInactivity
+# config/application.rb
+config.middleware.use BlockLoophole
+
 
 # config.hosts << ".ngrok-free.app" 
     puts("Loading cookies session store options")
