@@ -13,7 +13,13 @@ class BlockLoophole
     ]
 
     blocked_paths = [
-      "/",                    # homepage
+      "/",  
+      "/c'",
+      "/get_all_clients",
+      "/get_all_admins",
+      "/api/get_all_clients",
+      "/api/get_all_admins",
+      "current_user",                  # homepage
       "/rails/info",          # Rails default info
       "/rails/info/properties",
       "/rails/consoles",      # any default endpoints you want to secure
