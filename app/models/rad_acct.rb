@@ -128,13 +128,17 @@ class RadAcct < ApplicationRecord
     }
   end
 
-
-  HotspotChannel.broadcast_to(account, 
- active_user_count: active_user_data.size,
+  hotspot_data = {
+active_user_count: active_user_data.size,
   total_upload: format_bytes(total_upload),
   total_download: format_bytes(total_download),
   total_bandwidth: format_bytes(total_bytes),
   users: active_user_data
+  }
+
+  HotspotChannel.broadcast_to(account, 
+    hotspot_data
+ 
   )
 
   RadacctChannel.broadcast_to(account, radacct_data)
