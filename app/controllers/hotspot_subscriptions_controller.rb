@@ -52,7 +52,10 @@ session = RadAcct.where(framedipaddress: ip, framedprotocol: '').order(acctupdat
   end
 
 end
-#RadAcct
+
+
+
+
  def get_active_hotspot_users
   active_sessions = RadAcct.where(acctstoptime: nil, framedprotocol: '')
 

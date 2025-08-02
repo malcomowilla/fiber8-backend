@@ -1,5 +1,7 @@
 
-class RadacctChannel < ApplicationCable::Channel
+
+
+class HotspotChannel < ApplicationCable::Channel
   def subscribed
     subdomain = params["X-Subdomain"]
     account = Account.find_by(subdomain: subdomain)
@@ -9,10 +11,8 @@ class RadacctChannel < ApplicationCable::Channel
       stream_for account
     else
       reject
-    end
-  end
- 
-def unsubscribed
-    ActsAsTenant.current_tenant = nil
+    end 
   end
 end
+
+

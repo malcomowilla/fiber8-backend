@@ -1,5 +1,6 @@
 
-class RadacctChannel < ApplicationCable::Channel
+
+class BandwidthChannel < ApplicationCable::Channel
   def subscribed
     subdomain = params["X-Subdomain"]
     account = Account.find_by(subdomain: subdomain)

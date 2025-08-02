@@ -40,7 +40,8 @@ class RadAcct < ApplicationRecord
   acts_as_tenant(:account)
 
   self.ignored_columns = ["class"]
-  after_commit :broadcast_radacct_stats, on: [:create, :update, :destroy, ]
+  after_commit :broadcast_radacct_stats, on: [:create, :update, :destroy]
+  after_commit :broadcast_hotspot_stats, on: [:create, :update, :destroy]
 
   def broadcast_radacct_stats
   threshold_time = 3.minutes.ago
@@ -92,17 +93,58 @@ class RadAcct < ApplicationRecord
   radacct_data = {
     online_radacct: online,
     offline_radacct: offline,
-    total_bandwidth: format_bytes(total_bytes),
-    total_download: format_bytes(total_download),
-    total_upload: format_bytes(total_upload),
+  
     timestamp: Time.current
   }
 
+
+
+  bandwidth_data = {
+     total_bandwidth: format_bytes(total_bytes),
+    total_download: format_bytes(total_download),
+    total_upload: format_bytes(total_upload),
+  }
+
   RadacctChannel.broadcast_to(account, radacct_data)
+  BandwidthChannel.broadcast_to(account, bandwidth_data)
 end
 
 
+def broadcast_hotspot_stats
+   active_sessions = RadAcct.where(acctstoptime: nil, framedprotocol: '')
 
+  total_bytes = 0
+
+  active_user_data = active_sessions.map do |session|
+    download_bytes = session.acctinputoctets || 0
+    upload_bytes = session.acctoutputoctets || 0
+    session_total = download_bytes + upload_bytes
+    total_bytes += session_total
+
+    {
+      username: session.username,
+      ip_address: session.framedipaddress.to_s,
+      mac_address: session.callingstationid,
+      up_time: format_uptime(session.acctsessiontime),
+      download: format_bytes(download_bytes),
+      upload: format_bytes(upload_bytes),
+      start_time: session.acctstarttime.strftime("%B %d, %Y at %I:%M %p"),
+      nas_port: session.nasportid
+    }
+  end
+
+
+  HotspotChannel.broadcast_to(account, 
+  active_user_count: active_user_data.size,
+  total_upload: active_user_data.upload,
+  total_download: active_user_data.download,
+
+    total_bandwidth: format_bytes(total_bytes),
+    users: active_user_data
+  )
+
+
+end
 
 def format_bytes(bytes)
       units = ['B', 'KB', 'MB', 'GB', 'TB']
