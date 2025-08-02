@@ -26,10 +26,10 @@ Sidekiq.configure_server do |config|
     schedule = {
 
 
- 'tickets_job' => {
-      'class' => 'TicketsJob',
-      'cron' => '* * * * *'
-    },
+#  'tickets_job' => {
+#       'class' => 'TicketsJob',
+#       'cron' => '* * * * *'
+#     },
 
     'rehydrate_wireguard_job' => {
       'class' => 'RehydrateWireguardJob',

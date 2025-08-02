@@ -177,7 +177,9 @@ gem "omniauth-auth0", "~> 3.1"
 # gem "omniauth-rails_csrf_protection", "~> 1.0"
 
 # Move dotenv-rails out of the development/test group
-gem 'dotenv-rails'
+# gem 'dotenv-rails'
+
+gem 'dotenv-rails', groups: [:development, :test]
 
 group :development, :test do
   # other development gems...
