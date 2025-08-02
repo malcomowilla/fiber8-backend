@@ -5,6 +5,16 @@
 # config/sidekiq.yml
 
 # Default settings for all environments
+
+
+:schedule:
+  broadcast_radacct_stats:
+    every: ["30s"]
+    class: "RadSessionsJob"
+    queue: radacct
+
+
+
 default:
   :concurrency: 5
   :queues:
