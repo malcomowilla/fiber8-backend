@@ -41,7 +41,6 @@ class RadAcct < ApplicationRecord
 
   self.ignored_columns = ["class"]
   after_commit :broadcast_radacct_stats, on: [:create, :update, :destroy]
-  after_commit :broadcast_hotspot_stats, on: [:create, :update, :destroy]
 
   def broadcast_radacct_stats
   threshold_time = 3.minutes.ago
@@ -105,13 +104,9 @@ class RadAcct < ApplicationRecord
     total_upload: format_bytes(total_upload),
   }
 
-  RadacctChannel.broadcast_to(account, radacct_data)
-  BandwidthChannel.broadcast_to(account, bandwidth_data)
-end
 
 
-def broadcast_hotspot_stats
-   active_sessions = RadAcct.where(acctstoptime: nil, framedprotocol: '')
+  active_sessions = RadAcct.where(acctstoptime: nil, framedprotocol: '')
 
   total_bytes = 0
 
@@ -143,8 +138,11 @@ def broadcast_hotspot_stats
     users: active_user_data
   )
 
-
+  RadacctChannel.broadcast_to(account, radacct_data)
+  BandwidthChannel.broadcast_to(account, bandwidth_data)
 end
+
+
 
 def format_bytes(bytes)
       units = ['B', 'KB', 'MB', 'GB', 'TB']
