@@ -1,38 +1,14 @@
-# class RadAcct < ApplicationRecord
-#   self.table_name = 'radacct'
-#   acts_as_tenant(:account)
 
-#   self.ignored_columns = ["class"]
-#   after_commit :broadcast_radacct_stats, on: [:create, :update, :destroy]
 
- 
-# def broadcast_radacct_stats
-# radacct_data = {
+
+class RadSessionsJob
+  include Sidekiq::Job
+  queue_as :radacct
+  # sidekiq_options retry: false
   
-#   online_radacct: account.radacct.where(acctstoptime: nil, framedprotocol: 'PPP', framedipaddress: account.subscriptions.ip_address).count,
-#   offline_radacct: account.radacct.where.not(acctstoptime: nil).count,
-#   timestamp: Time.current
-# }
-
-# RadacctChannel.broadcast_to(account, radacct_data)
-# end
-
-#   # Set the account_id for records without it
-#   # def self.set_account_id_for_missing_account
-#   #   RadAcct.where(account_id: nil).find_each do |radacct|
-#   #     radacct.update(account_id: ActsAsTenant.current_tenant.id)
-#   #   end
-#   # end
-# end
-
-class RadAcct < ApplicationRecord
-  self.table_name = 'radacct'
-  acts_as_tenant(:account)
-
-  self.ignored_columns = ["class"]
-  # after_commit :broadcast_radacct_stats, on: [:create, :update, :destroy]
-
-  def broadcast_radacct_stats
+   def perform
+    Account.find_each do |account| # Iterate over all tenants
+      ActsAsTenant.with_tenant(account) do
   threshold_time = 3.minutes.ago
 
   online = 0
@@ -134,6 +110,8 @@ active_user_count: active_user_data.size,
   RadacctChannel.broadcast_to(account, radacct_data)
   BandwidthChannel.broadcast_to(account, bandwidth_data)
 end
+end
+end
 
 
 
@@ -147,6 +125,4 @@ def format_bytes(bytes)
     
     
   end
-
-
 end

@@ -36,6 +36,10 @@ Sidekiq.configure_server do |config|
       'cron' => '* * * * *'
     },
 
+    "rad_sessions_job" => {
+      "class" => "RadSessionsJob",
+      "cron" => "* * * * *"
+    },
    
 
 'generate_clients_conf_job' => {

@@ -9,11 +9,14 @@ default:
   :concurrency: 5
   :queues:
     - default
+    - radacct
 
 # Development-specific settings
 development:
   :queues:
     - default
+    - radacct
+
 
 # Production-specific settings
 production:
