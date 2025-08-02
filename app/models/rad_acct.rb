@@ -40,7 +40,7 @@ class RadAcct < ApplicationRecord
   acts_as_tenant(:account)
 
   self.ignored_columns = ["class"]
-  after_commit :broadcast_radacct_stats, on: [:create, :update, :destroy]
+  # after_commit :broadcast_radacct_stats, on: [:create, :update, :destroy]
 
   def broadcast_radacct_stats
   threshold_time = 3.minutes.ago

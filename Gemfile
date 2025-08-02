@@ -225,6 +225,7 @@ gem 'sys-filesystem'
 # gem 'safe_attributes'
 
 gem "ipaddress", "~> 0.8.3"
+gem 'rails-observers'
 
 
 

@@ -5,6 +5,8 @@ require_relative '../app/middleware/set_tenant_ppoe'
 require_relative '../app/middleware/check_inactivity'
 require_relative '../app/middleware/set_tenant_hotspot'
 require_relative '../app/middleware/block_loophole'
+require_relative '../app/models/rad_acct_observer'
+
 
 # require_relative '../app/middleware/blocked_user'
 
@@ -67,6 +69,7 @@ config.time_zone = 'Africa/Nairobi'
     # config.active_job.queue_adapter = :sidekiq
     # Configuration for the application, engines, and railties goes here.
     config.active_job.queue_adapter = :async
+    config.active_record.observers = :rad_acct_observer
 
     # These settings can be overridden in specific environments using the files
     # in config/environments, which are processed later.
