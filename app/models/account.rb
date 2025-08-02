@@ -9,6 +9,7 @@ class Account < ApplicationRecord
     has_many :prefix_and_digits, dependent: :destroy
     has_one :sms_provider_setting, dependent: :destroy
     has_one :company_setting, dependent: :destroy
+    has_many :support_tickets, dependent: :destroy
     has_one :email_setting, dependent: :destroy
     has_one :router_setting, dependent: :destroy
     has_one :subscriber_setting, dependent: :destroy
