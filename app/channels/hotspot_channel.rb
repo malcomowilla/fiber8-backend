@@ -11,7 +11,11 @@ class HotspotChannel < ApplicationCable::Channel
       stream_for account
     else
       reject
-    end 
+    end
+  end
+ 
+def unsubscribed
+    ActsAsTenant.current_tenant = nil
   end
 end
 
