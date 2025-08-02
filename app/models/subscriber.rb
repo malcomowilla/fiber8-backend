@@ -3,6 +3,7 @@ class Subscriber < ApplicationRecord
     auto_increment :sequence_number
         has_secure_password(validations: false)
 has_many :subscriptions, dependent: :destroy
+after_commit :broadcast_subscriber_stats, on: [:create, :update, :destroy]
       # before_create :set_default_status
 
 # after_create :update_subscriber_status
@@ -13,7 +14,13 @@ has_many :subscriptions, dependent: :destroy
   # end
 
 
+def broadcast_subscriber_stats
+  subscriber_count = {
+    subscriber_count: Subscriber.count,
+  }
 
+  SubscriberChannel.broadcast_to(account, subscriber_count)
+end
   
 
     def update_subscriber_status
