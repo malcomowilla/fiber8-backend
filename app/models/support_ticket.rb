@@ -1,4 +1,5 @@
-auto_increment :sequence_number
+class SupportTicket < ApplicationRecord
+  auto_increment :sequence_number
   acts_as_tenant(:account)
 
   after_commit :broadcast_ticket_stats, on: [:create, :update, :destroy]
@@ -14,3 +15,4 @@ auto_increment :sequence_number
 
     TicketsChannel.broadcast_to(account, tickets_data)
   end
+end
