@@ -72,7 +72,7 @@ class RadSessionsJob
 
 
 
-  active_sessions = RadAcct.where(acctstoptime: nil, framedprotocol: '')
+  active_sessions = RadAcct.where(acctstoptime: nil, framedprotocol: '').where('acctupdatetime > ?', 3.minutes.ago) 
 
   total_bytes = 0
 
