@@ -436,7 +436,7 @@ end
 
 def login_with_hotspot_voucher
 
-Rails.loger.info "voucher ip#{params[:ip]}"
+Rails.logger.info "voucher ip#{params[:ip]}"
   
   return render json: { error: 'voucher is required' }, status: :bad_request unless params[:voucher].present?
 
