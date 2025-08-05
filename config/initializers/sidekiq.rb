@@ -38,7 +38,7 @@ Sidekiq.configure_server do |config|
 
     "rad_sessions_job" => {
       "class" => "RadSessionsJob",
-      'every' => ['20s'],
+      'every' => ['2`0s'],
         'queue' => 'radacct'
     },
    
