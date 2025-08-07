@@ -73,12 +73,10 @@ if current_user
 
   # DELETE /invoices/1 or /invoices/1.json
   def destroy
+     @invoice = Invoice.find_by(id: params[:id])
     @invoice.destroy!
 
-    respond_to do |format|
-      format.html { redirect_to invoices_path, status: :see_other, notice: "Invoice was successfully destroyed." }
-      format.json { head :no_content }
-    end
+       head :no_content 
   end
 
   private
