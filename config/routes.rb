@@ -1,4 +1,5 @@
 Rails.application.routes.draw do
+  resources :equipment
   resources :invoices
   resources :activty_logs
   resources :customer_portals
@@ -58,7 +59,7 @@ Rails.application.routes.draw do
 mount ActionCable.server => '/cable'
 scope '/api' do
     resources :invoices
-
+  resources :equipment
   resources :calendar_settings
   resources :activty_logs
   resources :invoices
