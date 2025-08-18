@@ -1,0 +1,23 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  serial_number: MyString
+  oui: MyString
+  product_class: MyString
+  manufacturer: MyString
+  onu_id: MyString
+  status: MyString
+  last_inform: MyString
+  account_id: 1
+  last_boot: MyString
+
+two:
+  serial_number: MyString
+  oui: MyString
+  product_class: MyString
+  manufacturer: MyString
+  onu_id: MyString
+  status: MyString
+  last_inform: MyString
+  account_id: 1
+  last_boot: MyString

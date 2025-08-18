@@ -81,6 +81,7 @@ if current_user
 
   # DELETE /equipment/1 or /equipment/1.json
   def destroy
+    @equipment = set_equipment
     @equipment.destroy!
 
       head :no_content 

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2025_08_13_121439) do
+ActiveRecord::Schema[7.2].define(version: 2025_08_15_111926) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -413,6 +413,24 @@ ActiveRecord::Schema[7.2].define(version: 2025_08_13_121439) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.string "country"
+  end
+
+  create_table "onus", force: :cascade do |t|
+    t.string "serial_number"
+    t.string "oui"
+    t.string "product_class"
+    t.string "manufacturer"
+    t.string "onu_id"
+    t.string "status"
+    t.string "last_inform"
+    t.integer "account_id"
+    t.string "last_boot"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.string "ssid1"
+    t.string "ssid2"
+    t.string "wan_ip"
+    t.string "mac_adress"
   end
 
   create_table "p_poe_packages", id: false, force: :cascade do |t|

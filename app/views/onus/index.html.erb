@@ -1,0 +1,16 @@
+<p style="color: green"><%= notice %></p>
+
+<% content_for :title, "Onus" %>
+
+<h1>Onus</h1>
+
+<div id="onus">
+  <% @onus.each do |onu| %>
+    <%= render onu %>
+    <p>
+      <%= link_to "Show this onu", onu %>
+    </p>
+  <% end %>
+</div>
+
+<%= link_to "New onu", new_onu_path %>

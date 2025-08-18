@@ -1,0 +1,10 @@
+<p style="color: green"><%= notice %></p>
+
+<%= render @onu %>
+
+<div>
+  <%= link_to "Edit this onu", edit_onu_path(@onu) %> |
+  <%= link_to "Back to onus", onus_path %>
+
+  <%= button_to "Destroy this onu", @onu, method: :delete %>
+</div>

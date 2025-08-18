@@ -1,0 +1,62 @@
+<%= form_with(model: onu) do |form| %>
+  <% if onu.errors.any? %>
+    <div style="color: red">
+      <h2><%= pluralize(onu.errors.count, "error") %> prohibited this onu from being saved:</h2>
+
+      <ul>
+        <% onu.errors.each do |error| %>
+          <li><%= error.full_message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div>
+    <%= form.label :serial_number, style: "display: block" %>
+    <%= form.text_field :serial_number %>
+  </div>
+
+  <div>
+    <%= form.label :oui, style: "display: block" %>
+    <%= form.text_field :oui %>
+  </div>
+
+  <div>
+    <%= form.label :product_class, style: "display: block" %>
+    <%= form.text_field :product_class %>
+  </div>
+
+  <div>
+    <%= form.label :manufacturer, style: "display: block" %>
+    <%= form.text_field :manufacturer %>
+  </div>
+
+  <div>
+    <%= form.label :onu_id, style: "display: block" %>
+    <%= form.text_field :onu_id %>
+  </div>
+
+  <div>
+    <%= form.label :status, style: "display: block" %>
+    <%= form.text_field :status %>
+  </div>
+
+  <div>
+    <%= form.label :last_inform, style: "display: block" %>
+    <%= form.text_field :last_inform %>
+  </div>
+
+  <div>
+    <%= form.label :account_id, style: "display: block" %>
+    <%= form.number_field :account_id %>
+  </div>
+
+  <div>
+    <%= form.label :last_boot, style: "display: block" %>
+    <%= form.text_field :last_boot %>
+  </div>
+
+  <div>
+    <%= form.submit %>
+  </div>
+<% end %>

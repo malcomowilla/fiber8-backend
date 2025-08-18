@@ -1,6 +1,6 @@
 class AcsTestingController < ApplicationController
  def index
-    uri = URI("http://102.221.35.92:7347/devices?_limit=10") # Update host/port if needed
+    uri = URI("http://102.221.35.92:7347/devices") # Update host/port if needed
 
     
     begin
@@ -8,7 +8,9 @@ class AcsTestingController < ApplicationController
 
       if response.is_a?(Net::HTTPSuccess)
         @devices = JSON.parse(response.body)
-        render json: @devices
+        # render json: @devices.map { |device| device }
+    render json: @devices.map { |device|device}
+ 
       else
         @devices = []
         Rails.logger.error("Failed to fetch devices from GenieACS: #{response.code}")
