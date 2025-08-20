@@ -66,10 +66,34 @@ def get_devices
           wan_ip = device["InternetGatewayDevice"]["WANDevice"]["1"]["WANConnectionDevice"]["1"]["WANIPConnection"]["1"]["ExternalIPAddress"]["_value"]
           onu.wan_ip = wan_ip
  onu.mac_adress = device["InternetGatewayDevice"]["WANDevice"]["1"]["WANConnectionDevice"]["1"]["WANIPConnection"]["1"]["MACAddress"]["_value"]
+ 
+
+
+onu.dhcp_name = device["InternetGatewayDevice"]["WANDevice"]["1"]["WANConnectionDevice"]["1"]["WANIPConnection"]["1"]["Name"]["_value"]
+ onu.dhcp_addressing_type = device["InternetGatewayDevice"]["WANDevice"]["1"]["WANConnectionDevice"]["1"]["WANIPConnection"]["1"]["AddressingType"]["_value"]
+ onu.dhcp_connection_status = device["InternetGatewayDevice"]["WANDevice"]["1"]["WANConnectionDevice"]["1"]["WANIPConnection"]["1"]["ConnectionStatus"]["_value"]
+ onu.dhcp_uptime = device["InternetGatewayDevice"]["WANDevice"]["1"]["WANConnectionDevice"]["1"]["WANIPConnection"]["1"]["Uptime"]["_value"]
+ onu.dhcp_ip = device["InternetGatewayDevice"]["WANDevice"]["1"]["WANConnectionDevice"]["1"]["WANIPConnection"]["1"]["ExternalIPAddress"]["_value"]
+ onu.dhcp_subnet_mask = device["InternetGatewayDevice"]["WANDevice"]["1"]["WANConnectionDevice"]["1"]["WANIPConnection"]["1"]["SubnetMask"]["_value"]
+ onu.dhcp_gateway = device["InternetGatewayDevice"]["WANDevice"]["1"]["WANConnectionDevice"]["1"]["WANIPConnection"]["1"]["DefaultGateway"]["_value"]
+ onu.dhcp_dns_servers = device["InternetGatewayDevice"]["WANDevice"]["1"]["WANConnectionDevice"]["1"]["WANIPConnection"]["1"]["DNSServers"]["_value"]
+ onu.dhcp_last_connection_error = device["InternetGatewayDevice"]["WANDevice"]["1"]["WANConnectionDevice"]["1"]["WANIPConnection"]["1"]["LastConnectionError"]["_value"]
+ onu.dhcp_mac_address = device["InternetGatewayDevice"]["WANDevice"]["1"]["WANConnectionDevice"]["1"]["WANIPConnection"]["1"]["MACAddress"]["_value"]
+onu.dhcp_max_mtu_size = device["InternetGatewayDevice"]["WANDevice"]["1"]["WANConnectionDevice"]["1"]["WANIPConnection"]["1"]["MaxMTUSize"]["_value"]
+onu.dhcp_nat_enabled = device["InternetGatewayDevice"]["WANDevice"]["1"]["WANConnectionDevice"]["1"]["WANIPConnection"]["1"]["NATEnabled"]["_value"]
+onu.dhcp_vlan_id = device["InternetGatewayDevice"]["WANDevice"]["1"]["WANConnectionDevice"]["1"]["WANIPConnection"]["1"]["X_HW_VLAN"]["_value"]
+
+
+
+
 
           # onu.status = device["_registered"] ? "registered" : "unregistered"
 
-
+ onu.software_version = device["InternetGatewayDevice"]["DeviceInfo"]['SoftwareVersion']['_value']
+ onu.hardware_version = device["InternetGatewayDevice"]["DeviceInfo"]['HardwareVersion']['_value']
+onu.uptime = device["InternetGatewayDevice"]["DeviceInfo"]['UpTime']['_value']
+onu.ram_used = device["InternetGatewayDevice"]["DeviceInfo"]['X_HW_MemUsed']['_value']
+onu.cpu_used = device["InternetGatewayDevice"]["DeviceInfo"]['X_HW_CpuUsed']['_value']
           onu.save!
         end
       end

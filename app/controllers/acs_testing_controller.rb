@@ -9,7 +9,8 @@ class AcsTestingController < ApplicationController
       if response.is_a?(Net::HTTPSuccess)
         @devices = JSON.parse(response.body)
         # render json: @devices.map { |device| device }
-    render json: @devices.map { |device|device}
+    render json: @devices.map { |device|device["InternetGatewayDevice"]["WANDevice"]["1"]["WANConnectionDevice"]["1"]["WANIPConnection"]["1"] }
+
  
       else
         @devices = []

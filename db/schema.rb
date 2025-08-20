@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2025_08_15_111926) do
+ActiveRecord::Schema[7.2].define(version: 2025_08_18_164104) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -431,6 +431,24 @@ ActiveRecord::Schema[7.2].define(version: 2025_08_15_111926) do
     t.string "ssid2"
     t.string "wan_ip"
     t.string "mac_adress"
+    t.string "software_version"
+    t.string "hardware_version"
+    t.string "uptime"
+    t.string "cpu_used"
+    t.string "ram_used"
+    t.string "dhcp_name"
+    t.string "dhcp_addressing_type"
+    t.string "dhcp_connection_status"
+    t.string "dhcp_uptime"
+    t.string "dhcp_ip"
+    t.string "dhcp_subnet_mask"
+    t.string "dhcp_gateway"
+    t.string "dhcp_dns_servers"
+    t.string "dhcp_last_connection_error"
+    t.string "dhcp_max_mtu_size"
+    t.string "dhcp_nat_enabled"
+    t.string "dhcp_vlan_id"
+    t.string "dhcp_mac_address"
   end
 
   create_table "p_poe_packages", id: false, force: :cascade do |t|
