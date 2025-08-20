@@ -102,7 +102,7 @@ ActivtyLog.create(action: 'update', ip: request.remote_ip,
   def destroy
           @wireguard_peer = WireguardPeer.find(params[:id])
 ActivtyLog.create(action: 'delete', ip: request.remote_ip,
- description: "Deleted wireguard peer for private ip #{@ip_network.network}",
+ description: "Deleted wireguard peer for private ip #{@wireguard_peer.private_ip}",
           user_agent: request.user_agent, user: current_user.username || current_user.email,
            date: Time.current)
     @wireguard_peer.destroy!
