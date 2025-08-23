@@ -109,6 +109,7 @@ scope '/api' do
 
 end
 
+get '/api/get_subscriber_by_id', to: 'subscribers#get_subscriber_by_id'
 get '/api/high_priority_tickets', to: 'support_tickets#high_priority_tickets'
 get '/high_priority_tickets', to: 'support_tickets#high_priority_tickets'
 get '/api/solved_tickets', to: 'support_tickets#solved_tickets'

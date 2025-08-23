@@ -26,8 +26,19 @@ if current_user
 
 
 
+def get_subscriber_by_id
+id = params[:id]
+subscriber = Subscriber.find_by(id: id)
+if subscriber
+   render json: subscriber
+else
+   render json: { error: 'subscriber not found' }, status: :not_found
+end
+end  
 
-  
+
+
+
 def import
     authorize! :import, Subscriber
 

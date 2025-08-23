@@ -26,18 +26,20 @@ if current_user
 
 
   def set_tenant
-
-    host = request.headers['X-Subdomain'] 
-    # Rails.logger.info("Setting tenant for host: #{host}")
-  
+    host = request.headers['X-Subdomain']
     @account = Account.find_by(subdomain: host)
-    set_current_tenant(@account)
+    ActsAsTenant.current_tenant  = @account
+    EmailConfiguration.configure(@account, ENV['SYSTEM_ADMIN_EMAIL'])
+    # EmailSystemAdmin.configure(@current_account, current_system_admin)
+  Rails.logger.info "Setting tenant for app#{ActsAsTenant.current_tenant}"
   
-    unless @account
-      render json: { error: 'Invalid tenant' }, status: :not_found
-    end
+    # set_current_tenant(@account)
+  rescue ActiveRecord::RecordNotFound
+    render json: { error: 'Invalid tenant' }, status: :not_found
+  
     
   end
+
   # GET /nodes/1 or /nodes/1.json
   
 

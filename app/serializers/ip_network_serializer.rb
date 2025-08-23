@@ -44,6 +44,8 @@ class IpNetworkSerializer < ActiveModel::Serializer
     
   end
 
+
+  
   
   def total_ip_addresses
     range = IPAddr.new("#{object.network}/#{object.subnet_mask}").to_range
