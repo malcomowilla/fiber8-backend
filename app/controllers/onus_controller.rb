@@ -50,10 +50,10 @@ def set_tenant
 
 
   def reboot_device(device_id)
-    url = URI("http://#{GENIEACS_HOST}/devices/#{device_id}/tasks?connection_request")
+    uri = URI("http://#{GENIEACS_HOST}/devices/#{device_id}/tasks?connection_request")
 
-    http = Net::HTTP.new(url.host, url.port)
-    request = Net::HTTP::Post.new(url)
+    # http = Net::HTTP.new(uri.host, uri.port)
+    request = Net::HTTP::Post.new(uri)
     request["Content-Type"] = "application/json"
     request.body = [
       {
@@ -63,9 +63,21 @@ def set_tenant
       }
     ].to_json
 
-    response = http.request(request)
-
+    # response = http.request(request)
+    response = Net::HTTP.start(uri.hostname, uri.port) { |http| http.request(request) }
     response.code.to_i == 200
+
+
+  #   request = Net::HTTP::Post.new(uri, 'Content-Type' => 'application/json')
+  # request.body = body.to_json
+
+  # response = Net::HTTP.start(uri.hostname, uri.port) { |http| http.request(request) }
+
+  # if response.is_a?(Net::HTTPSuccess)
+  #   render json: { message: "WiFi settings updated successfully" }, status: :ok
+  # else
+  #   render json: { error: "Failed to update WiFi settings" }, status: :unprocessable_entity
+  # end
   
 end
 
