@@ -50,7 +50,7 @@ def set_tenant
 
 
   def reboot_device(device_id)
-    url = URI("/devices/#{device_id}/tasks?connection_request")
+    url = URI("#{GENIEACS_HOST}/devices/#{device_id}/tasks?connection_request")
 
     http = Net::HTTP.new(url.host, url.port)
     request = Net::HTTP::Post.new(url)
