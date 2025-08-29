@@ -7,17 +7,18 @@ class SmsController < ApplicationController
 before_action :set_tenant
 before_action :update_last_activity, only: [:index]
 
-def set_tenant
 
+def set_tenant
   host = request.headers['X-Subdomain']
   @account = Account.find_by(subdomain: host)
+  ActsAsTenant.current_tenant = @account
+  EmailConfiguration.configure(@account, ENV['SYSTEM_ADMIN_EMAIL'])
 
-
-  set_current_tenant(@account)
+  # set_current_tenant(@account)
 rescue ActiveRecord::RecordNotFound
   render json: { error: 'Invalid tenant' }, status: :not_found
 
-end
+  end
 
 
 

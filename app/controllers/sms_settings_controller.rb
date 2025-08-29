@@ -37,22 +37,26 @@ if current_user
   render json: @sms_settings
   end
 
+
+
+
   def set_tenant
+  host = request.headers['X-Subdomain']
+  @account = Account.find_by(subdomain: host)
+  ActsAsTenant.current_tenant = @account
+  EmailConfiguration.configure(@account, ENV['SYSTEM_ADMIN_EMAIL'])
 
-    host = request.headers['X-Subdomain']
-    @account = Account.find_by(subdomain: host)
-  
-  
-    set_current_tenant(@account)
-  rescue ActiveRecord::RecordNotFound
-    render json: { error: 'Invalid tenant' }, status: :not_found
-  
-    
-   end
+  # set_current_tenant(@account)
+rescue ActiveRecord::RecordNotFound
+  render json: { error: 'Invalid tenant' }, status: :not_found
 
-  # api key =>c3I6A1BuUvESuTkdSa2l
-  # api secret => aSYTHMEmRF3XQUUSPANeYGEeGlZYTYGYFj4TXWqV
-  # POST /sms_settings or /sms_settings.json
+  end
+
+
+
+
+
+  
   def create
     # @sms_setting = SmsSetting.find_or_initialize_by(sms_setting_params)
       @sms_setting = SmsSetting.find_or_initialize_by(
