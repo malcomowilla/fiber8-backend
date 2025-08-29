@@ -57,9 +57,8 @@ def set_tenant
     request["Content-Type"] = "application/json"
     request.body = [
       {
-        name: "Reboot",
-        objectName: "",
-        parameterValues: []
+        name: "reboot",
+      
       }
     ].to_json
 
