@@ -109,6 +109,11 @@ scope '/api' do
 
 end
 
+post "/api/reboot_device/:id", to: "onus#reboot"
+
+post '/api/change_wireless_lan1/:id', to: 'onus#change_wireless_lan1'
+get '/api/get_device/:id', to: 'onus#get_device_id'
+post '/api/refresh_device/:id', to: 'onus#refresh_devices'
 get '/api/get_subscriber_by_id', to: 'subscribers#get_subscriber_by_id'
 get '/api/high_priority_tickets', to: 'support_tickets#high_priority_tickets'
 get '/high_priority_tickets', to: 'support_tickets#high_priority_tickets'

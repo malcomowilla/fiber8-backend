@@ -4,7 +4,12 @@ class OnuSerializer < ActiveModel::Serializer
   :uptime, :ram_used, :cpu_used, :dhcp_uptime, :dhcp_name, :dhcp_addressing_type,
    :dhcp_connection_status, :dhcp_ip, :dhcp_subnet_mask, :dhcp_gateway, 
    :dhcp_dns_servers, :dhcp_last_connection_error, :dhcp_mac_address, 
-   :dhcp_max_mtu_size, :dhcp_nat_enabled, :dhcp_vlan_id,
+   :dhcp_max_mtu_size, :dhcp_nat_enabled, :dhcp_vlan_id, :wifi_password1, :wifi_password2,
+   :wlan1_status, :enable1, :rf_band1, :radio_enabled1, :total_associations1, :ssid_advertisment_enabled1,
+   :wpa_encryption1, :channel_width1, :autochannel1, :channel, :country_regulatory_domain1,:tx_power1,
+   :authentication_mode1, :standard1
+
+
 
 
 def status
