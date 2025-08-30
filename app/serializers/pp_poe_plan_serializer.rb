@@ -6,11 +6,10 @@ class PpPoePlanSerializer < ActiveModel::Serializer
 
 
 def expiry
-     days = object.expiry_days
-    expiry = object.created_at + days.days
-    expiry.strftime("%B %d, %Y at %I:%M %p")
+    return nil unless object.expiry.present?
     
-  
+    object.expiry.strftime("%B %d, %Y at %I:%M %p") if object.expiry.present?
+
 end
    
 

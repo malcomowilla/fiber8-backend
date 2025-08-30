@@ -11,7 +11,7 @@ class AcsTestingController < ApplicationController
       if response.is_a?(Net::HTTPSuccess)
        
         @devices = JSON.parse(response.body)
-        render json:  @devices.map { |device| device["InternetGatewayDevice"]["LANDevice"]["1"]["WLANConfiguration"]["1"]["RegulatoryDomain"]["_value"] }
+        render json:  @devices.map { |device| device["InternetGatewayDevice"]["LANDevice"]["1"]["LANHostConfigManagement"]["DHCPLeaseTime"]  }
 # render json:  @devices.map { |device| device.dig("InternetGatewayDevice", "LANDevice", "1", "WLANConfiguration", "1", "Standard",  ) }
     # device.dig("InternetGatewayDevice", "LANDevice", "1", "WLANConfiguration", "1")
 

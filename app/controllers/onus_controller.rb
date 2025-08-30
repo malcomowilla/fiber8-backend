@@ -38,8 +38,8 @@ def set_tenant
  
 
    def reboot
-    device_id = params[:id]
-
+    onu_id = params[:id]
+    device_id = Onu.find_by(id: onu_id).onu_id
     if reboot_device(device_id)
       render json: { message: "Reboot initiated" }, status: :ok
     else
@@ -50,25 +50,100 @@ def set_tenant
 
 
   def reboot_device(device_id)
-    url = URI("#{GENIEACS_HOST}/devices/#{device_id}/tasks?connection_request")
+      url = URI("#{GENIEACS_HOST}/devices/#{device_id}/tasks?timeout=3000&connection_request")
+
 
     http = Net::HTTP.new(url.host, url.port)
     request = Net::HTTP::Post.new(url)
-    request["Content-Type"] = "application/json"
-    request.body = [
-      {
-        name: "reboot",
+      request = Net::HTTP::Post.new(url, 'Content-Type' => 'application/json')
+
+    # request.body = [
+    #   {
+    #     name: "reboot",
+    #     parameterValues: []
       
-      }
-    ].to_json
+    #   }
+    # ].to_json
+  body = {
+    name: "reboot",
+    parameterValues: []
+  }
+
+    request.body = body.to_json
 
     response = http.request(request)
 
-    response.code.to_i == 200
+    # response.code.to_i == 200
+    if response.is_a?(Net::HTTPSuccess)
+      Rails.logger.info "Reboot initiated=> #{response}"
+    # render json: { message: "Reboot initiated" }, status: :ok
+  else
+    Rails.logger.info "Failed to rebbot device: #{response}"
+    # render json: { error: "Failed to update WiFi settings" }, status: :unprocessable_entity
+  end
   
 end
 
 
+
+
+def change_dhcp_server_settings
+  device = Onu.find_by(onu_id: params[:id])
+  return render json: { error: "Device not found" }, status: :not_found unless device
+
+  device_id = device.onu_id
+
+  lan_ip_interface_address =  params[:lan_ip_interface_address]
+  lan_ip_interface_net_mask = params[:lan_ip_interface_net_mask]
+  dhcp_server_enable = params[:dhcp_server_enable]
+  dhcp_ip_pool_min_addr = params[:dhcp_ip_pool_min_addr]
+  dhcp_ip_pool_max_addr = params[:dhcp_ip_pool_max_addr]
+  dhcp_server_subnet_mask = params[:dhcp_server_subnet_mask]
+  dhcp_server_default_gateway = params[:dhcp_server_default_gateway]
+  dhcp_server_dns_servers = params[:dhcp_server_dns_servers]
+  lease_time = params[:lease_time]
+  clients_domain_name = params[:clients_domain_name]
+  reserved_ip_address = params[:reserved_ip_address]
+
+
+
+
+
+
+  body = {
+    name: "setParameterValues",
+   parameterValues: [
+      ["InternetGatewayDevice.LANDevice.1.LANHostConfigManagement.IPInterface.1.IPInterfaceIPAddress", lan_ip_interface_address, "xsd:string"],
+
+      ["InternetGatewayDevice.LANDevice.1.LANHostConfigManagement.IPInterface.1.IPInterfaceSubnetMask", lan_ip_interface_net_mask, "xsd:string"],
+      ["InternetGatewayDevice.LANDevice.1.LANHostConfigManagement.DHCPServerEnable", dhcp_server_enable, "xsd:boolean"],
+      
+      ["InternetGatewayDevice.LANDevice.1.LANHostConfigManagement.MinAddress", dhcp_ip_pool_min_addr, "xsd:string"],
+      ["InternetGatewayDevice.LANDevice.1.LANHostConfigManagement.MaxAddress", dhcp_ip_pool_max_addr, "xsd:string"],
+      ["InternetGatewayDevice.LANDevice.1.LANHostConfigManagement.SubnetMask", dhcp_server_subnet_mask, "xsd:string"],
+      ["InternetGatewayDevice.LANDevice.1.LANHostConfigManagement.IPRouters", dhcp_server_default_gateway, "xsd:string"],
+      ["InternetGatewayDevice.LANDevice.1.LANHostConfigManagement.DNSServers", dhcp_server_dns_servers, "xsd:string"],
+      ["InternetGatewayDevice.LANDevice.1.LANHostConfigManagement.DHCPLeaseTime", lease_time, "xsd:string"],
+      ["InternetGatewayDevice.LANDevice.1.LANHostConfigManagement.DomainName", clients_domain_name, "xsd:string"],
+      ["InternetGatewayDevice.LANDevice.1.LANHostConfigManagement.ReservedIPAddress", reserved_ip_address, "xsd:string"]
+     
+    ]
+  }
+
+  uri = URI("#{GENIEACS_HOST}/devices/#{device_id}/tasks?timeout=3000&connection_request")
+  request = Net::HTTP::Post.new(uri, 'Content-Type' => 'application/json')
+  request.body = body.to_json
+
+  response = Net::HTTP.start(uri.hostname, uri.port) { |http| http.request(request) }
+
+  if response.is_a?(Net::HTTPSuccess)
+    render json: { message: "dhcp settings updated successfully" }, status: :ok
+  else
+        Rails.logger.info "Failed to update dhcp settings #{response}"
+
+    render json: { error: "Failed to update dhcp settings" }, status: :unprocessable_entity
+  end
+end
 
   def change_wireless_lan1
   device = Onu.find_by(onu_id: params[:id])
@@ -239,7 +314,22 @@ wpa_encryption1: device.dig("InternetGatewayDevice", "LANDevice", "1", "WLANConf
 
     uptime: device.dig("InternetGatewayDevice", "DeviceInfo", "UpTime", "_value"),
     ram_used: device.dig("InternetGatewayDevice", "DeviceInfo", "X_HW_MemUsed", "_value"),
-    cpu_used: device.dig("InternetGatewayDevice", "DeviceInfo", "X_HW_CpuUsed", "_value")
+    cpu_used: device.dig("InternetGatewayDevice", "DeviceInfo", "X_HW_CpuUsed", "_value"),
+      lan_ip_interface_address: device.dig("InternetGatewayDevice", "LANDevice", "1", "LANHostConfigManagement", "IPInterface", "1", "IPInterfaceIPAddress", "_value"),
+            lan_ip_interface_net_mask: device.dig("InternetGatewayDevice", "LANDevice", "1", "LANHostConfigManagement", "IPInterface", "1", "IPInterfaceSubnetMask", "_value"),
+            dhcp_server_enable: device.dig("InternetGatewayDevice", "LANDevice", "1", "LANHostConfigManagement", "DHCPServerEnable", "_value"),
+            dhcp_ip_pool_min_addr: device.dig("InternetGatewayDevice", "LANDevice", "1", "LANHostConfigManagement", "MinAddress", "_value"),
+            dhcp_ip_pool_max_addr: device.dig("InternetGatewayDevice", "LANDevice", "1", "LANHostConfigManagement", "MaxAddress", "_value"),
+
+            dhcp_server_subnet_mask: device.dig("InternetGatewayDevice", "LANDevice", "1", "LANHostConfigManagement", "SubnetMask", "_value"),
+
+            dhcp_server_default_gateway: device.dig("InternetGatewayDevice", "LANDevice", "1", "LANHostConfigManagement", "IPRouters", "_value"),
+            dhcp_server_dns_servers: device.dig("InternetGatewayDevice", "LANDevice", "1", "LANHostConfigManagement", "DNSServers", "_value"),
+            lease_time: device.dig("InternetGatewayDevice", "LANDevice", "1", "LANHostConfigManagement", "DHCPLeaseTime", "_value"),
+            clients_domain_name: device.dig("InternetGatewayDevice", "LANDevice", "1", "LANHostConfigManagement", "DomainName", "_value"),
+            reserved_ip_address: device.dig("InternetGatewayDevice", "LANDevice", "1", "LANHostConfigManagement", "ReservedAddresses", "_value"),
+
+
   }
 end
 
@@ -308,7 +398,23 @@ autochannel1: device.dig("InternetGatewayDevice", "LANDevice", "1", "WLANConfigu
         hardware_version: device.dig("InternetGatewayDevice", "DeviceInfo", "HardwareVersion", "_value"),
         uptime: device.dig("InternetGatewayDevice", "DeviceInfo", "UpTime", "_value"),
         ram_used: device.dig("InternetGatewayDevice", "DeviceInfo", "X_HW_MemUsed", "_value"),
-        cpu_used: device.dig("InternetGatewayDevice", "DeviceInfo", "X_HW_CpuUsed", "_value")
+        cpu_used: device.dig("InternetGatewayDevice", "DeviceInfo", "X_HW_CpuUsed", "_value"),
+            lan_ip_interface_address: device.dig("InternetGatewayDevice", "LANDevice", "1", "LANHostConfigManagement", "IPInterface", "1", "IPInterfaceIPAddress", "_value"),
+            lan_ip_interface_net_mask: device.dig("InternetGatewayDevice", "LANDevice", "1", "LANHostConfigManagement", "IPInterface", "1", "IPInterfaceSubnetMask", "_value"),
+            dhcp_server_enable: device.dig("InternetGatewayDevice", "LANDevice", "1", "LANHostConfigManagement", "DHCPServerEnable", "_value"),
+            dhcp_ip_pool_min_addr: device.dig("InternetGatewayDevice", "LANDevice", "1", "LANHostConfigManagement", "MinAddress", "_value"),
+            dhcp_ip_pool_max_addr: device.dig("InternetGatewayDevice", "LANDevice", "1", "LANHostConfigManagement", "MaxAddress", "_value"),
+
+            dhcp_server_subnet_mask: device.dig("InternetGatewayDevice", "LANDevice", "1", "LANHostConfigManagement", "SubnetMask", "_value"),
+
+            dhcp_server_default_gateway: device.dig("InternetGatewayDevice", "LANDevice", "1", "LANHostConfigManagement", "IPRouters", "_value"),
+            dhcp_server_dns_servers: device.dig("InternetGatewayDevice", "LANDevice", "1", "LANHostConfigManagement", "DNSServers", "_value"),
+            lease_time: device.dig("InternetGatewayDevice", "LANDevice", "1", "LANHostConfigManagement", "DHCPLeaseTime", "_value"),
+            clients_domain_name: device.dig("InternetGatewayDevice", "LANDevice", "1", "LANHostConfigManagement", "DomainName", "_value"),
+            reserved_ip_address: device.dig("InternetGatewayDevice", "LANDevice", "1", "LANHostConfigManagement", "ReservedAddresses", "_value"),
+
+
+
       }
 
       onu.update!(attributes)

@@ -109,6 +109,7 @@ scope '/api' do
 
 end
 
+post '/api/change_dhcp_server_settings/:id', to: 'onus#change_dhcp_server_settings'
 post "/api/reboot_device/:id", to: "onus#reboot"
 
 post '/api/change_wireless_lan1/:id', to: 'onus#change_wireless_lan1'
