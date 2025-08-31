@@ -25,7 +25,7 @@ class SetTenantPpoe
 #       'sms_provider_settings',
 
 # 'get_all_admins',
-
+'subscriber',
 'delete_subscriber',
  'update_subscriber',
       # 'subscribers',

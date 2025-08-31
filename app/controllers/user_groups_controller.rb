@@ -47,7 +47,7 @@ if current_user
   # POST /user_groups or /user_groups.json
   def create
     @user_group = UserGroup.new(
-      name: params[:name],
+      user_group_params
     )
 
       if @user_group.save
@@ -65,7 +65,7 @@ if current_user
   # PATCH/PUT /user_groups/1 or /user_groups/1.json
   def update
     @user_group = set_user_group
-      if @user_group.update(name: params[:name])
+      if @user_group.update(user_group_params)
         ActivtyLog.create(action: 'update', ip: request.remote_ip,
  description: "Updated user group #{@user_group.name}",
           user_agent: request.user_agent, user: current_user.username || current_user.email,
@@ -99,6 +99,6 @@ if current_user
 
     # Only allow a list of trusted parameters through.
     def user_group_params
-      params.permit(:name, :account_id)
+      params.require(:user_group).permit(:name, :account_id)
     end
 end
