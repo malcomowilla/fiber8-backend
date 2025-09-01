@@ -45,13 +45,13 @@ class RadSessionsJob
 
 
 
-    total_bandwidth = RadAcct.where(
+    active_sessions = RadAcct.where(
     framedprotocol: 'PPP'
   )
 
 
-  total_download = total_bandwidth.sum("COALESCE(acctinputoctets, 0)")
-  total_upload   = total_bandwidth.sum("COALESCE(acctoutputoctets, 0)")
+  total_download = active_sessions.sum("COALESCE(acctinputoctets, 0)")
+  total_upload   = active_sessions.sum("COALESCE(acctoutputoctets, 0)")
   total_bytes    = total_download + total_upload
 
   radacct_data = {
