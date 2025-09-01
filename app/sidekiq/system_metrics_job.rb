@@ -78,17 +78,6 @@ class SystemMetricsJob
 
 
 
-
-
-
-
-
-
-
-
-
-    
-
 log_output = `journalctl -u loophole -n 200 --no-page`
 
 

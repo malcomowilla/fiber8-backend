@@ -48,7 +48,7 @@ class RadSessionsJob
     active_sessions = RadAcct.where(
     acctstoptime: nil,
     framedprotocol: 'PPP'
-  ).where('acctupdatetime > ?', 3.minutes.ago)
+  )
 
 
   total_download = active_sessions.sum("COALESCE(acctinputoctets, 0)")
