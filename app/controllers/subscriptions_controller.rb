@@ -44,46 +44,6 @@ end
 
 
 
-# def get_active_pppoe_users
-#       subscriptions = Subscription.where(subscriber_id: params[:subscriber_id])
-#      subscriptions.map do |subscription|
-
-
-#   active_sessions = RadAcct.where(acctstoptime: nil, framedprotocol: 'PPP', 
-#   username: subscription.ppoe_username
-  
-#   )
-
-#   total_bytes = 0
-
-#   active_user_data = active_sessions.map do |session|
-#     download_bytes = session.acctinputoctets || 0
-#     upload_bytes = session.acctoutputoctets || 0
-#     session_total = download_bytes + upload_bytes
-#     total_bytes += session_total
-
-#     {
-#       username: session.username,
-#       ip_address: session.framedipaddress.to_s,
-#       mac_address: session.callingstationid,
-#       up_time: format_uptime(session.acctsessiontime),
-#       download: format_bytes(download_bytes),
-#       upload: format_bytes(upload_bytes),
-#       start_time: session.acctstarttime.strftime("%B %d, %Y at %I:%M %p"),
-#       nas_port: session.nasportid
-#     }
-#   end
-# end
-
-#   render json: {
-#     active_user_count: active_user_data.size,
-#     total_bandwidth: format_bytes(total_bytes),
-#     users: active_user_data
-#   }
-# end
-
-
-
 
 
 def get_total_bandwidth_and_online_users
@@ -168,7 +128,9 @@ active_sessions = RadAcct.where(
       total_bytes += session_total
 
       all_active_user_data << {
+        client: subscription.subscriber.name,
         username: session.username,
+        package:  subscription.package_name,
         ip_address: session.framedipaddress.to_s,
         mac_address: session.callingstationid,
         up_time: format_uptime(session.acctsessiontime),
