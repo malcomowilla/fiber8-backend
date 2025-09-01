@@ -46,7 +46,6 @@ class RadSessionsJob
 
 
     active_sessions = RadAcct.where(
-    acctstoptime: nil,
     framedprotocol: 'PPP'
   )
 
