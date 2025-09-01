@@ -159,6 +159,82 @@ ActionCable.server.broadcast("online_stats_channel", {
 end
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+def get_total_active_pppoe_users
+  subscriptions = Subscription.all
+
+  total_bytes = 0
+  all_active_user_data = []
+
+  subscriptions.each do |subscription|
+    # active_sessions = RadAcct.where(
+    #   acctstoptime: nil,
+    #   framedprotocol: 'PPP',
+    #   username: subscription.ppoe_username,
+    #   framedipaddress: subscription.ip_address,
+      
+    # )
+
+
+active_sessions = RadAcct.where(
+  acctstoptime: nil,
+  framedprotocol: 'PPP',
+  username: subscription.ppoe_username,
+  framedipaddress: subscription.ip_address
+).where('acctupdatetime > ?', 3.minutes.ago)
+ .order(acctupdatetime: :desc)
+
+    active_sessions.each do |session|
+      download_bytes = session.acctinputoctets || 0
+      upload_bytes = session.acctoutputoctets || 0
+      session_total = download_bytes + upload_bytes
+      total_bytes += session_total
+
+      all_active_user_data << {
+        client: subscription.subscriber.name,
+        username: session.username,
+        package:  subscription.package_name,
+        ip_address: session.framedipaddress.to_s,
+        mac_address: session.callingstationid,
+        up_time: format_uptime(session.acctsessiontime),
+        download: format_bytes(download_bytes),
+        upload: format_bytes(upload_bytes),
+        start_time: session.acctstarttime&.strftime("%B %d, %Y at %I:%M %p") || 'Unknown',
+        nas_port: session.nasportid
+      }
+    end
+  end
+
+
+
+ActionCable.server.broadcast("online_stats_channel", {
+     active_user_count: all_active_user_data.size,
+    total_bandwidth: format_bytes(total_bytes),
+    users: all_active_user_data,
+    })
+
+
+  render json: {
+    active_user_count: all_active_user_data.size,
+    total_bandwidth: format_bytes(total_bytes),
+    users: all_active_user_data
+  }
+end
+
+
+
+
 def format_uptime(seconds)
   return '0s' if seconds.nil?
 

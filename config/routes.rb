@@ -134,6 +134,9 @@ post '/api/make_subscription_payment', to: 'subscription_payment#make_subscripti
 post '/api/delete_radcheck', to: 'subscriptions#delete_radcheck'
 get '/api/get_total_bandwidth_and_online_users', to: 'subscriptions#get_total_bandwidth_and_online_users'
 get '/api/get_active_pppoe_users', to: 'subscriptions#get_active_pppoe_users'
+get '/api/get_total_active_pppoe_users', to: 'subscriptions#get_total_active_pppoe_users'
+get '/get_total_active_pppoe_users', to: 'subscriptions#get_total_active_pppoe_users'
+
 get '/get_active_pppoe_users', to: 'subscriptions#get_active_pppoe_users'
 get '/api/trafic_stats', to: 'router_info#trafic_stats'
 get '/api/get_router_interface', to: 'router_info#get_router_interface'
