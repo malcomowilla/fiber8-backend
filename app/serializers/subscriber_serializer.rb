@@ -3,9 +3,21 @@ class SubscriberSerializer < ActiveModel::Serializer
   :date_registered, :ref_no,
    :package_name,:installation_fee, :subscriber_discount, :second_phone_number, :router_name,
    :house_number, :building_name, :latitude, :longitude, :expiration, :registration_date,
-   :location, :node, :status
+   :location, :node, :status, :created_at, :updated_at
 
 
+
+   def created_at
+     
+      object.created_at.strftime("%B %d, %Y at %I:%M %p") if object.created_at.present?
+   end
+
+
+   def updated_at
+     
+      object.updated_at.strftime("%B %d, %Y at %I:%M %p") if object.updated_at.present?
+     
+   end
 
    # def status
    #      if self.object.subscriptions.exists?
