@@ -6,6 +6,21 @@ class User < ApplicationRecord
     has_one :admin_setting, dependent: :destroy
     # has_one :sms_setting, dependent: :destroy
     has_many :admin_web_authn_credentials, dependent: :destroy
+
+
+
+
+   before_save :sanitize_fields
+
+
+  def sanitize_fields
+    # Remove any HTML/JS tags from details before saving
+    #  self.name = Sanitize.fragment(name)
+  self.email = Sanitize.fragment(email)
+  self.message = Sanitize.fragment(message)
+  self.phone_number = Sanitize.fragment(phone_number)
+  self.username = Sanitize.fragment(username)
+  end
     # before_destroy :delete_admin_setting
 
 #     enum :role,  [:super_administrator, :technician,
