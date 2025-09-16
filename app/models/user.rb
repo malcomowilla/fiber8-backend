@@ -17,7 +17,6 @@ class User < ApplicationRecord
     # Remove any HTML/JS tags from details before saving
     #  self.name = Sanitize.fragment(name)
   self.email = Sanitize.fragment(email)
-  self.message = Sanitize.fragment(message)
   self.phone_number = Sanitize.fragment(phone_number)
   self.username = Sanitize.fragment(username)
   end
