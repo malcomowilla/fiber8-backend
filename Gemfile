@@ -228,6 +228,7 @@ gem "ipaddress", "~> 0.8.3"
 gem 'rails-observers'
 
 
+gem 'sanitize'
 
 
 

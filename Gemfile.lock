@@ -382,6 +382,9 @@ GEM
       fugit (~> 1.1, >= 1.11.1)
     safety_net_attestation (0.4.0)
       jwt (~> 2.0)
+    sanitize (7.0.0)
+      crass (~> 1.0.2)
+      nokogiri (>= 1.16.8)
     securerandom (0.4.1)
     selenium-webdriver (4.28.0)
       base64 (~> 0.2)
@@ -508,6 +511,7 @@ DEPENDENCIES
   rest-client
   rotp
   rqrcode
+  sanitize
   securerandom
   selenium-webdriver
   sidekiq
