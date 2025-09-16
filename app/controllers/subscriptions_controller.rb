@@ -24,16 +24,15 @@ if current_user
     
   end
   
+
+
     
 def set_current_tenant
   host = request.headers['X-Subdomain']
   @account = Account.find_by(subdomain: host)
    ActsAsTenant.current_tenant = @account
   EmailConfiguration.configure(@account, ENV['SYSTEM_ADMIN_EMAIL'])
-  # EmailSystemAdmin.configure(@current_account, current_system_admin)
 
-  # set_current_tenant(@account)
-  Rails.logger.info "set_current_tenant subscriptions => #{ActsAsTenant.current_tenant.inspect}"
 rescue ActiveRecord::RecordNotFound
   render json: { error: 'Invalid tenant' }, status: :not_found
 
@@ -48,7 +47,6 @@ end
 
 def get_total_bandwidth_and_online_users
   active_sessions = RadAcct.where(
-    acctstoptime: nil,
     framedprotocol: 'PPP'
   ).where('acctupdatetime > ?', 3.minutes.ago)
 
