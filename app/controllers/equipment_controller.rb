@@ -2,6 +2,7 @@ class EquipmentController < ApplicationController
   before_action :set_equipment, only: %i[ show edit update destroy ]
 
 
+  load_and_authorize_resource
 
   set_current_tenant_through_filter
 

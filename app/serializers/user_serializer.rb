@@ -13,6 +13,8 @@ class UserSerializer < ActiveModel::Serializer
 :can_manage_hotspot_template, :can_read_hotspot_template,
 :can_manage_hotspot_voucher, :can_read_hotspot_voucher,
 :can_manage_hotspot_settings, :can_read_hotspot_settings,
+:can_manage_invoice, :can_read_invoice,
+:can_manage_equipment, :can_read_equipment,
 :date_registered, :last_login_at,
 
 :status,

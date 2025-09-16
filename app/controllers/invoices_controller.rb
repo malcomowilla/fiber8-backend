@@ -1,6 +1,7 @@
 class InvoicesController < ApplicationController
-  before_action :set_invoice, only: %i[ show edit update destroy ]
+  # before_action :set_invoice, only: %i[ show edit update destroy ]
 
+  load_and_authorize_resource
 
   set_current_tenant_through_filter
 

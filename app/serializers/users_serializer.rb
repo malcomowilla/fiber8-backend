@@ -9,10 +9,14 @@ attributes :can_manage_subscriber,:can_read_read_subscriber,:can_manage_ticket_s
 :can_read_support_tickets,:can_manage_users, :can_read_users,:can_manage_zones,:can_read_zones,
 :can_manage_free_radius, :can_read_free_radius, :can_manage_mpesa_settings, :can_read_mpesa_settings,
 :can_reboot_router,:can_manage_hotspot_template, :can_read_hotspot_template,
+:can_manage_invoice, :can_read_invoice, :can_manage_equipment, :can_read_equipment,
+
+
 :date_registered,
 :can_manage_hotspot_voucher, :can_read_hotspot_voucher,
 :can_manage_hotspot_settings, :can_read_hotspot_settings,
 :last_login_at,
+
 
 :status,
 :can_manage_support_tickets,

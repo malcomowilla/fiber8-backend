@@ -146,7 +146,11 @@ can_create_ip_networks: params[:can_create_ip_networks],
 can_read_task_setting: params[:can_read_task_setting],
 can_create_task_setting: params[:can_create_task_setting],
 can_create_license_setting: params[:can_create_license_setting],
-can_read_license_setting: params[:can_read_license_setting]
+can_read_license_setting: params[:can_read_license_setting],
+can_read_invoice: params[:can_read_invoice],
+can_manage_invoice: params[:can_manage_invoice],
+can_read_equipment: params[:can_read_equipment],
+can_manage_equipment: params[:can_manage_equipment]
 
       
 
@@ -273,7 +277,11 @@ can_read_license_setting: params[:can_read_license_setting],
 can_manage_networks: params[:can_manage_networks],
 can_read_networks: params[:can_read_networks],
 can_manage_private_ips: params[:can_manage_private_ips],
-can_read_private_ips: params[:can_read_private_ips]
+can_read_private_ips: params[:can_read_private_ips],
+can_read_invoice: params[:can_read_invoice],
+can_manage_invoice: params[:can_manage_invoice],
+can_read_equipment: params[:can_read_equipment],
+can_manage_equipment: params[:can_manage_equipment]
     )
 
     ActivtyLog.create(action: 'update', ip: request.remote_ip,
@@ -351,7 +359,11 @@ end
 :can_read_task_setting,
 :can_create_task_setting,
 :can_create_license_setting,
-:can_read_license_setting
+:can_read_license_setting,
+:can_manage_invoice,
+:can_read_invoice,
+:can_read_equipment,
+:can_manage_equipment
 
 
 
