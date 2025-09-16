@@ -48,7 +48,7 @@ end
 def get_total_bandwidth_and_online_users
   active_sessions = RadAcct.where(
     framedprotocol: 'PPP'
-  ).where('acctupdatetime > ?', 3.minutes.ago)
+  )
 
   active_user_count = active_sessions.count
 
