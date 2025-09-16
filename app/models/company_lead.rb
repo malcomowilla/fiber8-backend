@@ -6,6 +6,12 @@ class CompanyLead < ApplicationRecord
 
   def sanitize_fields
     # Remove any HTML/JS tags from details before saving
-    self.details = Sanitize.fragment(details)
+    # self.name = Sanitize.fragment(name)
+  self.name = Sanitize.fragment(name)
+  self.email = Sanitize.fragment(email)
+  self.company_name = Sanitize.fragment(company_name)
+  self.message = Sanitize.fragment(message)
+  self.phone_number = Sanitize.fragment(phone_number)
+
   end
 end
