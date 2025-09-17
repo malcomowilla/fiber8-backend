@@ -8,6 +8,8 @@ class GenerateInvoiceJob
         # Process hotspot plan
         Rails.logger.info "Processing plan invoice for => #{tenant.subdomain}"
         if !tenant.hotspot_plan&.name == 'Free Trial'
+                  Rails.logger.info "Processing plan...... => #{tenant.subdomain}"
+
         if tenant.hotspot_plan&.expiry > Time.current
           process_hotspot_plan_invoice(tenant, tenant.hotspot_plan.name, tenant.hotspot_plan.price, 
           tenant.hotspot_plan.expiry_days)
