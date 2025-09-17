@@ -425,7 +425,16 @@ end
     # @my_admin.password = generate_secure_password(16)
     # @my_admin.password_confirmation = generate_secure_password(16)
 
-    @my_admin.update!(account_id: account_id.id)
+    # @my_admin.update!(account_id: account_id.id)
+  ActsAsTenant.with_tenant(account_id) do
+  @my_admin = User.create!(
+    username: params[:username],
+    email: params[:email],
+    phone_number: params[:phone_number],
+    password: params[:password],
+    password_confirmation: params[:password]
+  )
+end
 @my_admin.update!(password: params[:password],  password_confirmation: params[:password])
 
 
