@@ -26,6 +26,12 @@ Sidekiq.configure_server do |config|
     schedule = {
 
 
+
+   'generate_invoice_job' => {
+    'class' => 'GenerateInvoiceJob',
+     'cron' => '* * * * *'
+  },
+
 #  'tickets_job' => {
 #       'class' => 'TicketsJob',
 #       'cron' => '* * * * *'
@@ -92,10 +98,6 @@ Sidekiq.configure_server do |config|
   # },
 
 
-   'generate_invoice_job' => {
-    'class' => 'GenerateInvoiceJob',
-     'cron' => '* * * * *'
-  },
 
 
   # 'router_ping_job' => {

@@ -84,4 +84,7 @@ end
   def generate_invoice_number
     "INV#{Time.current.strftime("%Y%m%d%H%M%S")}#{rand(100..999)}"
   end
+
+
+  
 end
