@@ -2,7 +2,7 @@ class PpPoePlanSerializer < ActiveModel::Serializer
   attributes :id, :maximum_pppoe_subscribers, :name, :expiry_days, :billing_cycle, :expiry, :status,
   :condition
 
-  belongs_to :account
+  # belongs_to :account
 
 
 def expiry
