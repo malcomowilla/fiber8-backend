@@ -7,7 +7,7 @@ class GenerateInvoiceJob
       ActsAsTenant.with_tenant(tenant) do
         # Process hotspot plan
         Rails.logger.info "Processing plan invoice for => #{tenant.subdomain}"
-        if !tenant.hotspot_plan&.name == 'Free Trial'
+        unless tenant.hotspot_plan&.name == 'Free Trial'
                   Rails.logger.info "Processing plan...... => #{tenant.subdomain}"
 
         if tenant.hotspot_plan&.expiry > Time.current
