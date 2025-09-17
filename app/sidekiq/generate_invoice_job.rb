@@ -5,7 +5,6 @@ class GenerateInvoiceJob
   def perform
     Account.find_each do |tenant|
       ActsAsTenant.with_tenant(tenant) do
-        # Process hotspot plan
         Rails.logger.info "Processing plan invoice for => #{tenant.subdomain}"
         unless tenant.hotspot_plan&.name == 'Free Trial'
                   Rails.logger.info "Processing plan...... => #{tenant.subdomain}"
