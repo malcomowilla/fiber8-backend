@@ -15,20 +15,20 @@ end
 
    
 
-  def name
- object.name.presence || "Free Trial"
+#   def name
+#  object.name.presence || "Free Trial"
 
-  end
+#   end
 
-  def condition
-    return false unless object.expiry.present?
+  # def condition
+  #   return false unless object.expiry.present?
     
-    # Get warning days threshold from frontend settings or use default (2 days)
-    warning_days = object.account.license_setting&.expiry_warning_days || 2
+  #   # Get warning days threshold from frontend settings or use default (2 days)
+  #   warning_days = object.account.license_setting&.expiry_warning_days || 2
     
-    # Check if expiry is within the warning period
-    (object.expiry - Time.current) <= warning_days.days
-  end
+  #   # Check if expiry is within the warning period
+  #   (object.expiry - Time.current) <= warning_days.days
+  # end
 
   def status
     # return "expired" if object.expiry.present? && object.expiry < Time.current 
