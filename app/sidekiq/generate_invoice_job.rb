@@ -19,7 +19,7 @@ class GenerateInvoiceJob
 
 
         # Process PPPoE plan
-         if !tenant.pp_poe_plan&.name == 'Free Trial'
+         unless tenant.pp_poe_plan&.name == 'Free Trial'
          if tenant.pp_poe_plan&.expiry > Time.current
           process_pppoe_plan_invoice(tenant, tenant.pp_poe_plan.name, tenant.pp_poe_plan.price, 
           tenant.pp_poe_plan.expiry_days)
