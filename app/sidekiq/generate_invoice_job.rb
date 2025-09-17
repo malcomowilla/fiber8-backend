@@ -1,6 +1,6 @@
 class GenerateInvoiceJob
    include Sidekiq::Job
-  queue_as :radacct
+  queue_as :default
 
   def perform
     Account.find_each do |tenant|
