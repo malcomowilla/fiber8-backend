@@ -418,7 +418,7 @@ end
     )
   
 
-   account_id = Account.find_by(subdomain: params[:company_name])
+   account_id = Account.find_or_create_by(subdomain: params[:company_name])
 
 
 
