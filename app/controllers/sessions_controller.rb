@@ -62,7 +62,7 @@ def create_fcm_token
 
 def set_tenant
     host = request.headers['X-Subdomain']
-    @account = Account.find_by(subdomain: host)
+    @account = Account.find_or_create_by(subdomain: host)
      ActsAsTenant.current_tenant = @account
     # EmailConfiguration.configure(@current_account)
     EmailConfiguration.configure(@account, ENV['SYSTEM_ADMIN_EMAIL'])
