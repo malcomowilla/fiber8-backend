@@ -51,7 +51,8 @@ Rails.logger.info "Processing hotspot plan invoice for => #{tenant.subdomain}"
         invoice_desciption: plan_name,
         total: plan_amount,
         status: "unpaid",
-        expiry: Time.current + expiry_days.days
+        expiry: Time.current + expiry_days.days,
+        account_id: tenant.id
       )
     
 end
