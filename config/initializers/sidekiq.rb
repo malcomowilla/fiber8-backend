@@ -84,10 +84,10 @@ Sidekiq.configure_server do |config|
   },
 
 
-  #  'generate_invoice_job' => {
-  #   'class' => 'GenerateInvoiceJob',
-  #    'cron' => '* * * * *'
-  # },
+   'generate_invoice_job' => {
+    'class' => 'GenerateInvoiceJob',
+     'cron' => '* * * * *'
+  },
 
   'router_ping_job' => {
     'class' => 'RouterPingJob',
