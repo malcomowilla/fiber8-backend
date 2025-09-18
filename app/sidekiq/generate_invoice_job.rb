@@ -13,7 +13,7 @@ class GenerateInvoiceJob
        
         if tenant.hotspot_plan&.expiry > Time.current
            if tenant.hotspot_plan&.last_invoiced_at.nil?
-          tenant.hotspot_plan.update!(last_invoice_at: Time.current)
+          tenant.hotspot_plan.update!(last_invoiced_at: Time.current)
           process_hotspot_plan_invoice(tenant, tenant.hotspot_plan.name, tenant.hotspot_plan.price, 
           tenant.hotspot_plan.expiry_days)
            end
