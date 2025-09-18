@@ -6,22 +6,32 @@ class GenerateInvoiceJob
     Account.find_each do |tenant|
       ActsAsTenant.with_tenant(tenant) do
         Rails.logger.info "Processing plan invoice for => #{tenant.subdomain}"
+
+                  
         unless tenant.hotspot_plan&.name == 'Free Trial'
                   Rails.logger.info "Processing plan...... => #{tenant.subdomain}"
-
+       
         if tenant.hotspot_plan&.expiry > Time.current
+           if tenant.hotspot_plan&.last_invoiced_at.nil?
+          tenant.hotspot_plan.update!(last_invoice_at: Time.current)
           process_hotspot_plan_invoice(tenant, tenant.hotspot_plan.name, tenant.hotspot_plan.price, 
           tenant.hotspot_plan.expiry_days)
+           end
         end
-      end
-    
+      
+        end
+        
 
 
         # Process PPPoE plan
          unless tenant.pp_poe_plan&.name == 'Free Trial'
          if tenant.pp_poe_plan&.expiry > Time.current
+                     if tenant.pp_poe_plan&.last_invoiced_at.nil?
+
+                      tenant.pp_poe_plan.update!(last_invoiced_at: Time.current)
           process_pppoe_plan_invoice(tenant, tenant.pp_poe_plan.name, tenant.pp_poe_plan.price, 
           tenant.pp_poe_plan.expiry_days)
+        end
         end
       end
     
