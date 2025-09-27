@@ -39,6 +39,40 @@ if current_user
   end
 
 
+   def upload_hotspot_file
+    router_ip = params[:router_ip]
+    username  = params[:router_username]
+    password  = params[:router_password]
+
+    local_file = "/root/login.html"
+
+    ftp_commands = <<~FTP
+      open #{router_ip}
+      user #{username} #{password}
+      binary
+      put #{local_file} hotspot/login.html
+      bye
+    FTP
+
+    File.write("/tmp/ftp_put.txt", ftp_commands)
+
+    output = `ftp -inv < /tmp/ftp_put.txt`
+
+    # Detect errors by parsing output
+    if output.match?(/Not connected|Login failed|530|No such file/i)
+      render json: {
+        status: "error",
+        message: "FTP upload failed",
+        output: output
+      }, status: :unprocessable_entity
+    else
+      render json: {
+        status: "ok",
+        message: "File uploaded successfully",
+        output: output
+      }, status: :ok
+    end
+  end
 
 
 

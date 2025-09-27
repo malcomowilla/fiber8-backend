@@ -109,6 +109,10 @@ scope '/api' do
 
 end
 
+
+
+post '/api/hotspot_upload', to: 'hotspot_settings#upload_hotspot_file'
+
 post '/api/change_dhcp_server_settings/:id', to: 'onus#change_dhcp_server_settings'
 post "/api/reboot_device/:id", to: "onus#reboot"
 
