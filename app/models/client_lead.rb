@@ -11,7 +11,6 @@ class ClientLead < ApplicationRecord
     #  self.name = Sanitize.fragment(name)
   self.email = Sanitize.fragment(email)
   self.company_name = Sanitize.fragment(company_name)
-  self.message = Sanitize.fragment(message)
   self.phone_number = Sanitize.fragment(phone_number)
   end
 end

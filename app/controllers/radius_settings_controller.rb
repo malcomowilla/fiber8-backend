@@ -41,11 +41,24 @@ if current_user
 
 
 
-  def index
-    
-    @nas = Na.all
-    render json: @nas, each_serializer: NasSerializer
-  end
+  # def index
+  #   @nas = Na.all
+
+  #   if @nas.nasname.blanl?
+  #     default_nas_name = Na.first_or_initialize(
+  #       nasname: ActsAsTenant.current_tenant.
+  #     )
+
+  #   end
+
+
+  #   render json: @nas, each_serializer: NasSerializer
+  # end
+
+def index
+@nas = Na.all
+render json: @nas, each_serializer: NasSerializer
+end
 
 
 
@@ -60,7 +73,9 @@ if current_user
     nasname: params[:ipaddr], secret: params[:secret] )
 @nas.update(
  shortname: params[:shortname], 
-    nasname: params[:ipaddr], secret: params[:secret]
+    nasname: params[:ipaddr], 
+    
+    secret: params[:secret]
 )
 
 
