@@ -19,15 +19,15 @@ class SubscriberSerializer < ActiveModel::Serializer
      
    end
 
-   # def status
-   #      if self.object.subscriptions.exists?
-   #       self.object.status = 'active'
-   #       else
-   #          self.object.status = 'no subscription'
-   #      end
+   def status
+        if self.object.subscriptions.exists?
+         self.object.status = 'active'
+         else
+            self.object.status = 'no subscription'
+        end
 
       
-   # end
+   end
 
 
 

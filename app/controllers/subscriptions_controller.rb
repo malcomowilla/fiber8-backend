@@ -528,11 +528,19 @@ end
   def create
 
 
-    if params[:subscription][:ppoe_username].blank? || params[:subscription][:ppoe_password].blank?
-      render json: { error: "Username and password are required" }, status: :unprocessable_entity
+    if params[:subscription][:ppoe_username].blank? 
+      render json: { error: "PPPOE Username required" }, status: :unprocessable_entity
       return
     end
 
+
+
+     if params[:subscription][:ppoe_password].blank? 
+      render json: { error: "PPPOE Password required" }, status: :unprocessable_entity
+      return
+    end
+
+    
 
      if params[:subscription][:expiration_date].blank?
 
