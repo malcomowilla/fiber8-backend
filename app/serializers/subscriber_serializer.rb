@@ -6,7 +6,11 @@ class SubscriberSerializer < ActiveModel::Serializer
    :location, :node, :status, :created_at, :updated_at
 
 
+   def package_name
+     object.subscriptions.pluck(:package_name)
 
+   end
+   
    def created_at
      
       object.created_at.strftime("%B %d, %Y at %I:%M %p") if object.created_at.present?
