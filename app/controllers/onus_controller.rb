@@ -6,7 +6,8 @@ set_current_tenant_through_filter
 
 before_action :set_tenant
 before_action :update_last_activity
-GENIEACS_HOST = "http://10.2.0.1:7347"
+GENIEACS_HOST = "http://102.221.35.92:7347"
+# GENIEACS_HOST = "http://10.2.0.1:7347"
 
 
  def update_last_activity
@@ -200,13 +201,22 @@ end
 
 
   # GET /onus or /onus.json
+  # def index
+  #       get_devices
+
+  #   @onus = Onu.all
+  #   render json: @onus
+
+  # end
+
+
   def index
-        get_devices
+  equipment_serials = Equipment.pluck(:serial_number).compact
+  get_devices
+  @onus = Onu.where(serial_number: equipment_serials)
+  render json: @onus
+end
 
-    @onus = Onu.all
-    render json: @onus
-
-  end
 
 
 def get_device_id
@@ -256,7 +266,6 @@ def refresh_device(device_id)
   JSON.parse(response.body) rescue nil
 end
 
-
   
 
 def fetch_device_data(device_id)
@@ -265,7 +274,7 @@ def fetch_device_data(device_id)
   return nil unless response.is_a?(Net::HTTPSuccess)
 
   data = JSON.parse(response.body) rescue nil
-  data.is_a?(Array) ? data.first : data  # Take the first element if it's an array
+  data.is_a?(Array) ? data.first : data  
 end
 
 
@@ -334,6 +343,7 @@ wpa_encryption1: device.dig("InternetGatewayDevice", "LANDevice", "1", "WLANConf
 end
 
 def get_devices
+  # genieacs_host = "http://10.2.0.1:7347"
   genieacs_host = "http://102.221.35.92:7347"
   devices_uri = URI("#{genieacs_host}/devices")
 
