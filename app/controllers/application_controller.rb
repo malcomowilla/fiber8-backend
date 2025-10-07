@@ -3,6 +3,7 @@ class ApplicationController < ActionController::Base
     set_current_tenant_through_filter
 before_action :set_time_zone
 before_action :block_loophole_requests
+# before_action :authorize_technician
 
 
 def block_loophole_requests
@@ -231,6 +232,20 @@ end
 
 
 
+def current_technician
+  header = request.headers['Authorization']
+  token = header.split(' ').last if header
+
+  begin
+    decoded = JWT.decode(token, ENV['JWT_SECRET'], true, algorithm: 'HS256')[0]
+    @current_technician = Technician.find_by(id: decoded["technician_id"])
+    return @current_technician if @current_technician
+  rescue JWT::ExpiredSignature
+    render json: { error: "Token has expired" }, status: :unauthorized
+  rescue JWT::DecodeError
+    render json: { error: "Invalid token" }, status: :unauthorized
+  end
+end
 
 
 

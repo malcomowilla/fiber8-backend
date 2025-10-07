@@ -726,6 +726,9 @@ render json:@user,   status: :accepted
         JWT.encode(payload, ENV['JWT_SECRET'], 'HS256')
       end
 
+
+
+      
       
     def validate_admin_update
       

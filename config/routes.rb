@@ -1,4 +1,5 @@
 Rails.application.routes.draw do
+  resources :technicians
   resources :company_ids
   resources :onus
   resources :equipment
@@ -67,6 +68,7 @@ resources :company_ids
   resources :calendar_settings
   resources :activty_logs
   resources :invoices
+  resources :technicians
 
   resources :license_settings
   resources :company_leads
@@ -112,6 +114,13 @@ end
 
 
 
+post 'api/technicians_signup', to: 'technicians#signup'
+post 'api/technicians_signin', to: 'technicians#signin'
+
+
+
+post '/technicians_signup', to: 'technicians#signup'
+post '/technicians_signin', to: 'technicians#signin'
 post '/api/hotspot_upload', to: 'hotspot_settings#upload_hotspot_file'
 
 post '/api/change_dhcp_server_settings/:id', to: 'onus#change_dhcp_server_settings'
