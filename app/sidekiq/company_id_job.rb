@@ -10,7 +10,10 @@ class CompanyIdJob
         
 
          Company.where(company_id_id: nil).find_each do |company|
-          company.update!(company_id: generate_company_id)
+          company.update!(company_id: generate_company_id,
+          
+          account_id: tenant.id
+          )
         end
 
 
