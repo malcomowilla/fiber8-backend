@@ -29,6 +29,7 @@ class Account < ApplicationRecord
     has_many :user_groups, dependent: :destroy
     has_one :hotspot_mpesa_setting, dependent: :destroy
     has_one :dial_up_mpesa_setting, dependent: :destroy
+    has_one :company_id
     # validates :subdomain, presence: true
     
 end

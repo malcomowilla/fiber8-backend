@@ -107,6 +107,12 @@ Sidekiq.configure_server do |config|
 },
 
 
+'company_id_job' => {
+  'class' => 'CompanyIdJob',
+  'cron' => '* * * * *' # Run every minute
+},
+
+
 'inactivity_check_job' => {
   'class' => 'InactivityCheckJob',
   'cron' => '* * * * *'

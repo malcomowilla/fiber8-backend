@@ -1,0 +1,11 @@
+<% content_for :title, "New company" %>
+
+<h1>New company</h1>
+
+<%= render "form", company_id: @company_id %>
+
+<br>
+
+<div>
+  <%= link_to "Back to companies", company_ids_path %>
+</div>
