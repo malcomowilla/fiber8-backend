@@ -10,7 +10,7 @@ class CompanyIdJob
         
  Rails.logger.info "Processing company id...... => #{tenant.subdomain}"
          CompanyId.where(company_id: nil).find_each do |company|
-          company.update!(company_id: generate_company_id,
+          company.first_or_initialize(company_id: generate_company_id,
           
           account_id: tenant.id
           )
