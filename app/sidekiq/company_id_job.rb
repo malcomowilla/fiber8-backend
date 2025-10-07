@@ -8,7 +8,7 @@ class CompanyIdJob
     Account.find_each do |tenant|
       ActsAsTenant.with_tenant(tenant) do
         
-
+ Rails.logger.info "Processing company id...... => #{tenant.subdomain}"
          Company.where(company_id_id: nil).find_each do |company|
           company.update!(company_id: generate_company_id,
           

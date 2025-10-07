@@ -8,6 +8,7 @@ class GenerateInvoiceJob
         Rails.logger.info "Processing plan invoice for => #{tenant.subdomain}"
 
                   
+        
         unless tenant.hotspot_plan&.name == 'Free Trial'
                   Rails.logger.info "Processing plan...... => #{tenant.subdomain}"
        
