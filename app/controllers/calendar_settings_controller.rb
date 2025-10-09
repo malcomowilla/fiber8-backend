@@ -103,7 +103,7 @@ if current_user
 @calendar_setting.update!(calendar_setting_params)
       if @calendar_setting.save
         ActivtyLog.create(action: 'create', ip: request.remote_ip,
- description: "Created calendar setting #{@calendar_setting.title}",
+ description: "Created calendar setting => event starts in  #{@calendar_setting.start_in_hours || @calendar_setting.start_in_minutes}",
           user_agent: request.user_agent, user: current_user.username || current_user.email,
            date: Time.current)
         render json: @calendar_setting, status: :created
