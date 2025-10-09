@@ -61,7 +61,7 @@ Rails.logger.info "Processing hotspot plan invoice for => #{tenant.subdomain}"
         invoice_number: generate_invoice_number,
          invoice_date: Time.current,
         due_date: Time.current + expiry_days.days,
-        invoice_desciption: plan_name,
+        invoice_desciption: "payment for hotspot license => #{plan_name}",
         total: plan_amount,
         status: "unpaid",
         account_id: tenant.id
@@ -81,7 +81,7 @@ end
         invoice_number: generate_invoice_number,
          invoice_date: Time.current,
         due_date: Time.current + expiry_days.days,
-        invoice_desciption: plan_name,
+        invoice_desciption: "payment for pppoe license => #{plan_name}",
         total: plan_amount,
         status: "unpaid",
         account_id: tenant.id,

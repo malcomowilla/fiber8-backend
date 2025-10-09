@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2025_10_07_123823) do
+ActiveRecord::Schema[7.2].define(version: 2025_10_08_124057) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -824,6 +824,8 @@ ActiveRecord::Schema[7.2].define(version: 2025_10_07_123823) do
     t.string "password"
     t.datetime "last_login_at"
     t.string "status"
+    t.string "first_name"
+    t.string "last_name"
   end
 
   create_table "ticket_settings", force: :cascade do |t|
