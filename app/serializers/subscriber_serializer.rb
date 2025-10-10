@@ -68,7 +68,12 @@ class SubscriberSerializer < ActiveModel::Serializer
 
   def registration_date
      object.registration_date.strftime("%B %d, %Y at %I:%M %p") if object.registration_date.present?
-    
+  end
+
+
+
+  def date_registered
+     object.date_registered.strftime("%B %d, %Y at %I:%M %p") if object.date_registered.present?
   end
   
    def second_phone_number
