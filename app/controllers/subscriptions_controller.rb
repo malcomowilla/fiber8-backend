@@ -342,7 +342,7 @@ radacct = radacct_records.find { |r| r.acctstoptime.nil? } || radacct_records.fi
         id: subscription.id,
         ppoe_username: subscription.ppoe_username,
         # status: "Active - Never connected",
-         status: subscription.status == 'blocked' ? 'blocked_offline' : 'offline_never_connected',
+         status: subscription.status == 'blocked' ? 'blocked_offline_never_connected' : 'offline_never_connected',
         last_seen: nil
       }
     end
