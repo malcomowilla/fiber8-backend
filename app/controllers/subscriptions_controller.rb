@@ -417,8 +417,8 @@ def unbock_service
       # If ping fails, SSH into MikroTik to block
       Net::SSH.start(router.ip_address, router.username, password: router.password,
                      verify_host_key: :never, non_interactive: true) do |ssh|
-
-        ssh.exec!("ip firewall address-list  list=aitechs_blocked_list address=#{ip_address} comment=blocked_user_#{ppoe_username}")
+ 
+        ssh.exec!("ip firewall address-list  remove [find list=aitechs_blocked_list address=#{ip_address}]")
         subscription.update!(status: 'blocked')
 
         render json: { message: "UNBlocked #{ppoe_username} (#{ip_address}) on MikroTik and updated status." }
