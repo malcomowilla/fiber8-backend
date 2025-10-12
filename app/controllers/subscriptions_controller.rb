@@ -790,11 +790,11 @@ RadCheck.where(username: @subscription.mac_address ).destroy_all
   def update
 
     @subscription = set_subscription
-    if @subscription.ppoe_username.blank? 
+    if params[:subscription][:ppoe_username].blank?
       render json: { error: "pppoe username is required" }, status: :unprocessable_entity
       return
     end
-if @subscription.ppoe_password.blank?
+if params[:subscription][:ppoe_password].blank?
         render json: { error: "pppoe password is required" }, status: :unprocessable_entity
 
         return
