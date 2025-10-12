@@ -322,7 +322,8 @@ radacct = radacct_records.find { |r| r.acctstoptime.nil? } || radacct_records.fi
           status: subscription.status == 'blocked' ? 'blocked_online' : 'online',
           last_seen: radacct.acctupdatetime.strftime("%B %d, %Y at %I:%M %p"),
           mac_adress:  lock_account_to_mac ? rad_check&.value : radacct&.callingstationid,
-          ip_address: radacct.framedipaddress
+          ip_address: radacct.framedipaddress,
+          expiry: subscription.expiry > Time.current ? 'expired' : 'subscriptiion_active'
         }
       else
         {
@@ -333,6 +334,7 @@ radacct = radacct_records.find { |r| r.acctstoptime.nil? } || radacct_records.fi
           # last_seen: radacct.acctstoptime.strftime("%B %d, %Y at %I:%M %p"),
          last_seen: radacct.acctstoptime&.strftime("%B %d, %Y at %I:%M %p") || radacct.acctupdatetime&.strftime("%B %d, %Y at %I:%M %p"),
           mac_adress:  lock_account_to_mac ? rad_check&.value : radacct&.callingstationid,
+          expiry: subscription.expiry > Time.current ? 'expired' : 'subscriptiion_active'
 
           # mac_adress: rad_check&.value
         }
@@ -343,7 +345,8 @@ radacct = radacct_records.find { |r| r.acctstoptime.nil? } || radacct_records.fi
         ppoe_username: subscription.ppoe_username,
         # status: "Active - Never connected",
          status: subscription.status == 'blocked' ? 'blocked_offline_never_connected' : 'offline_never_connected',
-        last_seen: nil
+        last_seen: nil,
+        expiry: subscription.expiry > Time.current ? 'expired' : 'subscriptiion_active'
       }
     end
   end
@@ -421,7 +424,7 @@ def unbock_service
         ssh.exec!("ip firewall address-list  remove [find list=aitechs_blocked_list address=#{ip_address}]")
         subscription.update!(status: 'blocked')
 
-        render json: { message: "UNBlocked #{ppoe_username} (#{ip_address}) on MikroTik and updated status." }
+        render json: { message: "UnBlocked #{ppoe_username} (#{ip_address}) on MikroTik and updated status." }
       end
   
 
