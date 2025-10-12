@@ -319,7 +319,7 @@ radacct = radacct_records.find { |r| r.acctstoptime.nil? } || radacct_records.fi
         {
           id: subscription.id,
           ppoe_username: subscription.ppoe_username,
-          status: subscription.status == 'blocked' ? 'blocked-online' : 'online',
+          status: subscription.status == 'blocked' ? 'blocked_online' : 'online',
           last_seen: radacct.acctupdatetime.strftime("%B %d, %Y at %I:%M %p"),
           mac_adress:  lock_account_to_mac ? rad_check&.value : radacct&.callingstationid,
           ip_address: radacct.framedipaddress
@@ -329,7 +329,7 @@ radacct = radacct_records.find { |r| r.acctstoptime.nil? } || radacct_records.fi
           id: subscription.id,
           ppoe_username: subscription.ppoe_username,
           # status: "offline",
-           status: subscription.status == 'blocked' ? 'blocked-offline' : 'offline',
+           status: subscription.status == 'blocked' ? 'blocked_offline' : 'offline',
           # last_seen: radacct.acctstoptime.strftime("%B %d, %Y at %I:%M %p"),
          last_seen: radacct.acctstoptime&.strftime("%B %d, %Y at %I:%M %p") || radacct.acctupdatetime&.strftime("%B %d, %Y at %I:%M %p"),
           mac_adress:  lock_account_to_mac ? rad_check&.value : radacct&.callingstationid,
@@ -342,7 +342,7 @@ radacct = radacct_records.find { |r| r.acctstoptime.nil? } || radacct_records.fi
         id: subscription.id,
         ppoe_username: subscription.ppoe_username,
         # status: "Active - Never connected",
-         status: subscription.status == 'blocked' ? 'blocked-offline' : 'Active - Never connected',
+         status: subscription.status == 'blocked' ? 'blocked_offline' : 'Active - Never connected',
         last_seen: nil
       }
     end
