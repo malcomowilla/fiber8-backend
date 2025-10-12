@@ -797,6 +797,7 @@ RadCheck.where(username: @subscription.mac_address ).destroy_all
 if @subscription.ppoe_password.blank?
         render json: { error: "pppoe password is required" }, status: :unprocessable_entity
 
+        return
 
   end
 
@@ -817,10 +818,10 @@ if @subscription.ppoe_password.blank?
     end
 
 
-    unless @subscription
-      render json: { error: "Subscription not found" }, status: :not_found
-      return false
-    end
+    # unless @subscription
+    #   render json: { error: "Subscription not found" }, status: :not_found
+    #   return false
+    # end
 
   
     # old_ip = @subscription.ip_address # store the old IP
