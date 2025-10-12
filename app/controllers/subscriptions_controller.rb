@@ -413,14 +413,15 @@ def unbock_service
 
     if ping_result
     
-       # If ping fails, SSH into MikroTik to block
+  
+      # If ping fails, SSH into MikroTik to block
       Net::SSH.start(router.ip_address, router.username, password: router.password,
                      verify_host_key: :never, non_interactive: true) do |ssh|
 
-        ssh.exec!("ip firewall address-list remove [find list=aitechs_blocked_list address=#{subscription.ip_address}]")
+        ssh.exec!("ip firewall address-list  list=aitechs_blocked_list address=#{ip_address} comment=blocked_user_#{ppoe_username}")
         subscription.update!(status: 'blocked')
 
-        render json: { message: "UnBlocked #{ppoe_username} (#{ip_address}) on MikroTik and updated status." }
+        render json: { message: "UNBlocked #{ppoe_username} (#{ip_address}) on MikroTik and updated status." }
       end
   
 
@@ -435,6 +436,13 @@ def unbock_service
     end
 
 
+  rescue => e
+    Rails.logger.error "Error blocking #{params[:subscription][:ppoe_username]}: #{e.message}"
+    render json: { error: e.message }, status: :internal_server_error
+    
+
+  end
+  
 end
 
 
@@ -480,13 +488,14 @@ def block_service
 
     end
     
-  end
-
-
 
   rescue => e
     Rails.logger.error "Error blocking #{params[:subscription][:ppoe_username]}: #{e.message}"
     render json: { error: e.message }, status: :internal_server_error
+  end
+
+
+
   
   
 
