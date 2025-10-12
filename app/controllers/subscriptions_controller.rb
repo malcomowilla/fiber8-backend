@@ -808,10 +808,10 @@ if params[:subscription][:ppoe_password].blank?
     end
   
     # Check uniqueness manually
-   if Subscription.exists?(ppoe_username: params[:subscription][:ppoe_username])
-  render json: { error: "Username already taken" }, status: :unprocessable_entity
-  return
-end
+#    if Subscription.exists?(ppoe_username: params[:subscription][:ppoe_username])
+#   render json: { error: "Username already taken" }, status: :unprocessable_entity
+#   return
+# end
 
 
     # unless @subscription
