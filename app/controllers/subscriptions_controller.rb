@@ -357,37 +357,99 @@ end
 
 
 
+# def block_service
+#   begin
+#     nas = IpNetwork.find_by(title: params[:subscription][:network_name]).nas
+
+#         router = NasRouter.find_by(name: nas)
+
+# return render  json: { error: "No router found" }, status: :not_found unless router
+#   ip_address =  params[:subscription][:ip_address],
+#   ppoe_username = params[:subscription][:ppoe_username],
+
+# subscription = Subscription.find_by(ppoe_username: ppoe_username)
+# router_ip = router.ip_address
+# router_username = router.username
+# router_password = router.password 
+
+#     # SSH into MikroTik router
+#     Net::SSH.start(router_ip, router_username , password: router_password, 
+#     verify_host_key: :never, non_interactive: true) do |ssh|
+#       # Add the user's IP address to the MikroTik Address List
+#       ssh.exec!("ip firewall address-list add list=aitechs_blocked_list address=#{params[:subscription][:ip_address]} comment=blocked_user_#{params[:subscription][:ppoe_username]}")
+
+#       puts "Blocked #{ppoe_username} (#{ip_address}) on MikroTik."
+# render json: { message: "Blocked #{ppoe_username} (#{ip_address}) on MikroTik." }
+#       # Update subscription status in DB
+#       subscription.update!(status: 'blocked')
+#     end
+#   rescue => e
+#     puts "Error blocking #{subscription.username}: #{e.message}"
+#   end
+
+# end
+
+
+
+
+
+
 def block_service
   begin
-    nas = IpNetwork.find_by(title: params[:subscription][:network_name]).nas
+    network = IpNetwork.find_by(title: params[:subscription][:network_name])
+    return render json: { error: "Network not found" }, status: :not_found unless network
 
-        router = NasRouter.find_by(name: nas)
+    router = NasRouter.find_by(name: network.nas)
+    return render json: { error: "No router found" }, status: :not_found unless router
 
-return render  json: { error: "No router found" }, status: :not_found unless router
-  ip_address =  params[:subscription][:ip_address],
-  ppoe_username = params[:subscription][:ppoe_username],
+    ip_address = params[:subscription][:ip_address]
+    ppoe_username = params[:subscription][:ppoe_username]
 
-subscription = Subscription.find_by(ppoe_username: ppoe_username)
-router_ip = router.ip_address
-router_username = router.username
-router_password = router.password 
+    subscription = Subscription.find_by(ppoe_username: ppoe_username)
+    return render json: { error: "Subscription not found" }, status: :not_found unless subscription
 
-    # SSH into MikroTik router
-    Net::SSH.start(router_ip, router_username , password: router_password, verify_host_key: :never, non_interactive: true) do |ssh|
-      # Add the user's IP address to the MikroTik Address List
-      ssh.exec!("ip firewall address-list add list=aitechs_blocked_list address=#{params[:subscription][:ip_address]} comment=blocked_user_#{params[:subscription][:ppoe_username]}")
+    # Ping the customer's IP address
+    ping_result = system("ping -c 1 -W 2 #{ip_address}")
 
-      puts "Blocked #{ppoe_username} (#{ip_address}) on MikroTik."
-render json: { message: "Blocked #{ppoe_username} (#{ip_address}) on MikroTik." }
-      # Update subscription status in DB
-      subscription.update!(status: 'blocked')
+    if ping_result
+    
+       # If ping fails, SSH into MikroTik to block
+      Net::SSH.start(router.ip_address, router.username, password: router.password,
+                     verify_host_key: :never, non_interactive: true) do |ssh|
+
+        ssh.exec!("ip firewall address-list add list=aitechs_blocked_list address=#{ip_address} comment=blocked_user_#{ppoe_username}")
+        subscription.update!(status: 'blocked')
+
+        render json: { message: "Blocked #{ppoe_username} (#{ip_address}) on MikroTik and updated status." }
+      end
+  
+
+  
+    else
+     
+
+  subscription.update!(status: 'blocked')
+      render json: { message: "#{ppoe_username} (#{ip_address}) is blocked" }
+
+
     end
-  rescue => e
-    puts "Error blocking #{subscription.username}: #{e.message}"
+
+
+
+
+    
+    
   end
 
-end
 
+
+  rescue => e
+    Rails.logger.error "Error blocking #{params[:subscription][:ppoe_username]}: #{e.message}"
+    render json: { error: e.message }, status: :internal_server_error
+  
+  
+
+end
 
 
 
