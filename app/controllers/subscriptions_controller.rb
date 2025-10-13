@@ -886,8 +886,9 @@ if @subscription.service_type == 'dhcp'
     end
 
 
-
 nas = IpNetwork.find_by(title: @subscription.network_name).nas
+router = NasRouter.find_by(name: nas)
+
 router_ip = router.ip_address
 
     expiration_time = Time.parse(@subscription.expiration_date.to_s)
@@ -902,7 +903,7 @@ if ping_result
      
 
      
-        router = NasRouter.find_by(name: nas)
+        
       
         return unless router
         
