@@ -930,8 +930,8 @@ if @subscription.service_type == 'dhcp'
     expiration_time = Time.parse(@subscription.expiration_date.to_s)
 if expiration_time > Time.current && @subscription.status == 'blocked'
   RemoveBlockedListExtendedJob.perform_later(@subscription)
-else
-  @subscription.update!(status: 'blocked')
+# else
+#   @subscription.update!(status: 'blocked')
 end
    
     
