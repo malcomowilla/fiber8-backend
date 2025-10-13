@@ -32,6 +32,10 @@
       rescue StandardError => e
         Rails.logger.error "Error removing PPPoE connection for username #{subscription.ppoe_username}: #{e.message}"
       end
+
+
+
+      
   
   end
 end

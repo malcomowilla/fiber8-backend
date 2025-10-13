@@ -861,18 +861,6 @@ if params[:subscription][:ppoe_password].blank?
       
     end
   
-    # Check uniqueness manually
-#    if Subscription.exists?(ppoe_username: params[:subscription][:ppoe_username])
-#   render json: { error: "Username already taken" }, status: :unprocessable_entity
-#   return
-# end
-
-
-    # unless @subscription
-    #   render json: { error: "Subscription not found" }, status: :not_found
-    #   return false
-    # end
-
   
     # old_ip = @subscription.ip_address # store the old IP
   
@@ -901,39 +889,51 @@ if @subscription.service_type == 'dhcp'
 
 
 
-#      nas = IpNetwork.find_by(title: @subscription.network_name).nas
+    expiration_time = Time.parse(@subscription.expiration_date.to_s)
+    ping_result = system("ping -c 1 -W 2 #{ip_address}")
+if expiration_time > Time.current && @subscription.status == 'blocked'
+
+
+if ping_result
+  
+ begin
+        
+     nas = IpNetwork.find_by(title: @subscription.network_name).nas
 
      
-#         router = NasRouter.find_by(name: nas)
+        router = NasRouter.find_by(name: nas)
+      
+        return unless router
+        
+        router_ip = router.ip_address
+        router_username = router.username
+        router_password = router.password 
+        
+        # Connect via SSH to MikroTik
+        Net::SSH.start(router_ip, router_username, password: router_password,
+         verify_host_key: :never, non_interactive: true) do |ssh|
+          # Correct command to remove active PPPoE session based on pppoe_username
+          command = "/ip firewall address-list remove [find list=aitechs_blocked_list address=#{@subscription.ip_address}]"
+          
+          # Execute the command
+          ssh.exec!(command)
+          @subscription.update!(status: 'active')
+          puts "UnBlocked #{@subscription.ppoe_username} (#{@subscription.ip_address}) on MikroTik."
+        end
+      rescue StandardError => e
+        Rails.logger.error "Error removing PPPoE connection for username #{@subscription.ppoe_username}: #{e.message}"
+      end
 
-#   ip_address = router.ip_address
-#           Rails.logger.info "Pinging router at #{ip_address} for tenant"
 
-# stdout_and_stderr, status = Open3.capture2e("ping -c 3 #{ip_address}")
+else
 
-#             if status && status.success?
-#   remove_pppoe_connection(@subscription.ppoe_username)
+@subscription.update!(status: 'active')
+end
 
 
-#             else
-         
-#   Rails.logger.warn "Ping failed: #{stdout_and_stderr.presence || 'No response'}"
-#   render json: { error: "Ping failed, router not reachable: #{stdout_and_stderr.presence || 'No response'}" }, status: :ok
-#   return
 
-            
 
-#       end
-# RemoveConnectionJob.perform_later(@subscription.ppoe_username, @subscription)
-    # remove_pppoe_connection(@subscription.ppoe_username)
 
-    expiration_time = Time.parse(@subscription.expiration_date.to_s)
-if expiration_time > Time.current && @subscription.status == 'blocked'
-  RemoveBlockedListExtendedJob.perform_later(@subscription)
-  @subscription.update!(status: 'active')
-
-# else
-#   @subscription.update!(status: 'blocked')
 end
    
     
@@ -943,6 +943,8 @@ end
       render json: @subscription.errors, status: :unprocessable_entity
     end
   end
+
+  
   private
     # Use callbacks to share common setup or constraints between actions.
     def set_subscription
