@@ -26,7 +26,7 @@
           
           # Execute the command
           ssh.exec!(command)
-          subscription.update!(status: 'online')
+          subscription.update!(status: 'active')
           puts "UnBlocked #{subscription.ppoe_username} (#{subscription.ip_address}) on MikroTik."
         end
       rescue StandardError => e
