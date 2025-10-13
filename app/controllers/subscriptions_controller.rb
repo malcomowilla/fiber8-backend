@@ -887,10 +887,11 @@ if @subscription.service_type == 'dhcp'
 
 
 
-
+nas = IpNetwork.find_by(title: @subscription.network_name).nas
+router_ip = router.ip_address
 
     expiration_time = Time.parse(@subscription.expiration_date.to_s)
-    ping_result = system("ping -c 1 -W 2 #{ip_address}")
+    ping_result = system("ping -c 1 -W 2 #{router_ip}")
 if expiration_time > Time.current && @subscription.status == 'blocked'
 
 
@@ -898,14 +899,14 @@ if ping_result
   
  begin
         
-     nas = IpNetwork.find_by(title: @subscription.network_name).nas
+     
 
      
         router = NasRouter.find_by(name: nas)
       
         return unless router
         
-        router_ip = router.ip_address
+        
         router_username = router.username
         router_password = router.password 
         
@@ -928,6 +929,7 @@ if ping_result
 else
 
 @subscription.update!(status: 'active')
+
 end
 
 
@@ -943,7 +945,6 @@ end
       render json: @subscription.errors, status: :unprocessable_entity
     end
   end
-
   
   private
     # Use callbacks to share common setup or constraints between actions.
