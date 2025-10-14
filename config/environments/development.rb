@@ -133,7 +133,9 @@ config.hosts << /.*\.aitechs\.co\.ke/
 
 config.action_cable.url = "wss://localhost:3000/cable"
 # config.action_cable.url = "ws://localhost:4000/cable"
-
+config.action_dispatch.trusted_proxies = [
+  '127.0.0.1', '::1'
+]
   config.action_cable.allowed_request_origins = [
     'http://localhost:3000',
     'http://127.0.0.1:3000',

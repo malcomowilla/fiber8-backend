@@ -596,6 +596,7 @@ end
         # head :no_content
         Rails.logger.info("Current user in destroy: #{current_user.inspect}")
 
+        Rails.logger.info("Current ip in destroy: #{request.remote_ip}")
   if current_user
     current_user.update(status: 'inactive')
     ActivtyLog.create(action: 'logout', ip: request.remote_ip,
