@@ -17,7 +17,7 @@ class TechniciansController < ApplicationController
     ActsAsTenant.current_tenant = @account
     EmailConfiguration.configure(@account, ENV['SYSTEM_ADMIN_EMAIL'])
     # EmailSystemAdmin.configure(@current_account, current_system_admin)
-  Rails.logger.info "Setting tenant for app android#{ActsAsTenant.current_tenant}"
+  Rails.logger.info "Setting tenant for app android#{ActsAsTenant.current_tenant.subdomain}"
     # set_current_tenant(@account)
   rescue ActiveRecord::RecordNotFound
     render json: { error: 'Invalid tenant technician' }, status: :not_found
