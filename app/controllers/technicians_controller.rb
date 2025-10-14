@@ -51,9 +51,16 @@ class TechniciansController < ApplicationController
 
 
 
+
   # 2️⃣ Set the correct tenant
     technician = Technician.new(technician_params)
+  unless technician.email_verified
+    
+    return render json: { error: "Email not verified please verify your email" }, status: :unprocessable_entity
 
+  end
+
+  
     # 3️⃣ Save and validate
     if technician.save
       render json: {

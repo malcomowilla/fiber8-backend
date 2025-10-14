@@ -114,7 +114,7 @@ end
 
 
 
-post 'api/technicians_signup', to: 'technicians#signup'
+post '/api/technicians_signup', to: 'technicians#signup'
 post 'api/technicians_signin', to: 'technicians#signin'
 
 
