@@ -39,7 +39,7 @@ class TechniciansController < ApplicationController
 
   # POST /technicians or /technicians.json
   def signup
-  company_id_param = params[:company_id]
+  company_id_param = params[:technician][:company_id]
 
   # 1️⃣ Validate company_id existence
   company_record = CompanyId.find_by(company_id: company_id_param)
