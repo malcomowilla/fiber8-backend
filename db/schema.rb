@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2025_10_14_131040) do
+ActiveRecord::Schema[7.2].define(version: 2025_10_15_222846) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -192,6 +192,19 @@ ActiveRecord::Schema[7.2].define(version: 2025_10_14_131040) do
     t.datetime "updated_at", null: false
   end
 
+  create_table "drawings", force: :cascade do |t|
+    t.string "drawing_type"
+    t.json "position"
+    t.json "path"
+    t.json "paths"
+    t.json "center"
+    t.json "bounds"
+    t.integer "account_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.string "title"
+  end
+
   create_table "email_settings", force: :cascade do |t|
     t.string "smtp_host"
     t.string "smtp_username"
@@ -224,6 +237,13 @@ ActiveRecord::Schema[7.2].define(version: 2025_10_14_131040) do
     t.string "title"
     t.string "timezone"
     t.string "allowed_ips", default: [], array: true
+    t.integer "account_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
+
+  create_table "google_maps", force: :cascade do |t|
+    t.string "api_key"
     t.integer "account_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false

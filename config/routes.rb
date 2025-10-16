@@ -1,4 +1,6 @@
 Rails.application.routes.draw do
+  resources :drawings
+  resources :google_maps
   resources :technicians
   resources :company_ids
   resources :onus
@@ -62,7 +64,10 @@ Rails.application.routes.draw do
 mount ActionCable.server => '/cable'
 scope '/api' do
     resources :onus
+    resources :drawings
 resources :company_ids
+  resources :google_maps
+
     resources :invoices
   resources :equipment
   resources :calendar_settings

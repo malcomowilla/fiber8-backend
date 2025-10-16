@@ -1,0 +1,12 @@
+<% content_for :title, "Editing google map" %>
+
+<h1>Editing google map</h1>
+
+<%= render "form", google_map: @google_map %>
+
+<br>
+
+<div>
+  <%= link_to "Show this google map", @google_map %> |
+  <%= link_to "Back to google maps", google_maps_path %>
+</div>

@@ -1,0 +1,10 @@
+<p style="color: green"><%= notice %></p>
+
+<%= render @google_map %>
+
+<div>
+  <%= link_to "Edit this google map", edit_google_map_path(@google_map) %> |
+  <%= link_to "Back to google maps", google_maps_path %>
+
+  <%= button_to "Destroy this google map", @google_map, method: :delete %>
+</div>

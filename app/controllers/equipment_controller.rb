@@ -11,6 +11,12 @@ class EquipmentController < ApplicationController
   before_action :update_last_activity
 
 
+  # Update current user's last activity time to current time.
+  # 
+  # This method is called before every action in every controller.
+  # 
+  # @return [void]
+  #
 def update_last_activity
 if current_user
       current_user.update!(last_activity_active: Time.now)

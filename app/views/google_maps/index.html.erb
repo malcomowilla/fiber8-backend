@@ -1,0 +1,16 @@
+<p style="color: green"><%= notice %></p>
+
+<% content_for :title, "Google maps" %>
+
+<h1>Google maps</h1>
+
+<div id="google_maps">
+  <% @google_maps.each do |google_map| %>
+    <%= render google_map %>
+    <p>
+      <%= link_to "Show this google map", google_map %>
+    </p>
+  <% end %>
+</div>
+
+<%= link_to "New google map", new_google_map_path %>

@@ -3,7 +3,7 @@ class Technician < ApplicationRecord
    has_secure_password(validations: false)
     acts_as_tenant(:account)
 
-
+validates :email,  uniqueness: true
    before_save :sanitize_fields
 
 
