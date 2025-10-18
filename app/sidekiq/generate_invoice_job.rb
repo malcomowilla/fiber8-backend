@@ -9,7 +9,7 @@ class GenerateInvoiceJob
 
                   
 
-        if hotspot_plan&.present? && hotspot_plan.name != 'Free Trial'
+        if hotspot_plan&.name.present? && hotspot_plan.name != 'Free Trial'
                   # Rails.logger.info "Processing plan...... => #{tenant.subdomain}"
        
         if tenant.hotspot_plan&.expiry.present? && tenant.hotspot_plan.expiry > Time.current
@@ -25,7 +25,7 @@ class GenerateInvoiceJob
 # 
 
         # Process PPPoE plan
-         if pppoe_plan.present? && pppoe_plan.name != 'Free Trial'
+         if pppoe_plan&.name.present? && pppoe_plan.name != 'Free Trial'
          if tenant.pp_poe_plan&.expiry.present? && tenant.pp_poe_plan.expiry > Time.current
                      if tenant.pp_poe_plan&.last_invoiced_at.nil?
 
