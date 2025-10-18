@@ -21,7 +21,7 @@ Rails.application.config.action_mailer.smtp_settings = {
   user_name: email_setting.smtp_username,
   password: email_setting.smtp_password,
   address: email_setting.smtp_host,
-  domain: 'aitechs.co.ke',
+  domain: 'aitechsent.net',
   port: email_setting.smtp_port,
   authentication: :login,
   # ssl: true,
@@ -84,7 +84,7 @@ Rails.application.config.action_mailer.smtp_settings = {
         user_name: email_setting.smtp_username,
         password: email_setting.smtp_password,
         address: email_setting.smtp_host,
-        domain: 'aitechs.co.ke',
+        domain: 'aitechsent.net',
 
         port: email_setting.smtp_port,
         authentication: :login,
@@ -108,7 +108,7 @@ Rails.application.config.action_mailer.smtp_settings = {
         password: email_setting.smtp_password,
         address: email_setting.smtp_host,
         port: email_setting.smtp_port,
-        domain: 'aitechs.co.ke',
+        domain: 'aitechsent.net',
 
         authentication: :login,
         ssl: true,                      # Enable SSL for port 465
@@ -123,10 +123,5 @@ Rails.application.config.action_mailer.smtp_settings = {
     end
   end
 
-  def self.set_fallback_settings
-    Rails.application.config.action_mailer.delivery_method = :mailtrap
-    Rails.application.config.action_mailer.mailtrap_settings = {
-      api_key: "f17620673c51e537ef268dea49025da8"
-    }
-  end
+  
 end
