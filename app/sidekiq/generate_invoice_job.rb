@@ -27,7 +27,6 @@ class GenerateInvoiceJob
         # Process PPPoE plan
          if tenant.pp_poe_plan&.name.present? && tenant.pp_poe_plan.name != 'Free Trial'
          if tenant.pp_poe_plan&.expiry.present? && tenant.pp_poe_plan.expiry < Time.current
-          tenant.pp_poe_plan.update!(last_invoiced_at: n)
                      if tenant.pp_poe_plan&.last_invoiced_at.nil? || tenant.pp_poe_plan.last_invoiced_at < tenant.pp_poe_plan.expiry
 
                       tenant.pp_poe_plan.update!(last_invoiced_at: Time.current)
