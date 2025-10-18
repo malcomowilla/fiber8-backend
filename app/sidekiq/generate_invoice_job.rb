@@ -13,7 +13,7 @@ class GenerateInvoiceJob
                   # Rails.logger.info "Processing plan...... => #{tenant.subdomain}"
        
         if tenant.hotspot_plan&.expiry.present? && tenant.hotspot_plan.expiry < Time.current
-           if tenant.hotspot_plan&.last_invoiced_at.nil?
+           if hotspot_plan.last_invoiced_at.nil? || tenant.hotspot_plan.last_invoiced_at < tenant.hotspot_plan.expiry
           tenant.hotspot_plan.update!(last_invoiced_at: Time.current)
           process_hotspot_plan_invoice(tenant, tenant.hotspot_plan.name, tenant.hotspot_plan.price, 
           tenant.hotspot_plan.expiry_days)
@@ -27,7 +27,8 @@ class GenerateInvoiceJob
         # Process PPPoE plan
          if tenant.pp_poe_plan&.name.present? && tenant.pp_poe_plan.name != 'Free Trial'
          if tenant.pp_poe_plan&.expiry.present? && tenant.pp_poe_plan.expiry < Time.current
-                     if tenant.pp_poe_plan&.last_invoiced_at.nil?
+          tenant.pp_poe_plan.update!(last_invoiced_at: n)
+                     if tenant.pp_poe_plan&.last_invoiced_at.nil? || tenant.pp_poe_plan.last_invoiced_at < tenant.pp_poe_plan.expiry
 
                       tenant.pp_poe_plan.update!(last_invoiced_at: Time.current)
           process_pppoe_plan_invoice(tenant, tenant.pp_poe_plan.name, tenant.pp_poe_plan.price, 
