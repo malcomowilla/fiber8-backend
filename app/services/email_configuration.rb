@@ -123,5 +123,18 @@ Rails.application.config.action_mailer.smtp_settings = {
     end
   end
 
+  def self.set_fallback_settings
+    Rails.application.config.action_mailer.delivery_method = :smtp
+    Rails.application.config.action_mailer.smtp_settings = {
+      user_name: 'aitechsent.net',
+      password: 'aitechsent.net',
+      address: 'smtp.mailtrap.io',
+      port: 2525,
+      domain: 'aitechsent.net',
+      authentication: :login,
+      ssl: true,                      # Enable SSL for port 465
+  tls: false  
+    }
+  end
   
 end
