@@ -10,10 +10,8 @@ class GenerateInvoiceJob
                   
 
         if tenant.hotspot_plan&.name.present? && tenant.hotspot_plan.name != 'Free Trial'
-                  # Rails.logger.info "Processing plan...... => #{tenant.subdomain}"
-       
         if tenant.hotspot_plan&.expiry.present? && tenant.hotspot_plan.expiry < Time.current
-           if hotspot_plan.last_invoiced_at.nil? || tenant.hotspot_plan.last_invoiced_at < tenant.hotspot_plan.expiry
+           if hotspot_plan&.last_invoiced_at.nil? || tenant.hotspot_plan.last_invoiced_at < tenant.hotspot_plan.expiry
           tenant.hotspot_plan.update!(last_invoiced_at: Time.current)
           process_hotspot_plan_invoice(tenant, tenant.hotspot_plan.name, tenant.hotspot_plan.price, 
           tenant.hotspot_plan.expiry_days)
@@ -22,13 +20,12 @@ class GenerateInvoiceJob
       
         end
         
-# 
+
 
         # Process PPPoE plan
          if tenant.pp_poe_plan&.name.present? && tenant.pp_poe_plan.name != 'Free Trial'
          if tenant.pp_poe_plan&.expiry.present? && tenant.pp_poe_plan.expiry < Time.current
                      if tenant.pp_poe_plan&.last_invoiced_at.nil? || tenant.pp_poe_plan.last_invoiced_at < tenant.pp_poe_plan.expiry
-
                       tenant.pp_poe_plan.update!(last_invoiced_at: Time.current)
           process_pppoe_plan_invoice(tenant, tenant.pp_poe_plan.name, tenant.pp_poe_plan.price, 
           tenant.pp_poe_plan.expiry_days)
@@ -92,6 +89,12 @@ end
   def generate_invoice_number
     "INV#{Time.current.strftime("%Y%m%d%H%M%S")}#{rand(100..999)}"
   end
+
+
+
+
+
+  
 
 
   

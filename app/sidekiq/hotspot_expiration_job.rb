@@ -94,6 +94,8 @@ end
     end
   end
 
+  
+
   def send_expiration(phone_number, voucher_code)
 
     # provider = ActsAsTenant.current_tenant.sms_provider_setting.sms_provider
@@ -144,6 +146,12 @@ end
     response = Net::HTTP.get_response(uri)
     handle_sms_response(response, original_message, phone_number)
   end
+
+
+
+
+
+
 
   def handle_sms_response(response, message, phone_number)
     if response.is_a?(Net::HTTPSuccess)

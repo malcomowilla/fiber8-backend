@@ -16,14 +16,19 @@ class OnuSerializer < ActiveModel::Serializer
 
 def status
   return "offline" unless object.last_inform.present?
-
-  last_inform_time = Time.parse(object.last_inform).in_time_zone("Africa/Nairobi") 
+  last_inform_time = Time.parse(object.last_inform).in_time_zone(GeneralSetting.first&.timezone || "Africa/Nairobi") 
   if last_inform_time > 5.minutes.ago
     "active"
   else
     "offline"
   end
 end
+
+
+
+
+
+
 
 
  def cpu_used

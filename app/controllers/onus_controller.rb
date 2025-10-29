@@ -6,13 +6,12 @@ set_current_tenant_through_filter
 
 before_action :set_tenant
 before_action :update_last_activity
-GENIEACS_HOST = "http://102.221.35.92:7347"
-# GENIEACS_HOST = "http://10.2.0.1:7347"
+GENIEACS_HOST = "http://10.2.0.1:7347"
 
 
  def update_last_activity
 if current_user
-      current_user.update!(last_activity_active:Time.current)
+      current_user.update!(last_activity_active: Time.current)
     end
     
   end
@@ -47,6 +46,36 @@ def set_tenant
       render json: { message: "Failed to reboot device" }, status: :unprocessable_entity
     end
   end
+
+
+
+
+def device_count
+    online_count = 0
+    offline_count = 0
+    
+    Onu.all.each do |record|
+      if record.last_inform.present?
+        last_inform_time = Time.parse(record.last_inform).in_time_zone(GeneralSetting.first&.timezone || "Africa/Nairobi")
+        last_inform_time > 5.minutes.ago ? online_count += 1 : offline_count += 1
+      else
+        offline_count += 1
+      end
+    end
+    
+      render json: {
+        online_count: online_count,
+        offline_count: offline_count,
+        total_count: online_count + offline_count
+      }
+  
+  end
+
+
+
+
+
+
 
 
 
@@ -145,6 +174,11 @@ def change_dhcp_server_settings
     render json: { error: "Failed to update dhcp settings" }, status: :unprocessable_entity
   end
 end
+
+
+
+
+
 
   def change_wireless_lan1
   device = Onu.find_by(onu_id: params[:id])
@@ -342,9 +376,12 @@ wpa_encryption1: device.dig("InternetGatewayDevice", "LANDevice", "1", "WLANConf
   }
 end
 
+
+
+
+
 def get_devices
-  # genieacs_host = "http://10.2.0.1:7347"
-  genieacs_host = "http://102.221.35.92:7347"
+  genieacs_host = "http://10.2.0.1:7347"
   devices_uri = URI("#{genieacs_host}/devices")
 
   begin
@@ -437,7 +474,7 @@ autochannel1: device.dig("InternetGatewayDevice", "LANDevice", "1", "WLANConfigu
 end
 
 def parse_time(value)
-  Time.parse(value).in_time_zone("Africa/Nairobi") if value.present?
+  Time.parse(value).in_time_zone(GeneralSetting.first&.timezone || "Africa/Nairobi") if value.present?
 rescue
   nil
 end

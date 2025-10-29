@@ -118,7 +118,8 @@ resources :company_ids
 end
 
 
-
+get '/api/device_count', to: 'onus#device_count'
+get '/device_count', to: 'onus#device_count'
 post '/api/technicians_signup', to: 'technicians#signup'
 post 'api/technicians_signin', to: 'technicians#signin'
 
