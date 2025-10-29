@@ -13,7 +13,7 @@ class GenerateInvoiceJob
         if tenant.hotspot_plan.present? &&tenant.hotspot_plan&.name.present? && tenant.hotspot_plan.name != 'Free Trial'
         if tenant.hotspot_plan.present? && tenant.hotspot_plan&.expiry.present? && tenant.hotspot_plan&.expiry < Time.current
 
-           if hotspot_plan&.last_invoiced_at.nil? || tenant.hotspot_plan&.last_invoiced_at < tenant.hotspot_plan.expiry
+           if tenant.hotspot_plan&.last_invoiced_at.nil? || tenant.hotspot_plan&.last_invoiced_at < tenant.hotspot_plan.expiry
           tenant.hotspot_plan.update!(last_invoiced_at: Time.current)
           process_hotspot_plan_invoice(tenant, tenant.hotspot_plan.name, tenant.hotspot_plan.price, 
           tenant.hotspot_plan.expiry_days, tenant.hotspot_plan.expiry)
