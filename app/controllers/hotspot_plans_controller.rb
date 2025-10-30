@@ -75,6 +75,7 @@ end
       hotspot_subscribers: params[:plan][:hotspot_subscribers],
       expiry_days: params[:plan][:expiry_days],
       status: "active",
+      plan_name: "Hotspot Plan #{params[:plan][:name]}",
       price: params[:plan][:price],
              expiry: Time.current + expiry_days.days
 
@@ -104,6 +105,7 @@ end
       expiry_days: params[:plan][:expiry_days],
       status: "active",
             price: params[:plan][:price],
+            plan_name: "Hotspot Plan #{params[:plan][:name]}",
               expiry: Time.current + expiry_days.days
 
 

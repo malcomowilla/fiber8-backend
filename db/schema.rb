@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2025_10_30_075440) do
+ActiveRecord::Schema[7.2].define(version: 2025_10_30_095844) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -296,6 +296,7 @@ ActiveRecord::Schema[7.2].define(version: 2025_10_30_075440) do
     t.string "price", default: "0"
     t.integer "expiry_days", default: 3
     t.datetime "last_invoiced_at"
+    t.string "plan_name"
   end
 
   create_table "hotspot_settings", force: :cascade do |t|
@@ -575,6 +576,7 @@ ActiveRecord::Schema[7.2].define(version: 2025_10_30_075440) do
     t.string "price", default: "0"
     t.integer "expiry_days", default: 3
     t.datetime "last_invoiced_at"
+    t.string "plan_name"
   end
 
   create_table "prefix_and_digits", force: :cascade do |t|

@@ -11,12 +11,12 @@ class GenerateInvoiceJob
 
         if tenant.hotspot_plan.present? && tenant.hotspot_plan&.name.present? && tenant.hotspot_plan.name != 'Free Trial'
 
-        if tenant.hotspot_plan.present? && tenant.hotspot_plan&.expiry.present? && tenant.hotspot_plan&.expiry < Time.current
+        if tenant.hotspot_plan.present? && tenant.hotspot_plan&.expiry.present? && tenant.hotspot_plan&.expiry - 1.days < Time.current
 
 
                     Rails.logger.info "Processing hotspot plan invoice for => #{tenant.subdomain}"
 
-     if tenant.invoices.present? && !tenant.invoices.where(plan_name: tenant.hotspot_plan.name).present? 
+     if tenant.invoices.present? && !tenant.invoices.where(plan_name: tenant.hotspot_plan.plan_name).present? 
           tenant.hotspot_plan.update!(last_invoiced_at: Time.current)
           process_hotspot_plan_invoice(tenant, tenant.hotspot_plan.name, tenant.hotspot_plan.price, 
           tenant.hotspot_plan.expiry_days, tenant.hotspot_plan.expiry)
@@ -29,12 +29,12 @@ class GenerateInvoiceJob
 
         # Process PPPoE plan
          if tenant.pp_poe_plan.present? && tenant.pp_poe_plan&.name.present? && tenant.pp_poe_plan.name != 'Free Trial'
-         if tenant.pp_poe_plan.present? && tenant.pp_poe_plan.expiry.present? && tenant.pp_poe_plan.expiry < Time.current
+         if tenant.pp_poe_plan.present? && tenant.pp_poe_plan.expiry.present? && tenant.pp_poe_plan.expiry - 1.days < Time.current
 
 
                     Rails.logger.info "Processing pppoe plan invoice for => #{tenant.subdomain}"
 
-   if tenant.invoices.present? && !tenant.invoices.where(plan_name: tenant.pp_poe_plan.name).present?
+   if tenant.invoices.present? && !tenant.invoices.where(plan_name: tenant.pp_poe_plan.plan_name).present?
    tenant.pp_poe_plan.update!(last_invoiced_at: Time.current)
           process_pppoe_plan_invoice(tenant, tenant.pp_poe_plan.name, tenant.pp_poe_plan.price, 
           tenant.pp_poe_plan.expiry_days, tenant.pp_poe_plan.expiry)
@@ -65,7 +65,7 @@ def process_hotspot_plan_invoice(tenant, plan_name, plan_amount, expiry_days, ex
 Rails.logger.info "Processing hotspot plan invoice for => #{tenant.subdomain}"
       Invoice.create!(
         invoice_number: generate_invoice_number,
-        plan_name: plan_name,
+        plan_name: "Hotspot Plan  #{plan_name}",
          invoice_date: Time.current,
         due_date: expiry + expiry_days.days,
         invoice_desciption: "payment for hotspot license => #{plan_name}",
@@ -88,7 +88,7 @@ end
 
       Invoice.create!(
         invoice_number: generate_invoice_number,
-        plan_name: plan_name,
+        plan_name: "PPPoE Plan  #{plan_name}",
         invoice_date: Time.current,
         due_date: expiry + expiry_days.days,
         invoice_desciption: "payment for pppoe license => #{plan_name}",
