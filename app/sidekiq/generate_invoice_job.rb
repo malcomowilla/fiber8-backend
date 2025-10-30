@@ -16,13 +16,13 @@ class GenerateInvoiceJob
 
                     Rails.logger.info "Processing hotspot plan invoice for => #{tenant.subdomain}"
 
-     if tenant.invoices.present? && !tenant.invoices.where(plan_name: tenant.hotspot_plan.plan_name).present? 
+     if !tenant.invoices.present? && tenant.invoices.where(plan_name: tenant.hotspot_plan.plan_name).last_invoiced_at.nil?
           tenant.hotspot_plan.update!(last_invoiced_at: Time.current)
+          tenant.invoices.where(plan_name: tenant.hotspot_plan.plan_name).update!(last_invoiced_at: Time.current)
           process_hotspot_plan_invoice(tenant, tenant.hotspot_plan.name, tenant.hotspot_plan.price, 
           tenant.hotspot_plan.expiry_days, tenant.hotspot_plan.expiry)
            end
         end
-      
         end
         
 
@@ -34,8 +34,9 @@ class GenerateInvoiceJob
 
                     Rails.logger.info "Processing pppoe plan invoice for => #{tenant.subdomain}"
 
-   if tenant.invoices.present? && !tenant.invoices.where(plan_name: tenant.pp_poe_plan.plan_name).present?
+   if !tenant.invoices.present? && tenant.invoices.where(plan_name: tenant.pp_poe_plan.plan_name).last_invoiced_at.nil?
    tenant.pp_poe_plan.update!(last_invoiced_at: Time.current)
+   tenant.invoices.where(plan_name: tenant.pp_poe_plan.plan_name).update!(last_invoiced_at: Time.current)
           process_pppoe_plan_invoice(tenant, tenant.pp_poe_plan.name, tenant.pp_poe_plan.price, 
           tenant.pp_poe_plan.expiry_days, tenant.pp_poe_plan.expiry)
         end
@@ -67,7 +68,7 @@ Rails.logger.info "Processing hotspot plan invoice for => #{tenant.subdomain}"
         invoice_number: generate_invoice_number,
         plan_name: "Hotspot Plan  #{plan_name}",
          invoice_date: Time.current,
-        due_date: expiry + expiry_days.days,
+        due_date: expiry - 1.days,
         invoice_desciption: "payment for hotspot license => #{plan_name}",
         total: plan_amount,
         status: "unpaid",
@@ -90,7 +91,7 @@ end
         invoice_number: generate_invoice_number,
         plan_name: "PPPoE Plan  #{plan_name}",
         invoice_date: Time.current,
-        due_date: expiry + expiry_days.days,
+        due_date: expiry - 1.days,
         invoice_desciption: "payment for pppoe license => #{plan_name}",
         total: plan_amount,
         status: "unpaid",
