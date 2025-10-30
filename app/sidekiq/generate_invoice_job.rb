@@ -18,7 +18,7 @@ class GenerateInvoiceJob
 
    existing_invoice = tenant.invoices.where(plan_name: "Hotspot Plan #{tenant.hotspot_plan.name}").order(created_at: :desc).first
 
-if existing_invoice.nil? || existing_invoice.last_invoiced_at.nil?
+if existing_invoice.nil? ||  existing_invoice.last_invoiced_at < 30.days.ago
   process_hotspot_plan_invoice(
     tenant,
     tenant.hotspot_plan.name,
@@ -47,7 +47,7 @@ end
 
          
 
-if existing_invoice.nil? || existing_invoice.last_invoiced_at.nil?
+if existing_invoice.nil? ||  existing_invoice.last_invoiced_at < 30.days.ago
   process_pppoe_plan_invoice(
     tenant,
     tenant.pp_poe_plan.name,
