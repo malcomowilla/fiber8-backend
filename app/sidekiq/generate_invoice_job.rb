@@ -26,6 +26,9 @@ if existing_invoice.nil? || existing_invoice.last_invoiced_at < tenant.hotspot_p
     tenant.hotspot_plan.expiry_days,
     tenant.hotspot_plan.expiry
   )
+
+else
+    Rails.logger.info "Skipping invoice for #{tenant.subdomain} — already invoiced hotspot."
 end
         end
         end
@@ -52,6 +55,10 @@ if existing_invoice.nil? || existing_invoice.last_invoiced_at < tenant.pp_poe_pl
     tenant.pp_poe_plan.expiry_days,
     tenant.pp_poe_plan.expiry
   )
+
+else
+      Rails.logger.info "Skipping invoice for #{tenant.subdomain} — already invoiced ppoe."
+
 end
         end
       end
