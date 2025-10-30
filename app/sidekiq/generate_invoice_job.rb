@@ -16,7 +16,7 @@ class GenerateInvoiceJob
 
                     Rails.logger.info "Processing hotspot plan invoice for => #{tenant.subdomain}"
 
-     if !tenant.invoices.present? && tenant.invoices.where(plan_name: tenant.hotspot_plan.plan_name).last_invoiced_at.nil?
+     if !tenant.invoices.present? && tenant.invoices.where(plan_name: tenant.hotspot_plan.plan_name).first&.last_invoiced_at.nil?
           tenant.hotspot_plan.update!(last_invoiced_at: Time.current)
           tenant.invoices.where(plan_name: tenant.hotspot_plan.plan_name).update!(last_invoiced_at: Time.current)
           process_hotspot_plan_invoice(tenant, tenant.hotspot_plan.name, tenant.hotspot_plan.price, 
@@ -34,7 +34,7 @@ class GenerateInvoiceJob
 
                     Rails.logger.info "Processing pppoe plan invoice for => #{tenant.subdomain}"
 
-   if !tenant.invoices.present? && tenant.invoices.where(plan_name: tenant.pp_poe_plan.plan_name).last_invoiced_at.nil?
+   if !tenant.invoices.present? && tenant.invoices.where(plan_name: tenant.pp_poe_plan.plan_name).first&.last_invoiced_at.nil?
    tenant.pp_poe_plan.update!(last_invoiced_at: Time.current)
    tenant.invoices.where(plan_name: tenant.pp_poe_plan.plan_name).update!(last_invoiced_at: Time.current)
           process_pppoe_plan_invoice(tenant, tenant.pp_poe_plan.name, tenant.pp_poe_plan.price, 
