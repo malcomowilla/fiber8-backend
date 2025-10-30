@@ -16,7 +16,7 @@ class GenerateInvoiceJob
 
                     Rails.logger.info "Processing hotspot plan invoice for => #{tenant.subdomain}"
 
-   existing_invoice = tenant.invoices.where(plan_name: tenant.hotspot_plan.plan_name).order(created_at: :desc).first
+   existing_invoice = tenant.invoices.where(plan_name: "Hotspot Plan #{tenant.hotspot_plan.name}").order(created_at: :desc).first
 
 if existing_invoice.nil? || existing_invoice.last_invoiced_at < tenant.hotspot_plan.expiry
   process_hotspot_plan_invoice(
@@ -43,7 +43,7 @@ end
                     Rails.logger.info "Processing pppoe plan invoice for => #{tenant.subdomain}"
 
 
-   existing_invoice = tenant.invoices.where(plan_name: tenant.pp_poe_plan.plan_name).order(created_at: :desc).first
+   existing_invoice = tenant.invoices.where(plan_name: "PPPoE Plan #{tenant.pp_poe_plan.name}").order(created_at: :desc).first
 
          
 
