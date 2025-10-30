@@ -85,7 +85,7 @@ end
 def process_hotspot_plan_invoice(tenant, plan_name, plan_amount, expiry_days, expiry)
     
 Rails.logger.info "Processing hotspot plan invoice for => #{tenant.subdomain}"
-invoice =  Invoice.create!(
+Invoice.create!(
         invoice_number: generate_invoice_number,
         plan_name: "Hotspot Plan #{plan_name}",
          invoice_date: Time.current,
@@ -111,7 +111,7 @@ end
   def process_pppoe_plan_invoice(tenant, plan_name, plan_amount, expiry_days, expiry)
     Rails.logger.info "Processing PPPoE plan invoice for => #{tenant.subdomain}"
 
-  invoice = Invoice.create!(
+   Invoice.create!(
         invoice_number: generate_invoice_number,
         plan_name: "PPPoE Plan #{plan_name}",
         invoice_date: Time.current,
