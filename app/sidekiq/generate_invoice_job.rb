@@ -99,7 +99,7 @@ invoice =  Invoice.create!(
       )
 
       # send_expiration_sms(phone_number, due_date, invoice_number, username, plan_name)
-       send_expiration_sms(tenant.users.where(role: "super_administrator").first.phone_number, invoice.due_date, invoice.invoice_number, tenant.users.where(role: "super_administrator").first.username, invoice.plan_name)
+      #  send_expiration_sms(tenant.users.where(role: "super_administrator").first.phone_number, invoice.due_date, invoice.invoice_number, tenant.users.where(role: "super_administrator").first.username, invoice.plan_name)
     
 end
 
@@ -124,7 +124,7 @@ end
 
       )
 
-       send_expiration_sms(tenant.users.where(role: "super_administrator").first.phone_number, invoice.due_date, invoice.invoice_number, tenant.users.where(role: "super_administrator").first.username, invoice.plan_name)
+      #  send_expiration_sms(tenant.users.where(role: "super_administrator").first.phone_number, invoice.due_date, invoice.invoice_number, tenant.users.where(role: "super_administrator").first.username, invoice.plan_name)
 
     
   end
