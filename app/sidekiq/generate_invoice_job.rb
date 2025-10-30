@@ -11,8 +11,9 @@ class GenerateInvoiceJob
           Rails.logger.info "Processing hotspot and ppoe plan invoice for => #{tenant.subdomain}"
 
         if tenant.hotspot_plan.present? && tenant.hotspot_plan&.name.present? && tenant.hotspot_plan.name != 'Free Trial'
+                    Rails.logger.info "Processing hotspot plan invoice for => #{tenant.subdomain}"
+
         if tenant.hotspot_plan.present? && tenant.hotspot_plan&.expiry.present? && tenant.hotspot_plan&.expiry + tenant.hotspot_plan.expiry_days.days < Time.current
-          Rails.logger.info "Processing hotspot plan invoice for => #{tenant.subdomain}"
 
 
 
