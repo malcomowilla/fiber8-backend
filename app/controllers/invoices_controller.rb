@@ -76,14 +76,16 @@ if current_user
   def destroy
      @invoice = Invoice.find_by(id: params[:id])
     @invoice.destroy!
-
        head :no_content 
   end
+
+
+  
 
   private
     # Use callbacks to share common setup or constraints between actions.
     def set_invoice
-      @invoice = Invoice.find(params[:id])
+      @invoice = Invoice.find_by(id: params[:id])
     end
 
     # Only allow a list of trusted parameters through.

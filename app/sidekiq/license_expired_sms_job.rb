@@ -30,6 +30,7 @@ class LicenseExpiredSmsJob
                      if tenant.pp_poe_plan&.last_invoiced_at.nil? || tenant.pp_poe_plan.last_invoiced_at < tenant.pp_poe_plan.expiry
 
                       tenant.pp_poe_plan.update!(last_invoiced_at: Time.current)
+                      
           process_pppoe_plan_invoice(tenant, tenant.pp_poe_plan.name, tenant.pp_poe_plan.price, 
           tenant.pp_poe_plan.expiry_days)
         end
@@ -95,16 +96,15 @@ end
 
 
 
-def send_expiration_sms(voucher)
+def send_expiration_sms(phone_number, due_date, invoice_number, tenant)
     provider = ActsAsTenant.current_tenant.sms_provider_setting.sms_provider
-    phone_number = voucher.phone
-    voucher_code = voucher.voucher
+    
 
     case provider
     when 'TextSms'
-      send_expiration_text_sms(phone_number, voucher_code)
+      send_expiration_text_sms(phone_number, due_date, invoice_number)
     when 'SMS leopard'
-      send_expiration(phone_number, voucher_code)
+      send_expiration(phone_number, due_date, invoice_number)
     else
       Rails.logger.info "No valid SMS provider configured"
     end
@@ -112,7 +112,7 @@ def send_expiration_sms(voucher)
 
   
 
-  def send_expiration(phone_number, voucher_code)
+  def send_expiration(phone_number, due_date, invoice_number, tenant, plan_name)
 
     # provider = ActsAsTenant.current_tenant.sms_provider_setting.sms_provider
 
@@ -121,8 +121,8 @@ def send_expiration_sms(voucher)
     
 
     sms_template = ActsAsTenant.current_tenant.sms_template
-    send_voucher_template = sms_template&.send_voucher_template
-    original_message = sms_template ? MessageTemplate.interpolate(send_voucher_template, { voucher_code: voucher_code }) : "Hello, your voucher #{voucher_code} is expired renew now to stay conected."
+    # send_voucher_template = sms_template&.send_voucher_template
+    original_message =  "Hello, #{tenant.users.where(role: "super_administrator").first.username} your invice #{invoice_number}  for #{plan_name} has been generated and is due to expire on #{due_date}. Please renew your subscription to stay connected."
 
     sender_id = "SMS_TEST"
     uri = URI("https://api.smsleopard.com/v1/sms/send")
@@ -142,13 +142,14 @@ def send_expiration_sms(voucher)
 
 
   
-  def send_expiration_text_sms(phone_number, voucher_code)
+  def send_expiration_text_sms(phone_number, due_date, invoice_number, tenant, plan_name)
     api_key = SmsSetting.find_by(sms_provider: 'TextSms')&.api_key
     partnerID = SmsSetting.find_by(sms_provider: 'TextSms')&.partnerID
 
     sms_template = ActsAsTenant.current_tenant.sms_template
-    send_voucher_template = sms_template&.send_voucher_template
-    original_message = sms_template ? MessageTemplate.interpolate(send_voucher_template, { voucher_code: voucher_code }) : "Hello, your voucher #{voucher_code} is expired renew now to stay conected."
+    # send_voucher_template = sms_template&.send_voucher_template
+        original_message =  "Hello, #{tenant.users.where(role: "super_administrator").first.username} your invoice #{invoice_number}  for #{plan_name} has been generated and is due to expire on #{due_date}. Please renew your subscription to stay connected."
+
 
     uri = URI("https://sms.textsms.co.ke/api/services/sendsms")
     params = {
@@ -166,6 +167,35 @@ def send_expiration_sms(voucher)
     handle_sms_response(response, original_message, phone_number)
   end
 
+
+
+
+
+
+   def handle_sms_response(response, message, phone_number)
+    if response.is_a?(Net::HTTPSuccess)
+      sms_data = JSON.parse(response.body)
+      if sms_data['responses'] && sms_data['responses'][0]['respose-code'] == 200
+        sms_recipient = sms_data['responses'][0]['mobile']
+        sms_status = sms_data['responses'][0]['response-description']
+        
+        Rails.logger.info "Recipient: #{sms_recipient}, Status: #{sms_status}"
+
+        SystemAdminSm.create!(
+          user: sms_recipient,
+          message: message,
+          status: sms_status,
+          date: Time.current,
+          system_user: 'system',
+          sms_provider: 'SMS leopard'
+        )
+      else
+        Rails.logger.info "Failed to send message: #{sms_data['responses'][0]['response-description']}"
+      end
+    else
+      Rails.logger.error "Failed to send message: #{response.body}"
+    end
+  end
 
 
 

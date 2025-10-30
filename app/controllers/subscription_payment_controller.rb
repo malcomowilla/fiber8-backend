@@ -56,11 +56,13 @@ expiry_days = params[:plan][:expiry_days]
 
 Invoice.create(
   invoice_number: generate_invoice_number,
+  plan_name: @plan.name,
   invoice_date: Time.current,
   due_date:   Time.current + expiry_days.days,
   invoice_desciption: @plan.name,
   total: @plan.price,
   status: "paid",
+  last_invoiced_at: Time.current,
 
 
 )
@@ -97,12 +99,13 @@ Invoice.create(
 
 Invoice.create(
   invoice_number: generate_invoice_number,
+  plan_name: @hotspot_plan.name,
   invoice_date: Time.current,
       due_date:  Time.current + expiry_days.days,
   invoice_desciption: @hotspot_plan.name,
   total: @hotspot_plan.price,
   status: "paid",
-
+last_invoiced_at: Time.current,
 
 )
 
