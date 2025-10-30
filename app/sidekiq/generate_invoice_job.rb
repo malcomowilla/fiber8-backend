@@ -12,10 +12,11 @@ class GenerateInvoiceJob
 
         if tenant.hotspot_plan.present? && tenant.hotspot_plan&.name.present? && tenant.hotspot_plan.name != 'Free Trial'
         if tenant.hotspot_plan.present? && tenant.hotspot_plan&.expiry.present? && tenant.hotspot_plan&.expiry + tenant.hotspot_plan.expiry_days.days < Time.current
+          Rails.logger.info "Processing hotspot plan invoice for => #{tenant.subdomain}"
 
 
 
-     if tenant.invoices.present? && tenant.invoices.where(plan_name: tenant.hotspot_plan.name).present? 
+     if tenant.invoices.present? && !tenant.invoices.where(plan_name: tenant.hotspot_plan.name).present? 
           tenant.hotspot_plan.update!(last_invoiced_at: Time.current)
           process_hotspot_plan_invoice(tenant, tenant.hotspot_plan.name, tenant.hotspot_plan.price, 
           tenant.hotspot_plan.expiry_days, tenant.hotspot_plan.expiry)
@@ -29,6 +30,7 @@ class GenerateInvoiceJob
         # Process PPPoE plan
          if tenant.pp_poe_plan.present? && tenant.pp_poe_plan&.name.present? && tenant.pp_poe_plan.name != 'Free Trial'
          if tenant.pp_poe_plan.present? && tenant.pp_poe_plan.expiry.present? && tenant.pp_poe_plan.expiry + tenant.pp_poe_plan.expiry_days.days < Time.current
+          Rails.logger.info "Processing pppoe plan invoice for => #{tenant.subdomain}"
 
    if tenant.invoices.present? && !tenant.invoices.where(plan_name: tenant.pp_poe_plan.name).present?
    tenant.pp_poe_plan.update!(last_invoiced_at: Time.current)
