@@ -51,6 +51,7 @@ class CalendarEventsController < ApplicationController
 
   # GET /calendar_events or /calendar_events.json
   def index
+    Rails.logger.info "Current user: #{current_user.inspect}"
     @calendar_events = CalendarEvent.all
     render json: @calendar_events
   end
@@ -135,11 +136,9 @@ render json: @calendar_event, status: :created
 
   # PATCH/PUT /calendar_events/1 or /calendar_events/1.json
   def update
-    Rails.logger.info "current_user update event: #{current_user.inspect}"
     @calendar_event = CalendarEvent.find_by(id: params[:id])
       if @calendar_event.update(calendar_event_params)
-         @fcm_token = current_user.fcm_token  if current_user
-         Rails.logger.info 'Current user is nil' if current_user.nil?
+         @fcm_token = current_user.fcm_token if current_user
       calendar_settings = ActsAsTenant.current_tenant.calendar_setting
       in_minutes = calendar_settings.start_in_minutes
       in_hours = calendar_settings.start_in_hours
@@ -152,8 +151,8 @@ ActivtyLog.create(action: 'update', ip: request.remote_ip,
  description: "Updated calendar event #{@calendar_event.title}",
           user_agent: request.user_agent, user: current_user.username || current_user.email,
            date: Time.current)
-      FcmNotificationJob.set(wait: 2.minutes).perform_later(@calendar_event.id)
-      # FcmNotificationJob.set(wait_until:notification_time_minutes).perform_later(@calendar_event.id, @fcm_token)
+      FcmNotificationJob.set(wait_until:notification_time_hrs).perform_later(@calendar_event.id, @fcm_token)
+      FcmNotificationJob.set(wait_until:notification_time_minutes).perform_later(@calendar_event.id, @fcm_token)
 
        render json: @calendar_event, status: :ok
       else
