@@ -72,7 +72,7 @@ end
           @nas = Na.first_or_initialize(shortname: params[:shortname], 
     nasname: params[:ipaddr], secret: params[:secret] )
 @nas.update(
- shortname: params[:shortname], 
+ shortname: 'admin', 
     nasname: params[:ipaddr] || params[:ip],
     
     secret: params[:secret] || params[:shared_secret]
