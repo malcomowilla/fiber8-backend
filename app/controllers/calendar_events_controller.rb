@@ -51,7 +51,7 @@ class CalendarEventsController < ApplicationController
 
   # GET /calendar_events or /calendar_events.json
   def index
-    Rails.logger.info "Current user: #{current_user.inspect}"
+    Rails.logger.info "Current user: #{current_user.fcm_token}"
     @calendar_events = CalendarEvent.all
     render json: @calendar_events
   end
@@ -136,6 +136,7 @@ render json: @calendar_event, status: :created
 
   # PATCH/PUT /calendar_events/1 or /calendar_events/1.json
   def update
+    Rails.logger.info "Current user: #{current_user.fcm_token}"
     @calendar_event = CalendarEvent.find_by(id: params[:id])
       if @calendar_event.update(calendar_event_params)
          @fcm_token = current_user.fcm_token if current_user
