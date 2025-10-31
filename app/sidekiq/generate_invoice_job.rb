@@ -169,7 +169,7 @@ end
 
     sms_template = ActsAsTenant.current_tenant.sms_template
     # send_voucher_template = sms_template&.send_voucher_template
-    original_message =  "Hello, #{username} your invoice #{invoice_number}  for #{plan_name} has been generated and is due to expire on #{due_date.strftime("%B %d, %Y at %I:%M %p")}. Please renew your subscription to stay connected."
+    original_message =  "Hello, #{username} your invoice #{invoice_number}  for #{plan_name} has been generated and is due on #{due_date.strftime("%B %d, %Y at %I:%M %p")}. Please renew your subscription to admin your network."
 
     sender_id = "SMS_TEST"
     uri = URI("https://api.smsleopard.com/v1/sms/send")
@@ -195,7 +195,7 @@ end
 
     sms_template = ActsAsTenant.current_tenant.sms_template
     # send_voucher_template = sms_template&.send_voucher_template
-        original_message =  "Hello, #{username} your invoice #{invoice_number}  for #{plan_name} has been generated and is due to expire on #{due_date.strftime("%B %d, %Y at %I:%M %p")}. Please renew your subscription to stay connected."
+        original_message =  "Hello, #{username} your invoice #{invoice_number}  for #{plan_name} has been generated and is due on #{due_date.strftime("%B %d, %Y at %I:%M %p")}. Please renew your subscription to admin your network."
 
 
     uri = URI("https://sms.textsms.co.ke/api/services/sendsms")
