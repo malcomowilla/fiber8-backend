@@ -69,8 +69,8 @@ config.time_zone = 'Africa/Nairobi'
     config.autoload_lib(ignore: %w(assets tasks))
     # config.active_job.queue_adapter = :sidekiq
     # Configuration for the application, engines, and railties goes here.
-    config.active_job.queue_adapter = :async
     config.active_record.observers = :rad_acct_observer
+config.active_job.queue_adapter = :sidekiq
 
     # These settings can be overridden in specific environments using the files
     # in config/environments, which are processed later.
