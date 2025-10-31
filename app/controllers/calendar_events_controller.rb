@@ -138,7 +138,7 @@ render json: @calendar_event, status: :created
     Rails.logger.info "current_user update event: #{current_user.inspect}"
     @calendar_event = CalendarEvent.find_by(id: params[:id])
       if @calendar_event.update(calendar_event_params)
-         @fcm_token = current_user.fcm_token if current_user
+         @fcm_token = current_user.fcm_token if current_user else Rails.logger.info "current_user is nil"
       calendar_settings = ActsAsTenant.current_tenant.calendar_setting
       in_minutes = calendar_settings.start_in_minutes
       in_hours = calendar_settings.start_in_hours
