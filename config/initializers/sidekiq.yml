@@ -13,17 +13,17 @@
 default:
   :concurrency: 15
   :queues:
-    - default
-    - radacct
-    - invoices
+     - [invoices, 3]
+     - [default, 5]
+     - [radacct, 2]
 
 # Development-specific settings
 development:
   :concurrency: 10
   :queues:
-    - default
-    - radacct
-    - invoices
+     - [invoices, 3]
+      - [default, 5]
+      - [radacct, 2]
     
 
 

@@ -54,7 +54,7 @@ Sidekiq.configure_server do |config|
 
       'router_ping_job' => {
         'class' => 'RouterPingJob',
-         'cron' => '*/2 * * * *' #
+         'cron' => '*/1 * * * *' # every 1 minutes
       },
 
       'subscription_expiration_job' => {
