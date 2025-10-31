@@ -70,15 +70,15 @@ end
            settings creation"}, status: :unprocessable_entity
         else
           @nas = Na.first_or_initialize(shortname: 'admin', 
-    nasname: params[:ipaddr] || params[:ip],
+    nasname: params[:ip],
     
-    secret: params[:secret] || params[:shared_secret] )
+    secret: params[:shared_secret] )
 
 
 
 @nas.update(
  shortname: 'admin', 
-    nasname: params[:ipaddr] || params[:ip],
+    nasname: params[:ip],
     
     secret:  params[:shared_secret]
 )
