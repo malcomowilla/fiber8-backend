@@ -86,7 +86,7 @@ end
 def process_hotspot_plan_invoice(tenant, plan_name, plan_amount, expiry_days, expiry)
     
 Rails.logger.info "Processing hotspot plan invoice for => #{tenant.subdomain}"
-Invoice.create!(
+invoice = Invoice.create!(
         invoice_number: generate_invoice_number,
         plan_name: "Hotspot Plan #{plan_name}",
          invoice_date: Time.current,
@@ -100,7 +100,7 @@ Invoice.create!(
       )
 
       # send_expiration_sms(phone_number, due_date, invoice_number, username, plan_name)
-      #  send_expiration_sms(tenant.users.where(role: "super_administrator").first.phone_number, invoice.due_date, invoice.invoice_number, tenant.users.where(role: "super_administrator").first.username, invoice.plan_name)
+       send_expiration_sms(tenant.users.where(role: "super_administrator").first.phone_number, invoice.due_date, invoice.invoice_number, tenant.users.where(role: "super_administrator").first.username, invoice.plan_name)
     
 end
 
@@ -112,7 +112,7 @@ end
   def process_pppoe_plan_invoice(tenant, plan_name, plan_amount, expiry_days, expiry)
     Rails.logger.info "Processing PPPoE plan invoice for => #{tenant.subdomain}"
 
-   Invoice.create!(
+  invoice =  Invoice.create!(
         invoice_number: generate_invoice_number,
         plan_name: "PPPoE Plan #{plan_name}",
         invoice_date: Time.current,
@@ -125,7 +125,7 @@ end
 
       )
 
-      #  send_expiration_sms(tenant.users.where(role: "super_administrator").first.phone_number, invoice.due_date, invoice.invoice_number, tenant.users.where(role: "super_administrator").first.username, invoice.plan_name)
+ send_expiration_sms(tenant.users.where(role: "super_administrator").first.phone_number, invoice.due_date, invoice.invoice_number, tenant.users.where(role: "super_administrator").first.username, invoice.plan_name)
 
     
   end
