@@ -49,7 +49,7 @@ Sidekiq.configure_server do |config|
 
       'contention_ratio_job' => {
         'class' => 'ContentionRatioJob',
-        'cron' => '* * * * *'
+         'cron' => '*/4 * * * *' # every 4 minutes
       },
 
       'router_ping_job' => {
