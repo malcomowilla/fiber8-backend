@@ -150,7 +150,7 @@ ActivtyLog.create(action: 'update', ip: request.remote_ip,
  description: "Updated calendar event #{@calendar_event.title}",
           user_agent: request.user_agent, user: current_user.username || current_user.email,
            date: Time.current)
-      FcmNotificationJob.set(wait_until: 2.minutes).perform_later(@calendar_event.id, @fcm_token)
+      FcmNotificationJob.set(wait: 2.minutes).perform_later(@calendar_event.id, @fcm_token)
       # FcmNotificationJob.set(wait_until:notification_time_minutes).perform_later(@calendar_event.id, @fcm_token)
 
        render json: @calendar_event, status: :ok
