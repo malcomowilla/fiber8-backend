@@ -3,6 +3,7 @@ class SessionsController < ApplicationController
 
   set_current_tenant_through_filter
 before_action :set_tenant
+before_action :current_user
 # require 'rqrcode_png'
 require 'base64'
 # before_action :throttle_login
@@ -743,6 +744,28 @@ render json:@user,   status: :accepted
       end
 
 
+
+
+
+      def current_user
+        @current_user ||= begin
+          token = cookies.encrypted.signed[:jwt_user]
+          if token  
+            begin
+              decoded_token = JWT.decode(token,  ENV['JWT_SECRET'], true, algorithm: 'HS256')
+            user_id = decoded_token[0]['user_id']
+            @current_user = User.find_by(id: user_id)
+              return @current_user if @current_user
+            rescue JWT::DecodeError, JWT::ExpiredSignature => e
+              cookies.delete(:jwt_user)
+              Rails.logger.error "JWT Decode Error super admin: #{e}"
+              render json: { error: 'Unauthorized' }, status: :unauthorized
+            end
+          end
+          nil
+        end
+             
+    end
 
 
 
