@@ -24,7 +24,7 @@ Sidekiq.configure_server do |config|
 
       'generate_clients_conf_job' => {
         'class' => 'GenerateClientsConfJob',
-        'cron' => '*/3 * * * *' # every 3 minutes
+        'cron' => '* * * * *' # every 3 minutes
       },
 
       'online_stats_broadcast_job' => {
