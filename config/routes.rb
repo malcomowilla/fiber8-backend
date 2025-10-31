@@ -1,3 +1,6 @@
+require 'sidekiq/web'
+
+
 Rails.application.routes.draw do
   resources :drawings
   resources :google_maps
