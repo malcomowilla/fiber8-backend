@@ -73,9 +73,9 @@ end
     nasname: params[:ipaddr], secret: params[:secret] )
 @nas.update(
  shortname: params[:shortname], 
-    nasname: params[:ipaddr], 
+    nasname: params[:ipaddr] || params[:ip],
     
-    secret: params[:secret]
+    secret: params[:secret] || params[:shared_secret]
 )
 
 
