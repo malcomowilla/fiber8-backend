@@ -69,8 +69,10 @@ end
           render json: {error: "Demo tenant does not allow NAS
            settings creation"}, status: :unprocessable_entity
         else
-          @nas = Na.first_or_initialize(shortname: params[:shortname], 
-    nasname: params[:ipaddr], secret: params[:secret] )
+          @nas = Na.first_or_initialize(shortname: 'admin', 
+    nasname: params[:ipaddr] || params[:ip],
+    
+    secret: params[:secret] || params[:shared_secret] )
 @nas.update(
  shortname: 'admin', 
     nasname: params[:ipaddr] || params[:ip],
