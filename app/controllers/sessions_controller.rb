@@ -3,7 +3,7 @@ class SessionsController < ApplicationController
 
   set_current_tenant_through_filter
 before_action :set_tenant
-before_action :current_user
+# before_action :current_user
 # require 'rqrcode_png'
 require 'base64'
 # before_action :throttle_login
