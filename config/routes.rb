@@ -62,6 +62,8 @@ Rails.application.routes.draw do
   # allow_get_admin_settings
  
 mount ActionCable.server => '/cable'
+mount Sidekiq::Web => "/sidekiq" # mount Sidekiq::Web in your Rails app
+
 scope '/api' do
     resources :onus
     resources :drawings

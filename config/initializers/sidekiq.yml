@@ -18,6 +18,7 @@ default:
 
 # Development-specific settings
 development:
+  :concurrency: 5
   :queues:
     - default
     - radacct
