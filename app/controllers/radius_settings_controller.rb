@@ -63,12 +63,9 @@ end
 
 
   def create_nas_settings
-        host = request.headers['X-Subdomain']
 
-         if host == 'demo'
-          render json: {error: "Demo tenant does not allow NAS
-           settings creation"}, status: :unprocessable_entity
-        else
+        
+        
           @nas = Na.first_or_initialize(shortname: 'admin', 
     nasname: params[:ip],
     
@@ -96,7 +93,7 @@ else
 end
         end
     
-  end
+  
 
 
 

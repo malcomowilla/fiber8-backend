@@ -3,7 +3,7 @@
 # app/jobs/generate_clients_conf_job.rb
 class GenerateClientsConfJob
   include Sidekiq::Job
-  queue_as :default
+  queue_as :client_conf
 
   def perform
     Rails.logger.info "Generating clients.conf"
