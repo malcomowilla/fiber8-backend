@@ -46,7 +46,8 @@ end
 
 def create_fcm_token
   
-   token_saved =  current_user.update!(fcm_token: params[:fcm_token])
+   token_saved = current_user && current_user.update!(fcm_token: params[:fcm_token])
+   Rails.logger.info "current_user: #{current_user.inspect}"
   
     if token_saved 
       render json: {message: 'token saved'}, status: :ok
