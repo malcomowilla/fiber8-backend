@@ -1,7 +1,7 @@
 class GenerateInvoiceJob
    include Sidekiq::Job
-  queue_as :default
-
+  # queue_as :default
+sidekiq_options queue: 'invoices'
   def perform
     Account.find_each do |tenant|
       ActsAsTenant.with_tenant(tenant) do
