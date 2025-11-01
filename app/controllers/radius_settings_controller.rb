@@ -75,7 +75,6 @@ end
 
 @nas.update!(
  shortname: 'admin', 
-    nasname: params[:ip],
     
     secret:  params[:shared_secret]
 )
