@@ -87,7 +87,7 @@ development:
 
   inactivity_check_job:
     class: InactivityCheckJob
-    cron: "*/2 * 
+    cron: "*/2 * * * *" 
 
 
 production:
