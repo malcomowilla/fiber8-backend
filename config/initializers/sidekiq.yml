@@ -33,9 +33,9 @@ development:
 
   :scheduler:
   :schedule:
-    subscription_expiration:
+    subscription_expiration_job:
       cron: '*/5 * * * *'  
-      class: SubscriptionExpiration
+      class: SubscriptionExpirationJob
 
 
 # Production-specific settings
