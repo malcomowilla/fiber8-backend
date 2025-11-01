@@ -29,8 +29,9 @@ development:
 
     
 
-
 :scheduler:
+  :enabled: true
+  :dynamic: false
   :schedule:
   generate_invoice_job:
     class: GenerateInvoiceJob
