@@ -42,10 +42,10 @@ Sidekiq.configure_server do |config|
         'cron' => '*/2 * * * *'
       },
 
-      # 'hotspot_expiration_job' => {
-      #   'class' => 'HotspotExpirationJob',
-      #   'cron' => '*/3 * * * *'
-      # },
+      'hotspot_expiration_job' => {
+        'class' => 'HotspotExpirationJob',
+        'cron' => '*/3 * * * *'
+      },
 
       'contention_ratio_job' => {
         'class' => 'ContentionRatioJob',
