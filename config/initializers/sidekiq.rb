@@ -79,6 +79,7 @@ Sidekiq.configure_server do |config|
     }
 
     Sidekiq.schedule = schedule
+    
     Sidekiq::Scheduler.reload_schedule!
     Rails.logger.info("✅ Sidekiq schedule loaded: #{Sidekiq.schedule.keys.join(', ')}")
   end
