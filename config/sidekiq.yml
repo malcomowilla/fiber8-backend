@@ -30,8 +30,8 @@ development:
     
 
 
-
-:schedule:
+:scheduler:
+  :schedule:
   generate_invoice_job:
     class: GenerateInvoiceJob
     cron: "* * * * *"
