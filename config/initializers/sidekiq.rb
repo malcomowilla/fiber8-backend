@@ -44,7 +44,7 @@ Sidekiq.configure_server do |config|
 
       'hotspot_expiration_job' => {
         'class' => 'HotspotExpirationJob',
-        'cron' => '* * * * *'
+        'cron' => '*/3 * * * *'
       },
 
       'contention_ratio_job' => {
@@ -59,7 +59,7 @@ Sidekiq.configure_server do |config|
 
       'subscription_expiration_job' => {
         'class' => 'SubscriptionExpirationJob',
-        'cron' => '* * * * *'
+        'cron' => '*/3 * * * *'
       },
 
       'system_metrics_job' => {
