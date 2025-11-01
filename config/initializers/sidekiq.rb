@@ -57,10 +57,10 @@ Sidekiq.configure_server do |config|
          'cron' => '*/1 * * * *' # every 1 minutes
       },
 
-      'subscription_expiration_job' => {
-        'class' => 'SubscriptionExpirationJob',
-        'cron' => '*/5 * * * *'
-      },
+      # 'subscription_expiration_job' => {
+      #   'class' => 'SubscriptionExpirationJob',
+      #   'cron' => '*/5 * * * *'
+      # },
 
       'system_metrics_job' => {
         'class' => 'SystemMetricsJob',

@@ -29,6 +29,15 @@ development:
     
 
 
+
+
+  :scheduler:
+  :schedule:
+    subscription_expiration:
+      cron: '*/5 * * * *'  
+      class: SubscriptionExpiration
+
+
 # Production-specific settings
 production:
   :queues:

@@ -1,7 +1,11 @@
 
+require 'sidekiq-scheduler'
+
+
 class SubscriptionExpirationJob
   include Sidekiq::Job
   queue_as :default
+  
   
   def perform
     Account.find_each do |tenant|
