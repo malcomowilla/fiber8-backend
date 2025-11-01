@@ -1,24 +1,11 @@
-
-
-
-
-# config/sidekiq.yml
-
-# Default settings for all environments
-
-
-
-
-
 default:
   :concurrency: 15
   :queues:
-     - [invoices, 3]
-     - [client_conf, 3]
-     - [default, 5]
-     - [radacct, 2]
+    - [invoices, 3]
+    - [client_conf, 3]
+    - [default, 5]
+    - [radacct, 2]
 
-# Development-specific settings
 development:
   :concurrency: 10
   :queues:
@@ -27,69 +14,66 @@ development:
     - [default, 5]
     - [radacct, 2]
 
-    
-
 :scheduler:
   :enabled: true
   :dynamic: false
   :schedule:
-  generate_invoice_job:
-    class: GenerateInvoiceJob
-    cron: "* * * * *"
+    generate_invoice_job:
+      class: GenerateInvoiceJob
+      cron: "* * * * *"
 
-  rehydrate_wireguard_job:
-    class: RehydrateWireguardJob
-    cron: "* * * * *"
+    rehydrate_wireguard_job:
+      class: RehydrateWireguardJob
+      cron: "* * * * *"
 
-  rad_sessions_job:
-    class: RadSessionsJob
-    every: ["20s"]
-    queue: radacct
+    rad_sessions_job:
+      class: RadSessionsJob
+      every: ["20s"]
+      queue: radacct
 
-  generate_clients_conf_job:
-    class: GenerateClientsConfJob
-    cron: "* * * * *"
+    generate_clients_conf_job:
+      class: GenerateClientsConfJob
+      cron: "* * * * *"
 
-  online_stats_broadcast_job:
-    class: OnlineStatsBroadcastJob
-    cron: "* * * * *"
+    online_stats_broadcast_job:
+      class: OnlineStatsBroadcastJob
+      cron: "* * * * *"
 
-  restart_cloudflared_if_tunnel_missing_job:
-    class: RestartCloudflaredIfTunnelMissingJob
-    cron: "*/2 * * * *"
+    restart_cloudflared_if_tunnel_missing_job:
+      class: RestartCloudflaredIfTunnelMissingJob
+      cron: "*/2 * * * *"
 
-  lock_account_job:
-    class: LockAccountJob
-    cron: "*/2 * * * *"
+    lock_account_job:
+      class: LockAccountJob
+      cron: "*/2 * * * *"
 
-  hotspot_expiration_job:
-    class: HotspotExpirationJob
-    cron: "*/3 * * * *"
+    hotspot_expiration_job:
+      class: HotspotExpirationJob
+      cron: "*/3 * * * *"
 
-  contention_ratio_job:
-    class: ContentionRatioJob
-    cron: "*/4 * * * *"
+    contention_ratio_job:
+      class: ContentionRatioJob
+      cron: "*/4 * * * *"
 
-  router_ping_job:
-    class: RouterPingJob
-    cron: "*/1 * * * *"
+    router_ping_job:
+      class: RouterPingJob
+      cron: "*/1 * * * *"
 
-  subscription_expiration_job:
-    class: SubscriptionExpirationJob
-    cron: "*/5 * * * *"
+    subscription_expiration_job:
+      class: SubscriptionExpirationJob
+      cron: "*/5 * * * *"
 
-  system_metrics_job:
-    class: SystemMetricsJob
-    cron: "* * * * *"
+    system_metrics_job:
+      class: SystemMetricsJob
+      cron: "* * * * *"
 
-  company_id_job:
-    class: CompanyIdJob
-    cron: "*/5 * * * *"
+    company_id_job:
+      class: CompanyIdJob
+      cron: "*/5 * * * *"
 
-  inactivity_check_job:
-    class: InactivityCheckJob
-    cron: "*/2 * * * *" 
-
+    inactivity_check_job:
+      class: InactivityCheckJob
+      cron: "*/2 * * * *"
 
 production:
   :queues:
@@ -97,54 +81,3 @@ production:
     - client_conf
     - radacct
     - invoices
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
