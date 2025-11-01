@@ -66,10 +66,10 @@ end
 
         
         
-          @nas = Na.first_or_initialize(shortname: 'admin', 
+          @nas = Na.first_or_initialize( 
     nasname: params[:ip],
     
-    secret: params[:shared_secret] )
+    )
 
 
 
