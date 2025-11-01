@@ -1,5 +1,4 @@
 
-# require 'sidekiq-scheduler'
 
 
 class SubscriptionExpirationJob
