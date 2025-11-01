@@ -66,17 +66,12 @@ end
 
         
         
-          @nas = Na.first_or_initialize( 
-    nasname: params[:ip],
-    
-    )
+          @nas = Na.find_or_initialize_by(nasname: params[:ip] )
 
 
 
 @nas.update!(
- shortname: 'admin', 
-    
-    secret:  params[:shared_secret]
+shortname: 'admin', secret: params[:shared_secret]
 )
 
 
