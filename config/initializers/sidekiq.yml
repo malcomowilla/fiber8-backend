@@ -31,11 +31,11 @@ development:
 
 
 
-  :scheduler:
-  :schedule:
-    subscription_expiration_job:
-      cron: '*/5 * * * *'  
-      class: SubscriptionExpirationJob
+  # :scheduler:
+  # :schedule:
+  #   subscription_expiration_job:
+  #     cron: '*/5 * * * *'  
+  #     class: SubscriptionExpirationJob
 
 
 # Production-specific settings
