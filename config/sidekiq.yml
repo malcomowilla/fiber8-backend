@@ -22,10 +22,11 @@ default:
 development:
   :concurrency: 10
   :queues:
-     - [invoices, 3]
-     - [client_conf, 3]
-      - [default, 5]
-      - [radacct, 2]
+    - [invoices, 3]
+    - [client_conf, 3]
+    - [default, 5]
+    - [radacct, 2]
+
     
 
 
