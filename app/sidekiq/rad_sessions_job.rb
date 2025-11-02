@@ -76,12 +76,16 @@ class RadSessionsJob
 
   total_bytes = 0
   total_bytes_upload_download = 0
+  total_bytes_upload = 0
+  total_bytes_download = 0
 
 
 
  active_user_data_upload_download = active_sessions_upload_download.map do |session|
   download_bytes = session.acctinputoctets || 0
   upload_bytes = session.acctoutputoctets || 0
+  total_bytes_download += download_bytes
+  total_bytes_upload += upload_bytes
   session_total = download_bytes + upload_bytes
   total_bytes_upload_download += session_total
 end
@@ -116,8 +120,8 @@ end
 
   hotspot_data = {
 active_user_count: active_user_data.size,
-  # total_upload: format_bytes(active_user_data_upload_download.upload_bytes),
-  # total_download: format_bytes(active_user_data_upload_download.download_bytes),
+  total_upload: format_bytes(total_bytes_upload),
+  total_download: format_bytes(total_bytes_download),
   total_bandwidth: format_bytes(total_bytes_upload_download),
   users: active_user_data
   }
