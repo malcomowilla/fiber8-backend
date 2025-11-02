@@ -71,7 +71,8 @@ class RadSessionsJob
 
 
 
-  active_sessions = RadAcct.where(acctstoptime: nil, framedprotocol: '').where('acctupdatetime > ?', 3.minutes.ago) 
+  # active_sessions = RadAcct.where(acctstoptime: nil, framedprotocol: '').where('acctupdatetime > ?', 3.minutes.ago) 
+  active_sessions = RadAcct.where(framedprotocol: '')
 
   total_bytes = 0
 
@@ -103,7 +104,6 @@ active_user_count: active_user_data.size,
 
   HotspotChannel.broadcast_to(account, 
     hotspot_data
- 
   )
 
   RadacctChannel.broadcast_to(account, radacct_data)

@@ -34,6 +34,7 @@ development:
     generate_clients_conf_job:
       class: GenerateClientsConfJob
       cron: "* * * * *"
+      
 
     online_stats_broadcast_job:
       class: OnlineStatsBroadcastJob
@@ -61,7 +62,7 @@ development:
 
     subscription_expiration_job:
       class: SubscriptionExpirationJob
-      cron: "*/8 * * * *"
+      cron: "*/9 * * * *"
 
     system_metrics_job:
       class: SystemMetricsJob
