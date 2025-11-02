@@ -59,9 +59,9 @@ development:
       class: RouterPingJob
       cron: "*/1 * * * *"
 
-    # subscription_expiration_job:
-    #   class: SubscriptionExpirationJob
-    #   cron: "*/5 * * * *"
+    subscription_expiration_job:
+      class: SubscriptionExpirationJob
+      cron: "0 */5 * * * *"
 
     system_metrics_job:
       class: SystemMetricsJob
