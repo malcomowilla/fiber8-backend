@@ -61,7 +61,7 @@ development:
 
     subscription_expiration_job:
       class: SubscriptionExpirationJob
-      cron: "0 */5 * * * *"
+      cron: "*/8 * * * *"
 
     system_metrics_job:
       class: SystemMetricsJob

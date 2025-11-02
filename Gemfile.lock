@@ -402,6 +402,10 @@ GEM
       rufus-scheduler (~> 3.2)
       sidekiq (>= 6, < 8)
       tilt (>= 1.4.0, < 3)
+    sidekiq-unique-jobs (8.0.11)
+      concurrent-ruby (~> 1.0, >= 1.0.5)
+      sidekiq (>= 7.0.0, < 9.0.0)
+      thor (>= 1.0, < 3.0)
     signet (0.19.0)
       addressable (~> 2.8)
       faraday (>= 0.17.5, < 3.a)
@@ -516,6 +520,7 @@ DEPENDENCIES
   selenium-webdriver
   sidekiq
   sidekiq-scheduler
+  sidekiq-unique-jobs
   sprockets-rails
   sys-filesystem
   sys-proctable

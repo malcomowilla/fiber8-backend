@@ -229,6 +229,7 @@ gem 'rails-observers'
 
 
 gem 'sanitize'
+gem "sidekiq-unique-jobs"
 
 
 
