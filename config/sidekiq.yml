@@ -42,7 +42,7 @@ development:
 
     restart_cloudflared_if_tunnel_missing_job:
       class: RestartCloudflaredIfTunnelMissingJob
-      cron: "*/2 * * * *"
+      cron: "* * * * *"
 
     lock_account_job:
       class: LockAccountJob
