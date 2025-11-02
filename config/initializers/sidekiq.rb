@@ -89,16 +89,34 @@
 
 require 'sidekiq'
 require 'sidekiq-scheduler'
+require "sidekiq-unique-jobs"
 
 Sidekiq.configure_server do |config|
   config.redis = { url: 'redis://localhost:6379/0' }
 
   # ✅ This automatically loads config/sidekiq.yml schedules
+  # 
+
+
+
+    config.client_middleware do |chain|
+    chain.add SidekiqUniqueJobs::Middleware::Client
+  end
+
+  config.server_middleware do |chain|
+    chain.add SidekiqUniqueJobs::Middleware::Server
+  end
+
+  SidekiqUniqueJobs::Server.configure(config)
   Sidekiq::Scheduler.dynamic = true
   Sidekiq::Scheduler.reload_schedule!
 end
 
 Sidekiq.configure_client do |config|
   config.redis = { url: 'redis://localhost:6379/0' }
+
+   config.client_middleware do |chain|
+    chain.add SidekiqUniqueJobs::Middleware::Client
+  end
 end
 
