@@ -71,10 +71,22 @@ class RadSessionsJob
 
 
 
-  # active_sessions = RadAcct.where(acctstoptime: nil, framedprotocol: '').where('acctupdatetime > ?', 3.minutes.ago) 
-  active_sessions = RadAcct.where(framedprotocol: '')
+  active_sessions = RadAcct.where(acctstoptime: nil, framedprotocol: '').where('acctupdatetime > ?', 3.minutes.ago) 
+  active_sessions_upload_download = RadAcct.where(framedprotocol: '')
 
   total_bytes = 0
+  total_bytes_upload_download = 0
+
+
+
+ active_user_data_upload_download = active_sessions_upload_download.map do |session|
+  download_bytes = session.acctinputoctets || 0
+  upload_bytes = session.acctoutputoctets || 0
+  session_total = download_bytes + upload_bytes
+  total_bytes_upload_download += session_total
+end
+
+
 
   active_user_data = active_sessions.map do |session|
     download_bytes = session.acctinputoctets || 0
@@ -94,16 +106,25 @@ class RadSessionsJob
     }
   end
 
+
+
+
+
+
+
+
+
   hotspot_data = {
 active_user_count: active_user_data.size,
-  total_upload: format_bytes(total_upload),
-  total_download: format_bytes(total_download),
-  total_bandwidth: format_bytes(total_bytes),
+  total_upload: format_bytes(active_user_data_upload_download.upload_bytes),
+  total_download: format_bytes(active_user_data_upload_download.download_bytes),
+  total_bandwidth: format_bytes(total_bytes_upload_download),
   users: active_user_data
   }
 
   HotspotChannel.broadcast_to(account, 
     hotspot_data
+ 
   )
 
   RadacctChannel.broadcast_to(account, radacct_data)
