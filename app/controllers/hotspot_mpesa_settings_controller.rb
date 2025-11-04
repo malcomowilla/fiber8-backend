@@ -29,6 +29,14 @@ if current_user
 
 
 
+  def customer_mpesa_stk_payments
+  
+    raw_data = request.body.read
+
+    data = JSON.parse(raw_data)
+    Rails.logger.info "Mpesa data: #{data}"
+end
+
 
   def saved_hotspot_mpesa_settings
     

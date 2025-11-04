@@ -10,13 +10,7 @@ class HotspotSettingsController < ApplicationController
   # 
 
 
-def customer_mpesa_stk_payments
-  
-    raw_data = request.body.read
 
-    data = JSON.parse(raw_data)
-    Rails.logger.info "Mpesa data: #{data}"
-end
 
 
 
