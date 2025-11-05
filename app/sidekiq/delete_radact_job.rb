@@ -22,7 +22,7 @@ class DeleteRadactJob
     # -------------------------------
     # DELETE INVALID Radcheck ENTRIES
     # -------------------------------
-    Radcheck.where.not(account_id: valid_account_ids).find_each do |radcheck|
+    RadCheck.where.not(account_id: valid_account_ids).find_each do |radcheck|
       Rails.logger.info "Deleting Radcheck ID=#{radcheck.id}, invalid account_id=#{radcheck.account_id}"
       radcheck.destroy!
       Rails.logger.info "Deleted Radcheck ID=#{radcheck.id}"
