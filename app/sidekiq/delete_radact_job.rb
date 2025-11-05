@@ -19,6 +19,23 @@ class DeleteRadactJob
       Rails.logger.info "Deleted RadAcct ID=#{radacct.id}"
     end
 
+
+
+
+ # -------------------------------
+    # DELETE INVALID RadReply ENTRIES
+    # -------------------------------
+    RadReply.where.not(account_id: valid_account_ids).find_each do |radreply|
+      Rails.logger.info "Deleting RadReply ID=#{radreply.id}, invalid account_id=#{radreply.account_id}"
+      radreply.destroy!
+      Rails.logger.info "Deleted RadReply ID=#{radreply.id}"
+    end
+
+
+
+
+
+
     # -------------------------------
     # DELETE INVALID Radcheck ENTRIES
     # -------------------------------
