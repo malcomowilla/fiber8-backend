@@ -35,6 +35,9 @@ development:
       class: GenerateClientsConfJob
       cron: "* * * * *"
       
+    delete_radact_job:
+      class: DeleteRadactJob
+      cron: "* * * * *"
 
     online_stats_broadcast_job:
       class: OnlineStatsBroadcastJob

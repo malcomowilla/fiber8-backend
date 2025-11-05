@@ -29,13 +29,39 @@ if current_user
 
 
 
-  def customer_mpesa_stk_payments
+#   def customer_mpesa_stk_payments
   
+#     raw_data = request.body.read
+
+#     data = JSON.parse(raw_data)
+#     Rails.logger.info "Mpesa data: #{data}"
+# end
+
+
+
+  def customer_mpesa_stk_payments
+    # Raw request body (as a string)
     raw_data = request.body.read
 
-    data = JSON.parse(raw_data)
-    Rails.logger.info "Mpesa data: #{data}"
-end
+    # Parse JSON if it's JSON-formatted
+    data = JSON.parse(raw_data) rescue {}
+
+    Rails.logger.info "M-Pesa Callback Received: #{data}"
+
+    # Example: extract fields
+    merchant_request_id = data.dig("Body", "stkCallback", "MerchantRequestID")
+    result_code = data.dig("Body", "stkCallback", "ResultCode")
+    result_desc = data.dig("Body", "stkCallback", "ResultDesc")
+
+    # Process the payment based on result
+    if result_code == 0
+      # Success — update your database, mark as paid, etc.
+    else
+      # Failed transaction
+    end
+
+    head :ok  # Always respond 200 OK to M-Pesa
+  end
 
 
   def saved_hotspot_mpesa_settings
