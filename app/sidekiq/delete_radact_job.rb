@@ -16,6 +16,8 @@ class DeleteRadactJob
     RadAcct.unscoped.where.not(account_id: valid_account_ids).find_each do |radacct|
       Rails.logger.info "Deleting RadAcct ID=#{radacct.id}, invalid account_id=#{radacct.account_id}"
       radacct.destroy!
+            Rails.logger.info "Deleted RadAcct ID=#{radacct.id}, invalid account_id=#{radacct.account_id}"
+
     end
   end
 end
