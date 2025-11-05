@@ -13,7 +13,7 @@ class DeleteRadactJob
 
         Rails.logger.info "✅ Successfully deleted RadAcct ID=#{radacct.id}"
       rescue => e
-        Rails.logger.error "❌ Failed to delete RadAcct ID=#{radacct.id}: #{e.class} - #{e.message}"
+        Rails.logger.info "❌ Failed to delete RadAcct ID=#{radacct.id}: #{e.class} - #{e.message}"
       end
     end
   end
