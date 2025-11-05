@@ -294,7 +294,6 @@ Rails.logger.info "IP: #{ip}"
     framedprotocol: 'PPP',
     # framedipaddress: subscription.ip_address,
     username: subscription.ppoe_username,
-    account_id: subscription.account_id,
 
     ).order(acctupdatetime: :desc)
 
