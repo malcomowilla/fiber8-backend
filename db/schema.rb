@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2025_10_30_095844) do
+ActiveRecord::Schema[7.2].define(version: 2025_11_09_131310) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -64,6 +64,16 @@ ActiveRecord::Schema[7.2].define(version: 2025_10_30_095844) do
     t.string "ip"
   end
 
+  create_table "ad_settings", force: :cascade do |t|
+    t.boolean "enabled"
+    t.boolean "to_right"
+    t.boolean "to_left"
+    t.boolean "to_top"
+    t.integer "account_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
+
   create_table "admin_settings", force: :cascade do |t|
     t.boolean "enable_2fa_for_admin_sms"
     t.boolean "enable_2fa_for_admin_email"
@@ -92,6 +102,29 @@ ActiveRecord::Schema[7.2].define(version: 2025_10_30_095844) do
     t.integer "account_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+  end
+
+  create_table "ads", force: :cascade do |t|
+    t.string "title"
+    t.string "description"
+    t.string "business_name"
+    t.string "business_type"
+    t.string "offer_text"
+    t.string "discount"
+    t.string "cat_text"
+    t.string "background_color"
+    t.string "text_color"
+    t.string "image"
+    t.string "imagePreview"
+    t.string "target_url"
+    t.boolean "is_active"
+    t.integer "account_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.string "image_preview"
+    t.string "phone"
+    t.string "email"
+    t.string "website"
   end
 
   create_table "calendar_events", force: :cascade do |t|

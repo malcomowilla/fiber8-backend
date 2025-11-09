@@ -1,0 +1,12 @@
+<% content_for :title, "Editing ad setting" %>
+
+<h1>Editing ad setting</h1>
+
+<%= render "form", ad_setting: @ad_setting %>
+
+<br>
+
+<div>
+  <%= link_to "Show this ad setting", @ad_setting %> |
+  <%= link_to "Back to ad settings", ad_settings_path %>
+</div>

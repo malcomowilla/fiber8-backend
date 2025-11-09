@@ -1,0 +1,16 @@
+<p style="color: green"><%= notice %></p>
+
+<% content_for :title, "Ad settings" %>
+
+<h1>Ad settings</h1>
+
+<div id="ad_settings">
+  <% @ad_settings.each do |ad_setting| %>
+    <%= render ad_setting %>
+    <p>
+      <%= link_to "Show this ad setting", ad_setting %>
+    </p>
+  <% end %>
+</div>
+
+<%= link_to "New ad setting", new_ad_setting_path %>

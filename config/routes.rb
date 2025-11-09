@@ -2,6 +2,8 @@ require 'sidekiq/web'
 
 
 Rails.application.routes.draw do
+  resources :ad_settings
+  resources :ads
   resources :drawings
   resources :google_maps
   resources :technicians
@@ -69,10 +71,11 @@ mount Sidekiq::Web => "/sidekiq" # mount Sidekiq::Web in your Rails app
 
 scope '/api' do
     resources :onus
+    resources :ad_settings
     resources :drawings
 resources :company_ids
   resources :google_maps
-
+ resources :ads
     resources :invoices
   resources :equipment
   resources :calendar_settings
@@ -116,9 +119,6 @@ resources :company_ids
   resources :system_admin_sms
   # resources :pppoe_plans
   # resources :hotspot_plans
-
-
-
 
 end
 

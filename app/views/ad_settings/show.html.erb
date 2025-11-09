@@ -1,0 +1,10 @@
+<p style="color: green"><%= notice %></p>
+
+<%= render @ad_setting %>
+
+<div>
+  <%= link_to "Edit this ad setting", edit_ad_setting_path(@ad_setting) %> |
+  <%= link_to "Back to ad settings", ad_settings_path %>
+
+  <%= button_to "Destroy this ad setting", @ad_setting, method: :delete %>
+</div>

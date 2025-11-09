@@ -1,0 +1,33 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  title: MyString
+  description: MyString
+  business_name: MyString
+  business_type: MyString
+  offer_text: MyString
+  discount: MyString
+  cat_text: MyString
+  background_color: MyString
+  text_color: MyString
+  image: MyString
+  imagePreview: MyString
+  target_url: MyString
+  is_active: false
+  account_id: 1
+
+two:
+  title: MyString
+  description: MyString
+  business_name: MyString
+  business_type: MyString
+  offer_text: MyString
+  discount: MyString
+  cat_text: MyString
+  background_color: MyString
+  text_color: MyString
+  image: MyString
+  imagePreview: MyString
+  target_url: MyString
+  is_active: false
+  account_id: 1
