@@ -31,6 +31,35 @@ def set_tenant
   end
 
 
+  def number_of_ads
+    @number_of_ads = Ad.count
+     render json: @number_of_ads
+  end
+
+
+
+def total_ad_clicks
+
+  @count = AnalyticsEvent.where(event_type: 'click').count
+   render json: @count
+  
+end
+
+
+
+
+  def track_ad_event
+
+ data = {
+    event_type: params[:event_type],
+    button_name: params[:button_name],
+    timestamp: Time.current.to_s
+  }.to_json
+
+  $redis.rpush("analytics_events", data) # ✅ works
+  render json: { message: 'Event Tracked' }, status: :ok
+    
+  end
 
   # GET /ads or /ads.json
   def index

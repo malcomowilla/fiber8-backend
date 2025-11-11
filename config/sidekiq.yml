@@ -26,6 +26,10 @@ development:
       class: RehydrateWireguardJob
       cron: "* * * * *"
 
+      analytics_job:
+        class: AnalyticsJob
+        cron: "* * * * *"
+
     rad_sessions_job:
       class: RadSessionsJob
       every: ["20s"]

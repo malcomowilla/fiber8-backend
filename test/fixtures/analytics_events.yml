@@ -1,0 +1,13 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  event_type: MyString
+  details: MyString
+  timestamp: 2025-11-11 12:29:32
+  account_id: 1
+
+two:
+  event_type: MyString
+  details: MyString
+  timestamp: 2025-11-11 12:29:32
+  account_id: 1

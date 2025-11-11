@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2025_11_09_131310) do
+ActiveRecord::Schema[7.2].define(version: 2025_11_11_093226) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -125,6 +125,17 @@ ActiveRecord::Schema[7.2].define(version: 2025_11_09_131310) do
     t.string "phone"
     t.string "email"
     t.string "website"
+    t.string "status"
+  end
+
+  create_table "analytics_events", force: :cascade do |t|
+    t.string "event_type"
+    t.string "details"
+    t.datetime "timestamp"
+    t.integer "account_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.string "button_name"
   end
 
   create_table "calendar_events", force: :cascade do |t|

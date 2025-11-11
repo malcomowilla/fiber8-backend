@@ -56,6 +56,13 @@ def set_tenant
   # POST /ad_settings or /ad_settings.json
   def create
     @ad_setting = AdSetting.first_or_initialize(ad_setting_params)
+    if params[:ad_setting][:enabled] == false
+      ActsAsTenant.current_tenant.ad.update(status: 'inactive')
+
+    else
+      ActsAsTenant.current_tenant.ad.update(status: 'active')
+    end
+    
  @ad_setting.update(ad_setting_params)
       if @ad_setting.save
     render json: @ad_setting, status: :created

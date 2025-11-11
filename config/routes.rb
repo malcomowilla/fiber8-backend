@@ -123,6 +123,10 @@ resources :company_ids
 end
 
 
+get '/total_ad_clicks', to: 'ads#total_ad_clicks'
+
+post '/api/track_ad_event', to: 'ads#track_ad_event'
+get '/api/number_of_ads', to: 'ads#number_of_ads'
 get '/api/device_count', to: 'onus#device_count'
 get '/device_count', to: 'onus#device_count'
 post '/api/technicians_signup', to: 'technicians#signup'
