@@ -6,16 +6,16 @@ class AnalyticsJob
     batch = []
 
     500.times do
-      event_json = $redis.lpop("analytics_events")
-      break unless event_json
+      raw = $redis.lpop("analytics_events")
+      break unless raw
 
-      event_hash = JSON.parse(event_json)
-      event_hash["timestamp"] = Time.parse(event_hash["timestamp"]) if event_hash["timestamp"]
-      batch << event_hash
+      h = JSON.parse(raw)
+      h["timestamp"] = Time.parse(h["timestamp"]) if h["timestamp"]
+      batch << h
     end
 
     return if batch.empty?
 
-    AnalyticsEvent.insert_all([batch])
+    AnalyticsEvent.insert_all(batch)
   end
 end
