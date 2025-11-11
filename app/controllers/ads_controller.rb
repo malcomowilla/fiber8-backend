@@ -53,13 +53,16 @@ end
  data = {
     event_type: params[:event_type],
     button_name: params[:button_name],
-    timestamp: Time.current.to_s
+    timestamp: Time.current.to_s,
+    account_id: ActsAsTenant.current_tenant.id,
   }.to_json
 
   $redis.rpush("analytics_events", data) # ✅ works
   render json: { message: 'Event Tracked' }, status: :ok
     
   end
+
+
 
   # GET /ads or /ads.json
   def index
