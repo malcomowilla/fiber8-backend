@@ -16,6 +16,6 @@ class AnalyticsJob
 
     return if batch.empty?
 
-    AnalyticsEvent.insert_all(batch)
+    AnalyticsEvent.insert_all([batch])
   end
 end
