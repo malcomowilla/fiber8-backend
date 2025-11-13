@@ -151,7 +151,7 @@ class RouterPingJob
           username: subscription.voucher,
           account_id: nil
         ).count
-        Rails.logger.info "Found #{nil_radacct_count} RadAcct records with nil account_id for tenant otspot voucher #{tenant.id}"
+        Rails.logger.info "Found #{nil_radacct_count} RadAcct records with nil account_id for tenant hotspot voucher #{tenant.id}"
 
         RadAcct.unscoped.where(
            username: subscription.voucher,
