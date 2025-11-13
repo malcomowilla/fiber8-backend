@@ -85,13 +85,13 @@ class MpesaService
       Rails.logger.info("Payment Request Password: #{password}")
     
     payload = {    
-      BusinessShortCode:shortcode,    
+      BusinessShortCode: shortcode,    
       Password:  password,    
       Timestamp:timestamp,    
       TransactionType: "CustomerPayBillOnline",    
       Amount: amount,    
       PartyA: formatted_phone_number,    
-      PartyB:shortcode ,    
+      PartyB: shortcode ,    
       PhoneNumber:formatted_phone_number,     
       CallBackURL: "https://aitechs.co.ke/api/mpesa/",    
       AccountReference: "Mpesa Test",    

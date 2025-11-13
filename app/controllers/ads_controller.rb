@@ -47,6 +47,13 @@ end
 
 
 
+def total_ad_impressions
+
+  @count = AnalyticsEvent.where(event_type: 'Ad View').count
+   render json: @count
+
+end
+
 
   def track_ad_event
 
@@ -61,6 +68,9 @@ end
   render json: { message: 'Event Tracked' }, status: :ok
     
   end
+
+
+
 
 
 
