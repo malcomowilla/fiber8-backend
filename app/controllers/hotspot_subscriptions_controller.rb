@@ -32,8 +32,8 @@ Rails.logger.info "IP from check session: #{ip}"
   # Step 1: Check if there's an active session in radacct (acctstoptime is nil = session still active)
 session = RadAcct.where(framedipaddress: ip, framedprotocol: '').order(acctupdatetime: :desc).first ||
           RadAcct.where(callingstationid: mac, framedprotocol: '').order(acctupdatetime: :desc).first
+Rails.logger.info "Session record found: #{session.inspect}"
 
-          Rails.logger.info "Session: #{session}"
   if session
     voucher = HotspotVoucher.find_by(voucher: session.username)
 
