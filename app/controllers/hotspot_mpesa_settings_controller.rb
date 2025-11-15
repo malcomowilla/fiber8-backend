@@ -53,6 +53,8 @@ if current_user
     result_code = data.dig("Body", "stkCallback", "ResultCode")
     result_desc = data.dig("Body", "stkCallback", "ResultDesc")
 
+    
+
     # Process the payment based on result
     if result_code == 0
       # Success — update your database, mark as paid, etc.

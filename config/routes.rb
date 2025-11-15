@@ -2,6 +2,7 @@ require 'sidekiq/web'
 
 
 Rails.application.routes.draw do
+  resources :dial_mpesa_settings
   resources :ad_settings
   resources :ads
   resources :drawings
@@ -70,6 +71,8 @@ mount ActionCable.server => '/cable'
 mount Sidekiq::Web => "/sidekiq" # mount Sidekiq::Web in your Rails app
 
 scope '/api' do
+    resources :dial_mpesa_settings
+
     resources :onus
     resources :ad_settings
     resources :drawings
@@ -122,7 +125,7 @@ resources :company_ids
 
 end
 
-
+post '/api/register_urls', to: 'register_urls#register_url'
 get '/total_ad_clicks', to: 'ads#total_ad_clicks'
 get '/api/total_ad_clicks', to: 'ads#total_ad_clicks'
 get '/total_ad_impressions', to: 'ads#total_ad_impressions'

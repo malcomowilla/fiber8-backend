@@ -1,0 +1,16 @@
+<p style="color: green"><%= notice %></p>
+
+<% content_for :title, "Dial mpesa settings" %>
+
+<h1>Dial mpesa settings</h1>
+
+<div id="dial_mpesa_settings">
+  <% @dial_mpesa_settings.each do |dial_mpesa_setting| %>
+    <%= render dial_mpesa_setting %>
+    <p>
+      <%= link_to "Show this dial mpesa setting", dial_mpesa_setting %>
+    </p>
+  <% end %>
+</div>
+
+<%= link_to "New dial mpesa setting", new_dial_mpesa_setting_path %>

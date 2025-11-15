@@ -1,0 +1,10 @@
+<p style="color: green"><%= notice %></p>
+
+<%= render @dial_mpesa_setting %>
+
+<div>
+  <%= link_to "Edit this dial mpesa setting", edit_dial_mpesa_setting_path(@dial_mpesa_setting) %> |
+  <%= link_to "Back to dial mpesa settings", dial_mpesa_settings_path %>
+
+  <%= button_to "Destroy this dial mpesa setting", @dial_mpesa_setting, method: :delete %>
+</div>

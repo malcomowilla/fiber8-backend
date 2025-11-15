@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2025_11_11_093226) do
+ActiveRecord::Schema[7.2].define(version: 2025_11_15_141119) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -221,6 +221,17 @@ ActiveRecord::Schema[7.2].define(version: 2025_11_11_093226) do
     t.string "username"
     t.string "password"
     t.integer "account_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
+
+  create_table "dial_mpesa_settings", force: :cascade do |t|
+    t.integer "account_id"
+    t.string "account_type"
+    t.string "short_code"
+    t.string "consumer_key"
+    t.string "consumer_secret"
+    t.string "passkey"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
   end

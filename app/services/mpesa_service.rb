@@ -28,7 +28,7 @@ class MpesaService
     
     
     
-     token = fetch_access_token(api_url,consumer_key, consumer_secret)
+     token = fetch_access_token(api_url, consumer_key, consumer_secret)
      
     
     #  if token
@@ -84,6 +84,8 @@ class MpesaService
       Rails.logger.info("Payment Request Timestamp: #{timestamp}")
       Rails.logger.info("Payment Request Password: #{password}")
     
+
+      
     payload = {    
       BusinessShortCode: shortcode,    
       Password:  password,    
