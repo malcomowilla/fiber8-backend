@@ -29,8 +29,8 @@ class RegisterUrlsController < ApplicationController
     payload = {
       ShortCode: mpesa.short_code,
       ResponseType: "Completed",
-      ConfirmationURL: "https://#{host}.aitechs.co.ke/confirmation_url",
-      ValidationURL: "https://#{host}.aitechs.co.ke/validation_url",
+      ConfirmationURL: "https://#{host}.#{ENV['HOST']}/confirmation_url",
+      ValidationURL: "https://#{host}.#{ENV['HOST']}/validation_url",
       # OR replace with static hosted domain if not tenant-based
     }
 
