@@ -69,9 +69,15 @@ class CheckInactivity
       'saved_hotspot_mpesa_settings',
       'license_settings',
       'sms_templates',
+      
       'admin_settings',
       'subscriptions',
-      'registration_stats'
+      'registration_stats',
+      'ads',
+      'invoices',
+      'get_current_pppoe_plan',
+      'get_current_hotspot_plan',
+      'equipment'
     ]
 
 
