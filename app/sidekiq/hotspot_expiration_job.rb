@@ -92,9 +92,9 @@ end
 
     case provider
     when 'TextSms'
-      send_expiration_text_sms(phone_number, voucher_code)
+      send_expiration_text_sms(phone_number, voucher_code, tenant)
     when 'SMS leopard'
-      send_expiration(phone_number, voucher_code)
+      send_expiration(phone_number, voucher_code, tenant)
     else
       Rails.logger.info "No valid SMS provider configured"
     end
@@ -102,13 +102,14 @@ end
 
   
 
-  def send_expiration(phone_number, voucher_code)
+  def send_expiration(phone_number, voucher_code, tenant)
 
     # provider = ActsAsTenant.current_tenant.sms_provider_setting.sms_provider
 
-    api_key = SmsSetting.find_by(sms_provider: 'SMS leopard')&.api_key
-    api_secret = SmsSetting.find_by(sms_provider: 'SMS leopard')&.api_secret
-    
+    # api_key = SmsSetting.find_by(sms_provider: 'SMS leopard')&.api_key
+    # api_secret = SmsSetting.find_by(sms_provider: 'SMS leopard')&.api_secret
+    api_key = tenant&.sms_setting.present? && tenant.sms_setting.find_by(sms_provider: 'SMS leopard')&.api_key
+    api_secret = tenant&.sms_setting.present? && tenant.sms_setting.find_by(sms_provider: 'SMS leopard')&.api_secret
 
     sms_template = ActsAsTenant.current_tenant.sms_template
     send_voucher_template = sms_template&.send_voucher_template
@@ -129,10 +130,12 @@ end
     handle_sms_response(response, original_message, phone_number)
   end
 
-  def send_expiration_text_sms(phone_number, voucher_code)
-    api_key = SmsSetting.find_by(sms_provider: 'TextSms')&.api_key
-    partnerID = SmsSetting.find_by(sms_provider: 'TextSms')&.partnerID
+  def send_expiration_text_sms(phone_number, voucher_code, tenant)
+    # api_key = SmsSetting.find_by(sms_provider: 'TextSms')&.api_key
+    # partnerID = SmsSetting.find_by(sms_provider: 'TextSms')&.partnerID
 
+    api_key = tenant&.sms_setting.present? && tenant.sms_setting.find_by(sms_provider: 'TextSms')&.api_key
+    partnerID = tenant&.sms_setting.present? && tenant.sms_setting.find_by(sms_provider: 'TextSms')&.partnerID
     sms_template = ActsAsTenant.current_tenant.sms_template
     send_voucher_template = sms_template&.send_voucher_template
     original_message = sms_template ? MessageTemplate.interpolate(send_voucher_template, { voucher_code: voucher_code }) : "Hello, your voucher #{voucher_code} is expired renew now to stay conected."
