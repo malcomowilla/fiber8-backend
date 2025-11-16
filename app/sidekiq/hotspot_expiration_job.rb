@@ -112,8 +112,25 @@ end
 
     # api_key = SmsSetting.find_by(sms_provider: 'SMS leopard')&.api_key
     # api_secret = SmsSetting.find_by(sms_provider: 'SMS leopard')&.api_secret
-    api_key = tenant&.sms_setting.present? && tenant.sms_setting.find_by(sms_provider: 'SMS leopard')&.api_key
-    api_secret = tenant&.sms_setting.present? && tenant.sms_setting.find_by(sms_provider: 'SMS leopard')&.api_secret
+    # api_key = tenant&.sms_setting.present? && tenant.sms_setting.find_by(sms_provider: 'SMS leopard')&.api_key
+    # api_secret = tenant&.sms_setting.present? && tenant.sms_setting.find_by(sms_provider: 'SMS leopard')&.api_secret
+
+ settings = tenant&.sms_setting.present?  
+
+
+
+if settings
+api_secret_api_key = tenant&.sms_setting
+  
+  if api_secret_api_key.sms_provider == 'SMS leopard'
+    
+  api_key = partner_id_api_key&.api_key
+  api_secret = partner_id_api_key&.api_secret
+  end
+  
+    
+end 
+
 
     sms_template = ActsAsTenant.current_tenant.sms_template
     send_voucher_template = sms_template&.send_voucher_template
