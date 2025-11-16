@@ -12,7 +12,10 @@ class HotspotExpirationJob
 
         # expired_vouchers = HotspotVoucher.where("expiration <= ? AND status != ?", Time.current, 'expired')
         # expired_vouchers = HotspotVoucher.where('expiration <= ?', Time.current)
-expired_vouchers = tenant&.hotspot_vouchers&.present? && tenant&.hotspot_vouchers&.where('expiration < ?', Time.current)
+# expired_vouchers = tenant&.hotspot_vouchers&.present? && tenant&.hotspot_vouchers&.where('expiration < ?', Time.current)
+
+expired_vouchers = tenant&.hotspot_vouchers&.where('expiration < ?', Time.current)
+return unless expired_vouchers.present?
         hotspot_subscriptions = HotspotVoucher.all
 
 hotspot_subscriptions.each do |subscription|
