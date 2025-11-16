@@ -33,6 +33,7 @@ class Account < ApplicationRecord
     has_many :invoices
     has_one :ad_setting
     has_one :ad
+    has_many :hotspot_vouchers
     # validates :subdomain, presence: true
     
 end
