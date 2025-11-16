@@ -45,10 +45,12 @@ end
           logout_hotspot_user(voucher)
           voucher.update!(status: 'expired') # Mark as expired in DB
 
+
           # Only send SMS if it hasn't been sent before
           if voucher.sms_sent_at.nil?
+             voucher.update!(sms_sent_at: Time.current) # Track when the SMS was sent
             send_expiration_sms(voucher) # Unified function to send SMS based on provider
-            voucher.update!(sms_sent_at: Time.current) # Track when the SMS was sent
+           
           end
         end
       end
