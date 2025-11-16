@@ -57,7 +57,7 @@ development:
 
     hotspot_expiration_job:
       class: HotspotExpirationJob
-      cron: "*/3 * * * *"
+      cron: "*/2 * * * *"
 
     contention_ratio_job:
       class: ContentionRatioJob
