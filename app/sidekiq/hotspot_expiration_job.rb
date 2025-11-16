@@ -139,12 +139,11 @@ end
     # partnerID = SmsSetting.find_by(sms_provider: 'TextSms')&.partnerID
 # TextSms
     settings = tenant&.sms_setting.present?  
-api_key = ''
-partnerID = ''  
+ 
 if settings
 partner_id_api_key = tenant&.sms_setting
   
-  if tenant.sms_setting.sms_provider == 'TextSms'
+  if partner_id_api_key.sms_provider == 'TextSms'
     
   api_key = partner_id_api_key&.api_key
   partnerID = partner_id_api_key&.partnerID
