@@ -1,6 +1,7 @@
 class GenerateInvoiceJob
    include Sidekiq::Job
   queue_as :invoices
+   sidekiq_options lock: :until_executed, lock_timeout: 0
 # sidekiq_options queue: 'invoices'
   def perform
     Account.find_each do |tenant|
