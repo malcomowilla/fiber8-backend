@@ -137,9 +137,22 @@ end
   def send_expiration_text_sms(phone_number, voucher_code, tenant)
     # api_key = SmsSetting.find_by(sms_provider: 'TextSms')&.api_key
     # partnerID = SmsSetting.find_by(sms_provider: 'TextSms')&.partnerID
+# TextSms
+    settings = tenant&.sms_setting.present?  
 
-    api_key = tenant&.sms_setting.present? && tenant.sms_setting.find_by(sms_provider: 'TextSms')&.api_key
-    partnerID = tenant&.sms_setting.present? && tenant.sms_setting.find_by(sms_provider: 'TextSms')&.partnerID
+if settings
+partner_id_api_key = tenant&.sms_setting
+  
+  if tenant.sms_setting.sms_provider == 'TextSms'
+    
+  api_key = partner_id_api_key&.api_key
+  partnerID = partner_id_api_key&.partnerID
+  end
+  
+    
+end 
+
+    # partnerID = tenant&.sms_setting.present? && tenant.sms_setting.find_by(sms_provider: 'TextSms')&.partnerID
     sms_template = ActsAsTenant.current_tenant.sms_template
     send_voucher_template = sms_template&.send_voucher_template
     original_message = sms_template ? MessageTemplate.interpolate(send_voucher_template, { voucher_code: voucher_code }) : "Hello, your voucher #{voucher_code} is expired renew now to stay conected."
