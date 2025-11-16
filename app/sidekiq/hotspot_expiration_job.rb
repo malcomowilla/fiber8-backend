@@ -55,7 +55,7 @@ end
 
           # Only send SMS if it hasn't been sent before
           if voucher.sms_sent_at.nil?
-             send_expiration_sms(voucher) # Unified function to send SMS based on provider
+             send_expiration_sms(voucher, tenant) # Unified function to send SMS based on provider
              voucher.update!(sms_sent_at: Time.current) # Track when the SMS was sent
            
            
