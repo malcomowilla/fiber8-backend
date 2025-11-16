@@ -8,7 +8,8 @@ class HotspotExpirationJob
       ActsAsTenant.with_tenant(tenant) do
 
 
-        expired_vouchers = HotspotVoucher.where("expiration <= ? AND status != ?", Time.current, 'expired')
+        # expired_vouchers = HotspotVoucher.where("expiration <= ? AND status != ?", Time.current, 'expired')
+        expired_vouchers = HotspotVoucher.where('expiration <= ?', Time.current)
         hotspot_subscriptions = HotspotVoucher.all
 
 hotspot_subscriptions.each do |subscription|
@@ -48,8 +49,9 @@ end
 
           # Only send SMS if it hasn't been sent before
           if voucher.sms_sent_at.nil?
+             send_expiration_sms(voucher) # Unified function to send SMS based on provider
              voucher.update!(sms_sent_at: Time.current) # Track when the SMS was sent
-            send_expiration_sms(voucher) # Unified function to send SMS based on provider
+           
            
           end
         end
