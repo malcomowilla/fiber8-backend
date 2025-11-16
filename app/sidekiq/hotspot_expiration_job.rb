@@ -85,8 +85,8 @@ end
 end
 
 
-  def send_expiration_sms(voucher)
-    provider = ActsAsTenant.current_tenant.sms_provider_setting.sms_provider
+  def send_expiration_sms(voucher, tenant)
+    provider = tenant&.sms_provider_setting.present? && tenant.sms_provider_setting&.sms_provider
     phone_number = voucher.phone
     voucher_code = voucher.voucher
 
