@@ -129,6 +129,7 @@ render json: @mpesa_setting, serializer: MpesaSettingSerializer
       @hotspot_mpesa_setting_setting = HotspotMpesaSetting.find_or_initialize_by(
         consumer_key: params[:consumer_key],
         consumer_secret: params[:consumer_secret],
+        short_code: params[:short_code]
       ) 
       @hotspot_mpesa_setting_setting.update(
       passkey: params[:passkey],
