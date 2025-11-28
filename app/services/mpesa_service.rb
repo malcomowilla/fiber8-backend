@@ -4,10 +4,11 @@ class MpesaService
 
 
 
-    def initiate_stk_push(phone_number, amount, shortcode,  passkey, consumer_key, consumer_secret) 
-      api_url = 'https://sandbox.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials'
-    
+    def initiate_stk_push(phone_number, amount, shortcode,  passkey, consumer_key, consumer_secret, host) 
+      # api_url = 'https://sandbox.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials'
+    api_url = 'https://api.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials'
 
+    
       consumer_key = consumer_key
       consumer_secret = consumer_secret
       shortcode = shortcode
@@ -44,7 +45,9 @@ class MpesaService
 
     if token
       # Initiate payment
-      response = initiate_payment(api_url, token, shortcode, passkey, callback_url, formatted_phone_number, amount)
+      response = initiate_payment(api_url, token, shortcode, passkey, callback_url, formatted_phone_number, amount,
+      host
+      )
       { success: true, response: response }
     else
       { success: false, error: 'Failed to fetch access token' }
@@ -75,7 +78,7 @@ class MpesaService
     
     
     def initiate_payment(api_url, token, shortcode, lipa_na_mpesa_online_passkey, callback_url,
-       formatted_phone_number, amount)
+       formatted_phone_number, amount, host)
       timestamp = Time.now.strftime('%Y%m%d%H%M%S')
     
       password = Base64.strict_encode64("#{shortcode}#{lipa_na_mpesa_online_passkey}#{timestamp}")
@@ -95,7 +98,7 @@ class MpesaService
       PartyA: formatted_phone_number,    
       PartyB: shortcode ,    
       PhoneNumber:formatted_phone_number,     
-      CallBackURL: "https://aitechs.co.ke/api/mpesa/",    
+      CallBackURL: "https://#{host}.#{ENV['HOST']}/#{ENV['HOTSPOT_PAYMENTS']}",    
       AccountReference: "Mpesa Test",    
       TransactionDesc:"Testing stk push"
     }
@@ -104,7 +107,8 @@ class MpesaService
     Rails.logger.info("Payment Request Payload: #{payload}")
     
     response = RestClient.post(
-      "https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest",
+      # "https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest",
+      'https://api.safaricom.co.ke/mpesa/stkpush/v1/processrequest',
       payload.to_json,
       { content_type: :json, Authorization: "Bearer #{token}" }
     )

@@ -9,6 +9,33 @@ load_and_authorize_resource except: [:login_with_hotspot_voucher, :make_payment]
   before_action :set_tenant
 
 
+   before_action :whitelist_mpesa_ips, only: [:check_payment_status]
+
+
+
+
+def whitelist_mpesa_ips
+    allowed_ips = [
+      '196.201.214.200',
+      '196.201.214.206',
+      '196.201.213.114',
+      '196.201.214.207',
+      '196.201.214.208',
+      '196.201.213.44',
+      '196.201.212.127',
+      '196.201.212.138',
+      '196.201.212.129',
+      '196.201.212.136',
+      '196.201.212.74',
+      '196.201.212.69'
+    ]
+
+    unless allowed_ips.include?(request.remote_ip)
+      Rails.logger.info "Not Authorized Safaricom IP: #{request.remote_ip}"
+      render json: { error: 'Not Authorized Safaricom IP' }, status: :not_found
+    end
+  end
+
   require 'net/http'
   require 'json'
   require 'net/ssh'
@@ -56,9 +83,22 @@ require 'message_template'
 
 
 
+  def check_payment_status
+    Rails.logger.info "Mpesa pHotspot payment status"
+    raw_data = request.body.read
+
+    # Parse JSON if it's JSON-formatted
+    data = JSON.parse(raw_data) rescue {}
+
+    Rails.logger.info "M-Pesa Callback For Hotspot Received: #{data}"
+        Rails.logger.info "===========================Hotspot Payment validated"
+  end
+
+
+
 
 def make_payment
-
+host = request.headers['X-Subdomain']
   phone_number = params[:phone_number]
   amount = params[:amount]
   shortcode = ActsAsTenant.current_tenant&.hotspot_mpesa_setting.short_code
@@ -76,7 +116,7 @@ def make_payment
   
       hotspot_payment = MpesaService.initiate_stk_push(phone_number, amount,
        shortcode,  passkey,
-        consumer_key, consumer_secret
+        consumer_key, consumer_secret, host
       )
   
       if hotspot_payment[:success]
