@@ -10,7 +10,7 @@ class HotspotMpesaSettingsController < ApplicationController
   before_action :set_tenant
   # GET /hotspot_mpesa_settings or /hotspot_mpesa_settings.json
   before_action :update_last_activity
- 
+ before_action :whitelist_mpesa_ips, only: [:customer_mpesa_stk_payments]
 
 
    def update_last_activity
@@ -21,12 +21,45 @@ if current_user
   end
 
 
-  def index
-    @hotspot_mpesa_settings =  HotspotMpesaSetting.find_by(account_type: params[:account_type])
-    render json: @hotspot_mpesa_settings
+
+   def whitelist_mpesa_ips
+    allowed_ips = [
+      '196.201.214.200',
+      '196.201.214.206',
+      '196.201.213.114',
+      '196.201.214.207',
+      '196.201.214.208',
+      '196.201.213.44',
+      '196.201.212.127',
+      '196.201.212.138',
+      '196.201.212.129',
+      '196.201.212.136',
+      '196.201.212.74',
+      '196.201.212.69'
+    ]
+
+    unless allowed_ips.include?(request.remote_ip)
+      Rails.logger.info "Not Authorized Safaricom IP: #{request.remote_ip}"
+      render json: { error: 'Not Authorized Safaricom IP' }, status: :not_found
+    end
   end
 
 
+  def index
+    @hotspot_mpesa_settings =  HotspotMpesaSetting.find_by(account_type: params[:account_type])
+    render json: @hotspot_mpesa_settings
+
+
+  end
+
+
+
+
+
+  def get_mpesa_settings
+@mpesa_setting = HotspotMpesaSetting.find_by(account_type: params[:account_type])
+render json: @mpesa_setting, serializer: MpesaSettingSerializer
+  end
 
 
 #   def customer_mpesa_stk_payments

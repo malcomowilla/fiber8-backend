@@ -253,7 +253,7 @@ def set_tenant
   ActsAsTenant.current_tenant = @account
   # set_current_tenant(@account)
   # Rails.logger.info "Setting tenant for app subscribers#{ActsAsTenant.current_tenant.subdomain}"
-  EmailConfiguration.configure(@account, ENV['SYSTEM_ADMIN_EMAIL'])
+  # EmailConfiguration.configure(@account, ENV['SYSTEM_ADMIN_EMAIL'])
 
   # set_current_tenant(@account)
 rescue ActiveRecord::RecordNotFound

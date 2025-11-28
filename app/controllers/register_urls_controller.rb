@@ -36,7 +36,8 @@ class RegisterUrlsController < ApplicationController
 
     begin
       response = RestClient.post(
-        "https://sandbox.safaricom.co.ke/mpesa/c2b/v1/registerurl",
+        # "https://sandbox.safaricom.co.ke/mpesa/c2b/v1/registerurl",
+          "https://api.safaricom.co.ke/mpesa/c2b/v2/registerurl",
         payload.to_json,
         { content_type: :json, Authorization: "Bearer #{token}" }
       )
@@ -58,7 +59,8 @@ class RegisterUrlsController < ApplicationController
     consumer_key     = mpesa.consumer_key
     consumer_secret  = mpesa.consumer_secret
 
-    api_url = "https://sandbox.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials"
+    # api_url = "https://sandbox.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials"
+    api_url = "https://api.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials"
 
     response = RestClient.get(api_url, {
       Authorization: "Basic #{Base64.strict_encode64("#{consumer_key}:#{consumer_secret}")}"
