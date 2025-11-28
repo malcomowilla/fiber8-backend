@@ -125,6 +125,8 @@ resources :company_ids
 
 end
 
+post '/validation_url', to: 'confirm_payment#validation_url'
+post '/confirmation_url', to: 'confirm_payment#confirmation_url'
 post '/api/register_urls', to: 'register_urls#register_url'
 get '/total_ad_clicks', to: 'ads#total_ad_clicks'
 get '/api/total_ad_clicks', to: 'ads#total_ad_clicks'
