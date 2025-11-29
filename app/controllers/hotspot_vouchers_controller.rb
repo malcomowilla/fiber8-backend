@@ -300,7 +300,7 @@ rad_user_group.update!(username: hotspot_voucher, groupname: hotspot_package, pr
 # rad_reply = RadReply.find_or_initialize_by(username: hotspot_voucher, radiusattribute: 'Idle-Timeout',
 #  op: ':=', value: '5000')
  
-rad_reply.update!(username: hotspot_voucher, radiusattribute: 'Idle-Timeout', op: ':=', value: '5000')
+# rad_reply.update!(username: hotspot_voucher, radiusattribute: 'Idle-Timeout', op: ':=', value: '5000')
 validity_period_units = HotspotPackage.find_by(name: package).validity_period_units
 validity = HotspotPackage.find_by(name: package).validity
 
