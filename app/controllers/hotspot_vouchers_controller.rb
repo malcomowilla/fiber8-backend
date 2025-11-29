@@ -163,7 +163,7 @@ def send_voucher_to_phone_number
   if params[:phone].present?
   HotspotVoucher.find_by(voucher: params[:voucher]).update(phone: params[:phone])
 
-  
+
              if ActsAsTenant.current_tenant.sms_provider_setting.sms_provider == "SMS leopard"
                send_voucher(params[:phone], params[:voucher],
                params[:expiration], params[:shared_users]
@@ -235,32 +235,6 @@ end
       calculate_expiration(params[:package], @hotspot_voucher)
         if @hotspot_voucher.save
 
-  
-         
-  
-  
-          if params[:phone].present?
-             voucher_expiration = calculate_expiration_send_to_customer(params[:package])
-  
-             if ActsAsTenant.current_tenant.sms_provider_setting.sms_provider == "SMS leopard"
-               send_voucher(@hotspot_voucher.phone, @hotspot_voucher.voucher,
-               voucher_expiration, @hotspot_voucher.shared_users
-               )
-               
-             elsif ActsAsTenant.current_tenant.sms_provider_setting.sms_provider == "TextSms"
-               send_voucher_text_sms(@hotspot_voucher.phone, @hotspot_voucher.voucher,
-               voucher_expiration, @hotspot_voucher.shared_users
-               )
-               
-             end
-          # send_voucher(params[:phone], @hotspot_voucher.voucher,
-          # voucher_expiration
-          # )
-          return render json: @hotspot_voucher, status: :created
-          end
-          
-        
-  
           render json: @hotspot_voucher, status: :created
 
           
@@ -318,7 +292,7 @@ radcheck.update!(op: ':=', value: hotspot_voucher)
 
 radcheck_simultanesous_use = RadCheck.find_or_initialize_by(username: hotspot_voucher, radiusattribute: 
 'Simultaneous-Use')
-radcheck_simultanesous_use.update!(op: ':=',  value: shared_users.to_s)
+radcheck_simultanesous_use.update!(op: ':=',  value: shared_users)
 
 rad_user_group = RadUserGroup.find_or_initialize_by(username: hotspot_voucher, groupname: hotspot_package, priority: 1)
 rad_user_group.update!(username: hotspot_voucher, groupname: hotspot_package, priority: 1)
