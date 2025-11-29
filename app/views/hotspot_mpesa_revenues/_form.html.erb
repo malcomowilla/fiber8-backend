@@ -1,0 +1,47 @@
+<%= form_with(model: hotspot_mpesa_revenue) do |form| %>
+  <% if hotspot_mpesa_revenue.errors.any? %>
+    <div style="color: red">
+      <h2><%= pluralize(hotspot_mpesa_revenue.errors.count, "error") %> prohibited this hotspot_mpesa_revenue from being saved:</h2>
+
+      <ul>
+        <% hotspot_mpesa_revenue.errors.each do |error| %>
+          <li><%= error.full_message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div>
+    <%= form.label :voucher, style: "display: block" %>
+    <%= form.text_field :voucher %>
+  </div>
+
+  <div>
+    <%= form.label :payment_method, style: "display: block" %>
+    <%= form.text_field :payment_method %>
+  </div>
+
+  <div>
+    <%= form.label :amount, style: "display: block" %>
+    <%= form.text_field :amount %>
+  </div>
+
+  <div>
+    <%= form.label :reference, style: "display: block" %>
+    <%= form.text_field :reference %>
+  </div>
+
+  <div>
+    <%= form.label :time_paid, style: "display: block" %>
+    <%= form.text_field :time_paid %>
+  </div>
+
+  <div>
+    <%= form.label :account_id, style: "display: block" %>
+    <%= form.number_field :account_id %>
+  </div>
+
+  <div>
+    <%= form.submit %>
+  </div>
+<% end %>

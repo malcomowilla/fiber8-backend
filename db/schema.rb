@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2025_11_28_103543) do
+ActiveRecord::Schema[7.2].define(version: 2025_11_29_093839) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -322,6 +322,17 @@ ActiveRecord::Schema[7.2].define(version: 2025_11_28_103543) do
 
   create_table "google_maps", force: :cascade do |t|
     t.string "api_key"
+    t.integer "account_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
+
+  create_table "hotspot_mpesa_revenues", force: :cascade do |t|
+    t.string "voucher"
+    t.string "payment_method"
+    t.string "amount"
+    t.string "reference"
+    t.string "time_paid"
     t.integer "account_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false

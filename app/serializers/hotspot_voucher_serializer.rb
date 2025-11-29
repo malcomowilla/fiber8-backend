@@ -1,9 +1,19 @@
 class HotspotVoucherSerializer < ActiveModel::Serializer
-  attributes :id, :voucher, :status, :expiration, :speed_limit, :phone, :package, :shared_users 
+  attributes :id, :voucher, :status, :expiration, :speed_limit, :phone, :package, :shared_users,
+  :created_at, :updated_at
 
   # expiration_time&.strftime("%B %d, %Y at %I:%M %p")
 def expiration
   object.expiration.strftime("%B %d, %Y at %I:%M %p") if object.expiration.present?
+end
+
+
+
+def created_at
+  object.created_at.strftime("%B %d, %Y at %I:%M %p") if object.created_at.present?
+end
+def updated_at
+  object.updated_at.strftime("%B %d, %Y at %I:%M %p") if object.updated_at.present?
 end
 
  def speed_limit
