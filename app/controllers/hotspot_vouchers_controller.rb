@@ -227,7 +227,7 @@ end
       # user_manager_user_id = get_user_manager_user_id(@hotspot_voucher.voucher)
       # user_profile_id = get_user_profile_id_from_mikrotik(@hotspot_voucher.voucher)
       # calculate_expiration(package, hotspot_package_created)
-      create_voucher_radcheck(@hotspot_voucher.voucher, @hotspot_voucher.package, params[:shared_users])
+      create_voucher_radcheck(@hotspot_voucher.voucher, @hotspot_voucher.package, @hotspot_voucher.shared_users)
       # @hotspot_voucher.update(
       #   user_manager_user_id: user_manager_user_id,
       #     user_profile_id: user_profile_id,
@@ -297,8 +297,8 @@ radcheck_simultanesous_use.update!(op: ':=',  value: shared_users)
 rad_user_group = RadUserGroup.find_or_initialize_by(username: hotspot_voucher, groupname: hotspot_package, priority: 1)
 rad_user_group.update!(username: hotspot_voucher, groupname: hotspot_package, priority: 1)
 
-rad_reply = RadReply.find_or_initialize_by(username: hotspot_voucher, radiusattribute: 'Idle-Timeout',
- op: ':=', value: '5000')
+# rad_reply = RadReply.find_or_initialize_by(username: hotspot_voucher, radiusattribute: 'Idle-Timeout',
+#  op: ':=', value: '5000')
  
 rad_reply.update!(username: hotspot_voucher, radiusattribute: 'Idle-Timeout', op: ':=', value: '5000')
 validity_period_units = HotspotPackage.find_by(name: package).validity_period_units
