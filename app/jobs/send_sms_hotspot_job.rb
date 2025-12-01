@@ -23,7 +23,7 @@ HotspotMpesaRevenue.create!(
 
   private
 
-  def send_sms_for_tenant(voucher, expiration)
+  def send_sms_for_tenant(voucher)
     sms_setting = ActsAsTenant.current_tenant.sms_provider_setting
 
     if sms_setting.blank?
@@ -33,9 +33,9 @@ HotspotMpesaRevenue.create!(
 
     case sms_setting.sms_provider
     when "SMS leopard"
-      send_voucher_sms_leopard(voucher, sms_setting, expiration)
+      send_voucher_sms_leopard(voucher, sms_setting)
     when "TextSms"
-      send_voucher_text_sms(voucher, sms_setting, expiration)
+      send_voucher_text_sms(voucher, sms_setting)
     else
       Rails.logger.warn "Tenant #{ActsAsTenant.current_tenant.id} has unknown SMS provider: #{sms_setting.sms_provider}. Skipping SMS for voucher #{voucher.voucher}."
     end
