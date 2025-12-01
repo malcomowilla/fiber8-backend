@@ -159,20 +159,10 @@ def check_payment_status
             render json: { error: "Login failed for voucher #{voucher_code} on router #{nas.ip_address}: #{output}" }, status: :unprocessable_entity
           else
             Rails.logger.info "Device #{session.ip} successfully logged in with voucher #{voucher_code} on router #{nas.ip_address}"
-            voucher = HotspotVoucher.find_by(voucher: voucher_code)
+            voucher = HotspotVoucher.find_by(voucher: voucher_code).voucher
 
 
-             if ActsAsTenant.current_tenant.sms_provider_setting.sms_provider == "SMS leopard"
-               send_voucher(voucher.phone, voucher.voucher,
-               voucher.expiration
-               )
-               
-             elsif ActsAsTenant.current_tenant.sms_provider_setting.sms_provider == "TextSms"
-               send_voucher_text_sms(voucher.phone, voucher.voucher,
-               voucher.expiration
-               )
-             end
-
+            SendSmsHotspotJob.perform_now(voucher)
             # render json: { message: "Device #{session.ip} successfully logged in with voucher #{voucher_code} on router" }, status: :ok
 
 
