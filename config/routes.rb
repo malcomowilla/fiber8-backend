@@ -130,7 +130,7 @@ end
 
 
 post '/api/send_voucher', to: 'hotspot_vouchers#send_voucher_to_phone_number'
-post 'hotspot_payment_url', to: 'hotspot_vouchers#check_payment_status'
+# post 'hotspot_payment_url', to: 'hotspot_vouchers#check_payment_status'
 post 'validation_url', to: 'confirm_payment#validation_url'
 # post 'confirmation_url', to: 'confirm_payment#confirmation_url'
  post 'confirmation_url', to: 'hotspot_vouchers#check_payment_status'
