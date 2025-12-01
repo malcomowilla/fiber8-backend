@@ -222,15 +222,15 @@ TemporarySession.create!(
       )
   
       if hotspot_payment[:success]
-        HotspotVoucher.new(
-        package: params[:package],
-        phone: phone_number,
-        voucher:  voucher_code
-      )
-
+voucher_record = HotspotVoucher.create!(
+  package: params[:package],
+  phone: phone_number,
+  voucher: voucher_code
+)
 
 create_voucher_radcheck(voucher_code, params[:package])
- calculate_expiration(params[:package], voucher_code)
+
+calculate_expiration(params[:package], voucher_record)
 
         render json: {
           message: 'Please check your phone to complete the payment',
