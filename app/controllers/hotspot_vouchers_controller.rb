@@ -6,7 +6,7 @@ load_and_authorize_resource except: [:login_with_hotspot_voucher, :make_payment]
 
   set_current_tenant_through_filter
 
-  before_action :set_tenant
+  before_action :set_tenant, expect: [:check_payment_status]
 
 
    before_action :whitelist_mpesa_ips, only: [:check_payment_status]
