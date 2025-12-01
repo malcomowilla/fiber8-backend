@@ -1,67 +1,73 @@
+
+
 # module ApplicationCable
 #   class Connection < ActionCable::Connection::Base
-#     identified_by :current_account
+#     identified_by :current_user
 
 #     def connect
-#       self.current_account = find_verified_account
-#       logger.add_tags 'ActionCable', current_account.class.name, current_account.id
-#     rescue StandardError
-#       reject_unauthorized_connection
+#       self.current_user = find_verified_user
 #     end
 
 #     private
 
-#     def find_verified_account
-#       # Check for admin JWT
-#       admin_token = cookies.encrypted.signed[:jwt_user]
-#       if admin_token
-#         begin
-#           decoded_token = JWT.decode(admin_token, ENV['JWT_SECRET'], true, algorithm: 'HS256')
+#     def find_verified_user
+#       token = cookies.encrypted.signed[:jwt_user]
+#        decoded_token = JWT.decode(token, ENV['JWT_SECRET'], true, algorithm: 'HS256')
 #           user_id = decoded_token[0]['user_id']
-#           return User.find_by(id: user_id) if user_id
-#         rescue JWT::DecodeError
-#           # Token decode failed
-#         end
+#       if current_user = User.find_by(id: user_id )
+#         current_user
+#       else
+#         reject_unauthorized_connection
 #       end
-
-#       # Check for customer JWT
-#       customer_token = cookies.encrypted.signed[:customer_jwt]
-#       if customer_token
-#         begin
-#           decoded_token = JWT.decode(customer_token, ENV['JWT_SECRET'], true, algorithm: 'HS256')
-#           customer_id = decoded_token[0]['customer_id']
-#           return Customer.find_by(id: customer_id) if customer_id
-#         rescue JWT::DecodeError
-#           # Token decode failed
-#         end
-#       end
-
-#       # Reject connection if neither admin nor customer is found
-#       reject_unauthorized_connection
 #     end
 #   end
 # end
 
 module ApplicationCable
   class Connection < ActionCable::Connection::Base
-    identified_by :current_user
+    identified_by :current_user, :current_session
 
     def connect
-      self.current_user = find_verified_user
+      # If hotspot session: use IP connection
+      if request.params["X-ip"].present?
+        connect_hotspot_user
+      else
+        # Otherwise use JWT-based authentication
+        connect_authenticated_user
+      end
     end
 
     private
 
-    def find_verified_user
+    ##
+    # HOTSPOT (Unauthenticated) connection
+    ##
+    def connect_hotspot_user
+      ip = request.params["X-ip"]
+      session = TemporarySession.find_by(ip: ip)
+
+      if session
+        self.current_session = session
+      else
+        reject_unauthorized_connection
+      end
+    end
+
+    ##
+    # ADMIN or CUSTOMER (Authenticated) connection
+    ##
+    def connect_authenticated_user
       token = cookies.encrypted.signed[:jwt_user]
-       decoded_token = JWT.decode(token, ENV['JWT_SECRET'], true, algorithm: 'HS256')
-          user_id = decoded_token[0]['user_id']
-      if current_user = User.find_by(id: user_id )
-        current_user
+      decoded = JWT.decode(token, ENV["JWT_SECRET"], true, algorithm: "HS256")
+      user_id = decoded[0]["user_id"]
+
+      user = User.find_by(id: user_id)
+
+      if user
+        self.current_user = user
       else
         reject_unauthorized_connection
       end
     end
   end
 end
-
