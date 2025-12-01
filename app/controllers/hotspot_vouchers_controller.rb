@@ -1,13 +1,13 @@
 class HotspotVouchersController < ApplicationController
   # before_action :set_hotspot_voucher, only: %i[ show edit update destroy ]
 
-load_and_authorize_resource except: [:login_with_hotspot_voucher, :make_payment]
+load_and_authorize_resource except: [:login_with_hotspot_voucher, :make_payment, :check_payment_status]
   skip_before_action :set_tenant, only: [:check_payment_status]
 
 
   set_current_tenant_through_filter
 
-  before_action :set_tenant, expect: [:check_payment_status]
+  before_action :set_tenant, except: [:check_payment_status]
 
 
   #  before_action :whitelist_mpesa_ips, only: [:check_payment_status]
@@ -122,7 +122,8 @@ require 'message_template'
 
 
 def check_payment_status
-  Rails.logger.info "check_payment_status"
+  Rails.logger.info "check_payment_status called"
+Rails.logger.info "Parsed data calback mpesa: #{request.body.read}"
   data = JSON.parse(request.body.read) rescue {}
   bill_ref = data["BillRefNumber"]
 
