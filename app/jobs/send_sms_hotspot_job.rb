@@ -16,7 +16,7 @@ HotspotMpesaRevenue.create!(
         voucher = HotspotVoucher.find_by(voucher: voucher_code)
         next unless voucher # Skip if this tenant does NOT own this voucher
 
-        send_sms_for_tenant(voucher, expiration)
+        send_sms_for_tenant(voucher)
       end
     end
   end
