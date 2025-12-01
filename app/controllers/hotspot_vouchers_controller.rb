@@ -163,7 +163,7 @@ Rails.logger.info "Parsed data calback mpesa: #{request.body.read}"
             render json: { error: "Login failed for voucher #{voucher_code} on router #{nas.ip_address}: #{output}" }, status: :unprocessable_entity
           else
             Rails.logger.info "Device #{session.ip} successfully logged in with voucher #{voucher_code} on router #{nas.ip_address}"
-            
+            HotspotVoucher.find_by(voucher: voucher_code).update(status: "used")
           end
         end
 
@@ -179,7 +179,7 @@ Rails.logger.info "Parsed data calback mpesa: #{request.body.read}"
               message: "Payment received! You are now connected.",
             )
 
-            
+
       rescue => e
         Rails.logger.error "SSH error logging in device #{session.ip}: #{e.message}"
       end
