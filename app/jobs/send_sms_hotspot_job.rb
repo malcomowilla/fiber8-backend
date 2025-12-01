@@ -16,15 +16,15 @@ HotspotMpesaRevenue.create!(
         voucher = HotspotVoucher.find_by(voucher: voucher_code)
         next unless voucher # Skip if this tenant does NOT own this voucher
 
-        send_sms_for_tenant(voucher)
+        send_sms_for_tenant(voucher, ActsAsTenant.current_tenant)
       end
     end
   end
 
   private
 
-  def send_sms_for_tenant(voucher)
-    sms_setting = ActsAsTenant.current_tenant.sms_provider_setting
+  def send_sms_for_tenant(voucher, tenant)
+    sms_setting = tenant.sms_provider_setting
 
     if sms_setting.blank?
       Rails.logger.warn "Tenant #{ActsAsTenant.current_tenant.id} does not have an SMS provider set. Skipping SMS for voucher #{voucher.voucher}."
