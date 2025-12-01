@@ -397,7 +397,7 @@ radcheck.update!(op: ':=', value: hotspot_voucher)
 
 # radcheck_simultanesous_use = RadCheck.find_or_initialize_by(username: hotspot_voucher, radiusattribute: 
 # 'Simultaneous-Use')
-radcheck_simultanesous_use.update!(op: ':=',  value: shared_users)
+# radcheck_simultanesous_use.update!(op: ':=',  value: shared_users)
 
 rad_user_group = RadUserGroup.find_or_initialize_by(username: hotspot_voucher, groupname: hotspot_package, priority: 1)
 rad_user_group.update!(username: hotspot_voucher, groupname: hotspot_package, priority: 1)
