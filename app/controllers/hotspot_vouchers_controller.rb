@@ -109,21 +109,14 @@ host = request.headers['X-Subdomain']
   phone_number = params[:phone_number]
   amount = params[:amount]
   shortcode = ActsAsTenant.current_tenant&.hotspot_mpesa_setting.short_code
-  # callback_url = "https://df2a-105-163-1-122.ngrok-free.app/customer_mpesa_stk_payments"
   passkey = ActsAsTenant.current_tenant&.hotspot_mpesa_setting.passkey
   consumer_key = ActsAsTenant.current_tenant&.hotspot_mpesa_setting.consumer_key
   consumer_secret = ActsAsTenant.current_tenant&.hotspot_mpesa_setting.consumer_secret
 
-  
-      # if @customer_wallet_payment.save
-      #   render :show, status: :created, location: @customer_wallet_payment
-      # else
-      #   render json: @customer_wallet_payment.errors, status: :unprocessable_entity
-      # end
-  
+  voucher_code = generate_voucher_code
       hotspot_payment = MpesaService.initiate_stk_push(phone_number, amount,
        shortcode,  passkey,
-        consumer_key, consumer_secret, host
+        consumer_key, consumer_secret, host,voucher_code
       )
   
       if hotspot_payment[:success]
