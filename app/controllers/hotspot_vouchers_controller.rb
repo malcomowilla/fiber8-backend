@@ -813,7 +813,7 @@ private
 
     #   })  :   "Your voucher code: #{voucher_code} for #{shared_users} devices. This code is valid until #{voucher_expiration}.
     #  Enjoy your browsing"
-               original_message = "Your voucher code: #{voucher_code} for #{shared_users} devices. This code is valid until #{voucher_expiration}.
+               original_message = "Your voucher code is: #{voucher_code}. This code is valid until #{voucher_expiration}.
   #    Enjoy your browsing"
       
       
@@ -886,7 +886,7 @@ private
   #    Enjoy your browsing"
   # end
 
-  original_message = "Your voucher code: #{voucher_code} for #{shared_users} devices. This code is valid until #{voucher_expiration}.
+  original_message = "Your voucher code is: #{voucher_code}. This code is valid until #{voucher_expiration}.
   #    Enjoy your browsing"
   #    
   uri = URI("https://sms.textsms.co.ke/api/services/sendsms")
