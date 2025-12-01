@@ -47,8 +47,9 @@ HotspotMpesaRevenue.create!(
   ##
   def send_voucher_sms_leopard(voucher, tenant)
     message = "Your voucher code is: #{voucher.voucher}. This code is valid until #{voucher.expiration}."
-api_key = tenant.sms_setting.find_by(sms_provider: 'SMS leopard')&.api_key
-    api_secret = tenant.sms_setting.find_by(sms_provider: 'SMS leopard')&.api_secret
+sms_setting = tenant.sms_setting
+  api_key = sms_setting.api_key
+  api_secret = sms_setting.api_secret
 
     uri = URI("https://api.smsleopard.com/v1/sms/send")
     params = {
@@ -69,8 +70,13 @@ api_key = tenant.sms_setting.find_by(sms_provider: 'SMS leopard')&.api_key
   ##
   def send_voucher_text_sms(voucher, tenant)
     message = "Your voucher code is: #{voucher.voucher}. This code is valid until #{voucher.expiration}."
-  api_key = tenant.sms_setting.find_by(sms_provider: 'TextSms')&.api_key
-  partnerID = tenant.sms_setting.find_by(sms_provider: 'TextSms')&.partnerID
+  # api_key = tenant.sms_setting.find_by(sms_provider: 'TextSms')&.api_key
+  # partnerID = tenant.sms_setting.find_by(sms_provider: 'TextSms')&.partnerID
+
+
+sms_setting = tenant.sms_setting
+  api_key = sms_setting.api_key
+  partnerID = sms_setting.partnerID
     uri = URI("https://sms.textsms.co.ke/api/services/sendsms")
     params = {
       apikey: api_key,
