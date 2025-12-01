@@ -1,0 +1,2 @@
+module TemporarySessionsHelper
+end

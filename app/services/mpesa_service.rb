@@ -80,7 +80,7 @@ class MpesaService
     
     
     def initiate_payment(api_url, token, shortcode, lipa_na_mpesa_online_passkey, callback_url,
-       formatted_phone_number, amount, host, voucher_code)
+       formatted_phone_number, amount, host, voucher_code, session_id)
       timestamp = Time.now.strftime('%Y%m%d%H%M%S')
     
       password = Base64.strict_encode64("#{shortcode}#{lipa_na_mpesa_online_passkey}#{timestamp}")
@@ -101,7 +101,7 @@ class MpesaService
       PartyB: shortcode ,    
       PhoneNumber:formatted_phone_number,     
       CallBackURL: "https://#{host}.#{ENV['HOST']}/#{ENV['HOTSPOT_PAYMENTS']}",    
-      AccountReference: voucher_code,    
+      AccountReference: "hotspot_#{session_id}_#{voucher_code}",
       TransactionDesc:"Hotspot stk push"
     }
     

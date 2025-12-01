@@ -1,0 +1,10 @@
+<p style="color: green"><%= notice %></p>
+
+<%= render @temporary_session %>
+
+<div>
+  <%= link_to "Edit this temporary session", edit_temporary_session_path(@temporary_session) %> |
+  <%= link_to "Back to temporary sessions", temporary_sessions_path %>
+
+  <%= button_to "Destroy this temporary session", @temporary_session, method: :delete %>
+</div>

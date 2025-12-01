@@ -1,0 +1,37 @@
+<%= form_with(model: temporary_session) do |form| %>
+  <% if temporary_session.errors.any? %>
+    <div style="color: red">
+      <h2><%= pluralize(temporary_session.errors.count, "error") %> prohibited this temporary_session from being saved:</h2>
+
+      <ul>
+        <% temporary_session.errors.each do |error| %>
+          <li><%= error.full_message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div>
+    <%= form.label :session, style: "display: block" %>
+    <%= form.text_field :session %>
+  </div>
+
+  <div>
+    <%= form.label :ip, style: "display: block" %>
+    <%= form.text_field :ip %>
+  </div>
+
+  <div>
+    <%= form.label :created_at, style: "display: block" %>
+    <%= form.text_field :created_at %>
+  </div>
+
+  <div>
+    <%= form.label :account_id, style: "display: block" %>
+    <%= form.number_field :account_id %>
+  </div>
+
+  <div>
+    <%= form.submit %>
+  </div>
+<% end %>

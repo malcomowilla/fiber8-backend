@@ -1,0 +1,2 @@
+class TemporarySession < ApplicationRecord
+end

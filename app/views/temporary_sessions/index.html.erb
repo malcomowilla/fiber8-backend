@@ -1,0 +1,16 @@
+<p style="color: green"><%= notice %></p>
+
+<% content_for :title, "Temporary sessions" %>
+
+<h1>Temporary sessions</h1>
+
+<div id="temporary_sessions">
+  <% @temporary_sessions.each do |temporary_session| %>
+    <%= render temporary_session %>
+    <p>
+      <%= link_to "Show this temporary session", temporary_session %>
+    </p>
+  <% end %>
+</div>
+
+<%= link_to "New temporary session", new_temporary_session_path %>

@@ -83,26 +83,120 @@ require 'message_template'
 
 
 
-  def check_payment_status
-    Rails.logger.info "Mpesa pHotspot payment status"
-    raw_data = request.body.read
 
-    # Parse JSON if it's JSON-formatted
-    data = JSON.parse(raw_data) rescue {}
 
-    Rails.logger.info "M-Pesa Callback For Hotspot Received: #{data}"
-        Rails.logger.info "===========================Hotspot Payment validated"
-        HotspotMpesaRevenue.create(amount: data['Body']['stkCallback']['Amount'], 
-        phone_number: data['Body']['stkCallback']['PhoneNumber'],
-         voucher: data['Body']['stkCallback']['MerchantRequestID'],
+
+  
+
+  # def check_payment_status
+  #   Rails.logger.info "Mpesa pHotspot payment status"
+  #   raw_data = request.body.read
+
+  #   # Parse JSON if it's JSON-formatted
+  #   data = JSON.parse(raw_data) rescue {}
+
+  #   Rails.logger.info "M-Pesa Callback For Hotspot Received: #{data}"
+  #       Rails.logger.info "===========================Hotspot Payment validated"
+  #      if bill_ref.start_with?("hotspot_")
+  #       bill_ref = data['BillRefNumber'].to_s
+
+  #        voucher_code = bill_ref.sub("hotspot_", "")
+  #       HotspotMpesaRevenue.create(amount: data['TransAmount'], 
+  #       # phone_number: data['Body']['stkCallback']['PhoneNumber'],
+  #        voucher:  voucher_code,
          
-         reference: data['Body']['stkCallback']['MerchantRequestID'],
-         time_paid: Time.current,
-         )
+  #        reference: data['TransID'],
+  #        payment_method: 'Mpesa',
+  #        time_paid: data['TransTime'],
+  #        )
+
+
 
 
          
+
+  #       end
+         
+  # end
+
+
+def check_payment_status
+  data = JSON.parse(request.body.read) rescue {}
+  bill_ref = data["BillRefNumber"].to_s
+
+  if bill_ref.start_with?("hotspot_")
+    # Remove "hotspot_" prefix and extract session_id and voucher_code
+    parts = bill_ref.sub("hotspot_", "").split("_")
+    session_id = parts[0]
+    voucher_code = parts[1]
+
+    # Find the temporary session
+    session = TemporarySession.find_by(session: session_id)
+    unless session
+      Rails.logger.warn "Temporary session not found for session_id: #{session_id}"
+      return head :ok
+    end
+
+    # Create revenue record
+    HotspotMpesaRevenue.create!(
+      amount: data["TransAmount"],
+      voucher: voucher_code,
+      reference: data["TransID"],
+      payment_method: "Mpesa",
+      time_paid: data["TransTime"]
+    )
+    Rails.logger.info "Hotspot voucher #{voucher_code} paid successfully."
+
+    # Automatically login device using IP from session
+    NasRouter.all.each do |nas|
+      begin
+        Net::SSH.start(nas.ip_address, nas.username, password: nas.password, verify_host_key: :never) do |ssh|
+          command = "/ip hotspot active login user=#{voucher_code} password=#{voucher_code} ip=#{session.ip}"
+
+          output = ssh.exec!(command)
+          if output.include?("failure")
+            Rails.logger.warn "Login failed for voucher #{voucher_code} on router #{nas.ip_address}: #{output}"
+            render json: { error: "Login failed for voucher #{voucher_code} on router #{nas.ip_address}: #{output}" }, status: :unprocessable_entity
+          else
+            Rails.logger.info "Device #{session.ip} successfully logged in with voucher #{voucher_code} on router #{nas.ip_address}"
+            voucher = HotspotVoucher.find_by(voucher: voucher_code)
+
+
+             if ActsAsTenant.current_tenant.sms_provider_setting.sms_provider == "SMS leopard"
+               send_voucher(voucher.phone, voucher.voucher,
+               voucher.expiration
+               )
+               
+             elsif ActsAsTenant.current_tenant.sms_provider_setting.sms_provider == "TextSms"
+               send_voucher_text_sms(voucher.phone, voucher.voucher,
+               voucher.expiration
+               )
+             end
+
+            # render json: { message: "Device #{session.ip} successfully logged in with voucher #{voucher_code} on router" }, status: :ok
+
+
+            HotspotNotificationsChannel.broadcast_to(
+              session,
+              message: "Payment received! You are now connected.",
+            )
+          end
+        end
+      rescue => e
+        Rails.logger.error "SSH error logging in device #{session.ip}: #{e.message}"
+      end
+    end
+
+    # Mark session as paid
+
+  else
+    # Handle other types of payments here
+    Rails.logger.info "Non-hotspot payment received: #{bill_ref}"
+    # Your custom logic for other BillRefNumbers can go here
   end
+
+  head :ok
+end
 
 
 
@@ -123,6 +217,20 @@ host = request.headers['X-Subdomain']
       )
   
       if hotspot_payment[:success]
+        HotspotVoucher.new(
+        package: params[:package],
+        phone: phone_number,
+        voucher:  voucher_code
+      )
+session_id = rand(100000..999999).to_s
+TemporarySession.create!(
+  session: session_id,
+  ip: params[:ip],    # the IP you get from Mikrotik login.html
+)
+
+create_voucher_radcheck(voucher_code, params[:package])
+ calculate_expiration(params[:package], voucher_code)
+
         render json: {
           message: 'Please check your phone to complete the payment',
         }
@@ -223,7 +331,7 @@ end
       # user_manager_user_id = get_user_manager_user_id(@hotspot_voucher.voucher)
       # user_profile_id = get_user_profile_id_from_mikrotik(@hotspot_voucher.voucher)
       # calculate_expiration(package, hotspot_package_created)
-      create_voucher_radcheck(@hotspot_voucher.voucher, @hotspot_voucher.package, @hotspot_voucher.shared_users)
+      create_voucher_radcheck(@hotspot_voucher.voucher, @hotspot_voucher.package)
       # @hotspot_voucher.update(
       #   user_manager_user_id: user_manager_user_id,
       #     user_profile_id: user_profile_id,
@@ -250,7 +358,7 @@ end
 
   end
 
-  def create_voucher_radcheck(hotspot_voucher, package, shared_users)
+  def create_voucher_radcheck(hotspot_voucher, package)
   
   
 # ActiveRecord::Base.connection.execute("
@@ -286,8 +394,8 @@ radcheck = RadCheck.find_or_initialize_by(username: hotspot_voucher, radiusattri
 
 radcheck.update!(op: ':=', value: hotspot_voucher)
 
-radcheck_simultanesous_use = RadCheck.find_or_initialize_by(username: hotspot_voucher, radiusattribute: 
-'Simultaneous-Use')
+# radcheck_simultanesous_use = RadCheck.find_or_initialize_by(username: hotspot_voucher, radiusattribute: 
+# 'Simultaneous-Use')
 radcheck_simultanesous_use.update!(op: ':=',  value: shared_users)
 
 rad_user_group = RadUserGroup.find_or_initialize_by(username: hotspot_voucher, groupname: hotspot_package, priority: 1)

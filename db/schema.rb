@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2025_11_29_093839) do
+ActiveRecord::Schema[7.2].define(version: 2025_12_01_181351) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -940,6 +940,14 @@ ActiveRecord::Schema[7.2].define(version: 2025_11_29_093839) do
     t.string "first_name"
     t.string "last_name"
     t.boolean "is_email_verified"
+  end
+
+  create_table "temporary_sessions", force: :cascade do |t|
+    t.string "session"
+    t.string "ip"
+    t.integer "account_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
   end
 
   create_table "ticket_settings", force: :cascade do |t|

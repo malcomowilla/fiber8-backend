@@ -1,0 +1,11 @@
+<% content_for :title, "New temporary session" %>
+
+<h1>New temporary session</h1>
+
+<%= render "form", temporary_session: @temporary_session %>
+
+<br>
+
+<div>
+  <%= link_to "Back to temporary sessions", temporary_sessions_path %>
+</div>
