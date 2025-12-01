@@ -1,7 +1,7 @@
 class SendSmsHotspotJob < ApplicationJob
   queue_as :default
 
-  def perform(voucher_code, expiration, data)
+  def perform(voucher_code, data)
     # Loop all tenants
     Account.find_each do |tenant|
       ActsAsTenant.with_tenant(tenant) do
