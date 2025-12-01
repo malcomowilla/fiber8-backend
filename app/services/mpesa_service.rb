@@ -5,7 +5,7 @@ class MpesaService
 
 
     def initiate_stk_push(phone_number, amount, shortcode,  passkey,
-       consumer_key, consumer_secret, host, voucher_code) 
+       consumer_key, consumer_secret, host, voucher_code, session_id) 
       # api_url = 'https://sandbox.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials'
     api_url = 'https://api.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials'
 
@@ -30,7 +30,7 @@ class MpesaService
     
     
     
-     token = fetch_access_token(api_url, consumer_key, consumer_secret, voucher_code)
+     token = fetch_access_token(api_url, consumer_key, consumer_secret,)
      
     
     #  if token
@@ -48,7 +48,7 @@ class MpesaService
       # Initiate payment
       response = initiate_payment(api_url, token, shortcode, passkey, callback_url,
        formatted_phone_number, amount,
-      host, voucher_code
+      host, voucher_code,session_id
       )
       { success: true, response: response }
     else
@@ -63,7 +63,7 @@ class MpesaService
 
     private
 
-    def fetch_access_token(api_url, consumer_key, consumer_secret, voucher_code)
+    def fetch_access_token(api_url, consumer_key, consumer_secret)
       
       response = RestClient.get(api_url, { params: { grant_type: 'client_credentials' }, Authorization: "Basic #{Base64.strict_encode64("#{consumer_key}:#{consumer_secret}")}" })
     
