@@ -211,9 +211,14 @@ host = request.headers['X-Subdomain']
   consumer_secret = ActsAsTenant.current_tenant&.hotspot_mpesa_setting.consumer_secret
 
   voucher_code = generate_voucher_code
+  session_id = rand(100000..999999).to_s
+TemporarySession.create!(
+  session: session_id,
+  ip: params[:ip],    # the IP you get from Mikrotik login.html
+)
       hotspot_payment = MpesaService.initiate_stk_push(phone_number, amount,
        shortcode,  passkey,
-        consumer_key, consumer_secret, host,voucher_code
+        consumer_key, consumer_secret, host,voucher_code,session_id
       )
   
       if hotspot_payment[:success]
@@ -222,11 +227,7 @@ host = request.headers['X-Subdomain']
         phone: phone_number,
         voucher:  voucher_code
       )
-session_id = rand(100000..999999).to_s
-TemporarySession.create!(
-  session: session_id,
-  ip: params[:ip],    # the IP you get from Mikrotik login.html
-)
+
 
 create_voucher_radcheck(voucher_code, params[:package])
  calculate_expiration(params[:package], voucher_code)
