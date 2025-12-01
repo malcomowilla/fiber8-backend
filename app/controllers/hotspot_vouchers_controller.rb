@@ -99,6 +99,9 @@ require 'message_template'
          reference: data['Body']['stkCallback']['MerchantRequestID'],
          time_paid: Time.current,
          )
+
+
+         
   end
 
 

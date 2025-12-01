@@ -100,9 +100,9 @@ class MpesaService
       PartyA: formatted_phone_number,    
       PartyB: shortcode ,    
       PhoneNumber:formatted_phone_number,     
-      CallBackURL: "https://#{host}.#{ENV['HOST']}/#{ENV['HOTSPOT_PAYMENTS']}",    
+      CallBackURL: "https://#{host}.aitechs.co.ke/hotspot_payment_url",    
       AccountReference: voucher_code,    
-      TransactionDesc:"Testing stk push"
+      TransactionDesc:"Hotspot stk push"
     }
     
 
