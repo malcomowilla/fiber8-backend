@@ -121,6 +121,7 @@ require 'message_template'
 
 
 def check_payment_status
+  Rails.logger.info "check_payment_status"
   data = JSON.parse(request.body.read) rescue {}
   bill_ref = data["BillRefNumber"]
 
@@ -130,6 +131,7 @@ def check_payment_status
     session_id = parts[0]
     voucher_code = parts[1]
 
+    Rails.logger.info "Session ID: #{session_id}, Voucher Code: #{voucher_code}"
     # Find the temporary session
     session = TemporarySession.find_by(session: session_id)
     unless session
