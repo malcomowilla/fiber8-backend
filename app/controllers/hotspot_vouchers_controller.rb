@@ -142,13 +142,13 @@ Rails.logger.info "Parsed data calback mpesa: #{request.body.read}"
     end
 
     # Create revenue record
-    HotspotMpesaRevenue.create!(
-      amount: data["TransAmount"],
-      voucher: voucher_code,
-      reference: data["TransID"],
-      payment_method: "Mpesa",
-      time_paid: data["TransTime"]
-    )
+    # HotspotMpesaRevenue.create!(
+    #   amount: data["TransAmount"],
+    #   voucher: voucher_code,
+    #   reference: data["TransID"],
+    #   payment_method: "Mpesa",
+    #   time_paid: data["TransTime"]
+    # )
     Rails.logger.info "Hotspot voucher #{voucher_code} paid successfully."
 
     # Automatically login device using IP from session
@@ -166,7 +166,7 @@ Rails.logger.info "Parsed data calback mpesa: #{request.body.read}"
             voucher = HotspotVoucher.find_by(voucher: voucher_code).voucher
 
 
-            SendSmsHotspotJob.perform_now(voucher)
+            SendSmsHotspotJob.perform_now(voucher, data)
             # render json: { message: "Device #{session.ip} successfully logged in with voucher #{voucher_code} on router" }, status: :ok
 
 
@@ -176,6 +176,8 @@ Rails.logger.info "Parsed data calback mpesa: #{request.body.read}"
             )
           end
         end
+
+        
       rescue => e
         Rails.logger.error "SSH error logging in device #{session.ip}: #{e.message}"
       end

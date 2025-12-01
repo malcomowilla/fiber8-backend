@@ -1,11 +1,18 @@
 class SendSmsHotspotJob < ApplicationJob
   queue_as :default
 
-  def perform(voucher_code, expiration)
+  def perform(voucher_code, expiration, data)
     # Loop all tenants
     Account.find_each do |tenant|
       ActsAsTenant.with_tenant(tenant) do
-
+HotspotMpesaRevenue.create!(
+      amount: data["TransAmount"],
+      voucher: voucher_code,
+      reference: data["TransID"],
+      payment_method: "Mpesa",
+      time_paid: data["TransTime"],
+      account_id: ActsAsTenant.current_tenant.id
+    )
         voucher = HotspotVoucher.find_by(voucher: voucher_code)
         next unless voucher # Skip if this tenant does NOT own this voucher
 
