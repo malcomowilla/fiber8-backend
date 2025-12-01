@@ -67,7 +67,7 @@ api_key = tenant.sms_setting.find_by(sms_provider: 'SMS leopard')&.api_key
   ##
   ## TextSMS
   ##
-  def send_voucher_text_sms(voucher, setting)
+  def send_voucher_text_sms(voucher, tenant)
     message = "Your voucher code is: #{voucher.voucher}. This code is valid until #{voucher.expiration}."
   api_key = tenant.sms_setting.find_by(sms_provider: 'TextSms')&.api_key
   partnerID = tenant.sms_setting.find_by(sms_provider: 'TextSms')&.partnerID
