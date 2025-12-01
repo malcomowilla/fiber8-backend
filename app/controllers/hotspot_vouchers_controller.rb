@@ -122,7 +122,7 @@ require 'message_template'
 
 def check_payment_status
   data = JSON.parse(request.body.read) rescue {}
-  bill_ref = data["BillRefNumber"].to_s
+  bill_ref = data["BillRefNumber"]
 
   if bill_ref.start_with?("hotspot_")
     # Remove "hotspot_" prefix and extract session_id and voucher_code
