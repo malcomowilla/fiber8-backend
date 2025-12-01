@@ -26,6 +26,7 @@ HotspotMpesaRevenue.create!(
   def send_sms_for_tenant(voucher, tenant)
     sms_setting = tenant.sms_provider_setting
 
+
     if sms_setting.blank?
       Rails.logger.warn "Tenant #{ActsAsTenant.current_tenant.id} does not have an SMS provider set. Skipping SMS for voucher #{voucher.voucher}."
       return
@@ -33,9 +34,9 @@ HotspotMpesaRevenue.create!(
 
     case sms_setting.sms_provider
     when "SMS leopard"
-      send_voucher_sms_leopard(voucher, sms_setting)
+      send_voucher_sms_leopard(voucher, tenant)
     when "TextSms"
-      send_voucher_text_sms(voucher, sms_setting)
+      send_voucher_text_sms(voucher, tenant)
     else
       Rails.logger.warn "Tenant #{ActsAsTenant.current_tenant.id} has unknown SMS provider: #{sms_setting.sms_provider}. Skipping SMS for voucher #{voucher.voucher}."
     end
@@ -44,13 +45,15 @@ HotspotMpesaRevenue.create!(
   ##
   ## SMS Leopard
   ##
-  def send_voucher_sms_leopard(voucher, setting)
+  def send_voucher_sms_leopard(voucher, tenant)
     message = "Your voucher code is: #{voucher.voucher}. This code is valid until #{voucher.expiration}."
+api_key = tenant.sms_setting.find_by(sms_provider: 'SMS leopard')&.api_key
+    api_secret = tenant.sms_setting.find_by(sms_provider: 'SMS leopard')&.api_secret
 
     uri = URI("https://api.smsleopard.com/v1/sms/send")
     params = {
-      username: setting.api_key,
-      password: setting.api_secret,
+      username: api_key,
+      password: api_secret,
       message: message,
       destination: voucher.phone,
       source: "SMS_TEST"
@@ -66,13 +69,14 @@ HotspotMpesaRevenue.create!(
   ##
   def send_voucher_text_sms(voucher, setting)
     message = "Your voucher code is: #{voucher.voucher}. This code is valid until #{voucher.expiration}."
-
+  api_key = tenant.sms_setting.find_by(sms_provider: 'TextSms')&.api_key
+  partnerID = tenant.sms_setting.find_by(sms_provider: 'TextSms')&.partnerID
     uri = URI("https://sms.textsms.co.ke/api/services/sendsms")
     params = {
-      apikey: setting.api_key,
+      apikey: api_key,
       message: message,
       mobile: voucher.phone,
-      partnerID: setting.partnerID,
+      partnerID: partnerID,
       shortcode: "TextSMS"
     }
     uri.query = URI.encode_www_form(params)
