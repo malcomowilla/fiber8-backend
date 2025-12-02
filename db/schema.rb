@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2025_12_01_181351) do
+ActiveRecord::Schema[7.2].define(version: 2025_12_02_083238) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -442,6 +442,7 @@ ActiveRecord::Schema[7.2].define(version: 2025_12_01_181351) do
     t.string "user_profile_id"
     t.string "shared_users"
     t.datetime "sms_sent_at"
+    t.datetime "sms_sent_at_voucher"
   end
 
   create_table "invoices", force: :cascade do |t|

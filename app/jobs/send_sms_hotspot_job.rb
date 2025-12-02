@@ -5,7 +5,7 @@ class SendSmsHotspotJob < ApplicationJob
     # Loop all tenants
     Account.find_each do |tenant|
       ActsAsTenant.with_tenant(tenant) do
-HotspotMpesaRevenue.create!(
+HotspotMpesaRevenue.find_or_create_by(
       amount: data["TransAmount"],
       voucher: voucher_code,
       reference: data["TransID"],
@@ -16,7 +16,15 @@ HotspotMpesaRevenue.create!(
         voucher = HotspotVoucher.find_by(voucher: voucher_code)
         next unless voucher # Skip if this tenant does NOT own this voucher
 
-        send_sms_for_tenant(voucher, ActsAsTenant.current_tenant)
+sms_sent_at_voucher = HotspotVoucher.find_by(voucher: voucher.voucher).sms_sent_at_voucher
+
+
+if sms_sent_at_voucher.nil?
+send_sms_for_tenant(voucher, ActsAsTenant.current_tenant)
+end
+
+
+        
       end
     end
   end
@@ -25,6 +33,7 @@ HotspotMpesaRevenue.create!(
 
   def send_sms_for_tenant(voucher, tenant)
     sms_setting = tenant.sms_provider_setting
+  HotspotVoucher.find_by(voucher: voucher.voucher).update(sms_sent_at_voucher: Time.now)
 
 
     if sms_setting.blank?
@@ -51,6 +60,8 @@ sms_setting = tenant.sms_setting
   api_key = sms_setting.api_key
   api_secret = sms_setting.api_secret
 
+
+  HotspotVoucher.find_by(voucher: voucher.voucher).update(sms_sent_at_voucher: Time.now)
     uri = URI("https://api.smsleopard.com/v1/sms/send")
     params = {
       username: api_key,
