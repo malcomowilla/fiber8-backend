@@ -164,10 +164,7 @@ Rails.logger.info "Parsed data calback mpesa: #{request.body.read}"
           else
             Rails.logger.info "Device #{session.ip} successfully logged in with voucher #{voucher_code} on router #{nas.ip_address}"
             HotspotVoucher.find_by(voucher: voucher_code).update(status: "used")
-          end
-        end
-
-        voucher = HotspotVoucher.find_by(voucher: voucher_code).voucher
+               voucher = HotspotVoucher.find_by(voucher: voucher_code).voucher
 
 
             SendSmsHotspotJob.perform_now(voucher, data)
@@ -179,6 +176,10 @@ Rails.logger.info "Parsed data calback mpesa: #{request.body.read}"
               message: "Payment received! You are now connected.",
             )
 
+          end
+        end
+
+     
 
       rescue => e
         Rails.logger.error "SSH error logging in device #{session.ip}: #{e.message}"
