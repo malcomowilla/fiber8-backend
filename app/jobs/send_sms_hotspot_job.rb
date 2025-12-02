@@ -3,11 +3,10 @@ class SendSmsHotspotJob < ApplicationJob
 
   def perform(voucher_code, data)
     # Loop all tenants
-    Account.find_each do |tenant|
-      ActsAsTenant.with_tenant(tenant) do
+      voucher = HotspotVoucher.find_by(voucher: voucher_code)
+      ActsAsTenant.with_tenant(voucher.account) do
 
    
-        voucher = HotspotVoucher.find_by(voucher: voucher_code)
         next unless voucher # Skip if this tenant does NOT own this voucher
 
 sms_sent_at_voucher = HotspotVoucher.find_by(voucher: voucher.voucher).sms_sent_at_voucher
@@ -22,13 +21,13 @@ HotspotMpesaRevenue.find_or_create_by(
       reference: data["TransID"],
       payment_method: "Mpesa",
       time_paid: data["TransTime"],
-      account_id: ActsAsTenant.current_tenant.id
+      account_id: voucher.account_id
     )
 end
 
 
         
-      end
+    
     end
   end
 
@@ -50,7 +49,7 @@ end
     when "TextSms"
       send_voucher_text_sms(voucher, tenant)
     else
-      Rails.logger.warn "Tenant #{ActsAsTenant.current_tenant.id} has unknown SMS provider: #{sms_setting.sms_provider}. Skipping SMS for voucher #{voucher.voucher}."
+      Rails.logger.info "Tenant #{ActsAsTenant.current_tenant.id} has unknown SMS provider: #{sms_setting.sms_provider}. Skipping SMS for voucher #{voucher.voucher}."
     end
   end
 
