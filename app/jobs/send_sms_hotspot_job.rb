@@ -5,14 +5,8 @@ class SendSmsHotspotJob < ApplicationJob
     # Loop all tenants
     Account.find_each do |tenant|
       ActsAsTenant.with_tenant(tenant) do
-HotspotMpesaRevenue.find_or_create_by(
-      amount: data["TransAmount"],
-      voucher: voucher_code,
-      reference: data["TransID"],
-      payment_method: "Mpesa",
-      time_paid: data["TransTime"],
-      account_id: ActsAsTenant.current_tenant.id
-    )
+
+   
         voucher = HotspotVoucher.find_by(voucher: voucher_code)
         next unless voucher # Skip if this tenant does NOT own this voucher
 
@@ -21,6 +15,15 @@ sms_sent_at_voucher = HotspotVoucher.find_by(voucher: voucher.voucher).sms_sent_
 
 if sms_sent_at_voucher.nil?
 send_sms_for_tenant(voucher, ActsAsTenant.current_tenant)
+     
+HotspotMpesaRevenue.find_or_create_by(
+      amount: data["TransAmount"],
+      voucher: voucher_code,
+      reference: data["TransID"],
+      payment_method: "Mpesa",
+      time_paid: data["TransTime"],
+      account_id: ActsAsTenant.current_tenant.id
+    )
 end
 
 
