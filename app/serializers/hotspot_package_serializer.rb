@@ -7,11 +7,11 @@ class HotspotPackageSerializer < ActiveModel::Serializer
 
 
   def name
-    object.speed == 'M/M' && "Unlimited #{object.name}"
+    object.download_limit == '' && "Unlimited #{object.name}"
   end
 
 
-  
+
   
   def valid_from
     object.valid_from.strftime('%I:%M %p') if object.valid_from.present?
@@ -26,6 +26,7 @@ class HotspotPackageSerializer < ActiveModel::Serializer
   end
   
   
+
   
   # def speed
   #   "#{self.object.upload_limit}M/#{self.object.download_limit}M" 
