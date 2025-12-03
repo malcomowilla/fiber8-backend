@@ -11,7 +11,15 @@ class HotspotPackagesController < ApplicationController
   before_action :set_tenant
   before_action :update_last_activity
   # /ip/hotspot/host?as-string=any&as-string-value=any&number=any&value-name=any
-   
+    DAY_MAP = {
+  "Monday" => "Mo",
+  "Tuesday" => "Tu",
+  "Wednesday" => "We",
+  "Thursday" => "Th",
+  "Friday" => "Fr",
+  "Saturday" => "Sa",
+  "Sunday" => "Su"
+}
 
 
 
@@ -604,7 +612,7 @@ ActivtyLog.create(action: 'delete', ip: request.remote_ip,
     # ✅ Delete related FreeRADIUS records
     RadGroupReply.where(groupname: group_name).destroy_all
     RadGroupCheck.where(groupname: group_name).destroy_all
-
+    # RadGroupCheck.where(groupname: group_name).destroy_all
     # ✅ Delete the HotspotPackage
     @hotspot_package.destroy!
   end
@@ -1179,13 +1187,29 @@ group_name = "hotspot_#{package.name.parameterize(separator: '_')}"
 
     # ✅ Handle weekdays restrictions
     if package.weekdays.present?
-      days_string = package.weekdays.map { |day| day[0..2] }.join(",")
+      # days_string = package.weekdays.map { |day| day[0..2] }.join(",")
 
-      rad_days = RadGroupCheck.find_or_initialize_by(groupname: group_name, radiusattribute: 'Day-Of-Week')
-      rad_days.update!(op: ':=', value: days_string)
-    else
-      # ✅ If no weekdays are set, remove existing restriction
-      RadGroupCheck.where(groupname: group_name, radiusattribute: 'Day-Of-Week').destroy_all
+      # rad_days = RadGroupCheck.find_or_initialize_by(groupname: group_name, radiusattribute: 'Login-Time')
+      # rad_days.update!(op: ':=', value: days_string)
+
+     
+
+# Convert ["Monday", "Tuesday"] → "MoTu0000-2359"
+day_codes = package.weekdays.map { |day| DAY_MAP[day] }.join
+
+# Full day allowed
+login_time_value = "#{day_codes}0000-2359"
+
+rad_days = RadGroupCheck.find_or_initialize_by(
+  groupname: group_name,
+  radiusattribute: 'Login-Time'
+)
+
+rad_days.update!(
+  op: ':=',
+  value: login_time_value
+)
+    
     end
   end
 end
@@ -1207,6 +1231,7 @@ end
         :download_limit,
         :upload_limit,
         :valid_from,
+        :shared_users,
         :valid_until,
           # Correct array syntax
         :tx_rate_limit,

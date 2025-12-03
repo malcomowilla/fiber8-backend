@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2025_12_03_064038) do
+ActiveRecord::Schema[7.2].define(version: 2025_12_03_071143) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -370,7 +370,7 @@ ActiveRecord::Schema[7.2].define(version: 2025_12_03_064038) do
     t.datetime "valid_from"
     t.datetime "valid_until"
     t.string "weekdays", default: [], array: true
-    t.string "shared_users"
+    t.string "shared_users", default: "1"
   end
 
   create_table "hotspot_plans", force: :cascade do |t|
