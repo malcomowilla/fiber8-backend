@@ -413,20 +413,20 @@ end
 def update_freeradius_policies(package_name, shared_users, upload_limit, download_limit,
     weekdays)
   # group_name = "#{package.name}_HotspotPackage" 
-group_name = "hotspot_#{package.name.parameterize(separator: '_')}"
+group_name = "hotspot_#{package_name.parameterize(separator: '_')}"
 
   ActiveRecord::Base.transaction do
     # ✅ Update or create speed limits in Radgroupreply
     rad_reply = RadGroupReply.find_or_initialize_by(groupname: group_name, radiusattribute: 'Mikrotik-Rate-Limit')
-    rad_reply.update!(op: ':=', value: "#{package.upload_limit}M/#{package.download_limit}M")
+    rad_reply.update!(op: ':=', value: "#{upload_limit}M/#{download_limit}M")
 
     rad_group_check = RadGroupCheck.find_or_initialize_by(groupname: group_name, radiusattribute: 'Simultaneous-Use')
-      rad_group_check.update!(op: ':=', value: package.shared_users)
+      rad_group_check.update!(op: ':=', value: shared_users)
 
    
 
     # ✅ Handle weekdays restrictions
-    if package.weekdays.present?
+    if weekdays.present?
       # days_string = package.weekdays.map { |day| day[0..2] }.join(",")
 
       # rad_days = RadGroupCheck.find_or_initialize_by(groupname: group_name, radiusattribute: 'Login-Time')
@@ -435,7 +435,7 @@ group_name = "hotspot_#{package.name.parameterize(separator: '_')}"
      
 
 # Convert ["Monday", "Tuesday"] → "MoTu0000-2359"
-day_codes = package.weekdays.map { |day| DAY_MAP[day] }.join
+day_codes = weekdays.map { |day| DAY_MAP[day] }.join
 
 # Full day allowed
 login_time_value = "#{day_codes}0000-2359"
