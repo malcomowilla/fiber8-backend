@@ -7,7 +7,7 @@ class HotspotPackageSerializer < ActiveModel::Serializer
 
 
   def name
-    object.download_limit == '' && "Unlimited #{object.name}"
+    object.download_limit == '' ? "Unlimited #{object.name}": object.name
   end
 
 
