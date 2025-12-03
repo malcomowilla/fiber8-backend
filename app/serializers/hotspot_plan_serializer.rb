@@ -1,11 +1,16 @@
 class HotspotPlanSerializer < ActiveModel::Serializer
   attributes :id,:hotspot_subscribers, :name, :expiry_days, :billing_cycle, :expiry, :status,
-  :condition
+  :condition, :company_name
   
   # belongs_to :account
 
 
-
+def company_name
+   return nil unless object.account.present?
+   
+   object.account.subdomain
+  
+end
 
   # def expiry
   #   object.expiry.strftime("%B %d, %Y at %I:%M %p") if object.expiry.present?
