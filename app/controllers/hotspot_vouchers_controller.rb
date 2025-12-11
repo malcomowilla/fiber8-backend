@@ -8,6 +8,7 @@ load_and_authorize_resource except: [:login_with_hotspot_voucher, :make_payment,
   set_current_tenant_through_filter
 
   before_action :set_tenant, except: [:check_payment_status]
+  before_action :set_time_zone
 
 
   #  before_action :whitelist_mpesa_ips, only: [:check_payment_status]
@@ -61,6 +62,16 @@ require 'message_template'
   
     
   end
+
+
+
+  def set_time_zone
+  Rails.logger.info "Setting time zone"
+  Time.zone = GeneralSetting.first&.timezone || Rails.application.config.time_zone
+    Rails.logger.info "Setting time zone #{Time.zone}"
+
+end
+
 
 
   # GET /hotspot_vouchers or /hotspot_vouchers.json

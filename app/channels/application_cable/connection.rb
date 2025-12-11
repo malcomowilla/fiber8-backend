@@ -39,9 +39,7 @@ module ApplicationCable
 
     private
 
-    ##
-    # HOTSPOT (Unauthenticated) connection
-    ##
+   
     def connect_hotspot_user
       ip = request.params["X-ip"]
       session = TemporarySession.find_by(ip: ip)

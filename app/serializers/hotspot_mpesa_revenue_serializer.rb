@@ -3,7 +3,7 @@ class HotspotMpesaRevenueSerializer < ActiveModel::Serializer
 
 
 def time_paid
-    Time.strptime(object.time_paid, "%Y%m%d%H%M%S").strftime("%d %b %Y %H:%M:%S")
+    Time.zone.strptime(object.time_paid, "%Y%m%d%H%M%S").strftime("%B %d, %Y at %I:%M %p")
 
 end
 

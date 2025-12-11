@@ -1,9 +1,10 @@
 class AdSettingsController < ApplicationController
-  before_action :set_ad_setting, only: %i[ show edit update destroy ]
+  # before_action :set_ad_setting, only: %i[ show edit update destroy ]
 
   set_current_tenant_through_filter
   before_action :set_tenant
     before_action :update_last_activity
+    before_action :set_time_zone
 
 
   # GET /ad_settings or /ad_settings.json
@@ -13,7 +14,12 @@ class AdSettingsController < ApplicationController
   end
 
 
+def set_time_zone
+  Rails.logger.info "Setting time zone"
+  Time.zone = GeneralSetting.first&.timezone || Rails.application.config.time_zone
+    Rails.logger.info "Setting time zone #{Time.zone}"
 
+end
 
 
   def update_last_activity

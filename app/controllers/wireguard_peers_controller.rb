@@ -1,9 +1,23 @@
 class WireguardPeersController < ApplicationController
 
+load_and_authorize_resource
 
 before_action :update_last_activity
 before_action :set_tenant
-load_and_authorize_resource
+before_action :set_time_zone
+
+
+
+
+
+ def set_time_zone
+  Rails.logger.info "Setting time zone"
+  Time.zone = GeneralSetting.first&.timezone || Rails.application.config.time_zone
+    Rails.logger.info "Setting time zone #{Time.zone}"
+
+end
+
+
 
 
 

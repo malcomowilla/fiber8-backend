@@ -1,6 +1,4 @@
 
-
-
 class SubscriptionPaymentController < ApplicationController
   # before_action :set_subscription_payment, only: %i[ show edit update destroy ]
 

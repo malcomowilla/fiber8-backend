@@ -8,6 +8,18 @@ class SmsSettingsController < ApplicationController
 
   set_current_tenant_through_filter
   before_action :set_tenant
+    before_action :set_time_zone
+
+
+
+ def set_time_zone
+  Rails.logger.info "Setting time zone"
+  Time.zone = GeneralSetting.first&.timezone || Rails.application.config.time_zone
+    Rails.logger.info "Setting time zone #{Time.zone}"
+
+end
+
+
   def index
     Rails.logger.info "current tenant sms settin: #{ActsAsTenant.current_tenant.sms_setting.sms_provider}"
     @sms_settings = SmsSetting.find_by(sms_provider: params[:provider])

@@ -7,16 +7,17 @@ class IpPoolsController < ApplicationController
   set_current_tenant_through_filter
 
   before_action :set_tenant
+  before_action :set_time_zone
 
 
 
 
-  # ip = IPAddress "172.16.10.1/24"
+def set_time_zone
+  Rails.logger.info "Setting time zone"
+  Time.zone = GeneralSetting.first&.timezone || Rails.application.config.time_zone
+    Rails.logger.info "Setting time zone #{Time.zone}"
 
-  # ip.each do |addr|
-  #   puts "ip adreses => #{addr}"
-  # end
-
+end
 
 
 

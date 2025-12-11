@@ -2,9 +2,17 @@ class RegisterUrlsController < ApplicationController
   set_current_tenant_through_filter
   before_action :set_tenant
   before_action :update_last_activity
-  # skip_before_action :verify_authenticity_token
+  before_action :set_time_zone
 
-  # skip_before_action :verify_authenticity_token
+   
+  
+  
+   def set_time_zone
+  Rails.logger.info "Setting time zone"
+  Time.zone = GeneralSetting.first&.timezone || Rails.application.config.time_zone
+    Rails.logger.info "Setting time zone #{Time.zone}"
+
+end
 
   def update_last_activity
     current_user&.update!(last_activity_active: Time.current)

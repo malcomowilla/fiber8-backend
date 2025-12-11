@@ -10,6 +10,10 @@ class HotspotPackagesController < ApplicationController
 
   before_action :set_tenant
   before_action :update_last_activity
+    before_action :set_time_zone
+
+
+
   # /ip/hotspot/host?as-string=any&as-string-value=any&number=any&value-name=any
     DAY_MAP = {
   "Monday" => "Mo",
@@ -34,6 +38,12 @@ if current_user
   
 
 
+  def set_time_zone
+  Rails.logger.info "Setting time zone"
+  Time.zone = GeneralSetting.first&.timezone || Rails.application.config.time_zone
+    Rails.logger.info "Setting time zone #{Time.zone}"
+
+end
 
 
 

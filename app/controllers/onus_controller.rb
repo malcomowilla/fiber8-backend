@@ -6,7 +6,7 @@ set_current_tenant_through_filter
 
 before_action :set_tenant
 before_action :update_last_activity
-GENIEACS_HOST = "http://10.2.0.1:7347"
+GENIEACS_HOST = "http://#{ENV['GENIEACS_HOST']}"
 
 
  def update_last_activity
@@ -381,7 +381,7 @@ end
 
 
 def get_devices
-  genieacs_host = "http://10.2.0.1:7347"
+  genieacs_host = "http://#{ENV['GENIEACS_HOST']}"
   devices_uri = URI("#{genieacs_host}/devices")
 
   begin

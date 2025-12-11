@@ -253,6 +253,18 @@ class WireguardController < ApplicationController
 before_action :update_last_activity
 before_action :set_tenant
 
+before_action :set_time_zone
+
+
+
+
+
+ def set_time_zone
+  Rails.logger.info "Setting time zone"
+  Time.zone = GeneralSetting.first&.timezone || Rails.application.config.time_zone
+    Rails.logger.info "Setting time zone #{Time.zone}"
+
+end
 
 
    def update_last_activity
@@ -577,7 +589,18 @@ end
 
       
       /ip address add address=#{ip} interface=wireguard1
+
+      /ip firewall filter
+      add chain=input src-address=10.2.0.1 protocol=icmp action=accept comment="Allow Wireguard Server To Ping"
       
+      add chain=input src-address=#{ip} protocol=tcp action=accept comment="Allow Wireguard Client Mikrotik"
+      
+      add chain=input src-address=10.2.0.1 protocol=tcp dst-port=22,80 action=accept comment="Allow Wireguard Server"
+
+      add chain=input src-address=10.2.0.0/24 protocol=tcp action=drop comment="Block all other wireguard clients"
+
+      add chain=input action=drop protocol=tcp src-address=!10.2.0.1 dst-port=21,22,23 log=yes log-prefix="drop, ssh,telnet" comment="Drop ssh telnet if not from wireguard server"
+
     
     CONFIG
   end
