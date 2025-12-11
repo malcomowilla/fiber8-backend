@@ -49,8 +49,13 @@ if current_user
     @hotspot_mpesa_revenues = HotspotMpesaRevenue.all
     render json: @hotspot_mpesa_revenues
   end
-
- 
+def todays_revenue
+  start_time = Time.current.beginning_of_day
+  end_time = Time.current
+  
+  # Query
+  render json: HotspotMpesaRevenue.where(created_at: start_time..end_time).sum(:amount)
+end
  
 
   # POST /hotspot_mpesa_revenues or /hotspot_mpesa_revenues.json
