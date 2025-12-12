@@ -127,6 +127,16 @@ resources :company_ids
   # resources :hotspot_plans
 
 end
+  get '/api/daily_revenue', to: 'hotspot_mpesa_revenues#daily_revenue'
+    get '/api/revenue_summary', to: 'hotspot_mpesa_revenues#revenue_summary'
+    get '/api/revenue_by_date_range', to: 'hotspot_mpesa_revenues#revenue_by_date_range'
+post '/api/this_month_revenue', to: 'hotspot_mpesa_revenues#this_month_revenue'
+post '/this_month_revenue', to: 'hotspot_mpesa_revenues#this_month_revenue'
+
+post '/api/todays_revenue', to: 'hotspot_mpesa_revenues#todays_revenue'
+post '/todays_revenue', to: 'hotspot_mpesa_revenues#todays_revenue'
+
+
 
 
 post '/api/send_voucher', to: 'hotspot_vouchers#send_voucher_to_phone_number'

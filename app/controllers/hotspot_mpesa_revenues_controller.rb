@@ -35,6 +35,10 @@ def set_tenant
     
   end
 
+
+
+
+
 def update_last_activity
 if current_user
       current_user.update_column(:last_activity_active, Time.now.strftime('%Y-%m-%d %I:%M:%S %p'))
@@ -57,6 +61,81 @@ def todays_revenue
   render json: HotspotMpesaRevenue.where(created_at: start_time..end_time).sum(:amount)
 end
  
+
+
+def this_month_revenue
+  start_time = Time.current.beginning_of_month
+  end_time = Time.current
+
+  render json: HotspotMpesaRevenue.where(created_at: start_time..end_time).sum(:amount)
+  
+end
+
+
+
+
+
+def daily_revenue
+      date = params[:date] ? Date.parse(params[:date]) : Date.current
+      
+      revenue = HotspotMpesaRevenue.daily_revenue(date)
+      transactions = HotspotMpesaRevenue.where(created_at: date.beginning_of_day..date.end_of_day)
+      
+      render json: {
+        success: true,
+        date: date,
+        total_revenue: revenue,
+        transaction_count: transactions.count,
+        transactions: transactions.as_json(only: [:id, :voucher, :amount, :reference, :time_paid, :created_at])
+      }
+    end
+    
+    # GET /api/revenue_summary
+    def revenue_summary
+      today = HotspotMpesaRevenue.today.sum(:amount)
+      this_week = HotspotMpesaRevenue.this_week.sum(:amount)
+      this_month = HotspotMpesaRevenue.this_month.sum(:amount)
+      all_time = HotspotMpesaRevenue.sum(:amount)
+      
+      # Last 7 days revenue
+      last_7_days = (0..6).map do |i|
+        date = i.days.ago.to_date
+        revenue = HotspotMpesaRevenue.daily_revenue(date)
+        { date: date, revenue: revenue }
+      end.reverse
+      
+      render json: {
+        success: true,
+        summary: {
+          today: today,
+          this_week: this_week,
+          this_month: this_month,
+          all_time: all_time
+        },
+        last_7_days: last_7_days,
+        currency: 'KES'
+      }
+    end
+    
+    # GET /api/revenue_by_date_range?start_date=2024-01-01&end_date=2024-01-31
+    def revenue_by_date_range
+      start_date = Date.parse(params[:start_date])
+      end_date = Date.parse(params[:end_date])
+      
+      revenues = HotspotMpesaRevenue.revenue_by_date_range(start_date, end_date)
+      
+      render json: {
+        success: true,
+        start_date: start_date,
+        end_date: end_date,
+        revenues: revenues,
+        total: revenues.values.sum
+      }
+    end
+    
+
+
+
 
   # POST /hotspot_mpesa_revenues or /hotspot_mpesa_revenues.json
   def create
