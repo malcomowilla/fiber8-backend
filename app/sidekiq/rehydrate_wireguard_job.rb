@@ -104,23 +104,38 @@ class RehydrateWireguardJob
       #   else
       #     db_peer.allowed_ips.split("/").first
       #   end
-
 allowed_ip = db_peer.allowed_ips
 
 tunnel_ip =
   if db_peer.private_ip.present?
-    db_peer.private_ip
+    # ----------------------------
+    # private_ip may contain "/"
+    # ----------------------------
+    ip, mask = db_peer.private_ip.split("/")
+
+    if mask.to_i == 32
+      ip
+    else
+      parts = ip.split(".")
+      parts[3] = "1"
+      parts.join(".")
+    end
+
   else
+    # ----------------------------
+    # handle allowed_ips normally
+    # ----------------------------
     base, mask = allowed_ip.split("/")
+
     if mask.to_i == 32
       base
     else
-      # Convert network address to .1 (router / peer address)
       parts = base.split(".")
       parts[3] = "1"
       parts.join(".")
     end
   end
+
 
       
       # -----------------------------
