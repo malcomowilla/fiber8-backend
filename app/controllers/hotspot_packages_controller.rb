@@ -434,6 +434,10 @@ group_name = "hotspot_#{package_name.parameterize(separator: '_')}"
       rad_group_check.update!(op: ':=', value: shared_users)
 
    
+rad_days = RadGroupCheck.find_or_initialize_by(
+  groupname: group_name,
+  radiusattribute: 'Login-Time'
+)
 
     # ✅ Handle weekdays restrictions
     if weekdays.present?
