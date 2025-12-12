@@ -133,8 +133,8 @@ end
 post '/api/this_month_revenue', to: 'hotspot_mpesa_revenues#this_month_revenue'
 post '/this_month_revenue', to: 'hotspot_mpesa_revenues#this_month_revenue'
 
-post '/api/todays_revenue', to: 'hotspot_mpesa_revenues#todays_revenue'
-post '/todays_revenue', to: 'hotspot_mpesa_revenues#todays_revenue'
+get '/api/todays_revenue', to: 'hotspot_mpesa_revenues#todays_revenue'
+get '/todays_revenue', to: 'hotspot_mpesa_revenues#todays_revenue'
 
 
 
