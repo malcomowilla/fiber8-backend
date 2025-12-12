@@ -459,7 +459,11 @@ rad_days.update!(
   op: ':=',
   value: login_time_value
 )
-    
+    else
+      rad_days.update!(
+        op: ':=',
+        value: ''
+      )
     end
   end
 end
