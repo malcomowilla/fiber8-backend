@@ -105,23 +105,24 @@ class RehydrateWireguardJob
       #     db_peer.allowed_ips.split("/").first
       #   end
 
+allowed_ip = db_peer.allowed_ips
 
 tunnel_ip =
   if db_peer.private_ip.present?
     db_peer.private_ip
   else
-    base, mask = db_peer.allowed_ips.split("/")
+    base, mask = allowed_ip.split("/")
     if mask.to_i == 32
-      base # exact IP
+      base
     else
-      # subnet => choose .1 as reachable host
-      # e.g. 192.168.30.0/24  => 192.168.30.1
+      # Convert network address to .1 (router / peer address)
       parts = base.split(".")
       parts[3] = "1"
       parts.join(".")
     end
   end
 
+      
       # -----------------------------
       # Check if handshake = connected
       # -----------------------------
