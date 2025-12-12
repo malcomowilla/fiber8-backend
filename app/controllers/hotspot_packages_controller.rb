@@ -420,53 +420,50 @@ end
 
 
 
-def update_freeradius_policies(package_name, shared_users, upload_limit, download_limit,
-    weekdays)
-  # group_name = "#{package.name}_HotspotPackage" 
-group_name = "hotspot_#{package_name.parameterize(separator: '_')}"
+def update_freeradius_policies(package_name, shared_users, upload_limit, download_limit, weekdays)
+  group_name = "hotspot_#{package_name.parameterize(separator: '_')}"
 
   ActiveRecord::Base.transaction do
-    # ✅ Update or create speed limits in Radgroupreply
-    rad_reply = RadGroupReply.find_or_initialize_by(groupname: group_name, radiusattribute: 'Mikrotik-Rate-Limit')
-    rad_reply.update!(op: ':=', value: "#{upload_limit}M/#{download_limit}M")
+    # Speed limits
+    RadGroupReply.find_or_initialize_by(
+      groupname: group_name,
+      radiusattribute: 'Mikrotik-Rate-Limit'
+    ).update!(
+      op: ':=',
+      value: "#{upload_limit}M/#{download_limit}M"
+    )
 
-    rad_group_check = RadGroupCheck.find_or_initialize_by(groupname: group_name, radiusattribute: 'Simultaneous-Use')
-      rad_group_check.update!(op: ':=', value: shared_users)
+    # Simultaneous use
+    RadGroupCheck.find_or_initialize_by(
+      groupname: group_name,
+      radiusattribute: 'Simultaneous-Use'
+    ).update!(
+      op: ':=',
+      value: shared_users
+    )
 
-   
-rad_days = RadGroupCheck.find_or_initialize_by(
-  groupname: group_name,
-  radiusattribute: 'Login-Time'
-)
+    # Login-Time rule
+    rad_days = RadGroupCheck.find_or_initialize_by(
+      groupname: group_name,
+      radiusattribute: 'Login-Time'
+    )
 
-    # ✅ Handle weekdays restrictions
     if weekdays.present?
-      # days_string = package.weekdays.map { |day| day[0..2] }.join(",")
+      # Build valid FR format: "Mo0000-2359,Tu0000-2359"
+      login_time_value = weekdays.map { |day|
+        code = DAY_MAP[day]
+        "#{code}0000-2359"
+      }.join(",")
 
-      # rad_days = RadGroupCheck.find_or_initialize_by(groupname: group_name, radiusattribute: 'Login-Time')
-      # rad_days.update!(op: ':=', value: days_string)
-
-     
-
-# Convert ["Monday", "Tuesday"] → "MoTu0000-2359"
-day_codes = weekdays.map { |day| DAY_MAP[day] }.join
-
-# Full day allowed
-login_time_value = "#{day_codes}0000-2359"
-
-rad_days = RadGroupCheck.find_or_initialize_by(
-  groupname: group_name,
-  radiusattribute: 'Login-Time'
-)
-
-rad_days.update!(
-  op: ':=',
-  value: login_time_value
-)
-    else
       rad_days.update!(
         op: ':=',
-        value: ''
+        value: login_time_value
+      )
+    else
+      # Allow all days OR disable restriction
+      rad_days.update!(
+        op: ':=',
+        value: 'Al0000-2359'
       )
     end
   end
