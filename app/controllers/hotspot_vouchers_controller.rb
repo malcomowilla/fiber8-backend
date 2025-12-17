@@ -78,7 +78,7 @@ end
   def index
     Rails.logger.info "Router IP: #{params.inspect}"
 
-    @hotspot_vouchers = HotspotVoucher.all
+    @hotspot_vouchers = HotspotVoucher.all.order(created_at: :desc)
     render json: @hotspot_vouchers
     
 # client_ip = request.env['HTTP_X_FORWARDED_FOR'] || request.remote_ip
