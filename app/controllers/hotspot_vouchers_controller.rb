@@ -571,7 +571,7 @@ Rails.logger.info "voucher ip#{params[:ip]}"
     active_voucher_sessions = active_sessions.select { |session| session.include?(params[:voucher]) }
   
     if active_voucher_sessions.count >= @shared_users
-      return render json: { error: "Voucher is already used by another user, the maximum number of allowed device is=> (#{shared_users})" }, status: :forbidden
+      return render json: { error: "Voucher is already used by another user, the maximum number of allowed device is=> (#{@shared_users})" }, status: :forbidden
     end
   end
   
