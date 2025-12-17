@@ -9,6 +9,17 @@ end
 
 
 
+def shared_users
+  package = HotspotPackage.find_by(name: self.object.package)
+  if package && package.shared_users
+    package.shared_users
+  else
+    "Unlimited"
+  end
+end
+
+
+
 def created_at
   object.created_at.strftime("%B %d, %Y at %I:%M %p") if object.created_at.present?
 end
