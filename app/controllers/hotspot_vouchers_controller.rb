@@ -299,76 +299,115 @@ end
 
 
 
-  def create
+#   def create
 
-    host = request.headers['X-Subdomain'] 
-    if host === 'demo'
+#   if params[:package].blank?
+#     render json: { error: "hotspot package is required" }, status: :unprocessable_entity
+#     return
+#   end
 
+#   if params[:package].blank?
+#         render json: { error: "hotspot package is required" }, status: :unprocessable_entity
+#         return
+#       end
+  
+
+#       @hotspot_voucher = HotspotVoucher.new(
+#       package: params[:package],
+#       shared_users: params[:shared_users],
+#       phone: params[:phone],
+#       voucher: generate_voucher_code
+#     )
+
+      
+#     ActivtyLog.create(action: 'create', ip: request.remote_ip,
+#  description: "Created hotspot voucher #{@hotspot_voucher.voucher}",
+#           user_agent: request.user_agent, user: current_user.username || current_user.email,
+#            date: Time.current)
+
+     
+#       create_voucher_radcheck(@hotspot_voucher.voucher, @hotspot_voucher.package)
+     
+#       calculate_expiration(params[:package], @hotspot_voucher)
+#         if @hotspot_voucher.save
+
+#           render json: @hotspot_voucher, status: :created
+
+          
+#         else
+#           render json: @hotspot_voucher.errors, status: :unprocessable_entity 
+#         end
+    
+#   end
+
+def create
   if params[:package].blank?
     render json: { error: "hotspot package is required" }, status: :unprocessable_entity
     return
   end
 
-      @hotspot_voucher = HotspotVoucher.new(
-      package: params[:package],
-      shared_users: params[:shared_users],
-      phone: params[:phone],
-      voucher: generate_voucher_code
-    )
-    render json: @hotspot_voucher, status: :created
+  number_of_vouchers = params[:number_of_vouchers].to_i
+  number_of_vouchers = 1 if number_of_vouchers < 1
 
-
-   
-    else
-
-      # use_radius = ActsAsTenant.current_tenant&.router_setting&.use_radius
-
-      if params[:package].blank?
-        render json: { error: "hotspot package is required" }, status: :unprocessable_entity
-        return
-      end
+  created_vouchers = []
   
+  ActiveRecord::Base.transaction do
+    number_of_vouchers.times do |index|
+      voucher_code = generate_voucher_code
+      
       @hotspot_voucher = HotspotVoucher.new(
         package: params[:package],
         shared_users: params[:shared_users],
         phone: params[:phone],
-        voucher: generate_voucher_code
+        voucher: voucher_code
       )
-    ActivtyLog.create(action: 'create', ip: request.remote_ip,
- description: "Created hotspot voucher #{@hotspot_voucher.voucher}",
-          user_agent: request.user_agent, user: current_user.username || current_user.email,
-           date: Time.current)
 
-      # return render json: { error: "hotspot package required" }, status: :unprocessable_entity unless @hotspot_voucher.package.nil?
-      # user_manager_user_id = get_user_manager_user_id(@hotspot_voucher.voucher)
-      # user_profile_id = get_user_profile_id_from_mikrotik(@hotspot_voucher.voucher)
-      # calculate_expiration(package, hotspot_package_created)
-      create_voucher_radcheck(@hotspot_voucher.voucher, @hotspot_voucher.package)
-      # @hotspot_voucher.update(
-      #   user_manager_user_id: user_manager_user_id,
-      #     user_profile_id: user_profile_id,
-      # )
       calculate_expiration(params[:package], @hotspot_voucher)
-        if @hotspot_voucher.save
-
-          render json: @hotspot_voucher, status: :created
-
-          
-        else
-          render json: @hotspot_voucher.errors, status: :unprocessable_entity 
-        end
-     
-  
-      # else
-        
-      #   create_voucher_radcheck(@hotspot_voucher.voucher, @hotspot_voucher.package, @hotspot_voucher.shared_users)
       
-      #   calculate_expiration(params[:package], @hotspot_voucher)
-      # end
-
+      # Save within transaction - will rollback if any fail
+      if @hotspot_voucher.save!
+        # Create radcheck entry
+        create_voucher_radcheck(voucher_code, params[:package])
+        
+        # Add to created list
+        created_vouchers << @hotspot_voucher
+      end
     end
-
+    
+    # Create batch activity log
+    if number_of_vouchers == 1
+      ActivtyLog.create!(
+        action: 'create', 
+        ip: request.remote_ip,
+        description: "Created hotspot voucher #{created_vouchers.first.voucher}",
+        user_agent: request.user_agent, 
+        user: current_user.username || current_user.email,
+        date: Time.current
+      )
+    else
+      ActivtyLog.create!(
+        action: 'create', 
+        ip: request.remote_ip,
+        description: "Created #{created_vouchers.count} hotspot vouchers for package #{params[:package]}",
+        user_agent: request.user_agent, 
+        user: current_user.username || current_user.email,
+        date: Time.current
+      )
+    end
   end
+  
+  if created_vouchers.any?
+    render json: created_vouchers, status: :created
+  else
+    render json: { error: "Failed to create vouchers" }, status: :unprocessable_entity
+  end
+  
+rescue ActiveRecord::RecordInvalid => e
+  render json: { error: e.message }, status: :unprocessable_entity
+rescue => e
+  render json: { error: "An error occurred: #{e.message}" }, status: :unprocessable_entity
+end
+
 
   def create_voucher_radcheck(hotspot_voucher, package)
   
