@@ -18,7 +18,6 @@ class InvoicesController < ApplicationController
 
 
 
-
   def set_time_zone
   Rails.logger.info "Setting time zone"
   Time.zone = GeneralSetting.first&.timezone || Rails.application.config.time_zone
