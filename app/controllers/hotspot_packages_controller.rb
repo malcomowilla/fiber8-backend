@@ -433,6 +433,14 @@ def update_freeradius_policies(package_name, shared_users, upload_limit, downloa
       value: "#{upload_limit}M/#{download_limit}M"
     )
 
+
+    RadGroupReply.find_or_initialize_by(
+      groupname: group_name,
+      radiusattribute: 'Idle-Timeout'
+    ).update!(
+      op: ':=',
+      value: "3600"
+    )
     # Simultaneous use
     RadGroupCheck.find_or_initialize_by(
       groupname: group_name,
