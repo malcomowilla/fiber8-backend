@@ -44,40 +44,7 @@ rescue ActiveRecord::RecordNotFound
 
 
 
-# before_action :set_tenant 
-# set_current_tenant_through_filter
-
-   
-
-
-
-# def set_tenant
-#   @account = Account.find_or_create_by(subdomain: request.headers['X-Original-Host'])
-
-#   set_current_tenant(@account)
-# rescue ActiveRecord::RecordNotFound
-#   render json: { error: 'Invalid tenant' }, status: :not_found
-# end
-
-  # def set_tenant
-  #   if current_user.present? && current_user.account.present?
-  #     set_current_tenant(current_user.account)
-  #   else
-  #     Rails.logger.debug "No tenant or current_user found"
-  #     # Optionally, handle cases where no tenant is set
-  #     raise ActsAsTenant::Errors::NoTenantSet
-  #   end
-  # end
-
-
-  
-
-
-  # GET /support_tickets or /support_tickets.json
   def index
-   
-
-
     @support_tickets = SupportTicket.all
     render json: @support_tickets
   end
@@ -113,76 +80,6 @@ def get_specific_ticket
   customer_code = Customer.find_by(customer_code: params[:my_customer_code])
 end
 
-
-
-  # POST /support_tickets or /support_tickets.json
-#   def create
-#     @support_ticket = SupportTicket.new(support_ticket_params)
-   
-#     if @support_ticket.valid?
-#       prefix = ActsAsTenant.current_tenant&.ticket_setting.prefix
-#       minimum_digits = ActsAsTenant.current_tenant&.ticket_setting.minimum_digits
-      
-
-
-#        unless prefix.present? && minimum_digits.present?
-#       return render json: { error: "Please create a ticket number for the account" }, status: :unprocessable_entity
-#     end
-
-#       # if prefix.blank? && minimum_digits.blank?
-#       # render json: { error: "Please create a ticket number for the account" }
-        
-#       # end
-   
-
-#       # return render json: { error: "Please create a ticket number for the account" } unless prefix.blank? && minimum_digits.blank?
-        
-#         @support_ticket.save!
-#         Rails.logger.info "support ticket info after save: #{@support_ticket.inspect}"
-#         ActivtyLog.create(action: 'create', ip: request.remote_ip,
-#  description: "Created support ticket #{@support_ticket.ticket_number}",
-#           user_agent: request.user_agent, user: current_user.username || current_user.email,
-#            date: Time.current)
-#         auto_generated_number = "#{prefix}#{@support_ticket.sequence_number.to_s.rjust(minimum_digits.to_i, '0')}"
-#         @support_ticket.update!(
-#           ticket_number: auto_generated_number,
-#           date_of_creation: Time.now.strftime('%Y-%m-%d %I:%M:%S %p')
-#         )
-        
-# # ticket_created_at = @support_ticket.date_of_creation.strftime('%Y-%m-%d %I:%M:%S %p')
-# # customer_portal = request.headers['X-Original-Host']
-
-# # company_name = ActsAsTenant.current_tenant.company_setting.company_name 
-# # customer_support_email = ActsAsTenant.current_tenant.company_setting.customer_support_email 
-
-
-# # service_provider,
-# #     ticket_number, ticket_created_at, 
-# #     customer_email, issue_description, ticket_status, ticket_priority,
-# #     customer_code, customer_portal_link, company_name,
-# #     customer_support_email
-
-# # ServiceProviderTicketMailer.send_ticket_email(@support_ticket.agent ,@support_ticket.ticket_number,
-# # ticket_created_at,customer_email, @support_ticket.issue_description, @support_ticket.status,
-# # @support_ticket.priority, customers_code, customer_portal, company_name, customer_support_email,
-# # service_provider_email).deliver_now
-
-# #  SubscriberTicketMailer.send_ticket(@support_ticket.ticket_number,
-# #  ticket_created_at,customer_email, @support_ticket.issue_description, @support_ticket.status,
-# #  @support_ticket.priority, customers_code, customer_portal, company_name, customer_support_email).deliver_now
-
-
-
-#         render json: @support_ticket, status: :created
-      
-#     else
-#       render json: @support_ticket.errors, status: :unprocessable_entity 
-#     end
-    
-
-
-
-#   end
 
 def create
   @support_ticket = SupportTicket.new(support_ticket_params)
@@ -254,8 +151,187 @@ ActivtyLog.create(action: 'delete', ip: request.remote_ip,
     
   end
 
+
+
+  def send_ticket
+    agent = params[:support_ticket][:agent]
+    ticket_number = params[:support_ticket][:ticket_number]
+    ticket_category = params[:support_ticket][:ticket_category]
+    agent_review = params[:support_ticket][:agent_review]
+    customer_name = params[:support_ticket][:customer_name]
+    customer_phone = Subscriber.find_by(name: customer_name)&.phone_number
+
+
+
+    agent_phone_number = User.find_by(username: agent)&.phone_number
+     if ActsAsTenant.current_tenant.sms_provider_setting.sms_provider == "SMS leopard"
+              send_ticket_sms_leopard(agent_phone_number,ticket_number,ticket_category,
+            agent_review,customer_phone, customer_name
+        )
+               
+             elsif ActsAsTenant.current_tenant.sms_provider_setting.sms_provider == "TextSms"
+              send_ticket_text_sms(agent_phone_number,ticket_number,ticket_category,
+            agent_review,customer_phone,customer_name
+            )
+             end
+  end
+
   private
     # Use callbacks to share common setup or constraints between actions.
+
+
+
+
+
+       def send_ticket_sms_leopard(agent_phone_number,ticket_number,ticket_category,
+            agent_review,customer_phone, customer_name
+        )
+      # api_key = ActsAsTenant.current_tenant.sms_setting.api_key
+      # api_secret = ActsAsTenant.current_tenant.sms_setting.api_secret
+      
+      api_key = SmsSetting.find_by(sms_provider: 'SMS leopard')&.api_key
+    api_secret = SmsSetting.find_by(sms_provider: 'SMS leopard')&.api_secret
+    
+              api_key = api_key
+              api_secret = api_secret
+             
+      
+      
+      sms_template =  ActsAsTenant.current_tenant.sms_template
+      send_voucher_template = sms_template&.send_voucher_template
+    #   original_message = sms_template ?  MessageTemplate.interpolate(send_voucher_template,{
+        
+    #   voucher_code: voucher_code,
+    #   voucher_expiration: voucher_expiration
+
+    #   })  :   "Your voucher code: #{voucher_code} for #{shared_users} devices. This code is valid until #{voucher_expiration}.
+    #  Enjoy your browsing"
+              original_message = "Support Ticket
+  Ticket No: #{ticket_number}
+Issue: #{ticket_category}
+Agent Review: #{agent_review}
+Customer Contact:  #{customer_phone}
+Custimer Name: #{customer_name}
+
+Please investigate and resolve.
+ .
+  #"
+      
+              sender_id = "SMS_TEST" # Ensure this is a valid sender ID
+          
+              uri = URI("https://api.smsleopard.com/v1/sms/send")
+              params = {
+                username: api_key,
+                password: api_secret,
+                message: original_message,
+                destination: phone_number,
+                source: sender_id
+              }
+              uri.query = URI.encode_www_form(params)
+          
+              response = Net::HTTP.get_response(uri)
+              if response.is_a?(Net::HTTPSuccess)
+                sms_data = JSON.parse(response.body)
+            
+                if sms_data['success']
+                  sms_recipient = sms_data['recipients'][0]['number']
+                  sms_status = sms_data['recipients'][0]['status']
+                  
+                  puts "Recipient: #{sms_recipient}, Status: #{sms_status}"
+            
+                  # Save the original message and response details in your database
+                  SystemAdminSm.create!(
+                    user: sms_recipient,
+                    message: original_message,
+                    status: sms_status,
+                    date:Time.now.strftime('%Y-%m-%d %I:%M:%S %p'),
+                    system_user: 'system'
+                  )
+                  
+                  # Return a JSON response or whatever is appropriate for your application
+                  render json: { message: "Message sent successfully", recipient: sms_recipient, status: sms_status }, status: :ok
+                else
+                  render json: { error: "Failed to send message: #{sms_data['message']}" }, status: :unprocessable_entity
+                  Rails.logger.info "Failed to send message: #{sms_data['message']}"
+                end
+              else
+                puts "Failed to send message: #{response.body}"
+                # render json: { error: "Failed to send message: #{response.body}" }
+              end
+            end
+
+
+
+
+
+           def send_ticket_text_sms(agent_phone_number,ticket_number,ticket_category,
+            agent_review,customer_phone,customer_name
+            )
+  sms_setting = SmsSetting.find_by(sms_provider: 'TextSms')
+
+  api_key = sms_setting&.api_key
+  partnerID = sms_setting&.partnerID 
+
+  sms_template = ActsAsTenant.current_tenant.sms_template
+  send_voucher_template = sms_template&.send_voucher_template
+
+ 
+
+  original_message = "Support Ticket
+  Ticket No: #{ticket_number}
+Issue: #{ticket_category}
+Agent Review: #{agent_review}
+Customer Contact:  #{customer_phone}
+Custimer Name: #{customer_name}
+
+Please investigate and resolve.
+ .
+  #"
+   
+  uri = URI("https://sms.textsms.co.ke/api/services/sendsms")
+  params = {
+    apikey: api_key,
+    message: original_message,
+    mobile: agent_phone_number,
+    partnerID: partnerID,
+    shortcode: 'TextSMS'
+  }
+  uri.query = URI.encode_www_form(params)
+
+  response = Net::HTTP.get_response(uri)
+
+  if response.is_a?(Net::HTTPSuccess)
+    sms_data = JSON.parse(response.body)
+
+    if sms_data['responses'] && sms_data['responses'][0]['respose-code'] == 200
+      sms_recipient = sms_data['responses'][0]['mobile']
+      sms_status = sms_data['responses'][0]['response-description']
+
+      puts "Recipient: #{sms_recipient}, Status: #{sms_status}"
+
+      # Save the message and response details in your database
+      SystemAdminSm.create!(
+        user: sms_recipient,
+        message: original_message,
+        status: sms_status,
+        date: Time.now.strftime('%Y-%m-%d %I:%M:%S %p'),
+        system_user: 'system'
+      )
+    else
+   render json: { message: "Message sent successfully", recipient: sms_recipient, status: sms_status }, status: :ok
+
+       Rails.logger.info "Failed to send message: #{sms_data['responses'][0]['response-description']}"
+    end
+  else
+    puts "Failed to send message: #{response.body}"
+    render json: { error: "Failed to send message: #{response.body}" }, status: :unprocessable_entity
+  end
+end
+
+
+
+
+
     def set_support_ticket
       @support_ticket = SupportTicket.find_by(id: params[:id])
     end

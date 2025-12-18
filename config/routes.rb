@@ -127,6 +127,9 @@ resources :company_ids
   # resources :hotspot_plans
 
 end
+
+  post '/api/send_ticket', to: 'support_tickets#send_ticket'
+  post '/send_ticket', to: 'support_tickets#send_ticket'
   get '/api/daily_revenue', to: 'hotspot_mpesa_revenues#daily_revenue'
     get '/api/revenue_summary', to: 'hotspot_mpesa_revenues#revenue_summary'
     get '/api/revenue_by_date_range', to: 'hotspot_mpesa_revenues#revenue_by_date_range'

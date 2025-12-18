@@ -980,6 +980,8 @@ private
 end
 
 
+
+
 def get_active_sessions(voucher)
   command = "/ip hotspot active print where user=#{voucher}"
 
