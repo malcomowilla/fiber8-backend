@@ -128,6 +128,8 @@ resources :company_ids
 
 end
 
+
+  
   post '/api/send_ticket', to: 'support_tickets#send_ticket'
   post '/send_ticket', to: 'support_tickets#send_ticket'
   get '/api/daily_revenue', to: 'hotspot_mpesa_revenues#daily_revenue'

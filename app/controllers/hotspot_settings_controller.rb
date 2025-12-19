@@ -51,6 +51,7 @@ if current_user
     router_ip = params[:router_ip]
     username  = params[:router_username]
     password  = params[:router_password]
+    host = request.headers['X-Subdomain']
 
     local_file = "/root/login.html"
 
@@ -58,7 +59,7 @@ if current_user
       open #{router_ip}
       user #{username} #{password}
       binary
-      put #{local_file} hotspot/login.html
+      put #{local_file} hotspot/fyber8.html
       bye
     FTP
 

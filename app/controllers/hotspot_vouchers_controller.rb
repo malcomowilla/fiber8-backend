@@ -409,9 +409,11 @@ rescue => e
 end
 
 
+
+
+
+
   def create_voucher_radcheck(hotspot_voucher, package)
-  
-  
 # ActiveRecord::Base.connection.execute("
 # INSERT INTO radcheck (username, radiusattribute, op, value) 
 # SELECT '#{hotspot_voucher}', 'Cleartext-Password', ':=', '#{hotspot_voucher}'
