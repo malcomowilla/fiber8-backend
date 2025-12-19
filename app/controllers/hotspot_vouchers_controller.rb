@@ -367,7 +367,7 @@ def create
       # Save within transaction - will rollback if any fail
       if @hotspot_voucher.save!
         # Create radcheck entry
-        create_voucher_radcheck(voucher_code, params[:package])
+        # create_voucher_radcheck(voucher_code, params[:package])
         
         # Add to created list
         created_vouchers << @hotspot_voucher
@@ -710,12 +710,52 @@ end
 
 # selected_provider
 
-    def generate_voucher_code
-      loop do
-        code = SecureRandom.hex(4).upcase 
-        break code unless HotspotVoucher.exists?(voucher: code)
+    # def generate_voucher_code
+    #   voucher_type = HotspotSetting.find_by(voucher_type: 'Mixed').voucher_type
+    #   loop do
+    #     code = SecureRandom.hex(4).upcase 
+    #     break code unless HotspotVoucher.exists?(voucher: code)
+    #   end
+    # end
+
+
+def generate_voucher_code
+  # voucher_type = HotspotSetting.first&.voucher_type || 'Mixed'
+voucher_type = ActsAsTenant.current_tenant&.hotspot_setting&.voucher_type || 'Mixed'
+
+  loop do
+    code =
+      case voucher_type
+      when 'Numeric'
+        # Example: 8-digit numeric code
+        rand(10**7..10**8 - 1).to_s
+
+      when 'Fixed'
+        # Example: FIXED-XXXX (you can customize)
+        "FIXED-#{SecureRandom.hex(2).upcase}"
+
+      when 'Words'
+        # Example: WORD-WORD (easy to read)
+        words = %w[
+          SKY NET FAST WIFI DATA ZONE LINK CLOUD
+          SPEED HOT SPOT CONNECT
+        ]
+        "#{words.sample}-#{words.sample}"
+
+      when 'Mixed'
+        # Example: A9F3C8D2
+        SecureRandom.hex(4).upcase
+
+      else
+        # Fallback
+        SecureRandom.hex(4).upcase
       end
-    end
+
+    break code unless HotspotVoucher.exists?(voucher: code)
+  end
+end
+
+
     # Only allow a list of trusted parameters through.
     def hotspot_voucher_params
       params.permit(:voucher, :status, :expiration, :speed_limit, :phone,

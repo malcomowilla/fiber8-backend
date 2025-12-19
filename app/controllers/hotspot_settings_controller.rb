@@ -99,6 +99,7 @@ if current_user
       hotspot_name: @hotspot_settings&.hotspot_name,
       hotspot_info: @hotspot_settings&.hotspot_info,
       email: @hotspot_settings&.email,
+      voucher_type: @hotspot_settings&.voucher_type,
       hotspot_banner: @hotspot_settings&.hotspot_banner&.attached? ? 
       # rails_blob_url(@hotspot_settings.hotspot_banner, host: '8209-102-221-35-92.ngrok-free.app', protocol: 'https', port: nil) : nil
       # }, 
@@ -118,6 +119,7 @@ def get_hotspot_setting
     hotspot_name: @hotspot_settings&.hotspot_name,
     hotspot_info: @hotspot_settings&.hotspot_info,
     email: @hotspot_settings&.email,
+    voucher_type: @hotspot_settings&.voucher_type,
     hotspot_banner: @hotspot_settings&.hotspot_banner&.attached? ? 
     # rails_blob_url(@hotspot_settings.hotspot_banner, host: '8209-102-221-35-92.ngrok-free.app', protocol: 'https', port: nil) : nil
     # }, 
@@ -140,6 +142,7 @@ hotspot_name: params[:hotspot_name],
 hotspot_info: params[:hotspot_info],
 hotspot_banner: params[:hotspot_banner],
 email: params[:email],
+voucher_type: params[:voucher_type],
     
     )
 
@@ -150,6 +153,7 @@ email: params[:email],
     hotspot_info: params[:hotspot_info],
     hotspot_banner: params[:hotspot_banner],
     email: params[:email],
+    voucher_type: params[:voucher_type],
       )
         render json: {
 
@@ -157,6 +161,7 @@ email: params[:email],
         hotspot_name: @hotspot_setting.hotspot_name,
         hotspot_info: @hotspot_setting.hotspot_info,
         email: @hotspot_setting.email,
+        voucher_type: @hotspot_setting.voucher_type,
         hotspot_banner: @hotspot_setting.hotspot_banner.attached? ? 
         # rails_blob_url(@hotspot_setting.hotspot_banner, host: 'speeches-air-una-dolls.trycloudflare.com', protocol: 'https', port: nil) : nil
         # }, 
@@ -196,6 +201,8 @@ email: params[:email],
     # Only allow a list of trusted parameters through.
     def hotspot_setting_params
       params.permit(:phone_number, :hotspot_name, 
-      :hotspot_info, :hotspot_banner, :account_id, :email)
+      :hotspot_info, :hotspot_banner, :account_id, :email, :voucher_type)
     end
 end
+
+
