@@ -354,18 +354,17 @@ def create
   ).where('acctupdatetime > ?', 3.minutes.ago)
   maximum_active_sessions = active_sessions.count
 
-  if !tenant.hotspot_plan.name == 'Free Trial'
 if tenant.hotspot_plan.present?
     plan_limit = tenant.hotspot_plan.hotspot_subscribers.to_i
     
-    if maximum_active_sessions 
+    if  plan_limit
       render json: { 
         error: "Maximum active sessions (#{plan_limit}) reached. Please upgrade your plan." 
       }, status: :unprocessable_entity
       return
     end
   end
-end
+
 
 
 
