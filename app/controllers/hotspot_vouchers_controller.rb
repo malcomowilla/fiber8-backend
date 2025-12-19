@@ -367,7 +367,7 @@ def create
       # Save within transaction - will rollback if any fail
       if @hotspot_voucher.save!
         # Create radcheck entry
-        # create_voucher_radcheck(voucher_code, params[:package])
+        create_voucher_radcheck(voucher_code, params[:package])
         
         # Add to created list
         created_vouchers << @hotspot_voucher
