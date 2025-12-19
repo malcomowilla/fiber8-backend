@@ -346,6 +346,29 @@ def create
     return
   end
 
+  tenant = ActsAsTenant.current_tenant
+ active_sessions = RadAcct.where(
+    account_id: tenant.id,
+    acctstoptime: nil,
+    framedprotocol: ''
+  ).where('acctupdatetime > ?', 3.minutes.ago)
+  maximum_active_sessions = active_sessions.count
+
+  if !tenant.hotspot_plan.name == 'Free Trial'
+if tenant.hotspot_plan.present?
+    plan_limit = tenant.hotspot_plan.hotspot_subscribers.to_i
+    
+    if maximum_active_sessions >= plan_limit
+      render json: { 
+        error: "Maximum active sessions (#{plan_limit}) reached. Please upgrade your plan." 
+      }, status: :unprocessable_entity
+      return
+    end
+  end
+end
+
+
+
   number_of_vouchers = params[:number_of_vouchers].to_i
   number_of_vouchers = 1 if number_of_vouchers < 1
 

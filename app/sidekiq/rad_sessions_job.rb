@@ -112,12 +112,6 @@ end
 
 
 
-
-
-
-
-
-
   hotspot_data = {
 active_user_count: active_user_data.size,
   total_upload: format_bytes(total_bytes_upload),
@@ -128,8 +122,8 @@ active_user_count: active_user_data.size,
 
   HotspotChannel.broadcast_to(account, 
     hotspot_data
- 
   )
+
 
   RadacctChannel.broadcast_to(account, radacct_data)
   BandwidthChannel.broadcast_to(account, bandwidth_data)

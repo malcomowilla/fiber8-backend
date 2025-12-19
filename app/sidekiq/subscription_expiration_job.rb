@@ -11,6 +11,7 @@ class SubscriptionExpirationJob
       ActsAsTenant.with_tenant(tenant) do
      
       subscriptions = Subscription.all
+      
 
 subscriptions.each do |subscription|
   next unless subscription.ppoe_username.present?
