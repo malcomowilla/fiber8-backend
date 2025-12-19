@@ -358,7 +358,7 @@ def create
 if tenant.hotspot_plan.present?
     plan_limit = tenant.hotspot_plan.hotspot_subscribers.to_i
     
-    if maximum_active_sessions >= plan_limit
+    if maximum_active_sessions 
       render json: { 
         error: "Maximum active sessions (#{plan_limit}) reached. Please upgrade your plan." 
       }, status: :unprocessable_entity
