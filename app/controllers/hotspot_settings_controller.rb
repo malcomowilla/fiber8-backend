@@ -47,43 +47,135 @@ if current_user
   end
 
 
-   def upload_hotspot_file
-    router_ip = params[:router_ip]
-    username  = params[:router_username]
-    password  = params[:router_password]
-    host = request.headers['X-Subdomain']
+  #  def upload_hotspot_file
+  #   router_ip = params[:router_ip]
+  #   username  = params[:router_username]
+  #   password  = params[:router_password]
 
-    local_file = "/root/login.html"
+  #   local_file = "/root/login.html"
+    
 
-    ftp_commands = <<~FTP
-      open #{router_ip}
-      user #{username} #{password}
-      binary
-      put #{local_file} hotspot/login.html
-      bye
-    FTP
+  #   ftp_commands = <<~FTP
+  #     open #{router_ip}
+  #     user #{username} #{password}
+  #     binary
+  #     put #{local_file} hotspot/login.html
+  #     bye
+  #   FTP
 
-    File.write("/tmp/ftp_put.txt", ftp_commands)
+  #   File.write("/tmp/ftp_put.txt", ftp_commands)
 
-    output = `ftp -inv < /tmp/ftp_put.txt`
+  #   output = `ftp -inv < /tmp/ftp_put.txt`
 
-    # Detect errors by parsing output
-    if output.match?(/Not connected|Login failed|530|No such file/i)
-      render json: {
-        status: "error",
-        message: "FTP upload failed",
-        output: output
-      }, status: :unprocessable_entity
-    else
-      render json: {
-        status: "ok",
-        message: "File uploaded successfully",
-        output: output
-      }, status: :ok
-    end
+  #   # Detect errors by parsing output
+  #   if output.match?(/Not connected|Login failed|530|No such file/i)
+  #     render json: {
+  #       status: "error",
+  #       message: "FTP upload failed",
+  #       output: output
+  #     }, status: :unprocessable_entity
+  #   else
+  #     render json: {
+  #       status: "ok",
+  #       message: "File uploaded successfully",
+  #       output: output
+  #     }, status: :ok
+  #   end
+  # end
+
+def upload_hotspot_file
+  router_ip = params[:router_ip]
+  username  = params[:router_username]
+  password  = params[:router_password]
+  host = request.headers['X-Subdomain']
+  
+  # Create the dynamic login.html content with the correct subdomain
+  login_html_content = <<~HTML
+  <html>
+    <head>
+        <title>Redirecting...</title>
+    </head>
+    <body>
+        <noscript>
+            <center><b>Javascript required. Enable Javascript to continue.</b></center>
+        </noscript>
+        
+        <center>If nothing opens, click 'Continue' below</br>
+        
+        <form id="redirectForm" method="GET">
+            <input type="submit" value="Continue">
+        </form>
+        
+        <script>
+            // Set cookies for the domain
+            document.cookie = `hotspot_mac=$(mac); path=/; domain=.aitechs.co.ke`;
+            document.cookie = `hotspot_ip=$(ip); path=/; domain=.aitechs.co.ke`;
+            
+            var mac = "$(mac)"; 
+            var ip = "$(ip)";
+            var username = "$(username)";
+            
+            // Construct the redirection URL with dynamic subdomain
+            var redirectUrl = `https://#{host}.aitechs.co.ke/hotspot-page?mac=\${mac}&ip=\${ip}&username=\${username}`;
+            
+            // Debug in console
+            console.log("Redirect URL:", redirectUrl);
+            
+            // Redirect immediately
+            window.location.href = redirectUrl;
+        </script>
+        </center>
+    </body>
+  </html>
+  HTML
+  
+  # Write the dynamic content to a temporary file
+  temp_file = Tempfile.new(['login', '.html'])
+  temp_file.write(login_html_content)
+  temp_file.close
+  
+  # FTP commands to upload to router
+  ftp_commands = <<~FTP
+  open #{router_ip}
+  user #{username} #{password}
+  binary
+  put #{temp_file.path} hotspot/login.html
+  bye
+  FTP
+  
+  # Write FTP commands to a file
+  ftp_script = Tempfile.new('ftp_script')
+  ftp_script.write(ftp_commands)
+  ftp_script.close
+  
+  # Execute FTP commands
+  output = `ftp -inv < #{ftp_script.path}`
+  
+  # Clean up temp files
+  temp_file.unlink
+  ftp_script.unlink
+  
+  # Detect errors by parsing output
+  if output.match?(/Not connected|Login failed|530|No such file|550|Permission denied/i)
+    render json: {
+      status: "error",
+      message: "FTP upload failed",
+      output: output
+    }, status: :unprocessable_entity
+  else
+    render json: {
+      status: "ok",
+      message: "File uploaded successfully",
+      output: output
+    }, status: :ok
   end
-
-
+rescue => e
+  render json: {
+    status: "error",
+    message: "An error occurred: #{e.message}",
+    output: e.backtrace
+  }, status: :internal_server_error
+end
 
   def index
     # @hotspot_settings = HotspotSetting.all
