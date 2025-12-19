@@ -54,21 +54,22 @@ if current_user
     render json: @hotspot_mpesa_revenues
   end
 def todays_revenue
-  start_time = Time.current.beginning_of_day
-  end_time = Time.current
-  
+  # start_time = Time.current.beginning_of_day
+  # end_time = Time.current
   # Query
-  render json: HotspotMpesaRevenue.where(created_at: start_time..end_time).sum(:amount)
+   today = HotspotMpesaRevenue.today.sum(:amount)
+  render json: today
 end
  
 
 
 def this_month_revenue
-  start_time = Time.current.beginning_of_month
-  end_time = Time.current
+  # start_time = Time.current.beginning_of_month
+  # end_time = Time.current
 
-  render json: HotspotMpesaRevenue.where(created_at: start_time..end_time).sum(:amount)
-  
+  # render json: HotspotMpesaRevenue.where(created_at: start_time..end_time).sum(:amount)
+  this_month = HotspotMpesaRevenue.this_month.sum(:amount)
+  render json: this_month
 end
 
 
