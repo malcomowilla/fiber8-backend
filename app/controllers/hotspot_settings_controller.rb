@@ -53,7 +53,7 @@ if current_user
     password  = params[:router_password]
     host = request.headers['X-Subdomain']
 
-    local_file = "/root/login.html"
+    local_file = "/root/fyber8.html"
 
     ftp_commands = <<~FTP
       open #{router_ip}
