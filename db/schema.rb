@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2025_12_19_100630) do
+ActiveRecord::Schema[7.2].define(version: 2025_12_20_160425) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -429,6 +429,7 @@ ActiveRecord::Schema[7.2].define(version: 2025_12_19_100630) do
     t.boolean "simple", default: false
     t.boolean "default_template", default: false
     t.boolean "pepea"
+    t.boolean "premium"
   end
 
   create_table "hotspot_vouchers", force: :cascade do |t|

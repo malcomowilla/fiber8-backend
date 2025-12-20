@@ -76,7 +76,10 @@ minimal: params[:hotspot_templates][:minimal],
 simple: params[:hotspot_templates][:simple],
 default_template: params[:hotspot_templates][:default_template],
 default: params[:hotspot_templates][:default],
-pepea: params[:hotspot_templates][:pepea]
+pepea: params[:hotspot_templates][:pepea],
+ premium: params[:hotspot_templates][:premium]
+
+
     )
     @hotspot_template.update(
       name: params[:hotspot_templates][:name],
@@ -89,7 +92,8 @@ pepea: params[:hotspot_templates][:pepea]
       simple: params[:hotspot_templates][:simple],
       default_template: params[:hotspot_templates][:default_template],
       default: params[:hotspot_templates][:default],
-      pepea: params[:hotspot_templates][:pepea]
+      pepea: params[:hotspot_templates][:pepea],
+      premium: params[:hotspot_templates][:premium]
 
     )
       if @hotspot_template.save
@@ -133,7 +137,7 @@ pepea: params[:hotspot_templates][:pepea]
     def hotspot_template_params
       params.permit(:name,:preview_image, :sleekspot, :attractive, 
       :clean, :default, :flat, :minimal, :simple, :default_template, 
-      :default_template, :pepea)
+      :default_template, :pepea, :premium)
     end
 
 
