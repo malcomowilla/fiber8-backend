@@ -28,11 +28,16 @@ end
 
 
 def unpaid_invoices_amount
-total_invoice_amount = Invoice.where(status: 'unpaid')
-total_invoice_amounts = total_invoice_amount.sum(:total)
-
-render json: total_invoice_amounts, status: :ok
+ unpaid_invoices = Invoice.where(status: 'unpaid')
+  
+  # Convert string totals to floats and sum
+  total_amount = unpaid_invoices.map { |invoice| invoice.total.to_f }.sum
+  
+  render json: total_amount, status: :ok
 end
+
+
+
 
 
    def update_last_activity
