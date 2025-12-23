@@ -646,7 +646,7 @@ end
 
 
 
-def calculate_expiration(package, hotspot_package_created)
+def calculate_expiration(package, voucher_created)
   hotspot_package = HotspotPackage.find_by(name: package)
 
   return render json: { error: 'Package not found' }, status: :not_found unless hotspot_package
@@ -676,7 +676,7 @@ def calculate_expiration(package, hotspot_package_created)
   # Update status only if expiration is present
   if expiration_time.present?
     status = expiration_time > Time.current ? "active" : "expired"
-    hotspot_package_created.update(status: status,  expiration: expiration_time&.strftime("%B %d, %Y at %I:%M %p"),)
+    voucher_created.update(status: status,  expiration: expiration_time&.strftime("%B %d, %Y at %I:%M %p"),)
   else
     status = "unknown" # Handle cases with no expiration logic
   end

@@ -27,6 +27,10 @@ end
 
 
 
+def unpaid_invoices_amount
+@total_invoice_amount = Invoice.where(status: 'unpaid').total
+render json: @total_invoice_amount, status: :ok
+end
    def update_last_activity
 if current_user
       current_user.update!(last_activity_active: Time.current)

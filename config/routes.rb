@@ -129,7 +129,8 @@ resources :company_ids
 end
 
 
-  
+  get '/api/unpaid_invoices_amount', to: 'invoices#unpaid_invoices_amount'
+    get '/unpaid_invoices_amount', to: 'invoices#unpaid_invoices_amount'
   post '/api/send_ticket', to: 'support_tickets#send_ticket'
   post '/send_ticket', to: 'support_tickets#send_ticket'
   get '/api/daily_revenue', to: 'hotspot_mpesa_revenues#daily_revenue'

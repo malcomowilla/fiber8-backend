@@ -455,9 +455,9 @@ if subscriber_welcome_message == true
   provider = ActsAsTenant.current_tenant&.sms_provider_setting&.sms_provider
   case provider
     when 'TextSms'
-      send_sms_text_sms
+      send_sms_text_sms(params[:phone_number], params[:name], params[:email])
     when 'SMS leopard'
-      send_sms_sms_leopard
+      send_sms_sms_leopard(params[:phone_number], params[:name], params[:email])
     else
       render json: { error: "No valid SMS provider configured" }, status: :unprocessable_entity
       return
@@ -1201,16 +1201,16 @@ Rails.logger.info 'router not found'
             end
 
 
- def send_sms_text_sms
+ def send_sms_text_sms(phone_number, name, email)
     
 
     # 👉 Fetch subscriber details to replace placeholders
-    subscriber = Subscriber.find_by(phone_number: params[:phone_number]) || Subscriber.find_by(name: params[:name]) || Subscriber.find_by(email: params[:email])
+    subscriber = Subscriber.find_by(phone_number: phone_number) || Subscriber.find_by(name: name) || Subscriber.find_by(email: email)
 company_name = ActsAsTenant.current_tenant&.company_setting&.company_name
-    if subscriber.nil?
-      render json: { error: 'Subscriber not found' }, status: :not_found
-      return
-    end
+    # if subscriber.nil?
+    #   render json: { error: 'Subscriber not found' }, status: :not_found
+    #   return
+    # end
 
     # 👇 Replace placeholders like {{name}}, {{email}}, etc.
     # interpolated_message = MessageTemplate.interpolate(message, {
@@ -1220,16 +1220,16 @@ company_name = ActsAsTenant.current_tenant&.company_setting&.company_name
     # ✅ Send SMS (you can reuse your existing method or simplify here)
     sms_setting = SmsSetting.find_by(sms_provider: 'TextSms')
 
-    if sms_setting.nil?
-      render json: { error: "SMS provider not found" }, status: :not_found
-      return
-    end
+    # if sms_setting.nil?
+    #   render json: { error: "SMS provider not found" }, status: :not_found
+    #   return
+    # end
 
     uri = URI("https://sms.textsms.co.ke/api/services/sendsms")
     sms_params = {
       apikey: sms_setting.api_key,
-      message: "Dear #{subscriber.name}, Welcome to #{company_name || 'Aitechs'}. Your account has been created successfully",
-      mobile: subscriber.phone_number,
+      message: "Dear #{name}, Welcome to #{company_name || 'Aitechs'}. Your account has been created successfully",
+      mobile: phone_number,
       partnerID: sms_setting.partnerID,
       shortcode: 'TextSMS'
     }
@@ -1251,7 +1251,7 @@ company_name = ActsAsTenant.current_tenant&.company_setting&.company_name
         SystemAdminSm.create!(
           user: sms_recipient,
           # message: interpolated_message,
-    message: "Dear #{subscriber.name}, Welcome to #{company_name || 'Aitechs'}. Your account has been created successfully",
+    message: "Dear #{name}, Welcome to #{company_name || 'Aitechs'}. Your account has been created successfully",
 
           status: body.dig('responses', 0, 'response-description'),
           date: Time.now.strftime('%Y-%m-%d %I:%M:%S %p'),
@@ -1275,16 +1275,16 @@ company_name = ActsAsTenant.current_tenant&.company_setting&.company_name
 
 
 
-  def send_sms_sms_leopard
-       subscriber = Subscriber.find_by(phone_number: params[:phone_number]) || Subscriber.find_by(name: params[:name]) || Subscriber.find_by(email: params[:email])
+  def send_sms_sms_leopard(phone_number, name, email)
+       subscriber = Subscriber.find_by(phone_number: phone_number) || Subscriber.find_by(name: name) || Subscriber.find_by(email: email)
 company_name = ActsAsTenant.current_tenant&.company_setting&.company_name
 
     # 👉 Fetch subscriber details to replace placeholders
 
-    if subscriber.nil?
-      render json: { error: 'Subscriber not found' }, status: :not_found
-      return
-    end
+    # if subscriber.nil?
+    #   render json: { error: 'Subscriber not found' }, status: :not_found
+    #   return
+    # end
 
     # 👇 Replace placeholders like {{name}}, {{email}}, etc.
     # interpolated_message = MessageTemplate.interpolate(message, {
@@ -1294,16 +1294,16 @@ company_name = ActsAsTenant.current_tenant&.company_setting&.company_name
     # ✅ Send SMS (you can reuse your existing method or simplify here)
     sms_setting = SmsSetting.find_by(sms_provider: 'SMS leopard')
 
-    if sms_setting.nil?
-      render json: { error: "SMS provider not found" }, status: :not_found
-      return
-    end
+    # if sms_setting.nil?
+    #   render json: { error: "SMS provider not found" }, status: :not_found
+    #   return
+    # end
 
     uri = URI("https://sms.textsms.co.ke/api/services/sendsms")
     sms_params = {
       username: sms_setting&.api_key,
-      message: "Dear #{subscriber.name}, Welcome to #{company_name || 'Aitechs'}. Your account has been created successfully",
-      destination: subscriber&.phone_number,
+      message: "Dear #{name}, Welcome to #{company_name || 'Aitechs'}. Your account has been created successfully",
+      destination: phone_number,
       password: sms_setting&.api_secret,
       source: "SMS_TEST",
       
