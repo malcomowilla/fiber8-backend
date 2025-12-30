@@ -1,0 +1,16 @@
+<p style="color: green"><%= notice %></p>
+
+<% content_for :title, "Template locations" %>
+
+<h1>Template locations</h1>
+
+<div id="template_locations">
+  <% @template_locations.each do |template_location| %>
+    <%= render template_location %>
+    <p>
+      <%= link_to "Show this template location", template_location %>
+    </p>
+  <% end %>
+</div>
+
+<%= link_to "New template location", new_template_location_path %>

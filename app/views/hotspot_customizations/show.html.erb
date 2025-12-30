@@ -1,0 +1,10 @@
+<p style="color: green"><%= notice %></p>
+
+<%= render @hotspot_customization %>
+
+<div>
+  <%= link_to "Edit this hotspot customization", edit_hotspot_customization_path(@hotspot_customization) %> |
+  <%= link_to "Back to hotspot customizations", hotspot_customizations_path %>
+
+  <%= button_to "Destroy this hotspot customization", @hotspot_customization, method: :delete %>
+</div>

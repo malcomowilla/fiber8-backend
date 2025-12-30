@@ -44,7 +44,6 @@ end
 
     begin
       response = RestClient.post(
-        # "https://sandbox.safaricom.co.ke/mpesa/c2b/v1/registerurl",
           "https://api.safaricom.co.ke/mpesa/c2b/v2/registerurl",
         payload.to_json,
         { content_type: :json, Authorization: "Bearer #{token}" }
@@ -53,8 +52,10 @@ end
       render json: JSON.parse(response.body), status: :ok
 
     rescue RestClient::ExceptionWithResponse => e
-      Rails.logger.error("Error registering M-Pesa URLs: #{e.response}")
-      render json: { error: "Failed to register callback URLs" }, status: :bad_request
+      Rails.logger.error("Error registering M-Pesa URLs: #{e.response.body}")
+      # render json: { error: "Failed to register callback URLs" }, status: :bad_request
+    render json: { error: "#{e.response.body}" }, status: :bad_request
+
     end
   end
 
@@ -67,7 +68,6 @@ end
     consumer_key     = mpesa.consumer_key
     consumer_secret  = mpesa.consumer_secret
 
-    # api_url = "https://sandbox.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials"
     api_url = "https://api.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials"
 
     response = RestClient.get(api_url, {
@@ -79,4 +79,9 @@ end
     Rails.logger.error("Error fetching access token: #{e.response}")
     nil
   end
+
+  
 end
+
+
+

@@ -1,0 +1,12 @@
+<% content_for :title, "Editing hotspot customization" %>
+
+<h1>Editing hotspot customization</h1>
+
+<%= render "form", hotspot_customization: @hotspot_customization %>
+
+<br>
+
+<div>
+  <%= link_to "Show this hotspot customization", @hotspot_customization %> |
+  <%= link_to "Back to hotspot customizations", hotspot_customizations_path %>
+</div>

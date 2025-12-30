@@ -1,0 +1,11 @@
+<% content_for :title, "New company financial record" %>
+
+<h1>New company financial record</h1>
+
+<%= render "form", company_financial_record: @company_financial_record %>
+
+<br>
+
+<div>
+  <%= link_to "Back to company financial records", company_financial_records_path %>
+</div>

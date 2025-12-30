@@ -1,0 +1,1 @@
+json.partial! "company_financial_records/company_financial_record", company_financial_record: @company_financial_record

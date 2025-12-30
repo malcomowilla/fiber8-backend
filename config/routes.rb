@@ -2,6 +2,9 @@ require 'sidekiq/web'
 
 
 Rails.application.routes.draw do
+  resources :hotspot_customizations
+  resources :template_locations
+  resources :company_financial_records
   resources :temporary_sessions
   resources :hotspot_mpesa_revenues
   resources :dial_mpesa_settings
@@ -73,6 +76,10 @@ mount ActionCable.server => '/cable'
 mount Sidekiq::Web => "/sidekiq" # mount Sidekiq::Web in your Rails app
 
 scope '/api' do
+    resources :hotspot_customizations
+    resources :company_financial_records
+    resources :template_locations
+
     resources :dial_mpesa_settings
   resources :hotspot_mpesa_revenues
 
@@ -129,6 +136,11 @@ resources :company_ids
 end
 
 
+post '/api/find_template_for_ip', to: 'ip_pools#find_template_for_ip'
+get '/api/allow_get_ip_pools', to: 'ip_pools#allow_get_ip_pools'
+get '/api/allow_get_hotspot_customization', to: 'hotspot_customizations#allow_get_hotspot_customization'
+patch '/api/hotspot_locations/:id', to: 'template_locations#update'
+patch '/api/update_onu_location/:id', to: 'onus#update_location'
   get '/api/unpaid_invoices_amount', to: 'invoices#unpaid_invoices_amount'
     get '/unpaid_invoices_amount', to: 'invoices#unpaid_invoices_amount'
   post '/api/send_ticket', to: 'support_tickets#send_ticket'

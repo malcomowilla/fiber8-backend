@@ -490,6 +490,7 @@ end
     def hotspot_package_params
       params.permit(
         :name,
+        :location,
         :price,
         :download_limit,
         :upload_limit,

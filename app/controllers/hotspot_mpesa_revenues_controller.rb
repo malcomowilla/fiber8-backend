@@ -7,7 +7,6 @@ class HotspotMpesaRevenuesController < ApplicationController
 
   
   before_action :set_tenant
-  # GET /hotspot_mpesa_settings or /hotspot_mpesa_settings.json
   before_action :update_last_activity
     before_action :set_time_zone
 

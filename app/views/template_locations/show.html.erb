@@ -1,0 +1,10 @@
+<p style="color: green"><%= notice %></p>
+
+<%= render @template_location %>
+
+<div>
+  <%= link_to "Edit this template location", edit_template_location_path(@template_location) %> |
+  <%= link_to "Back to template locations", template_locations_path %>
+
+  <%= button_to "Destroy this template location", @template_location, method: :delete %>
+</div>

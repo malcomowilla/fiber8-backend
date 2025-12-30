@@ -1,7 +1,5 @@
 class IpPoolsController < ApplicationController
 
-
-
   load_and_authorize_resource
 
   set_current_tenant_through_filter
@@ -24,30 +22,25 @@ end
   def set_tenant
     host = request.headers['X-Subdomain']
     @account = Account.find_by(subdomain: host)
-    @current_account =ActsAsTenant.current_tenant 
-    EmailConfiguration.configure(@current_account, ENV['SYSTEM_ADMIN_EMAIL'])
-    set_current_tenant(@account)
+     ActsAsTenant.current_tenant = @account
+    EmailConfiguration.configure(@account, ENV['SYSTEM_ADMIN_EMAIL'])
     # EmailSystemAdmin.configure(@current_account, current_system_admin)
   Rails.logger.info "Setting tenant for app#{ActsAsTenant.current_tenant}"
-  
-    # set_current_tenant(@account)
   rescue ActiveRecord::RecordNotFound
     render json: { error: 'Invalid tenant' }, status: :not_found
   
-    
   end
 
+
+
+
+  def find_template_for_ip
+    ip_pool = IpPool.find_by(start_ip: params[:start_ip])
+    render json: ip_pool, status: :ok
+  end
+
+
   def create
-
-    host = request.headers['X-Subdomain'] 
-
-    if  host == 'demo'
-      @ip_pool = IpPool.new(
-        ip_pool_params
-      )
-      @ip_pool.save
-      render json: @ip_pool, status: :created
-    else
 
       @ip_pool = IpPool.new(
         ip_pool_params
@@ -61,7 +54,7 @@ end
       else
         render json: { error: "Failed to create ip pool" }, status: :unprocessable_entity
     end
-    end
+    
    
 end
 
@@ -71,11 +64,20 @@ end
 
   def index
    
-    @current_account =ActsAsTenant.current_tenant 
+    @current_account = ActsAsTenant.current_tenant 
     ActsAsTenant.with_tenant(@current_account) do
       @ip_pools = IpPool.all
       render json: @ip_pools, status: :ok
     end
+  end
+
+
+
+  def allow_get_ip_pools
+
+@ip_pools = IpPool.all
+render json: @ip_pools, status: :ok
+
   end
 
 
@@ -90,7 +92,8 @@ end
     if host === 'demo'
       if @ip_pool
         @ip_pool.update(start_ip: params[:start_ip], end_ip: params[:end_ip],
-        pool_name: params[:pool_name], description: params[:description])
+        pool_name: params[:pool_name], description: params[:description],
+        location: params[:location], nas_router: params[:nas_router])
       render json: @ip_pool, status: :ok
       else
         
@@ -98,7 +101,7 @@ end
       end
     else
 
-      router_name = params[:router_name]
+      router_name = params[:nas_router]
       nas_router = NasRouter.find_by(name: router_name)
         router_ip_address = nas_router.ip_address
         router_password = nas_router.password
@@ -107,10 +110,10 @@ end
   
       return render json: { error: "router not found" }, status: :not_found unless nas_router
   
-      ip_pool_id = @ip_pool.ip_pool_id
+      ip_pool_id_mikrotik = @ip_pool.ip_pool_id_mikrotik
   
   
-        unless ip_pool_id.present?
+        unless ip_pool_id_mikrotik.present?
           return render json: { error: "ip pool id missing in package" }, status: :unprocessable_entity
         end
   
@@ -129,7 +132,7 @@ end
       
   
         begin
-          uri = URI("http://#{router_ip_address}/rest/ip/pool/#{ip_pool_id}") 
+          uri = URI("http://#{router_ip_address}/rest/ip/pool/#{ip_pool_id_mikrotik}") 
           req = Net::HTTP::Patch.new(uri)
              
   
@@ -144,7 +147,8 @@ end
   
   if response.is_a?(Net::HTTPSuccess) 
     @ip_pool.update(start_ip: params[:start_ip], end_ip: params[:end_ip],
-    pool_name: params[:pool_name], description: params[:description])
+    pool_name: params[:pool_name], description: params[:description],
+    location: params[:location], nas_router: params[:nas_router])
   render json: @ip_pool, status: :ok
   else
     puts "Failed to update ip pool : #{response.code} - #{response.message}"
@@ -179,7 +183,7 @@ end
 
 
 
-    router_name = params[:router_name]
+    router_name = params[:nas_router]
     nas_router = NasRouter.find_by(name: router_name)
       router_ip_address = nas_router.ip_address
       router_password = nas_router.password
@@ -188,10 +192,10 @@ end
 
     return render json: { error: "router not found" }, status: :not_found unless nas_router
 
-    ip_pool_id = @ip_pool.ip_pool_id
+    ip_pool_id_mikrotik = @ip_pool.ip_pool_id_mikrotik
 
 
-      unless ip_pool_id.present?
+      unless ip_pool_id_mikrotik.present?
         return render json: { error: "ip pool id missing in package" }, status: :unprocessable_entity
       end
 
@@ -199,7 +203,7 @@ end
 
 
       begin
-        uri = URI("http://#{router_ip_address}/rest/ip/pool/#{ip_pool_id}")
+        uri = URI("http://#{router_ip_address}/rest/ip/pool/#{ip_pool_id_mikrotik}")
     
         request = Net::HTTP::Delete.new(uri)
     
@@ -232,7 +236,7 @@ end
 
 
   def ip_pool_params
-    params.permit(:pool_name, :start_ip, :end_ip, :description)
+    params.permit(:pool_name, :start_ip, :end_ip, :description, :location, :nas_router)
   end
 
 
@@ -241,7 +245,7 @@ end
 
 
 def fetch_ip_pool
-  router_name = params[:router_name]
+  router_name = params[:nas_router]
         
   nas_router = NasRouter.find_by(name: router_name)
 if nas_router

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2025_12_20_160425) do
+ActiveRecord::Schema[7.2].define(version: 2025_12_27_155955) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -210,6 +210,21 @@ ActiveRecord::Schema[7.2].define(version: 2025_12_20_160425) do
     t.datetime "updated_at", null: false
   end
 
+  create_table "company_financial_records", force: :cascade do |t|
+    t.string "category"
+    t.boolean "is_intercompany"
+    t.string "amount"
+    t.string "description"
+    t.string "transaction_type"
+    t.string "company"
+    t.datetime "date"
+    t.string "counterparty"
+    t.integer "account_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.string "reference"
+  end
+
   create_table "company_ids", force: :cascade do |t|
     t.string "company_id"
     t.integer "account_id"
@@ -327,6 +342,14 @@ ActiveRecord::Schema[7.2].define(version: 2025_12_20_160425) do
     t.datetime "updated_at", null: false
   end
 
+  create_table "hotspot_customizations", force: :cascade do |t|
+    t.boolean "customize_template_and_package_per_location"
+    t.integer "account_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.boolean "enable_autologin"
+  end
+
   create_table "hotspot_mpesa_revenues", force: :cascade do |t|
     t.string "voucher"
     t.string "payment_method"
@@ -371,6 +394,7 @@ ActiveRecord::Schema[7.2].define(version: 2025_12_20_160425) do
     t.datetime "valid_until"
     t.string "weekdays", default: [], array: true
     t.string "shared_users", default: "1"
+    t.string "location"
   end
 
   create_table "hotspot_plans", force: :cascade do |t|
@@ -430,6 +454,7 @@ ActiveRecord::Schema[7.2].define(version: 2025_12_20_160425) do
     t.boolean "default_template", default: false
     t.boolean "pepea"
     t.boolean "premium"
+    t.string "location"
   end
 
   create_table "hotspot_vouchers", force: :cascade do |t|
@@ -487,6 +512,8 @@ ActiveRecord::Schema[7.2].define(version: 2025_12_20_160425) do
     t.integer "account_id"
     t.string "description"
     t.string "ip_pool_id_mikrotik"
+    t.string "location"
+    t.string "nas_router"
   end
 
   create_table "isp_subscriptions", force: :cascade do |t|
@@ -531,6 +558,7 @@ ActiveRecord::Schema[7.2].define(version: 2025_12_20_160425) do
     t.integer "account_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "location"
   end
 
   create_table "nodes", force: :cascade do |t|
@@ -604,6 +632,7 @@ ActiveRecord::Schema[7.2].define(version: 2025_12_20_160425) do
     t.string "lease_time"
     t.string "clients_domain_name"
     t.string "reserved_ip_address"
+    t.string "location"
   end
 
   create_table "p_poe_packages", id: false, force: :cascade do |t|
@@ -946,6 +975,15 @@ ActiveRecord::Schema[7.2].define(version: 2025_12_20_160425) do
     t.string "first_name"
     t.string "last_name"
     t.boolean "is_email_verified"
+  end
+
+  create_table "template_locations", force: :cascade do |t|
+    t.string "name"
+    t.string "location"
+    t.integer "account_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.string "template_type"
   end
 
   create_table "temporary_sessions", force: :cascade do |t|

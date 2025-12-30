@@ -1,0 +1,10 @@
+<p style="color: green"><%= notice %></p>
+
+<%= render @company_financial_record %>
+
+<div>
+  <%= link_to "Edit this company financial record", edit_company_financial_record_path(@company_financial_record) %> |
+  <%= link_to "Back to company financial records", company_financial_records_path %>
+
+  <%= button_to "Destroy this company financial record", @company_financial_record, method: :delete %>
+</div>

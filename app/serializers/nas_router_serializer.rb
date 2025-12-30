@@ -1,5 +1,6 @@
 class NasRouterSerializer < ActiveModel::Serializer
-  attributes :id, :name, :ip_address, :username, :account_id, :password
+  attributes :id, :name, :ip_address, :username, :account_id, :password, :location
+  
 
   # :password
 end

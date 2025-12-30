@@ -1,0 +1,27 @@
+<%= form_with(model: hotspot_customization) do |form| %>
+  <% if hotspot_customization.errors.any? %>
+    <div style="color: red">
+      <h2><%= pluralize(hotspot_customization.errors.count, "error") %> prohibited this hotspot_customization from being saved:</h2>
+
+      <ul>
+        <% hotspot_customization.errors.each do |error| %>
+          <li><%= error.full_message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div>
+    <%= form.label :customize_template_and_package_per_location, style: "display: block" %>
+    <%= form.check_box :customize_template_and_package_per_location %>
+  </div>
+
+  <div>
+    <%= form.label :account_id, style: "display: block" %>
+    <%= form.number_field :account_id %>
+  </div>
+
+  <div>
+    <%= form.submit %>
+  </div>
+<% end %>

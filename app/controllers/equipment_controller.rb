@@ -55,18 +55,6 @@ if current_user
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
   # GET /equipment or /equipment.json
   def index
     @equipment = Equipment.all

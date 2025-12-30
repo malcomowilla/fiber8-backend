@@ -9,7 +9,8 @@ class OnuSerializer < ActiveModel::Serializer
    :wpa_encryption1, :channel_width1, :autochannel1, :channel, :country_regulatory_domain1,:tx_power1,
    :authentication_mode1, :standard1, :lan_ip_interface_address, :lan_ip_interface_net_mask, :dhcp_server_enable,
    :dhcp_ip_pool_min_addr, :dhcp_ip_pool_max_addr, :dhcp_server_subnet_mask, :dhcp_server_default_gateway, 
-   :dhcp_server_dns_servers, :lease_time, :clients_domain_name, :reserved_ip_address
+   :dhcp_server_dns_servers, :lease_time, :clients_domain_name, :reserved_ip_address,
+   :location
 
 
 

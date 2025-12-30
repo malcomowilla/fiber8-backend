@@ -88,10 +88,21 @@
 
 puts "radius settings have been loaded successfully! 🎯"
 
+templates = [
+    {name: 'sleekspot', template_type: 'Sleekspot Template'},
+    {name: 'default_template', template_type: 'Default Template'},
+    {name: 'attractive', template_type: 'Attractive Template'},
+    {name: 'flat', template_type: 'Flat Design Template'},
+    {name: 'minimal', template_type: 'Minimal Template'},
+    {name: 'simple', template_type: 'Simple Template'},
+    {name: 'clean', template_type: 'Clean Template'},
+    {name: 'pepea', template_type: 'Pepea Template'},
+    {name: 'premium', template_type: 'Premium Template'}
+  ]
 
-
-
-
+templates.each do |template|
+    TemplateLocation.create(name: template[:name], template_type: template[:template_type])
+  end
   
 
 

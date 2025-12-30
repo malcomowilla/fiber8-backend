@@ -386,11 +386,11 @@ def get_devices
 
   begin
     # Step 1: Fetch devices first
-    response = Net::HTTP.get_response(devices_uri)
-    unless response.is_a?(Net::HTTPSuccess)
-      Rails.logger.error("Failed to fetch devices from GenieACS: #{response.code}")
-      return render json: [], status: :internal_server_error
-    end
+    # response = Net::HTTP.get_response(devices_uri)
+    # unless response.is_a?(Net::HTTPSuccess)
+    #   Rails.logger.error("Failed to fetch devices from GenieACS: #{response.code}")
+    #   return render json: [], status: :internal_server_error
+    # end
 
    
     updated_response = Net::HTTP.get_response(devices_uri)
@@ -504,25 +504,28 @@ end
 
   # PATCH/PUT /onus/1 or /onus/1.json
   def update
-    respond_to do |format|
       if @onu.update(onu_params)
-        format.html { redirect_to @onu, notice: "Onu was successfully updated." }
-        format.json { render :show, status: :ok, location: @onu }
+         render :show, status: :ok, location: @onu 
       else
-        format.html { render :edit, status: :unprocessable_entity }
-        format.json { render json: @onu.errors, status: :unprocessable_entity }
+         render json: @onu.errors, status: :unprocessable_entity 
       end
-    end
+  
+  end
+
+  def update_location
+
+   @onu = Onu.find_by(id: params[:id])
+   @onu.update(location: params[:location])
+   render json: @onu, status: :ok
+    
   end
 
   # DELETE /onus/1 or /onus/1.json
   def destroy
     @onu.destroy!
 
-    respond_to do |format|
-      format.html { redirect_to onus_path, status: :see_other, notice: "Onu was successfully destroyed." }
-      format.json { head :no_content }
-    end
+       head :no_content 
+  
   end
 
   private
@@ -533,6 +536,7 @@ end
 
     # Only allow a list of trusted parameters through.
     def onu_params
-      params.require(:onu).permit(:serial_number, :oui, :product_class, :manufacturer, :onu_id, :status, :last_inform, :account_id, :last_boot)
+      params.require(:onu).permit(:serial_number, :oui, :product_class, :manufacturer,
+       :onu_id, :status, :last_inform, :account_id, :last_boot, :location)
     end
 end
