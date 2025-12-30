@@ -134,7 +134,11 @@ resources :company_ids
   # resources :hotspot_plans
 
 end
+post '/disburse_funds_results_timeout', to: 'disburse_payment#disburse_funds_results_timeout'
 
+post '/disburse_funds_results', to: 'disburse_payment#disburse_funds_results'
+
+post '/api/disburse_funds', to: 'disburse_payment#disburse_funds'
 
 post '/api/find_template_for_ip', to: 'ip_pools#find_template_for_ip'
 get '/api/allow_get_ip_pools', to: 'ip_pools#allow_get_ip_pools'

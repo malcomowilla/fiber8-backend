@@ -65,7 +65,6 @@ if current_user
     @hotspot_mpesa_settings =  HotspotMpesaSetting.find_by(account_type: params[:account_type])
     render json: @hotspot_mpesa_settings
 
-
   end
 
 
@@ -145,13 +144,19 @@ render json: @mpesa_setting, serializer: MpesaSettingSerializer
       @hotspot_mpesa_setting_setting = HotspotMpesaSetting.find_or_initialize_by(
         consumer_key: params[:consumer_key],
         consumer_secret: params[:consumer_secret],
-        short_code: params[:short_code]
+        short_code: params[:short_code],
+         api_initiator_password: params[:api_initiator_password],
+      # api_initiator_username: params[:api_initiator_username],
+
       ) 
       @hotspot_mpesa_setting_setting.update(
       passkey: params[:passkey],
       consumer_key: params[:consumer_key],
         consumer_secret: params[:consumer_secret],
       short_code: params[:short_code],
+      api_initiator_password: params[:api_initiator_password],
+      api_initiator_username: params[:api_initiator_username],
+
         account_type: params[:account_type]
 
     )
@@ -193,12 +198,13 @@ render json: @mpesa_setting, serializer: MpesaSettingSerializer
   private
     # Use callbacks to share common setup or constraints between actions.
     def set_hotspot_mpesa_setting
-      @hotspot_mpesa_setting = HotspotMpesaSetting.find(params[:id])
+      @hotspot_mpesa_setting = HotspotMpesaSetting.find_by(id: params[:id])
     end
 
     # Only allow a list of trusted parameters through.
     def hotspot_mpesa_setting_params
-      params.require(:hotspot_mpesa_setting).permit(:account_type, :short_code, :consumer_key, 
-      :consumer_secret, :passkey)
+      params.require(:hotspot_mpesa_setting).permit(:account_type, :short_code, 
+      :consumer_key, 
+      :consumer_secret, :passkey, :api_initiator_password, :api_initiator_username)
     end
 end

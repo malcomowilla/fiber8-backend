@@ -37,6 +37,52 @@ def set_tenant
 
 
 
+  def disburse_funds
+    token = fetch_access_token
+    Rails.logger.info "Mpesa token: #{token}"
+    return render json: { error: "Unable to generate access token" }, status: :unprocessable_entity unless token
+
+    mpesa = HotspotMpesaSetting.find_by(account_type: "Paybill")
+    return render json: { error: "M-Pesa Settings Not Found" }, status: :not_found unless mpesa
+ host = request.headers['X-Subdomain']
+    payload = {
+      # ShortCode: mpesa.short_code,
+      # ResponseType: "Completed",
+      # ConfirmationURL: "https://#{host}.#{ENV['HOST']}/#{ENV['CONFIRMATION_URL']}",
+      # ValidationURL: "https://#{host}.#{ENV['HOST']}/#{ENV['VALIDATION_URL']}",
+      # 
+       OriginatorConversationID: "600997_Test_32et3241ed8yu", 
+    InitiatorName: mpesa.api_initiator_username,
+    SecurityCredential: mpesa.api_initiator_password,
+    CommandID: "BusinessPayment", 
+    Amount: "10", 
+    PartyA: mpesa.short_code, 
+  PartyB: params[:phone_number],
+    Remarks: "remarked", 
+    QueueTimeOutURL: "https://#{host}.#{ENV['HOST']}/disburse_funds_results_timeout", 
+    ResultURL: "https://#{host}.#{ENV['HOST']}/disburse_funds_results", 
+    Occassion: "PartnerPayment"
+    }
+
+    begin
+      response = RestClient.post(
+          "https://api.safaricom.co.ke/mpesa/b2c/v1/paymentrequest",
+
+        payload.to_json,
+        { content_type: :json, Authorization: "Bearer #{token}" }
+      )
+
+      render json: JSON.parse(response.body), status: :ok
+
+    rescue RestClient::ExceptionWithResponse => e
+      Rails.logger.error("Error disbursing funds: #{e.response.body}")
+      # render json: { error: "Failed to register callback URLs" }, status: :bad_request
+    render json: { error: "#{e.response.body}" }, status: :bad_request
+
+    end
+  end
+
+
 
 
 
@@ -64,7 +110,7 @@ def fetch_access_token
 
 
 
-  
+
 
 
 end

@@ -39,7 +39,6 @@ end
       ResponseType: "Completed",
       ConfirmationURL: "https://#{host}.#{ENV['HOST']}/#{ENV['CONFIRMATION_URL']}",
       ValidationURL: "https://#{host}.#{ENV['HOST']}/#{ENV['VALIDATION_URL']}",
-      # OR replace with static hosted domain if not tenant-based
     }
 
     begin
