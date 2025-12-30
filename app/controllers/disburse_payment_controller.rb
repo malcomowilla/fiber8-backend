@@ -66,7 +66,7 @@ def set_tenant
 
     begin
       response = RestClient.post(
-          "https://api.safaricom.co.ke/mpesa/b2c/v1/paymentrequest",
+          "https://api.safaricom.co.ke/mpesa/b2c/v3/paymentrequest",
 
         payload.to_json,
         { content_type: :json, Authorization: "Bearer #{token}" }
