@@ -48,8 +48,7 @@ def set_tenant
  host = request.headers['X-Subdomain']
     payload = {
       
-    InitiatorName: mpesa.api_initiator_username,
-    SecurityCredential: mpesa.api_initiator_password,
+   
     CommandID: "BusinessPayment", 
     Amount: params[:amount], 
     PartyA: mpesa.short_code, 
