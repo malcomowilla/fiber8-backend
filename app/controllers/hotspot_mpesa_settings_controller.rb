@@ -145,7 +145,7 @@ render json: @mpesa_setting, serializer: MpesaSettingSerializer
         consumer_key: params[:consumer_key],
         consumer_secret: params[:consumer_secret],
         short_code: params[:short_code],
-         api_initiator_password: params[:api_initiator_password],
+        #  api_initiator_password: params[:api_initiator_password],
       # api_initiator_username: params[:api_initiator_username],
 
       ) 
