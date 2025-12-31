@@ -49,13 +49,6 @@ def set_tenant
     payload = {
       
    
-    CommandID: "BusinessPayment", 
-    Amount: params[:amount], 
-    PartyA: mpesa.short_code, 
-    PartyB: params[:phone_number],
-    Remarks: "remarked", 
-    QueueTimeOutURL: "https://#{host}.#{ENV['HOST']}/disburse_funds_results_timeout", 
-    ResultURL: "https://#{host}.#{ENV['HOST']}/disburse_funds_results", 
     Occassion: "PartnerPayment"
     }
 
