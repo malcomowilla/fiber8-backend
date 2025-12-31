@@ -57,7 +57,7 @@ def set_tenant
           "https://api.safaricom.co.ke/mpesa/b2c/v1/paymentrequest",
 
         payload.to_json,
-        { content_type: :json, Authorization: "Bearer #{token}" }
+        { content_type: :json, Authorization: "Bearer #{fetch_access_token}" }
       )
 
       render json: JSON.parse(response.body), status: :ok
