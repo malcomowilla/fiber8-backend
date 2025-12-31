@@ -52,7 +52,7 @@ def set_tenant
     InitiatorName: mpesa.api_initiator_username,
     SecurityCredential: mpesa.api_initiator_password,
     CommandID: "BusinessPayment", 
-    Amount: "10", 
+    Amount: params[:amount], 
     PartyA: mpesa.short_code, 
     PartyB: params[:phone_number],
     Remarks: "remarked", 
@@ -72,7 +72,7 @@ def set_tenant
       render json: JSON.parse(response.body), status: :ok
 
     rescue RestClient::ExceptionWithResponse => e
-      Rails.logger.error("Error disbursing funds: #{e.response.body}")
+      Rails.logger.info("Error disbursing funds: #{e.response.body}")
       # render json: { error: "Failed to register callback URLs" }, status: :bad_request
     render json: { error: "#{e.response.body}" }, status: :bad_request
 
@@ -103,7 +103,7 @@ def fetch_access_token
 
     JSON.parse(response.body)["access_token"]
   rescue RestClient::ExceptionWithResponse => e
-    Rails.logger.error("Error fetching access token: #{e.response}")
+    Rails.logger.info("Error fetching access token: #{e.response}")
     nil
   end
 
