@@ -83,7 +83,7 @@ def set_tenant
 
 
 
-private
+
 
 
 def fetch_access_token
