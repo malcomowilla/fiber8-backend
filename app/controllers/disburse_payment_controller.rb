@@ -48,7 +48,16 @@ def set_tenant
  host = request.headers['X-Subdomain']
     payload = {
       
-   
+    OriginatorConversationID: "600997_Test_32et3241ed8yu", 
+    InitiatorName: mpesa.api_initiator_username,
+    SecurityCredential: mpesa.api_initiator_password,
+    CommandID: "BusinessPayment", 
+    Amount: params[:amount], 
+    PartyA: mpesa.short_code, 
+    PartyB: params[:phone_number],
+    Remarks: "remarked", 
+    QueueTimeOutURL: "https://#{host}.#{ENV['HOST']}/disburse_funds_results_timeout", 
+    ResultURL: "https://#{host}.#{ENV['HOST']}/disburse_funds_results", 
     Occassion: "PartnerPayment"
     }
 
@@ -57,7 +66,7 @@ def set_tenant
           "https://api.safaricom.co.ke/mpesa/b2c/v1/paymentrequest",
 
         payload.to_json,
-        { content_type: :json }
+        { content_type: :json, Authorization: "Bearer #{token}" }
       )
 
       render json: JSON.parse(response.body), status: :ok
@@ -86,6 +95,8 @@ def fetch_access_token
 
     consumer_key     = mpesa.consumer_key
     consumer_secret  = mpesa.consumer_secret
+    Rails.logger.info "Mpesa consumer key: #{consumer_key}"
+    Rails.logger.info "Mpesa consumer secret: #{consumer_secret}"
 
     api_url = "https://api.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials"
 
