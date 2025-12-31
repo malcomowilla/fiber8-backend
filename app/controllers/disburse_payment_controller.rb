@@ -48,7 +48,6 @@ def set_tenant
  host = request.headers['X-Subdomain']
     payload = {
       
-    OriginatorConversationID: "600997_Test_32et3241ed8yu", 
     InitiatorName: mpesa.api_initiator_username,
     SecurityCredential: mpesa.api_initiator_password,
     CommandID: "BusinessPayment", 
@@ -91,6 +90,7 @@ def fetch_access_token
 #  mpesa = ActsAsTenant.current_tenant.hotspot_mpesa_setting.find_by(account_type: "Paybill")
 
     return nil unless mpesa
+
 
     consumer_key     = mpesa.consumer_key
     consumer_secret  = mpesa.consumer_secret
