@@ -43,7 +43,7 @@ def set_tenant
     return render json: { error: "Unable to generate access token" }, status: :unprocessable_entity unless token
     # mpesa = ActsAsTenant.current_tenant.hotspot_mpesa_setting.find_by(account_type: "Paybill")
     mpesa = HotspotMpesaSetting.find_by(account_type: "Paybill")
-    Rails.logger.info "Mpesa: #{mpesa.shortcode}"
+    Rails.logger.info "Mpesa: #{mpesa.short_code}"
     Rails.logger.info "Mpesa: #{mpesa.consumer_key}"
     Rails.logger.info "Mpesa: #{mpesa.consumer_secret}"
     return render json: { error: "M-Pesa Settings Not Found" }, status: :not_found unless mpesa
