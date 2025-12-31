@@ -46,6 +46,8 @@ def set_tenant
     Rails.logger.info "Mpesa: #{mpesa.short_code}"
     Rails.logger.info "Mpesa: #{mpesa.consumer_key}"
     Rails.logger.info "Mpesa: #{mpesa.consumer_secret}"
+    Rails.logger.info "Mpesa api_initiator_username: #{mpesa.api_initiator_username}"
+    Rails.logger.info "Mpesa api_initiator_password: #{mpesa.api_initiator_password}"
     return render json: { error: "M-Pesa Settings Not Found" }, status: :not_found unless mpesa
  host = request.headers['X-Subdomain']
     payload = {
