@@ -41,8 +41,8 @@ def set_tenant
     token = fetch_access_token
     Rails.logger.info "Mpesa token: #{token}"
     return render json: { error: "Unable to generate access token" }, status: :unprocessable_entity unless token
-    mpesa = ActsAsTenant.current_tenant.hotspot_mpesa_setting.find_by(account_type: "Paybill")
-    # mpesa = HotspotMpesaSetting.find_by(account_type: "Paybill")
+    # mpesa = ActsAsTenant.current_tenant.hotspot_mpesa_setting.find_by(account_type: "Paybill")
+    mpesa = HotspotMpesaSetting.find_by(account_type: "Paybill")
     return render json: { error: "M-Pesa Settings Not Found" }, status: :not_found unless mpesa
  host = request.headers['X-Subdomain']
     payload = {
@@ -86,8 +86,8 @@ private
 
 
 def fetch_access_token
-    # mpesa = HotspotMpesaSetting.find_by(account_type: "Paybill")
- mpesa = ActsAsTenant.current_tenant.hotspot_mpesa_setting.find_by(account_type: "Paybill")
+    mpesa = HotspotMpesaSetting.find_by(account_type: "Paybill")
+#  mpesa = ActsAsTenant.current_tenant.hotspot_mpesa_setting.find_by(account_type: "Paybill")
 
     return nil unless mpesa
 
