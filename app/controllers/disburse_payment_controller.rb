@@ -39,7 +39,7 @@ def set_tenant
 
   def disburse_funds
     token = fetch_access_token
-    Rails.logger.info "Mpesa token: #{token}"
+    Rails.logger.info "Mpesa Access token: #{token}"
     return render json: { error: "Unable to generate access token" }, status: :unprocessable_entity unless token
     # mpesa = ActsAsTenant.current_tenant.hotspot_mpesa_setting.find_by(account_type: "Paybill")
     mpesa = HotspotMpesaSetting.find_by(account_type: "Paybill")
@@ -55,7 +55,7 @@ def set_tenant
     Amount: params[:amount], 
     PartyA: mpesa.short_code, 
     PartyB: params[:phone_number],
-    Remarks: "remarked", 
+    Remarks: "ok", 
     QueueTimeOutURL: "https://#{host}.#{ENV['HOST']}/disburse_funds_results_timeout", 
     ResultURL: "https://#{host}.#{ENV['HOST']}/disburse_funds_results", 
     Occassion: "PartnerPayment"
