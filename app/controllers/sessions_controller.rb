@@ -644,7 +644,7 @@ end
      
         @user = User.find_by(email: params[:email])
         if @user.nil?
-          render json: { error: 'User Not Found' }, status: :not_found and return
+          render json: { error: 'Invalid Credentials' }, status: :not_found and return
         end
 
 if @user.locked_account == true && @user&.locked_at > 5.minutes.ago

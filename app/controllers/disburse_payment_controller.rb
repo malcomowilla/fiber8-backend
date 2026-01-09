@@ -93,8 +93,8 @@ def fetch_access_token
     return nil unless mpesa
 
 
-    consumer_key     = mpesa.consumer_key
-    consumer_secret  = mpesa.consumer_secret
+    consumer_key = mpesa.consumer_key
+    consumer_secret = mpesa.consumer_secret
     Rails.logger.info "Mpesa consumer key: #{consumer_key}"
     Rails.logger.info "Mpesa consumer secret: #{consumer_secret}"
 
