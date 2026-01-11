@@ -46,9 +46,11 @@ if notification_when_unreachable
     # Avoid sending multiple notifications for same status
     if notification_sent.nil? || notification_sent < nas_router.last_status_changed_at
       if new_status == "reachable"
-        send_notification_sms_reachable(notification_phone_number, tenant, router_name, ip_address)
+        send_notification_sms_reachable(notification_phone_number, tenant, router_name,
+         ip_address)
       else
-        send_notification_sms_unreachable(notification_phone_number, tenant, router_name, ip_address)
+        send_notification_sms_unreachable(notification_phone_number, tenant,
+         router_name, ip_address)
       end
 
       nas_router.update(last_notification_sent_at: now)
@@ -67,14 +69,14 @@ end
   end
 
 private
-def send_notification_sms_reachable(phone_number, tenant, router_name, router_ip)
+def send_notification_sms_reachable(phone_number, tenant, router_name, ip_address)
     provider = tenant&.sms_provider_setting.present? && tenant.sms_provider_setting&.sms_provider
 
     case provider
     when 'TextSms'
-      send_notification_text_sms_reachable(phone_number, tenant, router_name, router_ip)
+      send_notification_text_sms_reachable(phone_number, tenant, router_name, ip_address)
     when 'SMS leopard'
-      send_notification_sms_leopard_reachable(phone_number, tenant, router_name, router_ip)
+      send_notification_sms_leopard_reachable(phone_number, tenant, router_name, ip_address)
     else
       Rails.logger.info "No valid SMS provider configured"
     end
@@ -85,14 +87,14 @@ def send_notification_sms_reachable(phone_number, tenant, router_name, router_ip
 
 
 
-  def send_notification_sms_unreachable(phone_number, tenant, router_name, router_ip)
+  def send_notification_sms_unreachable(phone_number, tenant, router_name, ip_address)
     provider = tenant&.sms_provider_setting.present? && tenant.sms_provider_setting&.sms_provider
 
     case provider
     when 'TextSms'
-      send_notification_text_sms_unreachable(phone_number, tenant, router_name, router_ip)
+      send_notification_text_sms_unreachable(phone_number, tenant, router_name, ip_address)
     when 'SMS leopard'
-      send_notification_sms_leopard_unreachable(phone_number, tenant, router_name, router_ip)
+      send_notification_sms_leopard_unreachable(phone_number, tenant, router_name,  ip_address)
     else
       Rails.logger.info "No valid SMS provider configured"
     end
@@ -101,7 +103,7 @@ def send_notification_sms_reachable(phone_number, tenant, router_name, router_ip
 
 
 
-def send_notification_text_sms_unreachable(phone_number,tenant, router_name, router_ip)
+def send_notification_text_sms_unreachable(phone_number,tenant, router_name, ip_address)
 
     # provider = ActsAsTenant.current_tenant.sms_provider_setting.sms_provider
 
@@ -126,7 +128,7 @@ end
     sms_template = ActsAsTenant.current_tenant.sms_template
     send_voucher_template = sms_template&.send_voucher_template
     # original_message = sms_template ? MessageTemplate.interpolate(send_voucher_template, { voucher_code: voucher_code }) : "Hello, your voucher #{voucher_code} is expired renew now to stay conected."
-    original_message =  "Hello, your router=> #{router_ip}, router name=>#{router_name} is unreachable"
+    original_message =  "Hello, your router=> #{ip_address}, router name=>#{router_name} is unreachable"
 
     sender_id = "SMS_TEST"
     uri = URI("https://api.smsleopard.com/v1/sms/send")
@@ -140,7 +142,7 @@ end
     uri.query = URI.encode_www_form(params)
 
     response = Net::HTTP.get_response(uri)
-    handle_sms_response(response, original_message, phone_number)
+    handle_sms_response_sms_leopard(response, original_message, phone_number)
   end
 
 
@@ -148,7 +150,7 @@ end
 
 
 
-  def send_notification_sms_leopard_unreachable(phone_number,tenant,router_name, router_ip)
+  def send_notification_sms_leopard_unreachable(phone_number,tenant,router_name, ip_address)
     # api_key = SmsSetting.find_by(sms_provider: 'TextSms')&.api_key
     # partnerID = SmsSetting.find_by(sms_provider: 'TextSms')&.partnerID
 # TextSms
@@ -169,7 +171,7 @@ end
     # partnerID = tenant&.sms_setting.present? && tenant.sms_setting.find_by(sms_provider: 'TextSms')&.partnerID
     sms_template = ActsAsTenant.current_tenant.sms_template
     send_voucher_template = sms_template&.send_voucher_template
-    original_message =  "Hello, your router=> #{router_ip}, router name=> #{router_name} is unreachable"
+    original_message =  "Hello, your router=> #{ip_address}, router name=> #{router_name} is unreachable"
 
     uri = URI("https://sms.textsms.co.ke/api/services/sendsms")
     params = {
@@ -184,14 +186,14 @@ end
     uri.query = URI.encode_www_form(params)
 
     response = Net::HTTP.get_response(uri)
-    handle_sms_response(response, original_message, phone_number)
+    handle_sms_response_text_sms(response, original_message, phone_number)
   end
 
 
 
 
 
-  def send_notification_text_sms_reachable(phone_number,tenant, router_name, router_ip)
+  def send_notification_text_sms_reachable(phone_number,tenant, router_name, ip_address)
 
     # provider = ActsAsTenant.current_tenant.sms_provider_setting.sms_provider
 
@@ -216,7 +218,7 @@ end
     sms_template = ActsAsTenant.current_tenant.sms_template
     send_voucher_template = sms_template&.send_voucher_template
     # original_message = sms_template ? MessageTemplate.interpolate(send_voucher_template, { voucher_code: voucher_code }) : "Hello, your voucher #{voucher_code} is expired renew now to stay conected."
-    original_message =  "Hello, your router #{router_ip}, router name #{router_name} is reachable"
+    original_message =  "Hello, your router #{ip_address}, router name #{router_name} is reachable"
 
     sender_id = "SMS_TEST"
     uri = URI("https://api.smsleopard.com/v1/sms/send")
@@ -230,14 +232,14 @@ end
     uri.query = URI.encode_www_form(params)
 
     response = Net::HTTP.get_response(uri)
-    handle_sms_response(response, original_message, phone_number)
+    handle_sms_response_text_sms(response, original_message, phone_number)
   end
 
 
 
 
 
-  def send_notification_sms_leopard_reachable(phone_number,tenant,router_name, router_ip)
+  def send_notification_sms_leopard_reachable(phone_number,tenant,router_name, ip_address)
     # api_key = SmsSetting.find_by(sms_provider: 'TextSms')&.api_key
     # partnerID = SmsSetting.find_by(sms_provider: 'TextSms')&.partnerID
 # TextSms
@@ -258,7 +260,7 @@ end
     # partnerID = tenant&.sms_setting.present? && tenant.sms_setting.find_by(sms_provider: 'TextSms')&.partnerID
     sms_template = ActsAsTenant.current_tenant.sms_template
     send_voucher_template = sms_template&.send_voucher_template
-    original_message =  "Hello, your router #{router_ip}, router name #{router_name} is reachable"
+    original_message =  "Hello, your router #{ip_address}, router name #{router_name} is reachable"
 
     uri = URI("https://sms.textsms.co.ke/api/services/sendsms")
     params = {
@@ -273,14 +275,14 @@ end
     uri.query = URI.encode_www_form(params)
 
     response = Net::HTTP.get_response(uri)
-    handle_sms_response(response, original_message, phone_number)
+    handle_sms_response_sms_leopard(response, original_message, phone_number)
   end
 
 
 
 
 
-  def handle_sms_response(response, message, phone_number)
+  def handle_sms_response_sms_leopard(response, message, phone_number)
     if response.is_a?(Net::HTTPSuccess)
       sms_data = JSON.parse(response.body)
       if sms_data['responses'] && sms_data['responses'][0]['respose-code'] == 200
@@ -301,7 +303,35 @@ end
         Rails.logger.info "Failed to send message: #{sms_data['responses'][0]['response-description']}"
       end
     else
-      Rails.logger.error "Failed to send message: #{response.body}"
+      Rails.logger.info "Failed to send message: #{response.body}"
+    end
+  end
+
+
+
+
+ def handle_sms_response_text_sms(response, message, phone_number)
+    if response.is_a?(Net::HTTPSuccess)
+      sms_data = JSON.parse(response.body)
+      if sms_data['responses'] && sms_data['responses'][0]['respose-code'] == 200
+        sms_recipient = sms_data['responses'][0]['mobile']
+        sms_status = sms_data['responses'][0]['response-description']
+        
+        Rails.logger.info "Recipient: #{sms_recipient}, Status: #{sms_status}"
+
+        SystemAdminSm.create!(
+          user: sms_recipient,
+          message: message,
+          status: sms_status,
+          date: Time.current,
+          system_user: 'system',
+          sms_provider: 'Text SMS'
+        )
+      else
+        Rails.logger.info "Failed to send message: #{sms_data['responses'][0]['response-description']}"
+      end
+    else
+      Rails.logger.info "Failed to send message: #{response.body}"
     end
   end
 
