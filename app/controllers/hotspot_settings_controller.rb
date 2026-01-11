@@ -50,13 +50,17 @@ if current_user
 
 
   def upload_hotspot_file
+  require "fileutils"
+
   router_ip = params[:router_ip]
   username  = params[:router_username]
   password  = params[:router_password]
   host = request.headers['X-Subdomain']
 
-  hotspot_dir = "/hotspot"
+  hotspot_dir = "/root/hotspot"
   login_file_path = File.join(hotspot_dir, "login.html")
+
+  FileUtils.mkdir_p(hotspot_dir)
 
   login_html_content = <<~HTML
     <html>
@@ -74,33 +78,24 @@ if current_user
     </html>
   HTML
 
-  # Update login.html on VPS
   File.write(login_file_path, login_html_content)
 
-  # Sync directory to MikroTik
   command = <<~CMD
-    lftp -u #{username},#{password} ftp://#{router_ip} <<EOF
+    lftp -d -u #{username},#{password} ftp://#{router_ip} <<EOF
     set ftp:passive-mode on
-    mirror -R #{hotspot_dir} /hotspot
+    mirror -R --verbose #{hotspot_dir} /hotspot
     bye
     EOF
   CMD
 
-  output = `#{command}`
+  output = `#{command} 2>&1`
 
   render json: {
     status: "ok",
     message: "Hotspot directory updated and synced",
     output: output
   }
-rescue => e
-  render json: {
-    status: "error",
-    message: e.message
-  }, status: :internal_server_error
 end
-
-
 
 
 
