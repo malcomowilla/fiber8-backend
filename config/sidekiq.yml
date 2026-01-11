@@ -47,6 +47,10 @@ development:
       class: OnlineStatsBroadcastJob
       cron: "* * * * *"
 
+    router_notification_job:
+      class: RouterNotificationJob
+      cron: "* * * * *"
+
     restart_cloudflared_if_tunnel_missing_job:
       class: RestartCloudflaredIfTunnelMissingJob
       cron: "* * * * *"

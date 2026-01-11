@@ -172,7 +172,8 @@ end
     # partnerID = tenant&.sms_setting.present? && tenant.sms_setting.find_by(sms_provider: 'TextSms')&.partnerID
     sms_template = ActsAsTenant.current_tenant.sms_template
     send_voucher_template = sms_template&.send_voucher_template
-    original_message = sms_template ? MessageTemplate.interpolate(send_voucher_template, { voucher_code: voucher_code }) : "Hello, your voucher #{voucher_code} is expired renew now to stay conected."
+    original_message = sms_template ? MessageTemplate.interpolate(send_voucher_template,
+     { voucher_code: voucher_code }) : "Hello, your voucher #{voucher_code} is expired renew now to stay conected."
 
     uri = URI("https://sms.textsms.co.ke/api/services/sendsms")
     params = {

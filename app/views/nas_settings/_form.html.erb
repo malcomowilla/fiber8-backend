@@ -1,0 +1,32 @@
+<%= form_with(model: nas_setting) do |form| %>
+  <% if nas_setting.errors.any? %>
+    <div style="color: red">
+      <h2><%= pluralize(nas_setting.errors.count, "error") %> prohibited this nas_setting from being saved:</h2>
+
+      <ul>
+        <% nas_setting.errors.each do |error| %>
+          <li><%= error.full_message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div>
+    <%= form.label :notification_when_unreachable, style: "display: block" %>
+    <%= form.check_box :notification_when_unreachable %>
+  </div>
+
+  <div>
+    <%= form.label :unreachable_duration_minutes, style: "display: block" %>
+    <%= form.text_field :unreachable_duration_minutes %>
+  </div>
+
+  <div>
+    <%= form.label :notification_phone_number, style: "display: block" %>
+    <%= form.text_field :notification_phone_number %>
+  </div>
+
+  <div>
+    <%= form.submit %>
+  </div>
+<% end %>

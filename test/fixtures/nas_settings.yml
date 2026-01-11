@@ -1,0 +1,11 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  notification_when_unreachable: false
+  unreachable_duration_minutes: MyString
+  notification_phone_number: MyString
+
+two:
+  notification_when_unreachable: false
+  unreachable_duration_minutes: MyString
+  notification_phone_number: MyString

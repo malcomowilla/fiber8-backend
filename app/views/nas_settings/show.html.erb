@@ -1,0 +1,10 @@
+<p style="color: green"><%= notice %></p>
+
+<%= render @nas_setting %>
+
+<div>
+  <%= link_to "Edit this nas setting", edit_nas_setting_path(@nas_setting) %> |
+  <%= link_to "Back to nas settings", nas_settings_path %>
+
+  <%= button_to "Destroy this nas setting", @nas_setting, method: :delete %>
+</div>

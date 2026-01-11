@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2025_12_30_135421) do
+ActiveRecord::Schema[7.2].define(version: 2026_01_11_101201) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -561,6 +561,18 @@ ActiveRecord::Schema[7.2].define(version: 2025_12_30_135421) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.string "location"
+    t.string "last_status"
+    t.datetime "last_status_changed_at"
+    t.datetime "last_notification_sent_at"
+  end
+
+  create_table "nas_settings", force: :cascade do |t|
+    t.boolean "notification_when_unreachable"
+    t.string "notification_phone_number"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.integer "account_id"
+    t.integer "unreachable_duration_minutes"
   end
 
   create_table "nodes", force: :cascade do |t|

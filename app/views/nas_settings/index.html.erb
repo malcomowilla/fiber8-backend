@@ -1,0 +1,16 @@
+<p style="color: green"><%= notice %></p>
+
+<% content_for :title, "Nas settings" %>
+
+<h1>Nas settings</h1>
+
+<div id="nas_settings">
+  <% @nas_settings.each do |nas_setting| %>
+    <%= render nas_setting %>
+    <p>
+      <%= link_to "Show this nas setting", nas_setting %>
+    </p>
+  <% end %>
+</div>
+
+<%= link_to "New nas setting", new_nas_setting_path %>
