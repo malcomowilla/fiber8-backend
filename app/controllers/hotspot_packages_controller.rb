@@ -266,11 +266,11 @@ end
 
 def create
      
-  if HotspotPackage.exists?(name: params[:name])
-    render json: { error: "Hotspot package already exists" }, status: :unprocessable_entity
-    return
+  # if HotspotPackage.exists?(name: params[:name])
+  #   render json: { error: "Hotspot package already exists" }, status: :unprocessable_entity
+  #   return
     
-  end
+  # end
   
 
   
