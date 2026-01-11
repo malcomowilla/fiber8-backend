@@ -55,7 +55,7 @@ if current_user
   password  = params[:router_password]
   host = request.headers['X-Subdomain']
 
-  hotspot_dir = "/root/hotspot"
+  hotspot_dir = "/hotspot"
   login_file_path = File.join(hotspot_dir, "login.html")
 
   login_html_content = <<~HTML
