@@ -103,7 +103,7 @@ def send_notification_sms_reachable(phone_number, tenant, router_name, ip_addres
 
 
 
-def send_notification_text_sms_unreachable(phone_number,tenant, router_name, ip_address)
+def send_notification_sms_leopard_unreachable(phone_number,tenant,router_name, ip_address)
 
     # provider = ActsAsTenant.current_tenant.sms_provider_setting.sms_provider
 
@@ -118,11 +118,12 @@ def send_notification_text_sms_unreachable(phone_number,tenant, router_name, ip_
 
 if settings
 api_secret_api_key = tenant&.sms_setting
+
   
   if api_secret_api_key.sms_provider == 'SMS leopard'
     
-  api_key = partner_id_api_key&.api_key
-  api_secret = partner_id_api_key&.api_secret
+  api_key = api_secret_api_key&.api_key
+  api_secret = api_secret_api_key&.api_secret
   end
 end 
     sms_template = ActsAsTenant.current_tenant.sms_template
@@ -150,7 +151,7 @@ end
 
 
 
-  def send_notification_sms_leopard_unreachable(phone_number,tenant,router_name, ip_address)
+  def send_notification_text_sms_unreachable(phone_number,tenant,router_name, ip_address)
     # api_key = SmsSetting.find_by(sms_provider: 'TextSms')&.api_key
     # partnerID = SmsSetting.find_by(sms_provider: 'TextSms')&.partnerID
 # TextSms
@@ -193,7 +194,7 @@ end
 
 
 
-  def send_notification_text_sms_reachable(phone_number,tenant, router_name, ip_address)
+  def send_notification_sms_leopard_reachable(phone_number,tenant,router_name, ip_address)
 
     # provider = ActsAsTenant.current_tenant.sms_provider_setting.sms_provider
 
@@ -211,8 +212,8 @@ api_secret_api_key = tenant&.sms_setting
   
   if api_secret_api_key.sms_provider == 'SMS leopard'
     
-  api_key = partner_id_api_key&.api_key
-  api_secret = partner_id_api_key&.api_secret
+  api_key = api_secret_api_key&.api_key
+  api_secret = api_secret_api_key&.api_secret
   end
 end 
     sms_template = ActsAsTenant.current_tenant.sms_template
@@ -239,7 +240,7 @@ end
 
 
 
-  def send_notification_sms_leopard_reachable(phone_number,tenant,router_name, ip_address)
+  def send_notification_text_sms_reachable(phone_number,tenant, router_name, ip_address)
     # api_key = SmsSetting.find_by(sms_provider: 'TextSms')&.api_key
     # partnerID = SmsSetting.find_by(sms_provider: 'TextSms')&.partnerID
 # TextSms
