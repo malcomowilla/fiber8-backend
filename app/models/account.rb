@@ -34,6 +34,7 @@ class Account < ApplicationRecord
     has_one :ad_setting
     has_one :ad
     has_many :hotspot_vouchers
+    has_one :nas_setting
     # validates :subdomain, presence: true
     
 end
