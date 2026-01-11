@@ -1,7 +1,7 @@
 class HotspotPackage < ApplicationRecord
   acts_as_tenant(:account)
 
-validates :name, presence: true, uniqueness: true
+# validates :name, presence: true, uniqueness: true
 
 def valid_from_formatted
   format_for_mikrotik(object.valid_from)

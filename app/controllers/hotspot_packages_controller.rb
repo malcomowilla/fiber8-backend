@@ -267,7 +267,7 @@ end
 def create
      
   if HotspotPackage.exists?(name: params[:name])
-    render json: { error: "ip pool already exists" }, status: :unprocessable_entity
+    render json: { error: "Hotspot package already exists" }, status: :unprocessable_entity
     return
     
   end
@@ -436,7 +436,8 @@ def update_freeradius_policies(package_name, shared_users, upload_limit, downloa
 
     RadGroupReply.find_or_initialize_by(
       groupname: group_name,
-      radiusattribute: 'Idle-Timeout'
+      radiusattribute: 'Idle-Timeout',
+
     ).update!(
       op: ':=',
       value: "3600"
