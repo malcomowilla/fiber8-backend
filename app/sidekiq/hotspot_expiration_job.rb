@@ -124,8 +124,8 @@ api_secret_api_key = tenant&.sms_setting
   
   if api_secret_api_key.sms_provider == 'SMS leopard'
     
-  api_key = partner_id_api_key&.api_key
-  api_secret = partner_id_api_key&.api_secret
+  api_key = api_secret_api_key&.api_key
+  api_secret = api_secret_api_key&.api_secret
   end
   
     

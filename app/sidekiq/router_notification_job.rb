@@ -48,7 +48,7 @@ if notification_when_unreachable
       if new_status == "reachable"
         send_notification_sms_reachable(notification_phone_number, tenant, router_name,
          ip_address)
-      else
+      elsif new_status == "unreachable"
         send_notification_sms_unreachable(notification_phone_number, tenant,
          router_name, ip_address)
       end
@@ -233,7 +233,7 @@ end
     uri.query = URI.encode_www_form(params)
 
     response = Net::HTTP.get_response(uri)
-    handle_sms_response_text_sms(response, original_message, phone_number)
+    handle_sms_response_sms_leopard(response, original_message, phone_number)
   end
 
 
@@ -276,7 +276,7 @@ end
     uri.query = URI.encode_www_form(params)
 
     response = Net::HTTP.get_response(uri)
-    handle_sms_response_sms_leopard(response, original_message, phone_number)
+    handle_sms_response_text_sms(response, original_message, phone_number)
   end
 
 
