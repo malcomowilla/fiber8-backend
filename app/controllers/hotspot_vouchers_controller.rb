@@ -148,7 +148,7 @@ Rails.logger.info "Parsed data calback mpesa: #{request.body.read}"
     # Find the temporary session
     session = TemporarySession.find_by(session: session_id)
     unless session
-      Rails.logger.warn "Temporary session not found for session_id: #{session_id}"
+      Rails.logger.info "Temporary session not found for session_id: #{session_id}"
       return head :ok
     end
 
