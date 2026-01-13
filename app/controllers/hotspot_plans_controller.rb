@@ -68,7 +68,12 @@ end
   end
 
   def create
-    expiry_days = params[:plan][:expiry_days]
+company_name = params[:plan][:company_name]
+expiry_days = params[:plan][:expiry_days]
+
+
+    ActsAsTenant.with_tenant(company_name) do
+    
 
     @plan = HotspotPlan.first_or_initialize(
       name: params[:plan][:name],
@@ -84,9 +89,8 @@ end
     )
 
 
-   account_id = Account.find_by(subdomain: params[:plan][:company_name])
-
-
+  #  account_id = Account.find_by(subdomain: params[:plan][:company_name])
+  #     @plan.update!(account_id: account_id&.id)
 
    # @my_admin.password = generate_secure_password(16)
    # @my_admin.password_confirmation = generate_secure_password(16)
@@ -95,9 +99,6 @@ end
    # @my_admin.password_confirmation = generate_secure_password(16)
     
    # Calculate expiration time
-  
-
-   @plan.update!(account_id: account_id&.id)
 
     @plan.update(
       name: params[:plan][:name],
@@ -117,6 +118,11 @@ end
       render json: { errors: @plan.errors }, status: :unprocessable_entity
     end
   end
+  end
+
+
+
+
 
   def update
     @plan = HotspotPlan.find_by(id: params[:id])
