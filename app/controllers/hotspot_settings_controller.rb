@@ -150,68 +150,69 @@ if current_user
   #
   #
 def upload_hotspot_file
-    router_ip = params[:router_ip]
-    username  = params[:router_username]
-    password  = params[:router_password]
-    subdomain = request.headers["X-Subdomain"]
+  require "tempfile"
 
-    raise "Missing router details" if router_ip.blank? || username.blank? || password.blank?
+  router_ip = params[:router_ip]
+  username  = params[:router_username]
+  password  = params[:router_password]
+  subdomain = request.headers["X-Subdomain"]
 
-    # ⚠️ DO NOT interpolate $(mac), $(ip), $(username)
-    login_html = <<~HTML
-      <html>
-        <head>
-          <title>Redirecting...</title>
-        </head>
-        <body>
-          <noscript>
-            <center><b>JavaScript required</b></center>
-          </noscript>
+  raise "Missing router details" if router_ip.blank? || username.blank? || password.blank?
 
-          <script>
-            var mac = "$(mac)";
-            var ip = "$(ip)";
-            var username = "$(username)";
+  login_html = <<~HTML
+    <html>
+      <head>
+        <title>Redirecting...</title>
+      </head>
+      <body>
+        <noscript>
+          <center><b>JavaScript required</b></center>
+        </noscript>
 
-            window.location.href =
-              "https://#{subdomain}.aitechs.co.ke/hotspot-page" +
-              "?mac=" + mac +
-              "&ip=" + ip +
-              "&username=" + username;
-          </script>
-        </body>
-      </html>
-    HTML
+        <script>
+          var mac = "$(mac)";
+          var ip = "$(ip)";
+          var username = "$(username)";
 
-    temp_file = Tempfile.new(["login", ".html"])
-    temp_file.write(login_html)
-    temp_file.close
+          var redirectUrl = `https://#{subdomain}.aitechs.co.ke/hotspot-page?mac=${mac}&ip=${ip}&username=${username}`;
 
-    ftp_script = <<~FTP
-      open #{router_ip}
-      user #{username} #{password}
-      binary
-      put #{temp_file.path} hotspot/login.html
-      bye
-    FTP
+          console.log("Hotspot redirect:", redirectUrl);
 
-    ftp_file = Tempfile.new("ftp")
-    ftp_file.write(ftp_script)
-    ftp_file.close
+          window.location.href = redirectUrl;
+        </script>
+      </body>
+    </html>
+  HTML
 
-    output = `ftp -inv < #{ftp_file.path} 2>&1`
+  temp_file = Tempfile.new(["login", ".html"])
+  temp_file.write(login_html)
+  temp_file.close
 
-    temp_file.unlink
-    ftp_file.unlink
+  ftp_script = <<~FTP
+    open #{router_ip}
+    user #{username} #{password}
+    binary
+    put #{temp_file.path} hotspot/login.html
+    bye
+  FTP
 
-    if output =~ /(530|550|not connected|failed|denied)/i
-      render json: { status: "error", output: output }, status: :unprocessable_entity
-    else
-      render json: { status: "ok", message: "login.html uploaded", output: output }
-    end
-  rescue => e
-    render json: { status: "error", message: e.message }, status: :internal_server_error
+  ftp_file = Tempfile.new("ftp")
+  ftp_file.write(ftp_script)
+  ftp_file.close
+
+  output = `ftp -inv < #{ftp_file.path} 2>&1`
+
+  temp_file.unlink
+  ftp_file.unlink
+
+  if output =~ /(530|550|not connected|failed|denied)/i
+    render json: { status: "error", output: output }, status: :unprocessable_entity
+  else
+    render json: { status: "ok", message: "login.html uploaded", output: output }
   end
+rescue => e
+  render json: { status: "error", message: e.message }, status: :internal_server_error
+end
 
   def index
     # @hotspot_settings = HotspotSetting.all
