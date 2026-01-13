@@ -156,6 +156,7 @@ patch '/api/update_onu_location/:id', to: 'onus#update_location'
     get '/api/revenue_summary', to: 'hotspot_mpesa_revenues#revenue_summary'
     get '/api/revenue_by_date_range', to: 'hotspot_mpesa_revenues#revenue_by_date_range'
 get '/api/this_month_revenue', to: 'hotspot_mpesa_revenues#this_month_revenue'
+get '/api/this_year_revenue', to: 'hotspot_mpesa_revenues#this_year_revenue'
 get '/this_month_revenue', to: 'hotspot_mpesa_revenues#this_month_revenue'
 
 get '/api/todays_revenue', to: 'hotspot_mpesa_revenues#todays_revenue'

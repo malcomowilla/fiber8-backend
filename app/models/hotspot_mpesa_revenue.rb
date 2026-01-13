@@ -15,6 +15,10 @@ class HotspotMpesaRevenue < ApplicationRecord
   scope :this_month, -> {
     where(created_at: Time.current.beginning_of_month..Time.current)
   }
+
+  scope :this_year, -> {
+    where(created_at: Time.current.beginning_of_year..Time.current)
+  }
   
   def self.daily_revenue(date = Date.current)
     where(created_at: date.beginning_of_day..date.end_of_day).sum(:amount)

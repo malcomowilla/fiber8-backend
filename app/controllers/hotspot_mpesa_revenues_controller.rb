@@ -73,6 +73,13 @@ end
 
 
 
+def this_year_revenue
+  # start_time = Time.current.beginning_of_month
+  # end_time = Time.current + 1.year
+  this_year = HotspotMpesaRevenue.this_year.sum(:amount)
+  render json: this_year
+end
+
 
 
 def daily_revenue
@@ -89,6 +96,10 @@ def daily_revenue
         transactions: transactions.as_json(only: [:id, :voucher, :amount, :reference, :time_paid, :created_at])
       }
     end
+
+
+
+
     
     # GET /api/revenue_summary
     def revenue_summary
@@ -96,6 +107,7 @@ def daily_revenue
       this_week = HotspotMpesaRevenue.this_week.sum(:amount)
       this_month = HotspotMpesaRevenue.this_month.sum(:amount)
       all_time = HotspotMpesaRevenue.sum(:amount)
+      this_year = HotspotMpesaRevenue.this_year.sum(:amount)
       
       # Last 7 days revenue
       last_7_days = (0..6).map do |i|
@@ -110,7 +122,8 @@ def daily_revenue
           today: today,
           this_week: this_week,
           this_month: this_month,
-          all_time: all_time
+          all_time: all_time,
+          this_year: this_year
         },
         last_7_days: last_7_days,
         currency: 'KES'
