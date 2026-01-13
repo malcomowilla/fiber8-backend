@@ -63,7 +63,7 @@ def set_tenant
 
     begin
       response = RestClient.post(
-          "https://api.safaricom.co.ke/mpesa/b2c/v3/paymentrequest",
+          "https://api.safaricom.co.ke/mpesa/b2c/v1/paymentrequest",
 
         payload.to_json,
         { content_type: :json, Authorization: "Bearer #{token}" }
@@ -98,7 +98,7 @@ def fetch_access_token
     Rails.logger.info "Mpesa consumer key: #{consumer_key}"
     Rails.logger.info "Mpesa consumer secret: #{consumer_secret}"
 
-    api_url = "https://api.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials"
+    api_url = "https://api.safaricom.co.ke/oauth/v1/generate"
 
     response = RestClient.get(api_url, {
       Authorization: "Basic #{Base64.strict_encode64("#{consumer_key}:#{consumer_secret}")}"
