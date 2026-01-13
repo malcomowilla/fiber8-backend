@@ -59,8 +59,9 @@ load_and_authorize_resource except: [:allow_get_current_plan, :index, :create]
   def create
 expiry_days = params[:plan][:expiry_days]
 company_name = params[:plan][:company_name]
+account = Account.find_by!(subdomain: company_name)
 
-ActsAsTenant.with_tenant(company_name) do
+ActsAsTenant.with_tenant(account) do
     @plan = PpPoePlan.first_or_initialize(
       name: params[:plan][:name],
       maximum_pppoe_subscribers: params[:plan][:maximum_pppoe_subscribers],

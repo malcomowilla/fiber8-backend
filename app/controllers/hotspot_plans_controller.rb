@@ -72,7 +72,9 @@ company_name = params[:plan][:company_name]
 expiry_days = params[:plan][:expiry_days]
 
 
-    ActsAsTenant.with_tenant(company_name) do
+account = Account.find_by!(subdomain: company_name)
+
+    ActsAsTenant.with_tenant(account) do
     
 
     @plan = HotspotPlan.first_or_initialize(
