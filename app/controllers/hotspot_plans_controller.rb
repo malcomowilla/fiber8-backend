@@ -6,7 +6,7 @@ class HotspotPlansController < ApplicationController
 set_current_tenant_through_filter
 
 before_action :set_tenant, only: [:get_current_hotspot_plan, :allow_get_current_hotspot_plan]
-load_and_authorize_resource except: [:allow_get_current_hotspot_plan, :index, :create]
+load_and_authorize_resource except: [:allow_get_current_hotspot_plan, :index, :create, :destroy]
 
 
 

@@ -5,7 +5,7 @@ class PpPoePlansController  < ApplicationController
 set_current_tenant_through_filter 
 
 before_action :set_tenant, only: [:get_current_plan, :allow_get_current_plan]
-load_and_authorize_resource except: [:allow_get_current_plan, :index, :create]
+load_and_authorize_resource except: [:allow_get_current_plan, :index, :create, :destroy]
 
   def index
     @plans = PpPoePlan.all
