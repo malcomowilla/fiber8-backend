@@ -56,6 +56,24 @@ load_and_authorize_resource except: [:allow_get_current_plan, :index, :create]
 
 
 
+  def destroy
+    company_name = params[:company_name]
+    account = Account.find_by!(subdomain: company_name)
+
+    ActsAsTenant.with_tenant(account) do
+
+      pppoe_plan = PpPoePlan.find_by(id: params[:id])
+      if pppoe_plan.nil?
+        return render json: { error: "PPPOE plan not found" }, status: :not_found
+      
+      end
+      pppoe_plan.destroy!
+      render json: { message: "PPPOE plan deleted successfully" }, status: :ok
+    end
+  end
+
+
+
   def create
 expiry_days = params[:plan][:expiry_days]
 company_name = params[:plan][:company_name]
@@ -75,7 +93,7 @@ ActsAsTenant.with_tenant(account) do
     )
 
 
-   account_id = Account.find_by(subdomain: params[:plan][:company_name])
+  #  account_id = Account.find_by(subdomain: params[:plan][:company_name])
 
 # Rails.logger.info "account_id: #{account_id.inspect}"
    # @my_admin.password = generate_secure_password(16)
@@ -83,7 +101,7 @@ ActsAsTenant.with_tenant(account) do
     
    # Calculate expiration time
   
-           @plan.update!(account_id: account_id.id)
+          #  @plan.update!(account_id: account_id.id)
 
 
                      

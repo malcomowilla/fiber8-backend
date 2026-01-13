@@ -137,6 +137,7 @@ resources :company_ids
   # resources :hotspot_plans
 
 end
+
 post '/disburse_funds_results_timeout', to: 'disburse_payment#disburse_funds_results_timeout'
 
 post '/disburse_funds_results', to: 'disburse_payment#disburse_funds_results'
@@ -256,7 +257,9 @@ get '/allow_get_current_hotspot_plan', to: 'hotspot_plans#allow_get_current_hots
 
 
 get '/api/hotspot_plans', to: 'hotspot_plans#index'
+
 get '/hotspot_plans', to: 'hotspot_plans#index'
+delete '/api/hotspot_plans/:id', to: 'hotspot_plans#destroy'
 
 
 post '/api/setup_google_authenticator', to: 'sessions#setup_google_authenticator'
@@ -269,6 +272,7 @@ post '/api/hotspot_plans/', to: 'hotspot_plans#create'
 post '/hotspot_plans/', to: 'hotspot_plans#create'
 
 post '/pppoe_plans', to: 'pp_poe_plans#create'
+delete '/api/pppoe_plans/:id', to: 'pp_poe_plans#destroy'
 
 
 get '/api/get_ips', to: 'subscriptions#get_ips'

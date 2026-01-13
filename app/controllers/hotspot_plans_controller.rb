@@ -38,7 +38,7 @@ end
 
   if plans.empty?
     default_plan = HotspotPlan.first_or_initialize(
-      name: "Free Trial",
+      name: "Hotspot Free Trial",
       hotspot_subscribers: "unlimited",
       price: "0",
       expiry_days: 3,
@@ -47,7 +47,7 @@ end
 
     )
     default_plan.update(
-       name: "Free Trial",
+       name: "Hotspot Free Trial",
       hotspot_subscribers: "unlimited",
       price: "0",
       expiry_days: 3,
@@ -140,6 +140,28 @@ account = Account.find_by!(subdomain: company_name)
       render json: { errors: @plan.errors }, status: :unprocessable_entity
     end
   end
+
+
+
+
+  def destroy
+    company_name = params[:company_name]
+    account = Account.find_by!(subdomain: company_name)
+
+    ActsAsTenant.with_tenant(account) do
+
+      hotspot_plan = HotspotPlan.find_by(id: params[:id])
+      if hotspot_plan.nil?
+        return render json: { error: "Hotspot plan not found" }, status: :not_found
+      end
+      hotspot_plan.destroy!
+      render json: { message: "Hotspot plan deleted successfully" }, status: :ok
+    end
+  end
+
+
+
+
 
   def set_tenant
     host = request.headers['X-Subdomain']

@@ -96,17 +96,17 @@ class SetTenantPpoe
         # Check for expired plans
         if license_expired?(account)
           error_message = "License expired for account #{account.subdomain}. Please renew your license for pppoe license"
-          Rails.logger.error error_message
+          Rails.logger.info error_message
           return [402, { 'Content-Type' => 'application/json' }, [{ error: error_message }.to_json]]
         end
 
       rescue StandardError => e
-        Rails.logger.error "Failed to set tenant for host #{host}: #{e.message}"
-        Rails.logger.error e.backtrace.join("\n")
+        Rails.logger.info "Failed to set tenant for host #{host}: #{e.message}"
+        Rails.logger.info e.backtrace.join("\n")
         return [500, { 'Content-Type' => 'application/json' }, [{ error: "Internal server error" }.to_json]]
       end
     else
-      Rails.logger.warn "No subdomain found in the request."
+      Rails.logger.info "No subdomain found in the request."
       return [400, { 'Content-Type' => 'application/json' }, [{ error: "Subdomain missing from request" }.to_json]]
     end
 
