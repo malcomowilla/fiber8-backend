@@ -149,7 +149,7 @@ if current_user
   # 
   #
   #
-def upload_login_html
+def upload_hotspot_file
     router_ip = params[:router_ip]
     username  = params[:router_username]
     password  = params[:router_password]
