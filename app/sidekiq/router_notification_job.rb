@@ -143,7 +143,7 @@ end
     uri.query = URI.encode_www_form(params)
 
     response = Net::HTTP.get_response(uri)
-    handle_sms_response_sms_leopard(response, original_message, phone_number)
+    handle_sms_response_sms_leopard(response, original_message, phone_number, tenant)
   end
 
 
@@ -187,7 +187,7 @@ end
     uri.query = URI.encode_www_form(params)
 
     response = Net::HTTP.get_response(uri)
-    handle_sms_response_text_sms(response, original_message, phone_number)
+    handle_sms_response_text_sms(response, original_message, phone_number, tenant)
   end
 
 
@@ -233,7 +233,7 @@ end
     uri.query = URI.encode_www_form(params)
 
     response = Net::HTTP.get_response(uri)
-    handle_sms_response_sms_leopard(response, original_message, phone_number)
+    handle_sms_response_sms_leopard(response, original_message, phone_number, tenant)
   end
 
 
@@ -276,14 +276,14 @@ end
     uri.query = URI.encode_www_form(params)
 
     response = Net::HTTP.get_response(uri)
-    handle_sms_response_text_sms(response, original_message, phone_number)
+    handle_sms_response_text_sms(response, original_message, phone_number, tenant)
   end
 
 
 
 
 
-  def handle_sms_response_sms_leopard(response, message, phone_number)
+  def handle_sms_response_sms_leopard(response, message, phone_number, tenant)
     if response.is_a?(Net::HTTPSuccess)
       sms_data = JSON.parse(response.body)
       if sms_data['responses'] && sms_data['responses'][0]['respose-code'] == 200
@@ -298,7 +298,8 @@ end
           status: sms_status,
           date: Time.current,
           system_user: 'system',
-          sms_provider: 'SMS leopard'
+          sms_provider: 'SMS leopard',
+          account_id: tenant.id
         )
       else
         Rails.logger.info "Failed to send message: #{sms_data['responses'][0]['response-description']}"
@@ -311,7 +312,7 @@ end
 
 
 
- def handle_sms_response_text_sms(response, message, phone_number)
+ def handle_sms_response_text_sms(response, message, phone_number, tenant)
     if response.is_a?(Net::HTTPSuccess)
       sms_data = JSON.parse(response.body)
       if sms_data['responses'] && sms_data['responses'][0]['respose-code'] == 200
@@ -326,7 +327,8 @@ end
           status: sms_status,
           date: Time.current,
           system_user: 'system',
-          sms_provider: 'Text SMS'
+          sms_provider: 'Text SMS',
+          account_id: tenant.id
         )
       else
         Rails.logger.info "Failed to send message: #{sms_data['responses'][0]['response-description']}"
