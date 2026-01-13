@@ -160,28 +160,63 @@ def upload_hotspot_file
   raise "Missing router details" if router_ip.blank? || username.blank? || password.blank?
 
   login_html = <<~HTML
-    <html>
-      <head>
+
+<html>
+    <head>
         <title>Redirecting...</title>
-      </head>
-      <body>
+    </head>
+    <body>
         <noscript>
-          <center><b>JavaScript required</b></center>
+            <center><b>Javascript required. Enable Javascript to continue.</b></center>
         </noscript>
-
+        
+        <center>If nothing opens, click 'Continue' below</br>
+        
+        <form id="redirectForm" method="GET">
+            <input type="submit" value="Continue">
+        </form>
+        
         <script>
-          var mac = "$(mac)";
-          var ip = "$(ip)";
-          var username = "$(username)";
+            // Extract MikroTik variables (MikroTik replaces these with real values)
+            // var mac = "$(mac)"; 
+            // var ip = "$(ip)";
+            // var username = "$(username)";
 
-          var redirectUrl = `https://#{subdomain}.aitechs.co.ke/hotspot-page?mac=${mac}&ip=${ip}&username=${username}`;
+            // // Construct the URL without encoding
+            // var redirectUrl = "https://fiber8.aitechs.co.ke/hotspot-page?mac=" + mac + "&ip=" + ip + "&username=" + username;
 
-          console.log("Hotspot redirect:", redirectUrl);
+            // // Debugging (check values in browser console)
+            // console.log("Redirect URL:", redirectUrl);
 
-          window.location.href = redirectUrl;
+            // // Redirect the user
+            document.cookie = `hotspot_mac=$(mac); path=/; domain=.aitechs.co.ke`;
+document.cookie = `hotspot_ip=$(ip); path=/; domain=.aitechs.co.ke`;
+            // window.location.href = redirectUrl;
+
+
+
+            
+            var mac = "$(mac)"; 
+    var ip = "$(ip)";
+    var username = "$(username)";
+   
+    // Show values before redirecting
+    // alert("MAC: " + mac + "\nIP: " + ip + "\nUsername: " + username);
+
+    // Construct the redirection URL
+    var redirectUrl = `https://owitech.aitechs.co.ke/hotspot-page?mac=${mac}&ip=${ip}&username=${username}`;
+    window.location.href = redirectUrl;
+    // Debug in console
+    console.log("Redirect URL:", redirectUrl);
+
+    // Wait 5 seconds before redirecting
+    // setTimeout(function() {
+    //     window.location.href = redirectUrl;
+    // }, 2000); 
         </script>
-      </body>
-    </html>
+        </center>
+    </body>
+</html>
   HTML
 
   temp_file = Tempfile.new(["login", ".html"])
