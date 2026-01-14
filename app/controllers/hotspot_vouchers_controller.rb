@@ -174,21 +174,21 @@ Rails.logger.info "Parsed data calback mpesa: #{request.body.read}"
           output = ssh.exec!(command)
           if output.include?("failure")
             Rails.logger.info "Login failed for voucher #{voucher_code} on router #{nas.ip_address}: #{output}"
-            render json: { error: "Login failed for voucher #{voucher_code} on router #{nas.ip_address}: #{output}" }, status: :unprocessable_entity
+            # render json: { error: "Login failed for voucher #{voucher_code} on router #{nas.ip_address}: #{output}" }, status: :unprocessable_entity
           else
             Rails.logger.info "Device #{session.ip} successfully logged in with voucher #{voucher_code} on router #{nas.ip_address}"
-           
-
+            
+            
 
             HotspotVoucher.find_by(voucher: voucher_code).update(status: "used")
                voucher = HotspotVoucher.find_by(voucher: voucher_code).voucher
- session.update!(paid: true, connected: true)
- session.destroy
+
 
             SendSmsHotspotJob.perform_now(voucher, data)
             # render json: { message: "Device #{session.ip} successfully logged in with voucher #{voucher_code} on router" }, status: :ok
 
-
+session.update!(paid: true, connected: true)
+            session.destroy
             HotspotNotificationsChannel.broadcast_to(
               session.ip,
               message: "Payment received! You are now connected.",
