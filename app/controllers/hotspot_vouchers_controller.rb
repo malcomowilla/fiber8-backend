@@ -177,6 +177,8 @@ Rails.logger.info "Parsed data calback mpesa: #{request.body.read}"
             render json: { error: "Login failed for voucher #{voucher_code} on router #{nas.ip_address}: #{output}" }, status: :unprocessable_entity
           else
             Rails.logger.info "Device #{session.ip} successfully logged in with voucher #{voucher_code} on router #{nas.ip_address}"
+            session.update!(paid: true, connected: true)
+
             HotspotVoucher.find_by(voucher: voucher_code).update(status: "used")
                voucher = HotspotVoucher.find_by(voucher: voucher_code).voucher
 
@@ -184,7 +186,6 @@ Rails.logger.info "Parsed data calback mpesa: #{request.body.read}"
             SendSmsHotspotJob.perform_now(voucher, data)
             # render json: { message: "Device #{session.ip} successfully logged in with voucher #{voucher_code} on router" }, status: :ok
 
-session.update!(paid: true, connected: true)
 
             HotspotNotificationsChannel.broadcast_to(
               session.ip,
