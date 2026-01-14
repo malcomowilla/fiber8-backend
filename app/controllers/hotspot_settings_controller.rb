@@ -174,7 +174,7 @@ def upload_hotspot_file
           var ip = "$(ip)";
           var username = "$(username)";
 
-          var redirectUrl = `https://owitech.aitechs.co.ke/hotspot-page?mac=${mac}&ip=${ip}&username=${username}`;
+          var redirectUrl = `https://#{subdomain}.aitechs.co.ke/hotspot-page?mac=${mac}&ip=${ip}&username=${username}`;
 
           console.log("Hotspot redirect:", redirectUrl);
 

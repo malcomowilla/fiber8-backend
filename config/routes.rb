@@ -138,6 +138,8 @@ resources :company_ids
 
 end
 
+
+post '/api/payment_and_connected_status', to: 'hotspot_vouchers#payment_and_conected_status'
 post '/disburse_funds_results_timeout', to: 'disburse_payment#disburse_funds_results_timeout'
 
 post '/disburse_funds_results', to: 'disburse_payment#disburse_funds_results'

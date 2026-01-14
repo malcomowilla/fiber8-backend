@@ -181,20 +181,21 @@ Rails.logger.info "Parsed data calback mpesa: #{request.body.read}"
             SendSmsHotspotJob.perform_now(voucher, data)
             # render json: { message: "Device #{session.ip} successfully logged in with voucher #{voucher_code} on router" }, status: :ok
 
+session.update!(paid: true, connected: true)
 
             HotspotNotificationsChannel.broadcast_to(
               session.ip,
               message: "Payment received! You are now connected.",
             )
           end
-
+ 
           
         end
 
      
 
       rescue => e
-        Rails.logger.error "SSH error logging in device #{session.ip}: #{e.message}"
+        Rails.logger.info "SSH error logging in device #{session.ip}: #{e.message}"
       end
     end
 
@@ -207,6 +208,13 @@ Rails.logger.info "Parsed data calback mpesa: #{request.body.read}"
   end
 
   head :ok
+end
+
+
+
+def payment_and_conected_status
+  session = TemporarySession.find_by(ip: params[:ip])
+  render json: { paid: session&.paid, connected: session&.connected }
 end
 
 
