@@ -135,21 +135,6 @@ end
 
 
 
-#  Parsed data calback mpesa: {
-#         "TransactionType": "Pay Bill",
-#          "TransID": "UAECH3RQRE",
-#           "TransTime": "20260114141901",
-#             "TransAmount": "5.00",
-#      "BusinessShortCode": "3702845",
-#           "BillRefNumber": "hotspot_414790_SKY-FAST",
-#           "InvoiceNumber": "",
-#     "OrgAccountBalance": "110.00",
-#            "ThirdPartyTransID": "",
-#             "MSISDN": "6eddb6ad486cba309535532e9b2e7c4047dbcdafd1004fe707d0d773903856ea",
-#           "FirstName": "Malcolm"
-#         }
-
-
 def check_payment_status
   Rails.logger.info "check_payment_status called"
 Rails.logger.info "Parsed data calback mpesa: #{request.body.read}"
