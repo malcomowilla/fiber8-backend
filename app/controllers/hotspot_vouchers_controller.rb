@@ -1,7 +1,8 @@
 class HotspotVouchersController < ApplicationController
   # before_action :set_hotspot_voucher, only: %i[ show edit update destroy ]
 
-load_and_authorize_resource except: [:login_with_hotspot_voucher, :make_payment, :check_payment_status]
+load_and_authorize_resource except: [:login_with_hotspot_voucher,
+ :make_payment, :check_payment_status, :payment_and_conected_status]
   # skip_before_action :set_tenant, only: [:check_payment_status]
 
 
