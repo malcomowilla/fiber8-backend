@@ -17,7 +17,7 @@ class DeleteSessionJob
     # 1️⃣ Get ONLINE IPs from RADIUS
     online_ips = RadAcct
       .where(acctstoptime: nil)
-      .where(framedprotocol: '')
+      .where(framedprotocol: [nil, ''])
       .where.not(framedipaddress: [nil, ''])
       .pluck(:framedipaddress)
       .uniq
