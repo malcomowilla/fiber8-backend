@@ -9,13 +9,12 @@ class DeleteSessionJob
     Rails.logger.info "[DeleteSessionJob] START"
 
     # Account.find_each do |tenant|
-    #   ActsAsTenant.with_tenant(tenant) do
-    #     Rails.logger.info "[DeleteSessionJob] Processing tenant #{tenant.id}"
-    #     sync_sessions!
-    #   end
-    sync_sessions
-    end
-
+    #   # ActsAsTenant.with_tenant(tenant) do
+    #   #   Rails.logger.info "[DeleteSessionJob] Processing tenant #{tenant.id}"
+    #   #   sync_sessions!
+    #   # end
+    # end
+sync_sessions
     Rails.logger.info "[DeleteSessionJob] FINISH"
   rescue => e
     Rails.logger.info "[DeleteSessionJob] ERROR: #{e.message}"
