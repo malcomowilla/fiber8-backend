@@ -164,7 +164,7 @@ Rails.logger.info "Parsed data calback mpesa: #{request.body.read}"
     #   time_paid: data["TransTime"]
     # )
     Rails.logger.info "Hotspot voucher #{voucher_code} paid successfully."
- voucher = HotspotVoucher.find_by(voucher: voucher_code).voucher
+ voucher = HotspotVoucher.find_by(voucher: voucher_code)
     # Automatically login device using IP from session
     nas_routers = NasRouter.where(account_id: voucher.account_id)
      nas_routers .all.each do |nas|
