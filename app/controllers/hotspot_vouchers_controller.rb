@@ -164,9 +164,10 @@ Rails.logger.info "Parsed data calback mpesa: #{request.body.read}"
     #   time_paid: data["TransTime"]
     # )
     Rails.logger.info "Hotspot voucher #{voucher_code} paid successfully."
-
+ voucher = HotspotVoucher.find_by(voucher: voucher_code).voucher
     # Automatically login device using IP from session
-    NasRouter.all.each do |nas|
+    nas_routers = NasRouter.where(account_id: voucher.account_id)
+     nas_routers .all.each do |nas|
       begin
         Net::SSH.start(nas.ip_address, nas.username, password: nas.password, verify_host_key: :never) do |ssh|
           command = "/ip hotspot active login user=#{voucher_code} password=#{voucher_code} ip=#{session.ip}"
@@ -178,12 +179,12 @@ Rails.logger.info "Parsed data calback mpesa: #{request.body.read}"
           else
             Rails.logger.info "Device #{session.ip} successfully logged in with voucher #{voucher_code} on router #{nas.ip_address}"
             
-            
+            session.update!(paid: true, connected: true)
+
 
             HotspotVoucher.find_by(voucher: voucher_code).update(status: "used")
                voucher = HotspotVoucher.find_by(voucher: voucher_code).voucher
 
-session.update!(paid: true, connected: true)
 
             SendSmsHotspotJob.perform_now(voucher, data)
             # render json: { message: "Device #{session.ip} successfully logged in with voucher #{voucher_code} on router" }, status: :ok
