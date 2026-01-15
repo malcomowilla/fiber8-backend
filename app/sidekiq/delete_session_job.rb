@@ -2,7 +2,9 @@ class DeleteSessionJob
   include Sidekiq::Job
   queue_as :default
 
-  sidekiq_options queue: :default, lock: :until_executed, lock_timeout: 0
+     sidekiq_options lock: :until_executed, lock_timeout: 0
+
+
   def perform
     Rails.logger.info "[DeleteSessionJob] START"
 
