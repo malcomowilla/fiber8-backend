@@ -29,10 +29,7 @@ sync_sessions
 
     online_ips = RadAcct.where(acctstoptime: nil, framedprotocol: '').where('acctupdatetime > ?', 2.minutes.ago).pluck(:framedipaddress).uniq.map(&:to_s)
       
-
-   
-
-      offline_ips = RadAcct.where.not(acctstoptime: nil, framedprotocol: '').where.not('acctupdatetime > ?', 2.minutes.ago).pluck(:framedipaddress).uniq.map(&:to_s)
+    offline_ips = RadAcct.where.not(acctstoptime: nil, framedprotocol: '').where.not('acctupdatetime > ?', 2.minutes.ago).pluck(:framedipaddress).uniq.map(&:to_s)
       
       
 
@@ -43,7 +40,7 @@ sync_sessions
       # .where(connected: true)
       .update_all(connected: true, updated_at: Time.current)
 
-    Rails.logger.info "[DeleteSessionJob] Marked ONLINE: #{updated_online}"
+    Rails.logger.info "DeleteSessionJob Marked ONLINE: #{updated_online}"
 
     updated_offline = TemporarySession
       .where(ip: offline_ips)
