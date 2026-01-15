@@ -182,13 +182,13 @@ Rails.logger.info "Parsed data calback mpesa: #{request.body.read}"
 
             HotspotVoucher.find_by(voucher: voucher_code).update(status: "used")
                voucher = HotspotVoucher.find_by(voucher: voucher_code).voucher
+session.update!(paid: true, connected: true)
 
 
             SendSmsHotspotJob.perform_now(voucher, data)
             # render json: { message: "Device #{session.ip} successfully logged in with voucher #{voucher_code} on router" }, status: :ok
 
-session.update!(paid: true, connected: true)
-            session.destroy
+            
             HotspotNotificationsChannel.broadcast_to(
               session.ip,
               message: "Payment received! You are now connected.",
@@ -220,7 +220,10 @@ end
 
 def payment_and_conected_status
   session = TemporarySession.find_by(ip: params[:ip])
-  render json: { paid: session&.paid, connected: session&.connected }
+
+  if session.paid && session.connected
+   render json: { paid: session.paid, connected: session.connected }
+  end
 end
 
 
@@ -236,11 +239,21 @@ host = request.headers['X-Subdomain']
   consumer_secret = ActsAsTenant.current_tenant&.hotspot_mpesa_setting.consumer_secret
 
   voucher_code = generate_voucher_code
-  session_id = rand(100000..999999).to_s
-TemporarySession.create!(
-  session: session_id,
-  ip: params[:ip],    # the IP you get from Mikrotik login.html
-)
+#   session_id = rand(100000..999999).to_s
+# TemporarySession.create!(
+#   session: session_id,
+#   ip: params[:ip],    # the IP you get from Mikrotik login.html
+# )
+
+session_id = rand(100000..999999).to_s
+
+session = TemporarySession.find_or_initialize_by(ip: params[:ip])
+
+session.session   = session_id
+session.paid      = false
+session.connected = false
+session.save!
+
       hotspot_payment = MpesaService.initiate_stk_push(phone_number, amount,
        shortcode,  passkey,
         consumer_key, consumer_secret, host,voucher_code,session_id

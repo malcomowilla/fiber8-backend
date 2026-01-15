@@ -43,6 +43,10 @@ development:
       class: DeleteRadactJob
       cron: "* * * * *"
 
+    delete_session_job:
+      class: DeleteSessionJob
+      cron: "* * * * *"
+
     online_stats_broadcast_job:
       class: OnlineStatsBroadcastJob
       cron: "* * * * *"
