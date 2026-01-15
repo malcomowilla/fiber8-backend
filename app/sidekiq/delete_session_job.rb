@@ -8,11 +8,12 @@ class DeleteSessionJob
   def perform
     Rails.logger.info "[DeleteSessionJob] START"
 
-    Account.find_each do |tenant|
-      ActsAsTenant.with_tenant(tenant) do
-        Rails.logger.info "[DeleteSessionJob] Processing tenant #{tenant.id}"
-        sync_sessions!
-      end
+    # Account.find_each do |tenant|
+    #   ActsAsTenant.with_tenant(tenant) do
+    #     Rails.logger.info "[DeleteSessionJob] Processing tenant #{tenant.id}"
+    #     sync_sessions!
+    #   end
+    sync_sessions
     end
 
     Rails.logger.info "[DeleteSessionJob] FINISH"
@@ -24,7 +25,7 @@ class DeleteSessionJob
 
   private
 
-  def sync_sessions!
+  def sync_sessions
     Rails.logger.info "[DeleteSessionJob] Sync sessions started"
 
     online_ips = RadAcct.where(acctstoptime: nil, framedprotocol: '').where('acctupdatetime > ?', 3.minutes.ago).pluck(:framedipaddress).uniq
