@@ -4,17 +4,27 @@ class DeleteSessionJob
   sidekiq_options queue: :default, lock: :until_executed, lock_timeout: 0
 
   def perform
+    Rails.logger.info "[DeleteSessionJob] START"
+
     Account.find_each do |tenant|
       ActsAsTenant.with_tenant(tenant) do
+        Rails.logger.info "[DeleteSessionJob] Processing tenant #{tenant.id}"
         sync_sessions!
       end
     end
+
+    Rails.logger.info "[DeleteSessionJob] FINISH"
+  rescue => e
+    Rails.logger.error "[DeleteSessionJob] ERROR: #{e.message}"
+    Rails.logger.error e.backtrace.join("\n")
+    raise e
   end
 
   private
 
   def sync_sessions!
-    # 1️⃣ Get ONLINE IPs from RADIUS
+    Rails.logger.info "[DeleteSessionJob] Sync sessions started"
+
     online_ips = RadAcct
       .where(acctstoptime: nil)
       .where(framedprotocol: [nil, ''])
@@ -22,22 +32,20 @@ class DeleteSessionJob
       .pluck(:framedipaddress)
       .uniq
 
-    # 2️⃣ Mark ONLINE sessions
-    TemporarySession
+    Rails.logger.info "[DeleteSessionJob] Online IPs: #{online_ips.inspect}"
+
+    updated_online = TemporarySession
       .where(ip: online_ips)
       .where(connected: false)
       .update_all(connected: true, updated_at: Time.current)
 
-    # 3️⃣ Mark OFFLINE sessions
-    TemporarySession
+    Rails.logger.info "[DeleteSessionJob] Marked ONLINE: #{updated_online}"
+
+    updated_offline = TemporarySession
       .where.not(ip: online_ips)
       .where(connected: true)
       .update_all(connected: false, updated_at: Time.current)
 
-    # 4️⃣ (Optional) Cleanup old offline sessions
-    # TemporarySession
-    #   .where(connected: false)
-    #   .where('updated_at < ?', 10.minutes.ago)
-    #   .delete_all
+    Rails.logger.info "[DeleteSessionJob] Marked OFFLINE: #{updated_offline}"
   end
 end
