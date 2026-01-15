@@ -35,12 +35,15 @@ class DeleteSessionJob
 
    
 
-      offline_ips = RadAcct
-  .where(framedprotocol: [nil, ''])
-  .where.not(acctstoptime: nil)
-  .where.not(framedipaddress: [nil, ''])
-  .pluck(:framedipaddress)
-  .uniq
+      offline_ips = RadAcct.where.not(acctstoptime: nil, framedprotocol: '').where.not('acctupdatetime > ?', 3.minutes.ago).pluck(:framedipaddress).uniq
+      
+      
+  #     RadAcct
+  # .where(framedprotocol: [nil, ''])
+  # .where.not(acctstoptime: nil)
+  # .where.not(framedipaddress: [nil, ''])
+  # .pluck(:framedipaddress)
+  # .uniq
 
     Rails.logger.info "[DeleteSessionJob] Online IPs: #{online_ips.inspect}"
 
