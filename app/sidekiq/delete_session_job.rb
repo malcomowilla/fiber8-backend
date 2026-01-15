@@ -2,7 +2,7 @@ class DeleteSessionJob
   include Sidekiq::Job
   queue_as :default
 
-     sidekiq_options lock: :until_executed, lock_timeout: 0
+    #  sidekiq_options lock: :until_executed, lock_timeout: 0
 
 
   def perform
@@ -17,8 +17,8 @@ class DeleteSessionJob
 
     Rails.logger.info "[DeleteSessionJob] FINISH"
   rescue => e
-    Rails.logger.error "[DeleteSessionJob] ERROR: #{e.message}"
-    Rails.logger.error e.backtrace.join("\n")
+    Rails.logger.info "[DeleteSessionJob] ERROR: #{e.message}"
+    Rails.logger.info e.backtrace.join("\n")
     raise e
   end
 
