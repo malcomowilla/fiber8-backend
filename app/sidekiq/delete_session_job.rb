@@ -27,12 +27,12 @@ sync_sessions
   def sync_sessions
     Rails.logger.info "[DeleteSessionJob] Sync sessions started"
 
-    online_ips = RadAcct.where(acctstoptime: nil, framedprotocol: '').where('acctupdatetime > ?', 3.minutes.ago).pluck(:framedipaddress).uniq.map(&:to_s)
+    online_ips = RadAcct.where(acctstoptime: nil, framedprotocol: '').where('acctupdatetime > ?', 2.minutes.ago).pluck(:framedipaddress).uniq.map(&:to_s)
       
 
    
 
-      offline_ips = RadAcct.where.not(acctstoptime: nil, framedprotocol: '').where.not('acctupdatetime > ?', 3.minutes.ago).pluck(:framedipaddress).uniq.map(&:to_s)
+      offline_ips = RadAcct.where.not(acctstoptime: nil, framedprotocol: '').where.not('acctupdatetime > ?', 2.minutes.ago).pluck(:framedipaddress).uniq.map(&:to_s)
       
       
 
