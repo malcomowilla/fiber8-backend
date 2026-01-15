@@ -1,5 +1,5 @@
 class DeleteSessionJob
-  include Sidekiq::Job
+ include Sidekiq::Job
   queue_as :default
 
     #  sidekiq_options lock: :until_executed, lock_timeout: 0

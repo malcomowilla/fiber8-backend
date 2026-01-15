@@ -114,6 +114,37 @@ class RouterPingJob
       ActsAsTenant.with_tenant(tenant) do
 
         
+
+
+    Rails.logger.info "[DeleteSessionJob] Sync sessions started"
+
+    online_ips = RadAcct
+      .where(acctstoptime: nil)
+      .where(framedprotocol: [nil, ''])
+      .where.not(framedipaddress: [nil, ''])
+      .pluck(:framedipaddress)
+      .uniq
+
+    Rails.logger.info "[DeleteSessionJob] Online IPs: #{online_ips.inspect}"
+
+    updated_online = TemporarySession
+      .where(ip: online_ips)
+      .where(connected: false)
+      .update_all(connected: true, updated_at: Time.current)
+
+    Rails.logger.info "[DeleteSessionJob] Marked ONLINE: #{updated_online}"
+
+    updated_offline = TemporarySession
+      .where.not(ip: online_ips)
+      .where(connected: true)
+      .update_all(connected: false, updated_at: Time.current)
+
+    Rails.logger.info "[DeleteSessionJob] Marked OFFLINE: #{updated_offline}"
+  
+
+
+
+
               subscriptions = Subscription.where.not(ip_address: [nil, ''])
               subscriptions.each do |subscription|
         # Process RadAcct records with nil account_id
