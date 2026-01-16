@@ -55,7 +55,7 @@ Rails.logger.info "Session record found: #{session.inspect}"
         session_active: true,
         ip: ip,
         username: voucher.voucher,
-        expiration: voucher.expiration,
+        expiration: voucher.expiration.strftime("%B %d, %Y at %I:%M %p"),
         package: voucher.package
       }
     else

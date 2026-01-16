@@ -39,7 +39,7 @@ end
 
 
     if sms_setting.blank?
-      Rails.logger.warn "Tenant #{ActsAsTenant.current_tenant.id} does not have an SMS provider set. Skipping SMS for voucher #{voucher.voucher}."
+      Rails.logger.info "Tenant #{ActsAsTenant.current_tenant.id} does not have an SMS provider set. Skipping SMS for voucher #{voucher.voucher}."
       return
     end
 
