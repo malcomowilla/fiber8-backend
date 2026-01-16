@@ -383,9 +383,11 @@ def create
   maximum_active_sessions = active_sessions.count
 
 if tenant.hotspot_plan.present?
+
+  if !tenant.hotspot_plan.name == 'Free Hotspot'
     plan_limit = tenant.hotspot_plan.hotspot_subscribers.to_i
     #  plan_limit = HotspotPlan.find_by(name: tenant.hotspot_plan.name).hotspot_subscribers.to_i
-Rails.logger.info "Hotspot PLan Maximum Subscribers =>#{tenant.hotspot_plan.hotspot_subscribers}"
+Rails.logger.info "Hotspot Plan Maximum Subscribers =>#{tenant.hotspot_plan.hotspot_subscribers}"
 
     
     if maximum_active_sessions >= plan_limit
@@ -394,6 +396,7 @@ Rails.logger.info "Hotspot PLan Maximum Subscribers =>#{tenant.hotspot_plan.hots
       }, status: :unprocessable_entity
       return
     end
+  end
   end
 
 
