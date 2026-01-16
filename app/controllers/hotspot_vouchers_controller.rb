@@ -384,10 +384,13 @@ def create
 
 if tenant.hotspot_plan.present?
     plan_limit = tenant.hotspot_plan.hotspot_subscribers.to_i
+    #  plan_limit = HotspotPlan.find_by(name: tenant.hotspot_plan.name).hotspot_subscribers.to_i
+Rails.logger.info "Hotspot PLan Maximum Subscribers =>#{tenant.hotspot_plan.hotspot_subscribers}"
+
     
     if maximum_active_sessions >= plan_limit
       render json: { 
-        error: "Maximum active sessions (#{plan_limit}) reached. Please upgrade your plan." 
+        error: "Maximum active sessions (#{plan_limit}) reached.Please upgrade your plan." 
       }, status: :unprocessable_entity
       return
     end

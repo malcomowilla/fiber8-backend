@@ -107,3 +107,11 @@ sms_setting = tenant.sms_setting
     Rails.logger.info "TextSMS response for voucher #{voucher.voucher}: #{response.body}"
   end
 end
+
+
+
+
+
+
+
+                    
