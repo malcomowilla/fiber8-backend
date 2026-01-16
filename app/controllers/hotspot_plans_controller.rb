@@ -41,18 +41,18 @@ end
       name: "Hotspot Free Trial",
       hotspot_subscribers: "unlimited",
       price: "0",
-      expiry_days: 3,
+      expiry_days: 7,
       status: "active",
-        expiry:  Time.current + 3.days
+        expiry:  Time.current + 7.days
 
     )
     default_plan.update(
        name: "Hotspot Free Trial",
       hotspot_subscribers: "unlimited",
       price: "0",
-      expiry_days: 3,
+      expiry_days: 7,
       status: "active",
-              expiry: Time.current + 3.days
+              expiry: Time.current + 7.days
 
     )
     plans = [default_plan]

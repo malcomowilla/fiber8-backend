@@ -53,8 +53,10 @@ Rails.logger.info "Session record found: #{session.inspect}"
     if voucher && voucher.expiration > Time.current
       return render json: {
         session_active: true,
+        ip: ip,
         username: voucher.voucher,
-        ip: ip
+        expiration: voucher.expiration,
+        package: voucher.package
       }
     else
 

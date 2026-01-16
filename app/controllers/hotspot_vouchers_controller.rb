@@ -379,7 +379,7 @@ def create
     account_id: tenant.id,
     acctstoptime: nil,
     framedprotocol: ''
-  ).where('acctupdatetime > ?', 3.minutes.ago)
+  ).where('acctupdatetime > ?', 2.minutes.ago)
   maximum_active_sessions = active_sessions.count
 
 if tenant.hotspot_plan.present?

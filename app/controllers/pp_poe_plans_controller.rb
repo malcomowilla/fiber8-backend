@@ -24,18 +24,18 @@ load_and_authorize_resource except: [:allow_get_current_plan, :index, :create, :
       maximum_pppoe_subscribers: "unlimited",
       
       price: "0",
-      expiry_days: 3,
+      expiry_days: 7,
       status: "active",
-       expiry: Time.current + 3.days
+       expiry: Time.current + 7.days
 
     )
     default_plan.update(
        name: "Free Trial",
       maximum_pppoe_subscribers: "unlimited",
       price: "0",
-      expiry_days: 3,
+      expiry_days: 7,
       status: "active",
-       expiry: Time.current + 3.days
+       expiry: Time.current + 7.days
 
     )
     plans = [default_plan]
