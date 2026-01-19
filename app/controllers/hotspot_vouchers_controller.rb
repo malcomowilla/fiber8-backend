@@ -610,7 +610,8 @@ Rails.logger.info "voucher ip#{params[:ip]}"
   # Get client IP
   client_ip = request.remote_ip
 
-
+ host = request.headers['X-Subdomain']
+ account = Account.find_by(subdomain: host)
 
   # Find the voucher in the database
   @hotspot_voucher = HotspotVoucher.find_by(voucher: params[:voucher])
@@ -634,7 +635,7 @@ Rails.logger.info "voucher ip#{params[:ip]}"
   end
   
  
-      nas_routers = NasRouter.all
+      nas_routers = NasRouter.where(account_id: account.id)
 
       nas_routers.each do |nas_router|
         
