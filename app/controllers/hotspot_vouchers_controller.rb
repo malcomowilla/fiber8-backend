@@ -603,6 +603,8 @@ end
 
 def login_with_hotspot_voucher
 
+
+
 Rails.logger.info "voucher ip#{params[:ip]}"
   
   return render json: { error: 'voucher is required' }, status: :bad_request unless params[:voucher].present?
@@ -622,17 +624,17 @@ Rails.logger.info "voucher ip#{params[:ip]}"
       return render json: { error: 'Voucher expired' }, status: :forbidden
     end
 
-  active_sessions = get_active_sessions(params[:voucher])
-@shared_users = HotspotPackage.find_by(name: @hotspot_voucher.package).shared_users.to_i
+#   active_sessions = get_active_sessions(params[:voucher])
+# @shared_users = HotspotPackage.find_by(name: @hotspot_voucher.package).shared_users.to_i
 
   
-  if active_sessions.any?
-    active_voucher_sessions = active_sessions.select { |session| session.include?(params[:voucher]) }
+#   if active_sessions.any?
+#     active_voucher_sessions = active_sessions.select { |session| session.include?(params[:voucher]) }
   
-    if active_voucher_sessions.count >= @shared_users
-      return render json: { error: "Voucher is already used by another user, the maximum number of allowed device => #{@shared_users}" }, status: :forbidden
-    end
-  end
+#     if active_voucher_sessions.count >= @shared_users
+#       return render json: { error: "Voucher is already used by another user, the maximum number of allowed device => #{@shared_users}" }, status: :forbidden
+#     end
+#   end
   
  
       nas_routers = NasRouter.where(account_id: account.id)
