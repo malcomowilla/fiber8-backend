@@ -14,12 +14,7 @@ class HotspotExpirationJob
         # expired_vouchers = HotspotVoucher.where('expiration <= ?', Time.current)
 # expired_vouchers = tenant&.hotspot_vouchers&.present? && tenant&.hotspot_vouchers&.where('expiration < ?', Time.current)
 
-expired_vouchers = tenant&.hotspot_vouchers&.where('expiration < ?', Time.current)
-return unless expired_vouchers.present?
-        # hotspot_subscriptions = HotspotVoucher.all
- hotspot_subscriptions = HotspotVoucher
-  .where(account_id: tenant.id)
-  # .where.not(voucher: [nil, ''])
+ hotspot_subscriptions = HotspotVoucher.where(account_id: tenant.id)
 
 hotspot_subscriptions.each do |subscription|
   next unless subscription.voucher.present?
@@ -48,12 +43,18 @@ hotspot_subscriptions.each do |subscription|
     ).destroy_all
   end
 end
+
+
+
+expired_vouchers = HotspotVoucher.where('expiration < ?', Time.current).where(account_id: tenant.id)
+return unless expired_vouchers.present?
+       
      
         expired_vouchers.each do |voucher|
 
-          
-          logout_hotspot_user(voucher)
           voucher.update!(status: 'expired') # Mark as expired in DB
+          logout_hotspot_user(voucher)
+          
 
 
           # Only send SMS if it hasn't been sent before
@@ -84,9 +85,9 @@ end
         Rails.logger.info("Successfully removed user #{voucher.voucher} from router #{router.name || router_ip}: #{output}")
       end
     rescue Net::SSH::AuthenticationFailed
-      Rails.logger.info("SSH authentication failed for MikroTik router #{router.name || router_ip}")
+      Rails.logger.error("SSH authentication failed for MikroTik router #{router.name || router_ip}")
     rescue StandardError => e
-      Rails.logger.info("Failed to logout user #{voucher.voucher} from router #{router.name || router_ip}: #{e.message}")
+      Rails.logger.error("Failed to logout user #{voucher.voucher} from router #{router.name || router_ip}: #{e.message}")
     end
   end
 end
@@ -221,7 +222,7 @@ end
         Rails.logger.info "Failed to send message: #{sms_data['responses'][0]['response-description']}"
       end
     else
-      Rails.logger.info "Failed to send message: #{response.body}"
+      Rails.logger.error "Failed to send message: #{response.body}"
     end
   end
 
