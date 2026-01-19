@@ -37,11 +37,11 @@ end
   end
 end
 
-def status
-  return "expired" if object.expiration.present? && object.expiration < Time.current
+# def status
+#   return "expired" if object.expiration.present? && object.expiration < Time.current
 
-  object.status
-end
+#   object.status
+# end
 end
 
 

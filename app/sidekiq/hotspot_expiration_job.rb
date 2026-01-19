@@ -16,7 +16,10 @@ class HotspotExpirationJob
 
 expired_vouchers = tenant&.hotspot_vouchers&.where('expiration < ?', Time.current)
 return unless expired_vouchers.present?
-        hotspot_subscriptions = HotspotVoucher.all
+        # hotspot_subscriptions = HotspotVoucher.all
+ hotspot_subscriptions = HotspotVoucher
+  .where(account_id: tenant.id)
+  # .where.not(voucher: [nil, ''])
 
 hotspot_subscriptions.each do |subscription|
   next unless subscription.voucher.present?
@@ -81,9 +84,9 @@ end
         Rails.logger.info("Successfully removed user #{voucher.voucher} from router #{router.name || router_ip}: #{output}")
       end
     rescue Net::SSH::AuthenticationFailed
-      Rails.logger.error("SSH authentication failed for MikroTik router #{router.name || router_ip}")
+      Rails.logger.info("SSH authentication failed for MikroTik router #{router.name || router_ip}")
     rescue StandardError => e
-      Rails.logger.error("Failed to logout user #{voucher.voucher} from router #{router.name || router_ip}: #{e.message}")
+      Rails.logger.info("Failed to logout user #{voucher.voucher} from router #{router.name || router_ip}: #{e.message}")
     end
   end
 end
@@ -218,7 +221,7 @@ end
         Rails.logger.info "Failed to send message: #{sms_data['responses'][0]['response-description']}"
       end
     else
-      Rails.logger.error "Failed to send message: #{response.body}"
+      Rails.logger.info "Failed to send message: #{response.body}"
     end
   end
 
