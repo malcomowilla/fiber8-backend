@@ -164,47 +164,99 @@ Rails.logger.info "Parsed data calback mpesa: #{request.body.read}"
     #   time_paid: data["TransTime"]
     # )
     Rails.logger.info "Hotspot voucher #{voucher_code} paid successfully."
- voucher = HotspotVoucher.find_by(voucher: voucher_code)
-    # Automatically login device using IP from session
-    nas_routers = NasRouter.where(account_id: voucher.account_id)
-     nas_routers .all.each do |nas|
-      begin
-        Net::SSH.start(nas.ip_address, nas.username, password: nas.password, verify_host_key: :never) do |ssh|
-          command = "/ip hotspot active login user=#{voucher_code} password=#{voucher_code} ip=#{session.ip}"
+    voucher = HotspotVoucher.find_by(voucher: voucher_code)
 
-          output = ssh.exec!(command)
-          if output.include?("failure")
-            Rails.logger.info "Login failed for voucher #{voucher_code} on router #{nas.ip_address}: #{output}"
-            # render json: { error: "Login failed for voucher #{voucher_code} on router #{nas.ip_address}: #{output}" }, status: :unprocessable_entity
-          else
-            Rails.logger.info "Device #{session.ip} successfully logged in with voucher #{voucher_code} on router #{nas.ip_address}"
+nas_routers = NasRouter.where(account_id: voucher.account_id)
+
+nas_routers.each do |nas|
+  begin
+    response = RestClient::Request.execute(
+      method: :post,
+      url: "http://#{nas.ip_address}/rest/ip/hotspot/active/login",
+      user: nas.username,
+      password: nas.password,
+      payload: {
+        ip: session.ip,
+        user: voucher_code,
+        password: voucher_code
+      }.to_json,
+      headers: {
+        content_type: :json,
+        accept: :json
+      }
+    )
+
+    if response.code == 200
+      Rails.logger.info "Device #{session.ip} successfully logged in with voucher #{voucher_code} on router #{nas.ip_address}"
+
+      # ✅ Update session
+      session.update!(paid: true, connected: true)
+
+      # ✅ Mark voucher as used
+      voucher.update!(status: "used")
+
+      # ✅ Send SMS
+      SendSmsHotspotJob.perform_now(voucher.voucher, data)
+
+      # ✅ Notify frontend
+      HotspotNotificationsChannel.broadcast_to(
+        session.ip,
+        message: "Payment received! You are now connected."
+      )
+    end
+
+  rescue RestClient::Unauthorized
+    Rails.logger.info "REST auth failed for router #{nas.ip_address}"
+
+  rescue RestClient::ExceptionWithResponse => e
+    Rails.logger.info "MikroTik REST error on #{nas.ip_address}: #{e.response}"
+
+  rescue StandardError => e
+    Rails.logger.info "REST error logging in device #{session.ip}: #{e.message}"
+  end
+end
+
+#  voucher = HotspotVoucher.find_by(voucher: voucher_code)
+#     # Automatically login device using IP from session
+#     nas_routers = NasRouter.where(account_id: voucher.account_id)
+#      nas_routers .all.each do |nas|
+#       begin
+#         Net::SSH.start(nas.ip_address, nas.username, password: nas.password, verify_host_key: :never) do |ssh|
+#           command = "/ip hotspot active login user=#{voucher_code} password=#{voucher_code} ip=#{session.ip}"
+
+#           output = ssh.exec!(command)
+#           if output.include?("failure")
+#             Rails.logger.info "Login failed for voucher #{voucher_code} on router #{nas.ip_address}: #{output}"
+#             # render json: { error: "Login failed for voucher #{voucher_code} on router #{nas.ip_address}: #{output}" }, status: :unprocessable_entity
+#           else
+#             Rails.logger.info "Device #{session.ip} successfully logged in with voucher #{voucher_code} on router #{nas.ip_address}"
             
-            session.update!(paid: true, connected: true)
+#             session.update!(paid: true, connected: true)
 
 
-            HotspotVoucher.find_by(voucher: voucher_code).update(status: "used")
-               voucher = HotspotVoucher.find_by(voucher: voucher_code).voucher
+#             HotspotVoucher.find_by(voucher: voucher_code).update(status: "used")
+#                voucher = HotspotVoucher.find_by(voucher: voucher_code).voucher
 
 
-            SendSmsHotspotJob.perform_now(voucher, data)
-            # render json: { message: "Device #{session.ip} successfully logged in with voucher #{voucher_code} on router" }, status: :ok
+#             SendSmsHotspotJob.perform_now(voucher, data)
+#             # render json: { message: "Device #{session.ip} successfully logged in with voucher #{voucher_code} on router" }, status: :ok
 
             
-            HotspotNotificationsChannel.broadcast_to(
-              session.ip,
-              message: "Payment received! You are now connected.",
-            )
-          end
+#             HotspotNotificationsChannel.broadcast_to(
+#               session.ip,
+#               message: "Payment received! You are now connected.",
+#             )
+#           end
  
           
-        end
+#         end
 
      
 
-      rescue => e
-        Rails.logger.info "SSH error logging in device #{session.ip}: #{e.message}"
-      end
-    end
+#       rescue => e
+#         Rails.logger.info "SSH error logging in device #{session.ip}: #{e.message}"
+#       end
+#     end
 
     # Mark session as paid
 
@@ -744,15 +796,15 @@ def login_with_hotspot_voucher
       end
 
     rescue RestClient::Unauthorized
-      Rails.logger.error "REST auth failed for router #{router.ip_address}"
+      Rails.logger.info "REST auth failed for router #{router.ip_address}"
       next
 
     rescue RestClient::ExceptionWithResponse => e
-      Rails.logger.error "MikroTik REST error (#{router.ip_address}): #{e.response}"
+      Rails.logger.info "MikroTik REST error (#{router.ip_address}): #{e.response}"
       next
 
     rescue StandardError => e
-      Rails.logger.error "REST login error: #{e.message}"
+      Rails.logger.info "REST login error: #{e.message}"
       next
     end
   end
