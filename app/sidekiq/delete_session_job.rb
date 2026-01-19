@@ -8,13 +8,18 @@ class DeleteSessionJob
   def perform
     Rails.logger.info "[DeleteSessionJob] START"
 
-    # Account.find_each do |tenant|
-    #   # ActsAsTenant.with_tenant(tenant) do
+    Account.find_each do |tenant|
+      ActsAsTenant.with_tenant(tenant) do
     #   #   Rails.logger.info "[DeleteSessionJob] Processing tenant #{tenant.id}"
     #   #   sync_sessions!
     #   # end
     # end
-sync_sessions
+sync_sessions(tenant)
+
+      end
+    end
+
+
     Rails.logger.info "[DeleteSessionJob] FINISH"
   rescue => e
     Rails.logger.info "[DeleteSessionJob] ERROR: #{e.message}"
@@ -24,12 +29,12 @@ sync_sessions
 
   private
 
-  def sync_sessions
+  def sync_sessions(tenant)
     Rails.logger.info "[DeleteSessionJob] Sync sessions started"
 
-    online_ips = RadAcct.where(acctstoptime: nil, framedprotocol: '').where('acctupdatetime > ?', 2.minutes.ago).pluck(:framedipaddress).uniq.map(&:to_s)
+    online_ips = RadAcct.where(acctstoptime: nil, framedprotocol: '', account_id: tenant.id).where('acctupdatetime > ?', 2.minutes.ago).pluck(:framedipaddress).uniq.map(&:to_s)
       
-    offline_ips = RadAcct.where.not(acctstoptime: nil, framedprotocol: '').where.not('acctupdatetime > ?', 2.minutes.ago).pluck(:framedipaddress).uniq.map(&:to_s)
+    offline_ips = RadAcct.where.not(acctstoptime: nil, framedprotocol: '').where.not('acctupdatetime > ?', 2.minutes.ago).where(account_id: tenant.id).pluck(:framedipaddress).uniq.map(&:to_s)
       
       
 
@@ -37,6 +42,7 @@ sync_sessions
 
     updated_online = TemporarySession
       .where(ip:  online_ips)
+      .where(account_id: tenant.id)
       # .where(connected: true)
       .update_all(connected: true, updated_at: Time.current)
 
@@ -44,6 +50,7 @@ sync_sessions
 
     updated_offline = TemporarySession
       .where(ip: offline_ips)
+       .where(account_id: tenant.id)
       #  .where(connected: false)
       .update_all(connected: false, updated_at: Time.current)
 

@@ -146,10 +146,12 @@ Rails.logger.info "Parsed data calback mpesa: #{request.body.read}"
     parts = bill_ref.sub("hotspot_", "").split("_")
     session_id = parts[0]
     voucher_code = parts[1]
+        voucher = HotspotVoucher.find_by(voucher: voucher_code)
+
 
     Rails.logger.info "Session ID: #{session_id}, Voucher Code: #{voucher_code}"
     # Find the temporary session
-    session = TemporarySession.find_by(session: session_id)
+    session = TemporarySession.find_by(session: session_id, account_id: voucher.account_id)
     unless session
       Rails.logger.info "Temporary session not found for session_id: #{session_id}"
       return head :ok
