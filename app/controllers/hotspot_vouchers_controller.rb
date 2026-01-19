@@ -655,8 +655,11 @@ Rails.logger.info "voucher ip#{params[:ip]}"
         @hotspot_voucher.update(status: 'used')
         return render json: {
           message: 'Connected successfully',
-          device_ip: client_ip,
-          response: output
+          device_ip: params[:ip],
+          response: output,
+           username:  @hotspot_voucher.voucher,
+        expiration:  @hotspot_voucher.expiration.strftime("%B %d, %Y at %I:%M %p"),
+        package:  @hotspot_voucher.package
         }, status: :ok
       end
     end
