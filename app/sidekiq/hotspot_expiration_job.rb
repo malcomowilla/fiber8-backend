@@ -53,7 +53,7 @@ return unless expired_vouchers.present?
         expired_vouchers.each do |voucher|
 
           voucher.update!(status: 'expired') # Mark as expired in DB
-          logout_hotspot_user(voucher)
+         
           
 
 
@@ -61,9 +61,8 @@ return unless expired_vouchers.present?
           if voucher.sms_sent_at.nil?
              send_expiration_sms(voucher, tenant) # Unified function to send SMS based on provider
              voucher.update!(sms_sent_at: Time.current) # Track when the SMS was sent
-           
-           
           end
+ logout_hotspot_user(voucher)
         end
       end
     end
