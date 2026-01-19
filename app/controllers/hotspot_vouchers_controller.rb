@@ -601,28 +601,28 @@ end
 
 
 
-def login_with_hotspot_voucher
+# def login_with_hotspot_voucher
 
-
-
-Rails.logger.info "voucher ip#{params[:ip]}"
   
-  return render json: { error: 'voucher is required' }, status: :bad_request unless params[:voucher].present?
 
-  # Get client IP
-  client_ip = request.remote_ip
+# Rails.logger.info "voucher ip#{params[:ip]}"
+  
+#   return render json: { error: 'voucher is required' }, status: :bad_request unless params[:voucher].present?
 
- host = request.headers['X-Subdomain']
- account = Account.find_by(subdomain: host)
+#   # Get client IP
+#   client_ip = request.remote_ip
 
-  # Find the voucher in the database
-  @hotspot_voucher = HotspotVoucher.find_by(voucher: params[:voucher])
-  return render json: { error: 'Invalid voucher' }, status: :not_found unless @hotspot_voucher
+#  host = request.headers['X-Subdomain']
+#  account = Account.find_by(subdomain: host)
+
+#   # Find the voucher in the database
+#   @hotspot_voucher = HotspotVoucher.find_by(voucher: params[:voucher])
+#   return render json: { error: 'Invalid voucher' }, status: :not_found unless @hotspot_voucher
 
 
-      if @hotspot_voucher.expiration.present? && @hotspot_voucher.expiration < Time.current
-      return render json: { error: 'Voucher expired' }, status: :forbidden
-    end
+#       if @hotspot_voucher.expiration.present? && @hotspot_voucher.expiration < Time.current
+#       return render json: { error: 'Voucher expired' }, status: :forbidden
+#     end
 
 #   active_sessions = get_active_sessions(params[:voucher])
 # @shared_users = HotspotPackage.find_by(name: @hotspot_voucher.package).shared_users.to_i
@@ -637,43 +637,129 @@ Rails.logger.info "voucher ip#{params[:ip]}"
 #   end
   
  
-      nas_routers = NasRouter.where(account_id: account.id)
+#       nas_routers = NasRouter.where(account_id: account.id)
 
-      nas_routers.each do |nas_router|
+#       nas_routers.each do |nas_router|
         
-    router_ip_address = nas_router.ip_address
-    router_password = nas_router.password
-    router_username = nas_router.username
+#     router_ip_address = nas_router.ip_address
+#     router_password = nas_router.password
+#     router_username = nas_router.username
 
 
-  command = "/ip hotspot active login user=#{params[:voucher]} password=#{params[:voucher]} ip=#{params[:ip]}"
+#   command = "/ip hotspot active login user=#{params[:voucher]} password=#{params[:voucher]} ip=#{params[:ip]}"
 
-  begin
-    Net::SSH.start(router_ip_address,  router_username, password: router_password, verify_host_key: :never) do |ssh|
-      output = ssh.exec!(command)
-      if output.include?('failure')
-        return render json: { error: "Login failed: #{output}" }, status: :unauthorized
-      else
-        @hotspot_voucher.update(status: 'used')
+#   begin
+#     Net::SSH.start(router_ip_address,  router_username, password: router_password, verify_host_key: :never) do |ssh|
+#       output = ssh.exec!(command)
+#       if output.include?('failure')
+#         return render json: { error: "Login failed: #{output}" }, status: :unauthorized
+#       else
+#         @hotspot_voucher.update(status: 'used')
+#         return render json: {
+#           message: 'Connected successfully',
+#           device_ip: params[:ip],
+#           response: output,
+#            username:  @hotspot_voucher.voucher,
+#         expiration:  @hotspot_voucher.expiration.strftime("%B %d, %Y at %I:%M %p"),
+#         package:  @hotspot_voucher.package
+#         }, status: :ok
+#       end
+#     end
+#   rescue Net::SSH::AuthenticationFailed
+#     render json: { error: 'SSH authentication failed' }, status: :unauthorized
+#   rescue StandardError => e
+#     render json: { error: "Failed to log in device", message: e.message }, status: :internal_server_error
+#   end
+#       end
+
+        
+# end
+# 
+#
+#
+def login_with_hotspot_voucher
+  Rails.logger.info "voucher ip #{params[:ip]}"
+
+  return render json: { error: 'voucher is required' }, status: :bad_request unless params[:voucher].present?
+  return render json: { error: 'ip is required' }, status: :bad_request unless params[:ip].present?
+
+  host = request.headers['X-Subdomain']
+  account = Account.find_by(subdomain: host)
+  return render json: { error: 'Account not found' }, status: :not_found unless account
+
+  # 🔹 Find voucher
+  @hotspot_voucher = HotspotVoucher.find_by(voucher: params[:voucher])
+  return render json: { error: 'Invalid voucher' }, status: :not_found unless @hotspot_voucher
+
+  # 🔹 Expiration check
+  if @hotspot_voucher.expiration.present? && @hotspot_voucher.expiration < Time.current
+    return render json: { error: 'Voucher expired' }, status: :forbidden
+  end
+
+  # 🔹 Shared users check
+  active_sessions = get_active_sessions(params[:voucher])
+  package = HotspotPackage.find_by(name: @hotspot_voucher.package)
+  shared_users = package&.shared_users.to_i
+
+  if active_sessions.any?
+    active_voucher_sessions = active_sessions.select { |s| s.include?(params[:voucher]) }
+    if active_voucher_sessions.count >= shared_users
+      return render json: {
+        error: "Voucher already used. Max devices allowed: #{shared_users}"
+      }, status: :forbidden
+    end
+  end
+
+  # 🔹 Login via MikroTik REST API (HTTP)
+  nas_routers = NasRouter.where(account_id: account.id)
+
+  nas_routers.each do |router|
+    begin
+      response = RestClient::Request.execute(
+        method: :post,
+        url: "http://#{router.ip_address}/rest/ip/hotspot/active/login",
+        user: router.username,
+        password: router.password,
+        payload: {
+          ip: params[:ip],
+          user: params[:voucher],
+          password: params[:voucher]
+        }.to_json,
+        headers: {
+          content_type: :json,
+          accept: :json
+        }
+      )
+
+      if response.code == 200
+        @hotspot_voucher.update!(status: 'used')
+
         return render json: {
           message: 'Connected successfully',
           device_ip: params[:ip],
-          response: output,
-           username:  @hotspot_voucher.voucher,
-        expiration:  @hotspot_voucher.expiration.strftime("%B %d, %Y at %I:%M %p"),
-        package:  @hotspot_voucher.package
+          username: @hotspot_voucher.voucher,
+          expiration: @hotspot_voucher.expiration&.strftime("%B %d, %Y at %I:%M %p"),
+          package: @hotspot_voucher.package
         }, status: :ok
       end
-    end
-  rescue Net::SSH::AuthenticationFailed
-    render json: { error: 'SSH authentication failed' }, status: :unauthorized
-  rescue StandardError => e
-    render json: { error: "Failed to log in device", message: e.message }, status: :internal_server_error
-  end
-      end
 
-        
+    rescue RestClient::Unauthorized
+      Rails.logger.error "REST auth failed for router #{router.ip_address}"
+      next
+
+    rescue RestClient::ExceptionWithResponse => e
+      Rails.logger.error "MikroTik REST error (#{router.ip_address}): #{e.response}"
+      next
+
+    rescue StandardError => e
+      Rails.logger.error "REST login error: #{e.message}"
+      next
+    end
+  end
+
+  render json: { error: 'Failed to connect on all routers' }, status: :unprocessable_entity
 end
+
   
   private
     # Use callbacks to share common setup or constraints between actions.
