@@ -14,11 +14,40 @@ class HotspotExpirationJob
         # expired_vouchers = HotspotVoucher.where('expiration <= ?', Time.current)
 # expired_vouchers = tenant&.hotspot_vouchers&.present? && tenant&.hotspot_vouchers&.where('expiration < ?', Time.current)
 
- 
+ hotspot_subscriptions = HotspotVoucher.where(account_id: tenant.id)
+
+hotspot_subscriptions.each do |subscription|
+  next unless subscription.voucher.present?
+
+  # Fetch the PPPoE plan linked to this subscription/account
+  plan = tenant&.hotspot_plan
+
+  expired_hotspot = plan&.expiry.present? && plan.expiry <= Time.current
+
+  if expired_hotspot
+    # Deny login by adding reject if not already there
+    RadCheck.find_or_create_by!(
+      username: subscription.voucher,
+      radiusattribute: 'Auth-Type',
+      account_id: subscription.account_id,
+      op: ':=',
+      value: 'Reject'
+    )
+  else
+    # Allow login by removing the reject entry if it exists
+    RadCheck.where(
+      username: subscription.voucher,
+      account_id: subscription.account_id,
+      radiusattribute: 'Auth-Type',
+      value: 'Reject'
+    ).destroy_all
+  end
+end
+
 
 
 expired_vouchers = HotspotVoucher.where('expiration < ?', Time.current).where(account_id: tenant.id)
-return unless expired_vouchers.present?
+# return unless expired_vouchers.present?
        
      
         expired_vouchers.each do |voucher|
@@ -33,7 +62,7 @@ return unless expired_vouchers.present?
              send_expiration_sms(voucher, tenant) # Unified function to send SMS based on provider
              voucher.update!(sms_sent_at: Time.current) # Track when the SMS was sent
           end
- logout_hotspot_user(voucher)
+#  logout_hotspot_user(voucher)
         end
       end
     end
