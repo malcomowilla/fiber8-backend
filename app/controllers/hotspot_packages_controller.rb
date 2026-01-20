@@ -443,13 +443,13 @@ def update_freeradius_policies(package_name, shared_users, upload_limit, downloa
       value: "3600"
     )
     # Simultaneous use
-    RadGroupCheck.find_or_initialize_by(
-      groupname: group_name,
-      radiusattribute: 'Simultaneous-Use'
-    ).update!(
-      op: ':=',
-      value: shared_users
-    )
+    # RadGroupCheck.find_or_initialize_by(
+    #   groupname: group_name,
+    #   radiusattribute: 'Simultaneous-Use'
+    # ).update!(
+    #   op: ':=',
+    #   value: shared_users
+    # )
 
     # Login-Time rule
     rad_days = RadGroupCheck.find_or_initialize_by(
