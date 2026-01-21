@@ -49,18 +49,18 @@ if current_user
   def invite_users
     authorize! :invite_users, User
 
-    if User.exists?(username: params[:username])
-      render json: { error: "username already exists" }, status: :unprocessable_entity
-      return
+    # if User.exists?(username: params[:username])
+    #   render json: { error: "username already exists" }, status: :unprocessable_entity
+    #   return
       
-    end
+    # end
     
 
-    if User.exists?(email: params[:email])
-      render json: { error: "email already exists" }, status: :unprocessable_entity
-      return
+    # if User.exists?(email: params[:email])
+    #   render json: { error: "email already exists" }, status: :unprocessable_entity
+    #   return
       
-    end
+    # end
     
     if params[:email].blank?
       render json: { error: "email is required" }, status: :unprocessable_entity
@@ -179,10 +179,12 @@ ActivtyLog.create(action: 'create', ip: request.remote_ip,
       if params[:send_password_via_sms] == true || params[:send_password_via_sms] == 'true'
         send_login_password(@my_admin.phone_number, @my_admin.password, @my_admin.user_name)
       end
+
+
       subdomain = request.headers['X-Subdomain']
 company_photo = Account.find_by(subdomain: subdomain).company_setting&.logo&.attached? ? rails_blob_url(Account.find_by(subdomain: subdomain).company_setting.logo, host: 'localhost', protocol: 'http', port: 4000) : nil
       invitation_link = "http://localhost:5173/signin"
-      company_name = ActsAsTenant.current_tenant.company_setting.company_name
+      company_name = ActsAsTenant.current_tenant.company_setting&.company_name || 'Aitechs'
       # company_photo = ActsAsTenant.current_tenant.company_setting&.logo&.attached? ? rails_blob_url(@company_settings.logo, host: 'localhost', protocol: 'http', port: 4000) : nil
       # if
         
