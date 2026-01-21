@@ -361,6 +361,10 @@ get '/api/get_active_hotspot_users', to: 'hotspot_subscriptions#get_active_hotsp
 get '/allow_get_hotspot_templates', to: 'hotspot_templates#allow_get_hotspot_templates'
 get '/api/allow_get_hotspot_templates', to: 'hotspot_templates#allow_get_hotspot_templates'
 
+
+
+get '/api/get_router_logs', to: 'router_info#get_router_logs'
+
 get '/api/router_info', to: 'router_info#router_info'
 post '/login_with_hotspot_voucher', to: 'hotspot_vouchers#login_with_hotspot_voucher'
 post '/api/login_with_hotspot_voucher', to: 'hotspot_vouchers#login_with_hotspot_voucher'

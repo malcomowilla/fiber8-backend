@@ -6,6 +6,10 @@ before_action :set_tenant
 
 require 'bigdecimal'
 require 'bigdecimal/util'
+ require 'net/http'
+    require 'json'
+    require 'uri'
+
 
 
 
@@ -170,6 +174,75 @@ end
 
     render json: customized_data
   end
+  
+
+
+
+
+
+
+
+
+
+ def get_router_logs
+      # Get router ID from params
+      router_id = params[:id]
+      
+      # Fetch router credentials from database
+      router = Router.find_by(id: router_id)
+      
+      unless router
+        render json: { error: "Router not found" }, status: :not_found
+        return
+      end
+
+      # Use router's IP and credentials
+      mikrotik_ip = router.ip_address
+      username = router.username
+      password = router.password
+
+      # Build MikroTik API URL
+      uri = URI("http://#{mikrotik_ip}/rest/log")
+      
+      # Create HTTP request
+      req = Net::HTTP::Get.new(uri)
+      req.basic_auth(username, password)
+      req["Content-Type"] = "application/json"
+
+      # Make request with timeout
+      http = Net::HTTP.new(uri.hostname, uri.port)
+      http.read_timeout = 10
+      http.open_timeout = 5
+
+      begin
+        res = http.request(req)
+        
+        unless res.is_a?(Net::HTTPSuccess)
+          render json: { error: "Failed to fetch logs", status: res.code }, status: :bad_gateway
+          return
+        end
+
+        logs = JSON.parse(res.body)
+        
+        # Process logs to match frontend expectations
+        processed_logs = logs.map do |log|
+          {
+            time: log['time'],
+            topics: log['topics'],
+            message: log['message']
+          }
+        end
+
+        render json: processed_logs
+      rescue Net::ReadTimeout, Net::OpenTimeout => e
+        render json: { error: "Connection timeout: #{e.message}" }, status: :gateway_timeout
+      rescue => e
+        render json: { error: "Failed to connect to router: #{e.message}" }, status: :internal_server_error
+      end
+    end
+
+
+
   
   private
   
