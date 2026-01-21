@@ -189,7 +189,7 @@ end
       router_id = params[:id]
       
       # Fetch router credentials from database
-      router = Router.find_by(id: router_id)
+      router = NasRouter.find_by(id: router_id)
       
       unless router
         render json: { error: "Router not found" }, status: :not_found
