@@ -2,6 +2,8 @@ require 'sidekiq/web'
 
 
 Rails.application.routes.draw do
+  resources :subscriber_invoices
+  resources :pp_poe_mpesa_revenues
   resources :nas_settings
   resources :hotspot_customizations
   resources :template_locations
@@ -77,6 +79,9 @@ mount ActionCable.server => '/cable'
 mount Sidekiq::Web => "/sidekiq" # mount Sidekiq::Web in your Rails app
 
 scope '/api' do
+
+    resources :subscriber_invoices
+  resources :pp_poe_mpesa_revenues
     resources :nas_settings
 
     resources :hotspot_customizations

@@ -1,0 +1,10 @@
+<p style="color: green"><%= notice %></p>
+
+<%= render @subscriber_invoice %>
+
+<div>
+  <%= link_to "Edit this subscriber invoice", edit_subscriber_invoice_path(@subscriber_invoice) %> |
+  <%= link_to "Back to subscriber invoices", subscriber_invoices_path %>
+
+  <%= button_to "Destroy this subscriber invoice", @subscriber_invoice, method: :delete %>
+</div>

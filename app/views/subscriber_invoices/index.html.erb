@@ -1,0 +1,16 @@
+<p style="color: green"><%= notice %></p>
+
+<% content_for :title, "Subscriber invoices" %>
+
+<h1>Subscriber invoices</h1>
+
+<div id="subscriber_invoices">
+  <% @subscriber_invoices.each do |subscriber_invoice| %>
+    <%= render subscriber_invoice %>
+    <p>
+      <%= link_to "Show this subscriber invoice", subscriber_invoice %>
+    </p>
+  <% end %>
+</div>
+
+<%= link_to "New subscriber invoice", new_subscriber_invoice_path %>

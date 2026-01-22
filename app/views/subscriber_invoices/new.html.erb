@@ -1,0 +1,11 @@
+<% content_for :title, "New subscriber invoice" %>
+
+<h1>New subscriber invoice</h1>
+
+<%= render "form", subscriber_invoice: @subscriber_invoice %>
+
+<br>
+
+<div>
+  <%= link_to "Back to subscriber invoices", subscriber_invoices_path %>
+</div>

@@ -218,58 +218,20 @@ nas_routers.each do |nas|
   end
 end
 
-#  voucher = HotspotVoucher.find_by(voucher: voucher_code)
-#     # Automatically login device using IP from session
-#     nas_routers = NasRouter.where(account_id: voucher.account_id)
-#      nas_routers .all.each do |nas|
-#       begin
-#         Net::SSH.start(nas.ip_address, nas.username, password: nas.password, verify_host_key: :never) do |ssh|
-#           command = "/ip hotspot active login user=#{voucher_code} password=#{voucher_code} ip=#{session.ip}"
-
-#           output = ssh.exec!(command)
-#           if output.include?("failure")
-#             Rails.logger.info "Login failed for voucher #{voucher_code} on router #{nas.ip_address}: #{output}"
-#             # render json: { error: "Login failed for voucher #{voucher_code} on router #{nas.ip_address}: #{output}" }, status: :unprocessable_entity
-#           else
-#             Rails.logger.info "Device #{session.ip} successfully logged in with voucher #{voucher_code} on router #{nas.ip_address}"
-            
-#             session.update!(paid: true, connected: true)
-
-
-#             HotspotVoucher.find_by(voucher: voucher_code).update(status: "used")
-#                voucher = HotspotVoucher.find_by(voucher: voucher_code).voucher
-
-
-#             SendSmsHotspotJob.perform_now(voucher, data)
-#             # render json: { message: "Device #{session.ip} successfully logged in with voucher #{voucher_code} on router" }, status: :ok
-
-            
-#             HotspotNotificationsChannel.broadcast_to(
-#               session.ip,
-#               message: "Payment received! You are now connected.",
-#             )
-#           end
- 
-          
-#         end
-
-     
-
-#       rescue => e
-#         Rails.logger.info "SSH error logging in device #{session.ip}: #{e.message}"
-#       end
-#     end
-
-    # Mark session as paid
 
   else
     # Handle other types of payments here
     Rails.logger.info "Non-hotspot payment received: #{bill_ref}"
-    # Your custom logic for other BillRefNumbers can go here
+    
+    bill_ref = data["BillRefNumber"]
+     
   end
 
   head :ok
 end
+
+
+
 
 
 

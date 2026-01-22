@@ -1,8 +1,11 @@
 class SubscriberSerializer < ActiveModel::Serializer
-  attributes :id, :name, :phone_number, :ppoe_username, :ppoe_password, :email, :ppoe_package, 
+  attributes :id, :name, :phone_number, :ppoe_username, 
+  :ppoe_password, :email, :ppoe_package, 
   :date_registered, :ref_no,
-   :package_name,:installation_fee, :subscriber_discount, :second_phone_number, :router_name,
-   :house_number, :building_name, :latitude, :longitude, :expiration, :registration_date,
+   :package_name,:installation_fee, :subscriber_discount, 
+   :second_phone_number, :router_name,
+   :house_number, :building_name, :latitude, :longitude, :expiration,
+    :registration_date,
    :location, :node, :status, :created_at, :updated_at
 
 

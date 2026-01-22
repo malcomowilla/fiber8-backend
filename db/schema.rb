@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_01_14_081707) do
+ActiveRecord::Schema[7.2].define(version: 2026_01_22_094145) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -700,6 +700,18 @@ ActiveRecord::Schema[7.2].define(version: 2026_01_14_081707) do
     t.string "subscription"
   end
 
+  create_table "pp_poe_mpesa_revenues", force: :cascade do |t|
+    t.string "payment_method"
+    t.string "reference"
+    t.datetime "time_paid"
+    t.integer "account_id"
+    t.string "account_number"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.integer "amount"
+    t.string "customer_name"
+  end
+
   create_table "pp_poe_plans", force: :cascade do |t|
     t.string "maximum_pppoe_subscribers", default: "unlimited"
     t.datetime "created_at", null: false
@@ -793,6 +805,22 @@ ActiveRecord::Schema[7.2].define(version: 2026_01_14_081707) do
     t.datetime "updated_at", null: false
   end
 
+  create_table "subscriber_invoices", force: :cascade do |t|
+    t.string "item"
+    t.datetime "due_date"
+    t.datetime "invoice_date"
+    t.string "invoice_number"
+    t.integer "amount"
+    t.string "status"
+    t.string "description"
+    t.string "quantity"
+    t.integer "account_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.integer "subscriber_id"
+    t.integer "subscription_id"
+  end
+
   create_table "subscriber_settings", force: :cascade do |t|
     t.string "prefix"
     t.string "minimum_digits"
@@ -808,6 +836,8 @@ ActiveRecord::Schema[7.2].define(version: 2026_01_14_081707) do
     t.string "installation_fee"
     t.boolean "subscriber_welcome_message"
     t.boolean "lock_account_to_mac"
+    t.boolean "notify_user_payment_received", default: false
+    t.boolean "invoice_created_or_paid", default: false
   end
 
   create_table "subscribers", force: :cascade do |t|

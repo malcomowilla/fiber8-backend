@@ -1,0 +1,23 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  item: MyString
+  due_date: 2026-01-22 10:31:23
+  invoice_date: 2026-01-22 10:31:23
+  invoice_number: MyString
+  amount: 1
+  status: MyString
+  description: MyString
+  quantity: MyString
+  account_id: 1
+
+two:
+  item: MyString
+  due_date: 2026-01-22 10:31:23
+  invoice_date: 2026-01-22 10:31:23
+  invoice_number: MyString
+  amount: 1
+  status: MyString
+  description: MyString
+  quantity: MyString
+  account_id: 1

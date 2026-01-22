@@ -1,0 +1,16 @@
+<p style="color: green"><%= notice %></p>
+
+<% content_for :title, "Pp poe mpesa revenues" %>
+
+<h1>Pp poe mpesa revenues</h1>
+
+<div id="pp_poe_mpesa_revenues">
+  <% @pp_poe_mpesa_revenues.each do |pp_poe_mpesa_revenue| %>
+    <%= render pp_poe_mpesa_revenue %>
+    <p>
+      <%= link_to "Show this pp poe mpesa revenue", pp_poe_mpesa_revenue %>
+    </p>
+  <% end %>
+</div>
+
+<%= link_to "New pp poe mpesa revenue", new_pp_poe_mpesa_revenue_path %>

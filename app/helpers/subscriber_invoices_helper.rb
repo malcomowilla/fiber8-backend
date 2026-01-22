@@ -1,0 +1,2 @@
+module SubscriberInvoicesHelper
+end
