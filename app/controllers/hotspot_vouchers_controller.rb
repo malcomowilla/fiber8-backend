@@ -228,7 +228,11 @@ end
         nas_routers = NasRouter.where(account_id: invoice.account_id)
         subscription = Subscription.find_by(id: invoice.subscription_id)
         subscriber_phone_number = Subscriber.find_by(id: subscription.subscriber_id).phone_number
-        package_amount_paid = data["TransAmount"]
+        # package_amount_paid = data["TransAmount"]
+        expiration_time = Time.parse(subscription.expiration_date.to_s)
+
+
+        expiration_time > Time.current
         # paid_right_amount = Package.find_by(
         #   account_id: subscription.account_id,
         #   amount: package_amount_paid

@@ -10,7 +10,7 @@ class SubscriptionExpirationJob
     Account.find_each do |tenant|
       ActsAsTenant.with_tenant(tenant) do
      
-      subscriptions = Subscription.all
+      subscriptions = Subscription.where(account_id: tenant.id)
       
 
 subscriptions.each do |subscription|
@@ -48,7 +48,7 @@ end
 
              begin
 
- routers = NasRouter.all
+ routers = NasRouter.where(account_id: subscription.account_id)
         routers.each do |router|
 
 
@@ -60,7 +60,8 @@ end
               is_online = RadAcct.where(
       acctstoptime: nil,
       framedprotocol: 'PPP',
-      framedipaddress: subscription.ip_address
+      framedipaddress: subscription.ip_address,
+      account_id: subscription.account_id 
     ).where('acctupdatetime > ?', 3.minutes.ago).exists?
 
 
@@ -96,12 +97,16 @@ end
 
 
 
-        expired_ppoe_subscriptions = Subscription.where("expiration_date <= ?", DateTime.current)
+        expired_ppoe_subscriptions = Subscription.where("expiration_date <= ?", DateTime.current,
+        
+          account_id: tenant.id 
+
+        )
         expired_ppoe_subscriptions.find_each do |subscription|
           begin
     # router = NasRouter.find_by(name: router_setting)
 
- routers = NasRouter.all
+ routers = NasRouter.where(account_id: subscription.account_id)
         routers.each do |router|
 
 
@@ -112,7 +117,8 @@ end
       is_online = RadAcct.where(
       acctstoptime: nil,
       framedprotocol: 'PPP',
-      framedipaddress: subscription.ip_address
+      framedipaddress: subscription.ip_address,
+      account_id: subscription.account_id
     ).where('acctupdatetime > ?', 3.minutes.ago).exists?
             # SSH into MikroTik router
             Net::SSH.start(router_ip, router_username , password: router_password, verify_host_key: :never, non_interactive: true) do |ssh|
