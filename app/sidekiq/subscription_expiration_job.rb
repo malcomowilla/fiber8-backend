@@ -14,7 +14,7 @@ class SubscriptionExpirationJob
       
 
 subscriptions.each do |subscription|
-  next unless subscription.ppoe_username.present?
+  # next unless subscription.ppoe_username.present?
 
   # Fetch the PPPoE plan linked to this subscription/account
   plan = tenant&.pp_poe_plan
