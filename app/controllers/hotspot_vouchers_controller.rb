@@ -232,6 +232,14 @@ end
           amount: package_amount_paid
         )
 
+# company_name, account_no, tenant
+company_name = CompanySetting.find_by(account_id: invoice.account_id)
+        SendInvoicePaidJob.perform_now(
+          company_name.company_name,
+          bill_ref,
+          invoice.account
+
+        )
         if paid_right_amount
 
 nas_routers.each do |nas|
