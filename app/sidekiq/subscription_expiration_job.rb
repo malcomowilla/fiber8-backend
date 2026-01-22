@@ -61,7 +61,7 @@ end
       acctstoptime: nil,
       framedprotocol: 'PPP',
       framedipaddress: subscription.ip_address,
-      account_id: subscription.account_id 
+      
     ).where('acctupdatetime > ?', 3.minutes.ago).exists?
 
 
@@ -97,11 +97,9 @@ end
 
 
 
-        expired_ppoe_subscriptions = Subscription.where("expiration_date <= ?", DateTime.current,
+        expired_ppoe_subscriptions = Subscription.where("expiration_date <= ?", DateTime.current
         
-          account_id: tenant.id 
-
-        )
+        ).where(account_id: tenant.id)
         expired_ppoe_subscriptions.find_each do |subscription|
           begin
     # router = NasRouter.find_by(name: router_setting)
