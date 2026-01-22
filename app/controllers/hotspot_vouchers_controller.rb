@@ -226,6 +226,13 @@ end
         invoice = SubscriberInvoice.find_by(invoice_number:  bill_ref)
         nas_routers = NasRouter.where(account_id: invoice.account_id)
         subscription = Subscription.find_by(id: invoice.subscription_id)
+        package_amount_paid = data["TransAmount"]
+        paid_right_amount = Package.find_by(
+          account_id: subscription.account_id,
+          amount: package_amount_paid
+        )
+
+        if paid_right_amount
 
 nas_routers.each do |nas|
       Rails.logger.info "PPPOE payment received: #{bill_ref}"
@@ -238,11 +245,11 @@ nas_routers.each do |nas|
           
           # Execute the command
           ssh.exec!(command)
-          
+
           subscription.update!(status: 'active')
           puts "UnBlocked #{subscription.ppoe_username} (#{subscription.ip_address}) on MikroTik."
         end
-        
+      end
       # rescue StandardError => e
       #   Rails.logger.error "Error removing PPPoE connection for username #{subscription.ppoe_username}: #{e.message}"
       # end
