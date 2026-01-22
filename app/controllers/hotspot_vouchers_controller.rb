@@ -224,13 +224,20 @@ end
  bill_ref = data["BillRefNumber"]
 
         invoice = SubscriberInvoice.find_by(invoice_number:  bill_ref)
+        
         nas_routers = NasRouter.where(account_id: invoice.account_id)
         subscription = Subscription.find_by(id: invoice.subscription_id)
         package_amount_paid = data["TransAmount"]
-        paid_right_amount = Package.find_by(
-          account_id: subscription.account_id,
-          amount: package_amount_paid
-        )
+        # paid_right_amount = Package.find_by(
+        #   account_id: subscription.account_id,
+        #   amount: package_amount_paid
+        # )
+
+        if invoice.amount === data["TransAmount"]
+
+          invoice.update!(status: 'paid')
+          
+        end
 
 # company_name, account_no, tenant
 company_name = CompanySetting.find_by(account_id: invoice.account_id)
@@ -240,7 +247,7 @@ company_name = CompanySetting.find_by(account_id: invoice.account_id)
           invoice.account
 
         )
-        if paid_right_amount
+        if invoice.amount === data["TransAmount"]
 
 nas_routers.each do |nas|
       Rails.logger.info "PPPOE payment received: #{bill_ref}"
