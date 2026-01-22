@@ -735,11 +735,8 @@ package_amount = Package.find_by(name: params[:subscription][:package_name]).pri
 
 
   if ActsAsTenant.current_tenant.subscriber_setting.invoice_created_or_paid == true
-      invoice = SubscriberInvoice.find_or_create_by(
-        item: params[:subscription][:package_name],
-      )
-      invoice.update(
-        invoice_date: Time.current,
+      invoice = SubscriberInvoice.create(
+         invoice_date: Time.current,
         invoice_number: generate_invoice_number,
         amount: package_amount,
         status: "unpaid",
@@ -750,6 +747,7 @@ package_amount = Package.find_by(name: params[:subscription][:package_name]).pri
         description: "payment for pppoe internet subscription => #{params[:subscription][:package_name]}",
 
       )
+      
 
 company_name_invoice = ActsAsTenant.current_tenant.company_setting.company_name || 'Aitechs'
 phone_number_customer = Subscriber.find_by(id:@subscription.subscriber_id).phone_number

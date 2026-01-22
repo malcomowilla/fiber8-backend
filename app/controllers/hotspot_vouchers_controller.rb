@@ -234,7 +234,7 @@ end
         #   amount: package_amount_paid
         # )
 
-        if invoice.amount === data["TransAmount"]
+        if invoice.amount.to_s === data["TransAmount"]
 
           invoice.update!(status: 'paid')
           
@@ -249,7 +249,7 @@ company_name = CompanySetting.find_by(account_id: invoice.account_id)
           subscriber_phone_number
 
         )
-        if invoice.amount === data["TransAmount"]
+        if invoice.amount.to_s === data["TransAmount"]
 
 nas_routers.each do |nas|
       Rails.logger.info "PPPOE payment received: #{bill_ref}"
