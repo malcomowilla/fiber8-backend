@@ -283,6 +283,7 @@ end
       time_paid: data["TransTime"],
       account_number:  bill_ref,
       reference: data["TransID"],
+      customer_name: data['FirstName'],
       account_id: invoice.account_id
     )
      
