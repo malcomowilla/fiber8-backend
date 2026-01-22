@@ -5,7 +5,7 @@ class SendInvoicePaidJob < ApplicationJob
   def perform(company_name, account_no, tenant, phone_number)
     # Loop all tenants
     ActsAsTenant.with_tenant(tenant) do
-send_sms_for_tenant(company_name, account_no, ActsAsTenant.current_tenant)
+send_sms_for_tenant(company_name, account_no, ActsAsTenant.current_tenant, phone_number)
     end
 
   end
