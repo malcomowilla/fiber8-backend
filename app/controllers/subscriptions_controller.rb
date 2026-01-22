@@ -751,7 +751,7 @@ package_amount = Package.find_by(name: params[:subscription][:package_name]).pri
 
       )
 
-company_name_invoice = ActsAsTenant.current_tenant.company_setting.company_name
+company_name_invoice = ActsAsTenant.current_tenant.company_setting.company_name || 'Aitechs'
 phone_number_customer = Subscriber.find_by(id:@subscription.subscriber_id).phone_number
 mpesa_paybill = HotspotMpesaSetting.find_by(account_type: "Paybill").short_code
 

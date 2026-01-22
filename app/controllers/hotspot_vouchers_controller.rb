@@ -220,10 +220,47 @@ end
 
 
   else
-    # Handle other types of payments here
-    Rails.logger.info "Non-hotspot payment received: #{bill_ref}"
-    
-    bill_ref = data["BillRefNumber"]
+
+ bill_ref = data["BillRefNumber"]
+
+        invoice = SubscriberInvoice.find_by(invoice_number:  bill_ref)
+        nas_routers = NasRouter.where(account_id: invoice.account_id)
+        subscription = Subscription.find_by(id: invoice.subscription_id)
+
+nas_routers.each do |nas|
+      Rails.logger.info "PPPOE payment received: #{bill_ref}"
+    #  ping_result = system("ping -c 1 -W 2 #{nas.ip_address}")
+
+      Net::SSH.start(nas.ip_address, nas.username, password: nas.password,
+         verify_host_key: :never, non_interactive: true) do |ssh|
+          # Correct command to remove active PPPoE session based on pppoe_username
+          command = "/ip firewall address-list remove [find list=aitechs_blocked_list address=#{subscription.ip_address}]"
+          
+          # Execute the command
+          ssh.exec!(command)
+          
+          subscription.update!(status: 'active')
+          puts "UnBlocked #{subscription.ppoe_username} (#{subscription.ip_address}) on MikroTik."
+        end
+        
+      # rescue StandardError => e
+      #   Rails.logger.error "Error removing PPPoE connection for username #{subscription.ppoe_username}: #{e.message}"
+      # end
+
+
+end
+        
+
+   
+
+    PpPoeMpesaRevenue.create(
+      amount: data["TransAmount"],
+      payment_method: "Mpesa",
+      time_paid: data["TransTime"],
+      account_number:  bill_ref,
+      reference: data["TransID"],
+      account_id: invoice.account_id
+    )
      
   end
 
