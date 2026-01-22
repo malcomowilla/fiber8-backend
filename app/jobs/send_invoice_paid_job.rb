@@ -2,12 +2,12 @@
 class SendInvoicePaidJob < ApplicationJob
   queue_as :default
 
-  def perform(company_name, account_no, tenant)
+  def perform(company_name, account_no, tenant, phone_number)
     # Loop all tenants
     ActsAsTenant.with_tenant(tenant) do
 send_sms_for_tenant(company_name, account_no, ActsAsTenant.current_tenant)
     end
-    
+
   end
 
 
@@ -15,7 +15,7 @@ send_sms_for_tenant(company_name, account_no, ActsAsTenant.current_tenant)
 
   private
 
-  def send_sms_for_tenant(company_name, account_no, tenant)
+  def send_sms_for_tenant(company_name, account_no, tenant, phone_number)
 
     sms_setting = tenant.sms_provider_setting
 
@@ -23,11 +23,9 @@ send_sms_for_tenant(company_name, account_no, ActsAsTenant.current_tenant)
 
     case sms_setting.sms_provider
     when "SMS leopard"
-     send_invoice_sms_leopard(company_name, phone_number, package_amount,
-     due_date, paybill, account_no, tenant)
+     send_invoice_sms_leopard(company_name, account_no, tenant, phone_number)
     when "TextSms"
-     send_invoice_text_sms(company_name, phone_number, package_amount,
-     due_date, paybill, account_no, tenant)
+     send_invoice_text_sms(company_name, account_no, tenant, phone_number)
     else
       Rails.logger.info "Tenant #{ActsAsTenant.current_tenant.id} has unknown SMS provider: #{sms_setting.sms_provider}"
     end
@@ -36,7 +34,7 @@ send_sms_for_tenant(company_name, account_no, ActsAsTenant.current_tenant)
   ##
   ## SMS Leopard
   ##
-  def send_invoice_sms_leopard(company_name, account_no, tenant)
+  def send_invoice_sms_leopard(company_name, account_no, tenant, phone_number)
 
      message = "Tnank you for your payment. Your invoice is now marked as paid at #{company_name || 'Aitechs'}. Account Number #{account_no}.
     "
@@ -62,7 +60,7 @@ sms_setting = tenant.sms_setting
   ##
   ## TextSMS
   ##
-  def send_invoice_text_sms(company_name, account_no, tenant)
+  def send_invoice_text_sms(company_name, account_no, tenant, phone_number)
 
    
      message = "Tnank you for your payment. Your invoice is now marked as paid at #{company_name || 'Aitechs'}. Account Number #{account_no}.
