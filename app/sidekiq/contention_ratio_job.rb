@@ -176,8 +176,8 @@ fetch_ip_firewal_adres_list.each do |entry|
   end
 end
 
-        next if active_users.blank?
-        Rails.logger.info "ContentionRatioJob Active users: #{active_users}"
+        # next if active_users.blank?
+        # Rails.logger.info "ContentionRatioJob Active users: #{active_users}"
 
         active_users.each do |user|
           pppoe_username = user['name'].to_s.strip
