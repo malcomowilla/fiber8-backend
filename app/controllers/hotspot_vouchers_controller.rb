@@ -349,12 +349,15 @@ voucher_record = HotspotVoucher.create!(
   voucher: voucher_code
 )
 
+ stk_response = hotspot_payment[:response]
+ checkout_request_id = stk_response['CheckoutRequestID']
 create_voucher_radcheck(voucher_code, params[:package])
 
 calculate_expiration(params[:package], voucher_record)
 
         render json: {
           message: 'Please check your phone to complete the payment',
+          checkout_request_id: checkout_request_id
         }
       else
         render json: { error: 'Failed to initiate payment' }, status: :unprocessable_entity
