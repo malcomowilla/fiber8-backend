@@ -181,7 +181,7 @@ end
 
         active_users.each do |user|
           pppoe_username = user['name'].to_s.strip
-          subscription   = Subscription.find_by(ppoe_username: pppoe_username,
+          subscription = Subscription.find_by(ppoe_username: pppoe_username,
           
           account_id: tenant.id
           )
