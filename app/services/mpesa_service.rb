@@ -116,6 +116,8 @@ class MpesaService
     )
     
     JSON.parse(response.body)
+     body = response.body
+      Rails.logger.info("Stk Request Response: #{body}")
     rescue RestClient::ExceptionWithResponse => e
     Rails.logger.error("Error initiating payment: #{e.response}")
     { error: 'Failed to initiate payment' }
