@@ -232,7 +232,7 @@ end
         expiration_time = Time.parse(subscription.expiration_date.to_s)
 
 
-        expiration_time > Time.current
+        # expiration_time > Time.current
         # paid_right_amount = Package.find_by(
         #   account_id: subscription.account_id,
         #   amount: package_amount_paid

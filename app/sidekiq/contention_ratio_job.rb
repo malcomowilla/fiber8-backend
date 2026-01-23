@@ -122,7 +122,10 @@ sidekiq_options lock: :until_executed, lock_timeout: 0
 
 
   def perform
-    NasRouter.all.each do |router|
+ Account.find_each do |tenant|
+      ActsAsTenant.with_tenant(tenant) do
+        nas_routers =  NasRouter.where(account_id: tenant.id)
+    nas_routers.each do |router|
       begin
         router_ip       = router.ip_address
         router_username = router.username
@@ -226,6 +229,18 @@ end
       end
     end
   end
+
+
+
+
+
+end
+end
+
+
+
+
+
 
   private
 

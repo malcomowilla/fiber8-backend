@@ -1143,6 +1143,7 @@ end
 
 
 
+
       def package_params
         params.require(:package).permit(:name, :download_limit, :upload_limit, :price,
          :validity, 

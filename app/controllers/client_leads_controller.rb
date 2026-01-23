@@ -99,11 +99,12 @@ if current_user
   private
     # Use callbacks to share common setup or constraints between actions.
     def set_client_lead
-      @client_lead = ClientLead.find(params[:id])
+      @client_lead = ClientLead.find_by(id: params[:id])
     end
 
     # Only allow a list of trusted parameters through.
     def client_lead_params
-      params.require(:client_lead).permit(:name, :email, :company_name, :phone_number)
+      params.require(:client_lead).permit(:name, :email,
+       :company_name, :phone_number, :location)
     end
 end
