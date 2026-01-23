@@ -177,19 +177,27 @@ fetch_ip_firewal_adres_list.each do |entry|
 end
 
         # next if active_users.blank?
-        # Rails.logger.info "ContentionRatioJob Active users: #{active_users}"
+        Rails.logger.info "ContentionRatioJob Active users: #{active_users}"
 
         active_users.each do |user|
           pppoe_username = user['name'].to_s.strip
-          subscription   = Subscription.find_by(ppoe_username: pppoe_username)
-          next unless subscription
+          subscription   = Subscription.find_by(ppoe_username: pppoe_username,
+          
+          account_id: tenant.id
+          )
+          # next unless subscription
 
-          package = Package.find_by(name: subscription.package_name)
-          next unless package&.aggregation.present?
+          package = Package.find_by(name: subscription.package_name,
+          
+           account_id: tenant.id
+          )
+          # next unless package&.aggregation.present?
 
           # Count active users with same package
           same_package_users = active_users.count do |u|
-            sub = Subscription.find_by(ppoe_username: u['name'].to_s.strip)
+            sub = Subscription.find_by(
+             account_id: tenant.id,  
+            ppoe_username: u['name'].to_s.strip)
             sub&.package_name == subscription.package_name
           end
 
