@@ -312,6 +312,29 @@ end
 
 
 
+def stk_push_status
+    shortcode = ActsAsTenant.current_tenant&.hotspot_mpesa_setting.short_code
+  passkey = ActsAsTenant.current_tenant&.hotspot_mpesa_setting.passkey
+  consumer_key = ActsAsTenant.current_tenant&.hotspot_mpesa_setting.consumer_key
+  consumer_secret = ActsAsTenant.current_tenant&.hotspot_mpesa_setting.consumer_secret
+ checkout_request_id = params[:checkout_request_id]
+  stk_push_query = StkStatusService.check_stk_push_status(
+    shortcode,  passkey,
+    consumer_key, consumer_secret, checkout_request_id
+  )
+
+  if stk_push_query[:success]
+    stk_push_query_response = stk_push_query[:response]
+    render json: { success: true, response: stk_push_query_response }
+  else
+    render json: { error: 'Failed to fetch stk push status'}
+  end
+
+
+end
+
+
+
 def make_payment
 host = request.headers['X-Subdomain']
   phone_number = params[:phone_number]
@@ -337,11 +360,13 @@ session.paid      = false
 session.connected = false
 session.save!
 
-      hotspot_payment = MpesaService.initiate_stk_push(phone_number, amount,
+      hotspot_payment = MpesaService.initiate_stk_push(phone_number, 
+      amount,
        shortcode,  passkey,
         consumer_key, consumer_secret, host,voucher_code,session_id
       )
   
+
       if hotspot_payment[:success]
 voucher_record = HotspotVoucher.create!(
   package: params[:package],

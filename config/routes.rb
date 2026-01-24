@@ -143,7 +143,7 @@ resources :company_ids
 
 end
 
-
+post '/api/stk_push_status', to: 'hotspot_vouchers#stk_push_status'
 post '/api/payment_and_connected_status', to: 'hotspot_vouchers#payment_and_conected_status'
 post '/disburse_funds_results_timeout', to: 'disburse_payment#disburse_funds_results_timeout'
 
