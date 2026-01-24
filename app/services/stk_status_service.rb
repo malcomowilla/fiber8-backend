@@ -4,8 +4,8 @@ class StkStatusService
 
 
 
-    def initiate_stk_query(shortcode,  passkey,
-       consumer_key,consumer_secret,checkout_request_id) 
+    def initiate_stk_query(shortcode,passkey,consumer_key,consumer_secret,checkout_request_id
+       ) 
     api_url = 'https://api.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials'
 
     
@@ -15,9 +15,7 @@ class StkStatusService
      token = fetch_access_token(api_url, consumer_key, consumer_secret)
      
     if token
-      response = stk_push_query(token, shortcode,
-       passkey, 
-        checkout_request_id
+      response = stk_push_query(token,shortcode,passkey,checkout_request_id
       )
       { success: true, response: response }
     else
@@ -46,10 +44,7 @@ class StkStatusService
       nil
     end
     
-    
-    def stk_push_query(token, shortcode, 
-      lipa_na_mpesa_online_passkey,
-      checkout_request_id
+    def stk_push_query(token,shortcode,passkey,checkout_request_id
        )
       timestamp = Time.now.strftime('%Y%m%d%H%M%S')
     
