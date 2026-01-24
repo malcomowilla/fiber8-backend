@@ -318,8 +318,7 @@ def stk_push_status
   consumer_key = ActsAsTenant.current_tenant&.hotspot_mpesa_setting.consumer_key
   consumer_secret = ActsAsTenant.current_tenant&.hotspot_mpesa_setting.consumer_secret
  checkout_request_id = params[:checkout_request_id]
- Rails.logger.info 'checkout_request_id', checkout_request_id
-
+Rails.logger.info "checkout_request_id: #{checkout_request_id}"
   stk_push_query = StkStatusService.initiate_stk_query(
     shortcode,  passkey,
     consumer_key, consumer_secret,checkout_request_id
