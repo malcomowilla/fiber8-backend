@@ -48,7 +48,7 @@ class StkStatusService
        )
       timestamp = Time.now.strftime('%Y%m%d%H%M%S')
     
-      password = Base64.strict_encode64("#{shortcode}#{lipa_na_mpesa_online_passkey}#{timestamp}")
+      password = Base64.strict_encode64("#{shortcode}#{passkey}#{timestamp}")
     
     
       Rails.logger.info("StkPush Request Timestamp: #{timestamp}")
