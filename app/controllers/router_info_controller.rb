@@ -137,6 +137,45 @@ def customize_interfaces(data)
 end
 
 
+
+
+def get_router_timezone
+  id = params[:id]
+
+   nas_router = NasRouter.find_by(id: id)
+   unless nas_router
+      return render json: { error: "Router not found" }, status: :not_found
+    end
+  
+    router_ip_address = nas_router.ip_address
+    router_username = nas_router.username
+    router_password = nas_router.password
+
+
+     uri = URI("http://#{router_ip_address}/rest/system/clock")
+    request = Net::HTTP::Get.new(uri)
+    request.basic_auth(router_username, router_password)
+  
+    response = Net::HTTP.start(uri.hostname, uri.port) do |http|
+      http.request(request)
+    end
+  
+    unless response.is_a?(Net::HTTPSuccess)
+      return render json: { error: "Failed to fettch router timezone: #{response.code} - #{response.message}" }, status: :internal_server_error
+    end
+  
+    # Parse and customize the data
+    data = JSON.parse(response.body)
+    customized_data = customize_router_timezone(data)
+  
+    # Log and return the customized data
+    Rails.logger.info "Customized router timezone data: #{customized_data}"
+    Rails.logger.info "router timezone data: #{data}"
+
+    render json: customized_data
+
+end
+
   def router_info
     # Fetch router details
     # Rails.logger.info "Fetching router info#{params[:id]}"
@@ -151,7 +190,6 @@ end
     router_username = nas_router.username
     router_password = nas_router.password
   
-    # Fetch router resource data
     uri = URI("http://#{router_ip_address}/rest/system/resource")
     request = Net::HTTP::Get.new(uri)
     request.basic_auth(router_username, router_password)
@@ -258,10 +296,25 @@ end
       disk_usage: format_disk_usage(data["total-hdd-space"], data["free-hdd-space"]),
       uptime: data["uptime"],
       version: data["version"],
-      build_time: data["build-time"]
+      build_time: data["build-time"],
+      platform: data["platform"],
+      
     }
   end
   
+
+
+
+  def customize_router_timezone(data)
+    {
+      time_zone_name: data["time-zone-name"],
+     
+      
+    }
+  end
+
+
+
   def format_memory_usage(total_memory, free_memory)
     total_memory_mb = BigDecimal(total_memory) / (1024 * 1024)
     free_memory_mb = BigDecimal(free_memory) / (1024 * 1024)
