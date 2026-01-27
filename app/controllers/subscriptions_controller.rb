@@ -744,7 +744,7 @@ package_amount = Package.find_by(name: params[:subscription][:package_name]).pri
         due_date: Time.current,
         subscriber_id: @subscription.subscriber_id,
         subscription_id: @subscription.id,
-        description: "payment for pppoe internet subscription => #{params[:subscription][:package_name]}",
+        description: "Subscription invoice for => #{params[:subscription][:package_name]}",
 
       )
       
@@ -752,6 +752,7 @@ package_amount = Package.find_by(name: params[:subscription][:package_name]).pri
 company_name_invoice = ActsAsTenant.current_tenant.company_setting.company_name || 'Aitechs'
 phone_number_customer = Subscriber.find_by(id:@subscription.subscriber_id).phone_number
 mpesa_paybill = HotspotMpesaSetting.find_by(account_type: "Paybill").short_code
+subscriber_account_number = Subscriber.find_by(id:@subscription.subscriber_id).ref_no
 
       SendInvoiceJob.perform_now(
         company_name_invoice,
@@ -759,8 +760,9 @@ mpesa_paybill = HotspotMpesaSetting.find_by(account_type: "Paybill").short_code
         package_amount,
         invoice.due_date,
         mpesa_paybill,
-         invoice.invoice_number,
-        ActsAsTenant.current_tenant
+          subscriber_account_number,
+        ActsAsTenant.current_tenant,
+      
 
 
 
