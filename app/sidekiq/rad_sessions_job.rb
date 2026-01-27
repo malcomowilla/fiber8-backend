@@ -1,6 +1,4 @@
 
-
-
 class RadSessionsJob
   include Sidekiq::Job
   queue_as :radacct
@@ -46,13 +44,15 @@ class RadSessionsJob
 
 
     active_sessions = RadAcct.where(
-    framedprotocol: 'PPP'
-  )
+    framedprotocol: 'PPP',
+    acctstoptime: nil,
+
+  ).where('acctupdatetime > ?', threshold_time).exists?
 
 
   total_download = active_sessions.sum("COALESCE(acctinputoctets, 0)")
-  total_upload   = active_sessions.sum("COALESCE(acctoutputoctets, 0)")
-  total_bytes    = total_download + total_upload
+  total_upload = active_sessions.sum("COALESCE(acctoutputoctets, 0)")
+  total_bytes  = total_download + total_upload
 
   radacct_data = {
     online_radacct: online,
@@ -72,7 +72,7 @@ class RadSessionsJob
 
 
   active_sessions = RadAcct.where(acctstoptime: nil, framedprotocol: '').where('acctupdatetime > ?', 3.minutes.ago) 
-  active_sessions_upload_download = RadAcct.where(framedprotocol: '')
+  active_sessions_upload_download = RadAcct.where(acctstoptime: nil, framedprotocol: '').where('acctupdatetime > ?', 3.minutes.ago) 
 
   total_bytes = 0
   total_bytes_upload_download = 0
@@ -81,7 +81,7 @@ class RadSessionsJob
 
 
 
- active_user_data_upload_download = active_sessions_upload_download.map do |session|
+  active_sessions_upload_download.map do |session|
   download_bytes = session.acctinputoctets || 0
   upload_bytes = session.acctoutputoctets || 0
   total_bytes_download += download_bytes
