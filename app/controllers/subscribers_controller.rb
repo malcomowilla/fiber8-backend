@@ -470,12 +470,12 @@ end
 end
 
 
-
+auto_generated_account_number = SecureRandom.random_number(10**4)
 
     # calculate_expiration(params[:package_name], @subscriber)
     # create_ppoe_us_and_pass_radcheck(params[:ppoe_username], params[:ppoe_password], params[:package_name])
 
-    @subscriber.update(ref_no: auto_generated_no)
+    @subscriber.update(ref_no: auto_generated_account_number)
 
     render json: @subscriber, status: :created
 
