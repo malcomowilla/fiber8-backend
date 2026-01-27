@@ -758,7 +758,7 @@ subscriber_account_number = Subscriber.find_by(id:@subscription.subscriber_id).r
         company_name_invoice,
         phone_number_customer,
         package_amount,
-        invoice.due_date,
+        invoice.due_date.strftime("%B %d, %Y at %I:%M %p"),
         mpesa_paybill,
           subscriber_account_number,
         ActsAsTenant.current_tenant,

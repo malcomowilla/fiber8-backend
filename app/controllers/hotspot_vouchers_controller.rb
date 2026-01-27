@@ -229,7 +229,7 @@ end
   # subscriber_account_number = Subscriber.find_by(ref_no:  bill_ref).ref_no
   
   found_subscriber = Subscriber.find_by(ref_no:  bill_ref)
-          invoice = SubscriberInvoice.find_by(subscriber_id: found_subscriber.id)
+          invoice = SubscriberInvoice.find_by(subscriber_id: found_subscriber.id, account_id: found_subscriber.account_id)
 
         nas_routers = NasRouter.where(account_id: found_subscriber.account_id)
         subscription = Subscription.find_by(id: found_subscriber.id, account_id: found_subscriber.account_id)
@@ -1224,7 +1224,8 @@ private
 
 
 
-           def send_voucher_text_sms(phone_number, voucher_code, voucher_expiration, shared_users
+           def send_voucher_text_sms(phone_number, voucher_code, voucher_expiration,
+             shared_users
             )
   sms_setting = SmsSetting.find_by(sms_provider: 'TextSms')
 
