@@ -5,7 +5,10 @@ class HotspotVoucherSerializer < ActiveModel::Serializer
 
 
   
+def last_logged_in
+  object.last_logged_in.strftime("%B %d, %Y at %I:%M %p") if object.last_logged_in.present?
 
+end
 
   # expiration_time&.strftime("%B %d, %Y at %I:%M %p")
 def expiration
