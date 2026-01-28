@@ -44,7 +44,7 @@ end
 
   # GET /subscriber_invoices or /subscriber_invoices.json
   def index
-    @subscriber_invoices = SubscriberInvoice.all
+    @subscriber_invoices = SubscriberInvoice.where(subscriber_id: params[:id])
     render json: @subscriber_invoices
   end
 
