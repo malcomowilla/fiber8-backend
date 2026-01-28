@@ -155,10 +155,12 @@ Rails.logger.info "Parsed data calback mpesa: #{request.body.read}"
     Rails.logger.info "Session ID: #{session_id}, Voucher Code: #{voucher_code}"
     # Find the temporary session
     session = TemporarySession.find_by(session: session_id, account_id: voucher.account_id)
+    voucher.update(ip: session.ip)
     unless session
       Rails.logger.info "Temporary session not found for session_id: #{session_id}"
       return head :ok
     end
+
 
     # Create revenue record
     # HotspotMpesaRevenue.create!(
@@ -193,7 +195,7 @@ nas_routers.each do |nas|
 
     if response.code == 200
       Rails.logger.info "Device #{session.ip} successfully logged in with voucher #{voucher_code} on router #{nas.ip_address}"
-
+voucher.update!(last_logged_in: Time.now)
       # ✅ Update session
       session.update!(paid: true, connected: true)
 
@@ -851,7 +853,8 @@ def login_with_hotspot_voucher
       )
 
       if response.code == 200
-        @hotspot_voucher.update!(status: 'used')
+        @hotspot_voucher.update!(status: 'used', last_logged_in: Time.now, 
+        ip: params[:ip], mac: params[:mac])
 
         return render json: {
           message: 'Connected successfully',
