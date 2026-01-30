@@ -8,7 +8,6 @@ require 'open3'
 
 
 set_current_tenant_through_filter
-
 before_action :set_current_tenant
 
 load_and_authorize_resource
@@ -21,9 +20,7 @@ before_action :set_time_zone
 
 
  def set_time_zone
-  Rails.logger.info "Setting time zone"
   Time.zone = GeneralSetting.first&.timezone || Rails.application.config.time_zone
-    Rails.logger.info "Setting time zone #{Time.zone}"
 
 end
 
@@ -966,7 +963,7 @@ if ping_result
 
 else
 
-@subscription.update!(status: 'active')
+@subscription.update!(status: 'active', expiration_sms_sent_at: nil)
 
 end
 

@@ -256,13 +256,19 @@ end
 
 # company_name, account_no, tenant
 company_name = CompanySetting.find_by(account_id: invoice.account_id)
+send_invoice_paid_notification = SubscriberSetting.find_by(account_id: 21).invoice_created_or_paid
+
+          if send_invoice_paid_notification
         SendInvoicePaidJob.perform_now(
           company_name.company_name,
           bill_ref,
           invoice.account,
           subscriber_phone_number
-
+          
         )
+          end
+
+
         if invoice.amount.to_s === data["TransAmount"]
 
 nas_routers.each do |nas|

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_01_28_111033) do
+ActiveRecord::Schema[7.2].define(version: 2026_01_30_120254) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -842,6 +842,10 @@ ActiveRecord::Schema[7.2].define(version: 2026_01_28_111033) do
     t.boolean "lock_account_to_mac"
     t.boolean "notify_user_payment_received", default: false
     t.boolean "invoice_created_or_paid", default: false
+    t.boolean "expiration_reminder", default: false
+    t.string "expiration_reminder_minutes"
+    t.string "expiration_reminder_hours"
+    t.string "expiration_reminder_days"
   end
 
   create_table "subscribers", force: :cascade do |t|
@@ -908,6 +912,8 @@ ActiveRecord::Schema[7.2].define(version: 2026_01_28_111033) do
     t.string "mac_address"
     t.datetime "expiration_date"
     t.string "package_name"
+    t.datetime "expiration_sms_sent_at"
+    t.datetime "expiry_reminder_sent_at"
   end
 
   create_table "support_tickets", force: :cascade do |t|

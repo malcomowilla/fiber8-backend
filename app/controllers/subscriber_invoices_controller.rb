@@ -51,6 +51,7 @@ end
   # GET /subscriber_invoices/1 or /subscriber_invoices/1.json
   def show
   end
+  
 
   # GET /subscriber_invoices/new
   def new

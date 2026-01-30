@@ -26,9 +26,17 @@ development:
       class: RehydrateWireguardJob
       cron: "* * * * *"
 
+    subscription_expiration_notification_job:
+        class: SubscriptionExpirationNotificationJob
+        cron: "* * * * *"
+
     analytics_job:
         class: AnalyticsJob
         cron: "* * * * *"
+
+        subscription_expiry_reminder_job:
+          class: SubscriptionExpiryReminderJob
+          cron: "* * * * *"
 
     rad_sessions_job:
       class: RadSessionsJob

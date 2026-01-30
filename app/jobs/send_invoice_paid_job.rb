@@ -31,9 +31,7 @@ send_sms_for_tenant(company_name, account_no, ActsAsTenant.current_tenant, phone
     end
   end
 
-  ##
-  ## SMS Leopard
-  ##
+  
   def send_invoice_sms_leopard(company_name, account_no, tenant, phone_number)
 
      message = "Tnank you for your payment. Your invoice is now marked as paid at #{company_name || 'Aitechs'}. Account Number #{account_no}.
