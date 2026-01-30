@@ -36,7 +36,7 @@ development:
 
     subscription_expiry_reminder_job:
         class: SubscriptionExpiryReminderJob
-          cron: "* * * * *"
+        cron: "* * * * *"
 
     rad_sessions_job:
       class: RadSessionsJob
