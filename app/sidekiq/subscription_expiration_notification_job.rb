@@ -9,10 +9,12 @@ class SubscriptionExpirationNotificationJob
       Account.find_each do |tenant|
       ActsAsTenant.with_tenant(tenant) do
 
+        expiration_reminder = SubscriberSetting.find_by(account_id: tenant.id)&.expiration_reminder
+        next unless expiration_reminder
         expired_ppoe_subscriptions = Subscription
           .where("expiration_date <= ?", Time.current)
           .where(account_id: tenant.id)
-          .where(expiration_sms_sent_at: nil) # 🚨 prevents duplicates
+          .where(expiration_sms_sent_at: nil) 
 
         next if expired_ppoe_subscriptions.empty?
 

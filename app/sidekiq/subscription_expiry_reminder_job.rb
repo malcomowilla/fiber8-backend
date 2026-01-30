@@ -6,6 +6,8 @@ class SubscriptionExpiryReminderJob
     Account.find_each do |tenant|
       ActsAsTenant.with_tenant(tenant) do
 
+        expiration_reminder = SubscriberSetting.find_by(account_id: tenant.id)&.expiration_reminder
+        next unless expiration_reminder
         Subscription
           .where(account_id: tenant.id)
           .where(expiry_reminder_sent_at: nil)

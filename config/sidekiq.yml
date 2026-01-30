@@ -34,8 +34,8 @@ development:
         class: AnalyticsJob
         cron: "* * * * *"
 
-        subscription_expiry_reminder_job:
-          class: SubscriptionExpiryReminderJob
+    subscription_expiry_reminder_job:
+        class: SubscriptionExpiryReminderJob
           cron: "* * * * *"
 
     rad_sessions_job:
