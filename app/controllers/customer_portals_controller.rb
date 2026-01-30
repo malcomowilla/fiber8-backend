@@ -33,9 +33,13 @@ def set_tenant
 
   # POST /customer_portals or /customer_portals.json
   def customer_login
+
+    # account_no = Subscriber.find_by(ref_no: params[:password])
+
     @customer = Subscriber.find_by(
       ppoe_username: params[:username],
-      ppoe_password: params[:password]
+      ref_no: params[:password]
+      # ppoe_password: params[:password]
     )
         if @customer.nil?
           render json: { error: 'User Not Found' }, status: :not_found and return

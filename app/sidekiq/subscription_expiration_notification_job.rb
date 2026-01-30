@@ -48,7 +48,6 @@ class SubscriptionExpirationNotificationJob
             tenant
           )
 
-          # ✅ mark as sent
           subscription.update_column(
             :expiration_sms_sent_at,
             Time.current
