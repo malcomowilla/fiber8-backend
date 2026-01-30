@@ -29,7 +29,7 @@ class SubscriptionExpiryReminderJob
           next unless subscriber&.phone_number
 
           send_expiration_sms(
-            subscriber.account_number,
+            subscriber.ref_no,
             paybill_number_for(tenant),
             support_number_for(tenant),
             subscriber.phone_number,

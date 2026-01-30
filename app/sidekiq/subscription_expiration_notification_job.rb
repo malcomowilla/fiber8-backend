@@ -40,7 +40,7 @@ class SubscriptionExpirationNotificationJob
           next unless subscriber&.phone_number
 
           send_expiration_sms(
-            subscriber.account_number,
+            subscriber.ref_no,
             paybill_number,
             customer_support_phone_number,
             subscriber.phone_number,
