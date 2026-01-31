@@ -4,10 +4,12 @@ class SubscriberChannel < ApplicationCable::Channel
   def subscribed
     subdomain = params["X-Subdomain"]
     account = Account.find_by(subdomain: subdomain)
+    subscriber_id = params["X-SubscriberId"]
 
-    if account
+    if subscriber_id
       ActsAsTenant.current_tenant = account
-      stream_for account
+      stream_for  subscriber_id
+
     else
       reject
     end
