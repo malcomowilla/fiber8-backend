@@ -1,0 +1,2 @@
+module SubscriberWalletBalancesHelper
+end

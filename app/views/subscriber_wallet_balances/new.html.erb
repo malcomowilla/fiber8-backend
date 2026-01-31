@@ -1,0 +1,11 @@
+<% content_for :title, "New subscriber wallet balance" %>
+
+<h1>New subscriber wallet balance</h1>
+
+<%= render "form", subscriber_wallet_balance: @subscriber_wallet_balance %>
+
+<br>
+
+<div>
+  <%= link_to "Back to subscriber wallet balances", subscriber_wallet_balances_path %>
+</div>

@@ -141,8 +141,8 @@ end
                 invoice_number: generate_invoice_number,
                 item: subscription.package_name,
                 account_id: subscription.account_id,
-                
-                amount:  package_price,
+
+                amount: package_price,
                 status: "unpaid",
                 description: "Subscription invoice for => #{subscription.package_name}",
                 due_date: Time.current,

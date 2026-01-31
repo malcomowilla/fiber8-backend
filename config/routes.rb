@@ -2,6 +2,7 @@ require 'sidekiq/web'
 
 
 Rails.application.routes.draw do
+  resources :subscriber_wallet_balances
   resources :subscriber_invoices
   resources :pp_poe_mpesa_revenues
   resources :nas_settings
@@ -80,6 +81,8 @@ mount Sidekiq::Web => "/sidekiq" # mount Sidekiq::Web in your Rails app
 
 scope '/api' do
 
+
+    resources :subscriber_wallet_balances
     resources :subscriber_invoices
     resources :pp_poe_mpesa_revenues
     resources :nas_settings

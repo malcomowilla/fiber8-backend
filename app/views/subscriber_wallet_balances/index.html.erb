@@ -1,0 +1,16 @@
+<p style="color: green"><%= notice %></p>
+
+<% content_for :title, "Subscriber wallet balances" %>
+
+<h1>Subscriber wallet balances</h1>
+
+<div id="subscriber_wallet_balances">
+  <% @subscriber_wallet_balances.each do |subscriber_wallet_balance| %>
+    <%= render subscriber_wallet_balance %>
+    <p>
+      <%= link_to "Show this subscriber wallet balance", subscriber_wallet_balance %>
+    </p>
+  <% end %>
+</div>
+
+<%= link_to "New subscriber wallet balance", new_subscriber_wallet_balance_path %>

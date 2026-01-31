@@ -1,0 +1,1 @@
+json.partial! "subscriber_wallet_balances/subscriber_wallet_balance", subscriber_wallet_balance: @subscriber_wallet_balance

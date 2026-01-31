@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_01_30_120254) do
+ActiveRecord::Schema[7.2].define(version: 2026_01_31_144535) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -846,6 +846,14 @@ ActiveRecord::Schema[7.2].define(version: 2026_01_30_120254) do
     t.string "expiration_reminder_minutes"
     t.string "expiration_reminder_hours"
     t.string "expiration_reminder_days"
+  end
+
+  create_table "subscriber_wallet_balances", force: :cascade do |t|
+    t.integer "account_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.integer "subscriber_id"
+    t.string "amount"
   end
 
   create_table "subscribers", force: :cascade do |t|
