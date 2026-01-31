@@ -988,10 +988,12 @@ end
     end
 
 
+
 def generate_invoice_number
     "CUST#{rand(100..999)}"
   end
 
+  
    def create_pppoe_credentials_radius(pppoe_password, pppoe_username, package, pppoe_ip, expiration_date)
   # pppoe_package = package.parameterize(separator: '_')
 

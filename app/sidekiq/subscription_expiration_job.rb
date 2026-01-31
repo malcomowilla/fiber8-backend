@@ -42,7 +42,7 @@ subscriptions.each do |subscription|
 end
 
 
-        blocked_ppoe_subscriptions = Subscription.where(status: 'blocked') 
+        blocked_ppoe_subscriptions = Subscription.where(status:'blocked') 
         blocked_ppoe_subscriptions.find_each do |subscription|
           
 
@@ -101,8 +101,10 @@ end
         
         ).where(account_id: tenant.id)
         expired_ppoe_subscriptions.find_each do |subscription|
+
           begin
     # router = NasRouter.find_by(name: router_setting)
+   
 
  routers = NasRouter.where(account_id: subscription.account_id)
         routers.each do |router|
@@ -133,7 +135,25 @@ end
         Rails.logger.info("Blocked #{subscription.ppoe_username} (#{subscription.ip_address}) on MikroTik.")
               # Update subscription status in DB
               subscription.update!(status: 'blocked')
+               package_price = Package.find_by(name: subscription.package_name).price
+     SubscriberInvoice.find_or_create_by!(
+                invoice_date: Time.current,
+                invoice_number: generate_invoice_number,
+                item: subscription.package_name,
+                account_id: subscription.account_id,
+                
+                amount:  package_price,
+                status: "unpaid",
+                description: "Subscription invoice for => #{subscription.package_name}",
+                due_date: Time.current,
+                subscriber_id: subscription.subscriber_id,
+                subscription_id: subscription.id,
+                
+              )
+             
+
             end
+
           rescue => e
             puts "Error blocking #{subscription.ppoe_username}: #{e.message}"
             Rails.logger.info("Error blocking #{subscription.ppoe_username}: #{e.message}")
@@ -158,6 +178,13 @@ end
 
 
     end
+
+    private
+
+    def generate_invoice_number
+    "CUST#{rand(100..999)}"
+  end
+
 
 
   end

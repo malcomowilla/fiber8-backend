@@ -231,11 +231,14 @@ end
   # subscriber_account_number = Subscriber.find_by(ref_no:  bill_ref).ref_no
   
   found_subscriber = Subscriber.find_by(ref_no:  bill_ref)
-          invoice = SubscriberInvoice.find_by(subscriber_id: found_subscriber.id, account_id: found_subscriber.account_id)
-
-        nas_routers = NasRouter.where(account_id: found_subscriber.account_id)
+  nas_routers = NasRouter.where(account_id: found_subscriber.account_id)
         subscription = Subscription.find_by(id: found_subscriber.id, account_id: found_subscriber.account_id)
+paid_amount = data["TransAmount"].to_i
+          invoice = SubscriberInvoice.find_by(subscriber_id: found_subscriber.id,
+           account_id: found_subscriber.account_id, 
+           amount: paid_amount, status: "unpaid")
 
+        
         subscriber_phone_number = Subscriber.find_by(id: subscription.subscriber_id).phone_number
         # package_amount_paid = data["TransAmount"]
         expiration_time = Time.parse(subscription.expiration_date.to_s)
