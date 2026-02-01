@@ -1179,15 +1179,13 @@ private
         )
       # api_key = ActsAsTenant.current_tenant.sms_setting.api_key
       # api_secret = ActsAsTenant.current_tenant.sms_setting.api_secret
-      
+    HotspotVoucher.find_by(voucher: voucher_code).update(sms_sent: true)
       api_key = SmsSetting.find_by(sms_provider: 'SMS leopard')&.api_key
     api_secret = SmsSetting.find_by(sms_provider: 'SMS leopard')&.api_secret
     
               api_key = api_key
               api_secret = api_secret
              
-      
-      
       sms_template =  ActsAsTenant.current_tenant.sms_template
       send_voucher_template = sms_template&.send_voucher_template
     #   original_message = sms_template ?  MessageTemplate.interpolate(send_voucher_template,{
@@ -1251,6 +1249,8 @@ private
            def send_voucher_text_sms(phone_number, voucher_code, voucher_expiration,
              shared_users
             )
+       HotspotVoucher.find_by(voucher: voucher_code).update(sms_sent: true)
+
   sms_setting = SmsSetting.find_by(sms_provider: 'TextSms')
 
   # if sms_setting.nil?
