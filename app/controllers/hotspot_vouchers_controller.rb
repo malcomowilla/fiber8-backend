@@ -320,16 +320,12 @@ end
 
 
 
-# def payment_and_conected_status
-#   session = TemporarySession.find_by(ip: params[:ip])
+def payment_and_conected_status
+  # session = TemporarySession.find_by(ip: params[:ip])
 
-#   if session.paid && session.connected
-#    render json: { paid: session.paid, connected: session.connected}
-#   end
-# end
-
-
-def payment_and_connected_status
+  # if session.paid && session.connected
+  #  render json: { paid: session.paid, connected: session.connected}
+  # end
   ip  = params[:ip]
   mac = params[:mac]
 
@@ -346,6 +342,7 @@ def payment_and_connected_status
 
   render json: status
 end
+
 
 
 
