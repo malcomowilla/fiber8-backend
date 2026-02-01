@@ -181,9 +181,8 @@ def daily_revenue
   def destroy
     @hotspot_mpesa_revenue = HotspotMpesaRevenue.find_by(id: params[:id])
     @hotspot_mpesa_revenue.destroy!
+    render json: { message: "Hotspot MPESA revenue deleted successfully" }, status: :ok
 
-       head :no_content 
-    
   end
 
   private
