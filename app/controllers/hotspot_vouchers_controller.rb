@@ -139,7 +139,6 @@ end
 
 
 def check_payment_status
-  Rails.logger.info "check_payment_status called"
 Rails.logger.info "Parsed data calback mpesa: #{request.body.read}"
   data = JSON.parse(request.body.read) rescue {}
   bill_ref = data["BillRefNumber"]
@@ -150,10 +149,7 @@ Rails.logger.info "Parsed data calback mpesa: #{request.body.read}"
     session_id = parts[0]
     voucher_code = parts[1]
         voucher = HotspotVoucher.find_by(voucher: voucher_code)
-
-
     Rails.logger.info "Session ID: #{session_id}, Voucher Code: #{voucher_code}"
-    # Find the temporary session
     session = TemporarySession.find_by(session: session_id, account_id: voucher.account_id)
     voucher.update(ip: session.ip)
     unless session
@@ -195,12 +191,11 @@ nas_routers.each do |nas|
 
     if response.code == 200
       Rails.logger.info "Device #{session.ip} successfully logged in with voucher #{voucher_code} on router #{nas.ip_address}"
-voucher.update!(last_logged_in: Time.now)
       # ✅ Update session
       session.update!(paid: true, connected: true)
 
       # ✅ Mark voucher as used
-      voucher.update!(status: "used")
+      voucher.update!(status: "used", last_logged_in: Time.now)
 
       # ✅ Send SMS
       SendSmsHotspotJob.perform_now(voucher.voucher, data)
@@ -450,17 +445,19 @@ end
 
 def send_voucher_to_phone_number
   if params[:phone].present?
-  HotspotVoucher.find_by(voucher: params[:voucher]).update(phone: params[:phone])
+  voucher = HotspotVoucher.find_by(voucher: params[:voucher]).update(phone: params[:phone])
 
 
              if ActsAsTenant.current_tenant.sms_provider_setting.sms_provider == "SMS leopard"
                send_voucher(params[:phone], params[:voucher],
-               params[:expiration], params[:shared_users]
+               voucher.expiration.strftime("%B %d, %Y at %I:%M %p"),
+                params[:shared_users]
                )
                
              elsif ActsAsTenant.current_tenant.sms_provider_setting.sms_provider == "TextSms"
                send_voucher_text_sms(params[:phone], params[:voucher],
-               params[:expiration], params[:shared_users]
+               voucher.expiration.strftime("%B %d, %Y at %I:%M %p"), 
+               params[:shared_users]
                )
              end
          

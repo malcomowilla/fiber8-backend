@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_02_01_132606) do
+ActiveRecord::Schema[7.2].define(version: 2026_02_01_164603) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -479,6 +479,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_02_01_132606) do
     t.datetime "last_logged_in"
     t.string "mac"
     t.string "ip"
+    t.boolean "sms_sent", default: false
   end
 
   create_table "invoices", force: :cascade do |t|

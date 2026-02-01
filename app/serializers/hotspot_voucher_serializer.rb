@@ -1,7 +1,7 @@
 class HotspotVoucherSerializer < ActiveModel::Serializer
   attributes :id, :voucher, :status, :expiration, :speed_limit,
    :phone, :package, :shared_users,
-  :created_at, :updated_at, :ip, :mac, :last_logged_in
+  :created_at, :updated_at, :ip, :mac, :last_logged_in, :sms_sent
 
 
   

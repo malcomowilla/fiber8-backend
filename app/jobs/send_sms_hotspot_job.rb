@@ -36,7 +36,7 @@ end
 
   def send_sms_for_tenant(voucher, tenant)
     sms_setting = tenant.sms_provider_setting
-  HotspotVoucher.find_by(voucher: voucher.voucher).update(sms_sent_at_voucher: Time.now)
+  HotspotVoucher.find_by(voucher: voucher.voucher).update(sms_sent_at_voucher: Time.now, sms_sent: true)
 
 
     if sms_setting.blank?
@@ -65,7 +65,7 @@ sms_setting = tenant.sms_setting
   api_secret = sms_setting.api_secret
 
 
-  HotspotVoucher.find_by(voucher: voucher.voucher).update(sms_sent_at_voucher: Time.now)
+  HotspotVoucher.find_by(voucher: voucher.voucher).update(sms_sent_at_voucher: Time.now, sms_sent: true)
     uri = URI("https://api.smsleopard.com/v1/sms/send")
     params = {
       username: api_key,
