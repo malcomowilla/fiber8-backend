@@ -1,11 +1,7 @@
 class HotspotMpesaRevenuesController < ApplicationController
-  # before_action :set_hotspot_mpesa_revenue, only: %i[ show edit update destroy ]
 
 
   set_current_tenant_through_filter
-
-
-  
   before_action :set_tenant
   before_action :update_last_activity
     before_action :set_time_zone
@@ -17,8 +13,11 @@ class HotspotMpesaRevenuesController < ApplicationController
   Rails.logger.info "Setting time zone"
   Time.zone = GeneralSetting.first&.timezone || Rails.application.config.time_zone
     Rails.logger.info "Setting time zone #{Time.zone}"
-
 end
+
+
+
+
 
 def set_tenant
     host = request.headers['X-Subdomain']
@@ -180,6 +179,7 @@ def daily_revenue
 
   # DELETE /hotspot_mpesa_revenues/1 or /hotspot_mpesa_revenues/1.json
   def destroy
+    @hotspot_mpesa_revenue = HotspotMpesaRevenue.find_by(id: params[:id])
     @hotspot_mpesa_revenue.destroy!
 
        head :no_content 
