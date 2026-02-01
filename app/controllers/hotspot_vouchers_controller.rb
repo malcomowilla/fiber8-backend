@@ -445,18 +445,18 @@ end
 
 def send_voucher_to_phone_number
   if params[:phone].present?
-  voucher = HotspotVoucher.find_by(voucher: params[:voucher]).update(phone: params[:phone])
+   HotspotVoucher.find_by(voucher: params[:voucher]).update(phone: params[:phone])
 
-
+expiration = HotspotVoucher.find_by(voucher: params[:voucher]).expiration
              if ActsAsTenant.current_tenant.sms_provider_setting.sms_provider == "SMS leopard"
                send_voucher(params[:phone], params[:voucher],
-               voucher.expiration.strftime("%B %d, %Y at %I:%M %p"),
+               expiration.strftime("%B %d, %Y at %I:%M %p"),
                 params[:shared_users]
                )
                
              elsif ActsAsTenant.current_tenant.sms_provider_setting.sms_provider == "TextSms"
                send_voucher_text_sms(params[:phone], params[:voucher],
-               voucher.expiration.strftime("%B %d, %Y at %I:%M %p"), 
+               expiration.strftime("%B %d, %Y at %I:%M %p"), 
                params[:shared_users]
                )
              end
