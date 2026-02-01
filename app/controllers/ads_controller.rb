@@ -17,6 +17,8 @@ class AdsController < ApplicationController
 
 end
 
+
+
      def update_last_activity
 if current_user
       current_user.update!(last_activity_active: Time.current)
@@ -72,7 +74,7 @@ end
     account_id: ActsAsTenant.current_tenant.id,
   }.to_json
 
-  $redis.rpush("analytics_events", data) # ✅ works
+  $redis.rpush("analytics_events", data) 
   render json: { message: 'Event Tracked' }, status: :ok
     
   end

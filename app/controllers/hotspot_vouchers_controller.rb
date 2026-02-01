@@ -320,14 +320,32 @@ end
 
 
 
-def payment_and_conected_status
-  session = TemporarySession.find_by(ip: params[:ip])
+# def payment_and_conected_status
+#   session = TemporarySession.find_by(ip: params[:ip])
 
-  if session.paid && session.connected
-   render json: { paid: session.paid, connected: session.connected}
+#   if session.paid && session.connected
+#    render json: { paid: session.paid, connected: session.connected}
+#   end
+# end
+
+
+def payment_and_connected_status
+  ip  = params[:ip]
+  mac = params[:mac]
+
+  cache_key = "payment_status:#{ip}:#{mac}"
+
+  status = Rails.cache.fetch(cache_key, expires_in: 10.seconds) do
+    session = TemporarySession.find_by(ip: ip)
+
+    {
+      paid: session&.paid || false,
+      connected: session&.connected || false
+    }
   end
-end
 
+  render json: status
+end
 
 
 
