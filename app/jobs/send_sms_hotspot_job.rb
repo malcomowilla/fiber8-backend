@@ -2,7 +2,6 @@ class SendSmsHotspotJob < ApplicationJob
   queue_as :default
 
   def perform(voucher_code, data)
-    # Loop all tenants
       voucher = HotspotVoucher.find_by(voucher: voucher_code)
       ActsAsTenant.with_tenant(voucher.account) do
 
@@ -21,7 +20,9 @@ HotspotMpesaRevenue.find_or_create_by(
       reference: data["TransID"],
       payment_method: "Mpesa",
       time_paid: data["TransTime"],
-      account_id: voucher.account_id
+      account_id: voucher.account_id,
+
+      name: data['FirstName']
     )
 end
 
@@ -53,9 +54,8 @@ end
     end
   end
 
-  ##
-  ## SMS Leopard
-  ##
+
+
   def send_voucher_sms_leopard(voucher, tenant)
         expiration = voucher.expiration.strftime("%B %d, %Y at %I:%M %p") if voucher.expiration.present?
 

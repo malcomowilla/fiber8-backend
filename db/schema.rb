@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_01_31_144535) do
+ActiveRecord::Schema[7.2].define(version: 2026_02_01_132606) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -360,6 +360,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_01_31_144535) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.integer "amount"
+    t.string "name"
   end
 
   create_table "hotspot_mpesa_settings", force: :cascade do |t|

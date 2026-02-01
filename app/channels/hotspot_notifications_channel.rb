@@ -4,7 +4,8 @@ class HotspotNotificationsChannel < ApplicationCable::Channel
   def subscribed
     ip = params["X-ip"]
     subdomain = params["X-Subdomain"]
-    session = TemporarySession.find_by(ip: ip)
+    account = Account.find_by(subdomain: subdomain)
+    session = TemporarySession.find_by(ip: ip, account_id: account.id)
     # account = Account.find_by(subdomain: subdomain)
 
     if session 

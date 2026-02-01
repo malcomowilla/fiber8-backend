@@ -324,7 +324,7 @@ def payment_and_conected_status
   session = TemporarySession.find_by(ip: params[:ip])
 
   if session.paid && session.connected
-   render json: { paid: session.paid, connected: session.connected }
+   render json: { paid: session.paid, connected: session.connected}
   end
 end
 
