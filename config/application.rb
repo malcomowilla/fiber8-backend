@@ -90,3 +90,6 @@ config.action_dispatch.cookies_same_site_protection = :strict
 # config.hosts << "solving-choice-dutch-utah.trycloudflare.com" 
   end
 end
+
+
+

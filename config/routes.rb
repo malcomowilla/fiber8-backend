@@ -146,6 +146,9 @@ resources :company_ids
 
 end
 
+
+
+get '/api/hotspot_traffic', to: 'hotspot_vouchers#hotspot_traffic'
 get '/api/router_timezone', to: 'router_info#get_router_timezone'
 post '/api/query_status', to: 'hotspot_vouchers#stk_push_status'
 post '/api/payment_and_connected_status', to: 'hotspot_vouchers#payment_and_conected_status'

@@ -100,40 +100,80 @@ end
 
 
 
+  def hotspot_traffic
+  # Cache key that includes timestamp for time-based invalidation
+  cache_key = "hotspot_traffic_#{Time.current.beginning_of_minute.to_i}"
+  
+  # Use cache with 10-second expiration (adjust based on your needs)
+  hotspot_data = Rails.cache.fetch(cache_key, expires_in: 10.seconds) do
+    total_bytes = 0
+    total_bytes_upload_download = 0
+    total_bytes_upload = 0
+    total_bytes_download = 0
+
+    # Get active sessions within last 3 minutes
+    active_sessions_upload_download = RadAcct.where(
+      acctstoptime: nil, 
+      framedprotocol: ''
+    ).where('acctupdatetime > ?', 3.minutes.ago)
+    
+    active_sessions = RadAcct.where(
+      acctstoptime: nil,
+      framedprotocol: ''
+    ).where('acctupdatetime > ?', 3.minutes.ago)
+
+    # Calculate upload/download totals
+    active_sessions_upload_download.each do |session|
+      download_bytes = session.acctinputoctets || 0
+      upload_bytes = session.acctoutputoctets || 0
+      total_bytes_download += download_bytes
+      total_bytes_upload += upload_bytes
+      session_total = download_bytes + upload_bytes
+      total_bytes_upload_download += session_total
+    end
+
+    # Prepare user data
+    active_user_data = active_sessions.map do |session|
+      download_bytes = session.acctinputoctets || 0
+      upload_bytes = session.acctoutputoctets || 0
+      session_total = download_bytes + upload_bytes
+      total_bytes += session_total
+
+      {
+        username: session.username,
+        ip_address: session.framedipaddress.to_s,
+        mac_address: session.callingstationid,
+        up_time: format_uptime(session.acctsessiontime),
+        download: format_bytes(download_bytes),
+        upload: format_bytes(upload_bytes),
+        start_time: session.acctstarttime&.strftime("%B %d, %Y at %I:%M %p") || "Unknown",
+        nas_port: session.nasportid,
+        last_update: session.acctupdatetime&.iso8601 || Time.current.iso8601
+      }
+    end
+
+    # Return the data to be cached
+    {
+      active_user_count: active_user_data.size,
+      total_upload: format_bytes(total_bytes_upload),
+      total_download: format_bytes(total_bytes_download),
+      total_bandwidth: format_bytes(total_bytes_upload_download),
+      users: active_user_data,
+      timestamp: Time.current.iso8601,
+      cache_hit: false # Flag to indicate this is fresh data
+    }
+  end
+  
+  # Update cache hit flag if this is a cache hit
+  hotspot_data[:cache_hit] = true unless hotspot_data[:cache_hit]
+  
+  render json: hotspot_data
+end
 
 
   
 
-  # def check_payment_status
-  #   Rails.logger.info "Mpesa pHotspot payment status"
-  #   raw_data = request.body.read
 
-  #   # Parse JSON if it's JSON-formatted
-  #   data = JSON.parse(raw_data) rescue {}
-
-  #   Rails.logger.info "M-Pesa Callback For Hotspot Received: #{data}"
-  #       Rails.logger.info "===========================Hotspot Payment validated"
-  #      if bill_ref.start_with?("hotspot_")
-  #       bill_ref = data['BillRefNumber'].to_s
-
-  #        voucher_code = bill_ref.sub("hotspot_", "")
-  #       HotspotMpesaRevenue.create(amount: data['TransAmount'], 
-  #       # phone_number: data['Body']['stkCallback']['PhoneNumber'],
-  #        voucher:  voucher_code,
-         
-  #        reference: data['TransID'],
-  #        payment_method: 'Mpesa',
-  #        time_paid: data['TransTime'],
-  #        )
-
-
-
-
-         
-
-  #       end
-         
-  # end
 
 
 
@@ -816,9 +856,9 @@ end
 
         
 # end
-# 
-#
-#
+ 
+
+
 def login_with_hotspot_voucher
   Rails.logger.info "voucher ip #{params[:ip]}"
 

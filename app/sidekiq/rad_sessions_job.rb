@@ -113,7 +113,7 @@ end
 
 
   hotspot_data = {
-active_user_count: active_user_data.size,
+  active_user_count: active_user_data.size,
   total_upload: format_bytes(total_bytes_upload),
   total_download: format_bytes(total_bytes_download),
   total_bandwidth: format_bytes(total_bytes_upload_download),
