@@ -3,6 +3,9 @@ class HotspotSubscriptionsController < ApplicationController
   set_current_tenant_through_filter
   before_action :set_tenant
     before_action :set_time_zone
+
+
+
   # GET /hotspot_subscriptions or /hotspot_subscriptions.json
   def index
     @hotspot_subscriptions = HotspotSubscription.all
@@ -36,11 +39,13 @@ def set_tenant
   end
 
 
+
+
  def check_session
   ip = params[:ip]
     mac = params[:mac]
 
-Rails.logger.info "IP from check session: #{ip}"
+# Rails.logger.info "IP from check session: #{ip}"
   # Step 1: Check if there's an active session in radacct (acctstoptime is nil = session still active)
 session =   RadAcct.where(framedipaddress: ip, framedprotocol: '').order(acctupdatetime: :desc).first ||
 

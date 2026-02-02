@@ -267,16 +267,22 @@ end
   
   found_subscriber = Subscriber.find_by(ref_no:  bill_ref)
   nas_routers = NasRouter.where(account_id: found_subscriber.account_id)
-        subscription = Subscription.find_by(id: found_subscriber.id, account_id: found_subscriber.account_id)
+        subscription = Subscription.find_by(id: found_subscriber.id, 
+        account_id: found_subscriber.account_id)
 paid_amount = data["TransAmount"].to_i
-          invoice = SubscriberInvoice.find_by(subscriber_id: found_subscriber.id,
-           account_id: found_subscriber.account_id, 
-           amount: paid_amount, status: "unpaid")
+          invoice = SubscriberInvoice
+  .where(
+    subscriber_id: found_subscriber.id,
+    account_id: found_subscriber.account_id,
+    status: "unpaid"
+  )
+  .order(:invoice_date)
+  .first
 
         
-        subscriber_phone_number = Subscriber.find_by(id: subscription.subscriber_id).phone_number
+  subscriber_phone_number = Subscriber.find_by(id: subscription.subscriber_id).phone_number
         # package_amount_paid = data["TransAmount"]
-        expiration_time = Time.parse(subscription.expiration_date.to_s)
+  expiration_time = Time.parse(subscription.expiration_date.to_s)
 
 
         # expiration_time > Time.current
@@ -285,12 +291,13 @@ paid_amount = data["TransAmount"].to_i
         #   amount: package_amount_paid
         # )
 
-        if invoice.amount.to_s === data["TransAmount"]
+       invoice.update!(status: 'paid', description: "Invoice paid for
+           wifi package => #{subscription.package_name}",
+           
+           amount: paid_amount,
+           )
 
-          invoice.update!(status: 'paid')
-          invoice.update(description: "Invoice paid for wifi package => #{subscription.package_name}")
-          
-        end
+           subscription.update(invoice_expired_created_at: nil)
 
 # company_name, account_no, tenant
 company_name = CompanySetting.find_by(account_id: invoice.account_id)

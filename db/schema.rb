@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_02_01_164603) do
+ActiveRecord::Schema[7.2].define(version: 2026_02_02_180642) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -924,6 +924,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_02_01_164603) do
     t.string "package_name"
     t.datetime "expiration_sms_sent_at"
     t.datetime "expiry_reminder_sent_at"
+    t.datetime "invoice_expired_created_at"
   end
 
   create_table "support_tickets", force: :cascade do |t|

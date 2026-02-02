@@ -135,13 +135,14 @@ end
         Rails.logger.info("Blocked #{subscription.ppoe_username} (#{subscription.ip_address}) on MikroTik.")
               # Update subscription status in DB
               subscription.update!(status: 'blocked')
+              return if subscription.invoice_expired_created_at.present?
+
                package_price = Package.find_by(name: subscription.package_name).price
-     SubscriberInvoice.find_or_create_by!(
+        SubscriberInvoice.find_or_create_by!(
                 invoice_date: Time.current,
                 invoice_number: generate_invoice_number,
                 item: subscription.package_name,
                 account_id: subscription.account_id,
-
                 amount: package_price,
                 status: "unpaid",
                 description: "Subscription invoice for => #{subscription.package_name}",
@@ -150,6 +151,7 @@ end
                 subscription_id: subscription.id,
                 
               )
+              subscription.update_column(:invoice_expired_created_at, Time.current)
              
 
             end
