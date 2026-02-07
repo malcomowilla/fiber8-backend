@@ -19,6 +19,12 @@ if current_user
 
 
 
+  def get_subscriber_details_by_invoice_id
+    shortcode = ActsAsTenant.current_tenant&.hotspot_mpesa_setting.short_code
+    subscriber_id = SubscriberInvoice.find_by(id: params[:invoice_id]).subscriber_id
+    @subscriber = Subscriber.find_by(id: subscriber_id)
+    render json: {subscriber: @subscriber, shortcode: shortcode}
+  end
 
 def set_tenant
     host = request.headers['X-Subdomain']

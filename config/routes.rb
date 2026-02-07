@@ -147,7 +147,7 @@ resources :company_ids
 end
 
 
-
+get '/api/get_subscriber_details_by_invoice', to: 'subscriber_invoices#get_subscriber_details_by_invoice_id'
 get '/api/hotspot_traffic', to: 'hotspot_vouchers#hotspot_traffic'
 get '/api/router_timezone', to: 'router_info#get_router_timezone'
 post '/api/query_status', to: 'hotspot_vouchers#stk_push_status'

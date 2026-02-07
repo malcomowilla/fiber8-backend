@@ -59,6 +59,7 @@ end
       agent_email: @company_settings&.agent_email,
       customer_support_phone_number: @company_settings&.customer_support_phone_number,
       customer_support_email: @company_settings&.customer_support_email,
+      location: @company_settings&.location,
      
       
   logo_url: @company_settings&.logo&.attached? ? rails_blob_url(@company_settings.logo,
@@ -95,6 +96,7 @@ end
       agent_email: @company_settings&.agent_email,
       customer_support_email: @company_settings&.customer_support_email,
       customer_support_phone_number: @company_settings&.customer_support_phone_number,
+      # location: @company_settings&.location,
       
       logo_url: @company_settings&.logo&.attached? ? rails_blob_url(@company_settings.logo,
        host: tunnel_host, protocol: 'https', port: nil,
@@ -127,6 +129,7 @@ customer_support_phone_number: @company_setting.customer_support_phone_number,
 agent_email: @company_setting.agent_email,
 contact_info: @company_setting.contact_info,
 email_info: @company_setting.email_info,
+location: @company_setting.location,
 # logo_url: @company_setting.logo.attached? ? url_for(@company_setting.logo) : nil
 # logo_url: @company_settings&.logo&.attached? ? rails_blob_url(@company_settings.logo,
 #  host: tunnel_host, protocol: 'https', port: nil) : nil
@@ -156,6 +159,7 @@ end
     # Only allow a list of trusted parameters through.
     def company_setting_params
       params.permit(:company_name, :contact_info,
-       :email_info, :logo, :customer_support_phone_number, :agent_email, :customer_support_email)
+       :email_info, :logo, :customer_support_phone_number, 
+       :agent_email, :customer_support_email, :location)
     end
 end
