@@ -346,6 +346,7 @@ end
       account_number:  bill_ref,
       reference: data["TransID"],
       customer_name: data['FirstName'],
+      type: "outbound",
       account_id: invoice.account_id
     )
      
