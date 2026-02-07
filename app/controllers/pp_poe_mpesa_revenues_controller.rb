@@ -84,6 +84,8 @@ end
     # Only allow a list of trusted parameters through.
     def pp_poe_mpesa_revenue_params
       params.require(:pp_poe_mpesa_revenue).permit(:payment_method, :amount,
-       :reference, :time_paid, :account_id, :account_number)
+       :reference, :time_paid, :account_id, :account_number,
+       :payment_type
+       )
     end
 end
