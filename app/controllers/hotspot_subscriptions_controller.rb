@@ -1,17 +1,9 @@
 class HotspotSubscriptionsController < ApplicationController
 
-  set_current_tenant_through_filter
-  before_action :set_tenant
+    set_current_tenant_through_filter
+    before_action :set_tenant
     before_action :set_time_zone
 
-
-
-  # GET /hotspot_subscriptions or /hotspot_subscriptions.json
-  def index
-    @hotspot_subscriptions = HotspotSubscription.all
-    render json: @hotspot_subscriptions
-
-  end
 
 
 
@@ -22,7 +14,9 @@ class HotspotSubscriptionsController < ApplicationController
     Rails.logger.info "Setting time zone #{Time.zone}"
 
 end
-# }/ip/hotspot/active
+
+
+
 
 def set_tenant
     host = request.headers['X-Subdomain']
@@ -41,19 +35,26 @@ def set_tenant
 
 
 
+
+
+   def index
+    @hotspot_subscriptions = HotspotSubscription.all
+    render json: @hotspot_subscriptions
+
+  end
+
  def check_session
   ip = params[:ip]
     mac = params[:mac]
 
 # Rails.logger.info "IP from check session: #{ip}"
-  # Step 1: Check if there's an active session in radacct (acctstoptime is nil = session still active)
 session =   RadAcct.where(framedipaddress: ip, framedprotocol: '').order(acctupdatetime: :desc).first ||
 
 
 RadAcct.where(callingstationid: mac, framedprotocol: '', ).order(acctupdatetime: :desc).first 
           
          
-Rails.logger.info "Session record found: #{session.inspect}"
+# Rails.logger.info "Session record found: #{session.inspect}"
 
   if session
     voucher = HotspotVoucher.find_by(voucher: session.username)

@@ -191,7 +191,6 @@ Rails.logger.info "Parsed data calback mpesa: #{request.body.read}"
         voucher = HotspotVoucher.find_by(voucher: voucher_code)
     Rails.logger.info "Session ID: #{session_id}, Voucher Code: #{voucher_code}"
     session = TemporarySession.find_by(session: session_id, account_id: voucher.account_id)
-    voucher.update(ip: session.ip)
     unless session
       Rails.logger.info "Temporary session not found for session_id: #{session_id}"
       return head :ok
@@ -231,16 +230,14 @@ nas_routers.each do |nas|
 
     if response.code == 200
       Rails.logger.info "Device #{session.ip} successfully logged in with voucher #{voucher_code} on router #{nas.ip_address}"
-      # ✅ Update session
       session.update!(paid: true, connected: true)
 
-      # ✅ Mark voucher as used
-      voucher.update!(status: "used", last_logged_in: Time.now)
 
-      # ✅ Send SMS
+      voucher.update!(status: "used", last_logged_in: Time.now,
+       ip: session.ip)
+
       SendSmsHotspotJob.perform_now(voucher.voucher, data)
 
-      # ✅ Notify frontend
       HotspotNotificationsChannel.broadcast_to(
         session.ip,
         message: "Payment received! You are now connected."
@@ -297,7 +294,7 @@ paid_amount = data["TransAmount"].to_i
            amount: paid_amount,
            )
 
-           subscription.update(invoice_expired_created_at: nil)
+           subscription.update(invoice_expired_created_at:  nil)
 
 # company_name, account_no, tenant
 company_name = CompanySetting.find_by(account_id: invoice.account_id)
@@ -425,7 +422,7 @@ host = request.headers['X-Subdomain']
 #   session_id = rand(100000..999999).to_s
 # TemporarySession.create!(
 #   session: session_id,
-#   ip: params[:ip],    # the IP you get from Mikrotik login.html
+#   ip: params[:ip],    
 # )
 
 session_id = rand(100000..999999).to_s
@@ -448,7 +445,9 @@ session.save!
 voucher_record = HotspotVoucher.create!(
   package: params[:package],
   phone: phone_number,
-  voucher: voucher_code
+  voucher: voucher_code,
+  mac: params[:mac]
+
 )
 
  stk_response = hotspot_payment[:response]
@@ -467,7 +466,6 @@ calculate_expiration(params[:package], voucher_record)
 end
 
 
-  # GET /hotspot_vouchers/1 or /hotspot_vouchers/1.json
   
 def expired_vouchers
   expired_voucher = HotspotVoucher.where(status: 'expired').count
@@ -485,10 +483,6 @@ end
 
 
 
-
-#  voucher: voucher,
-#           shared_users: useLimit,
-#           expiration: expiration
 
 def send_voucher_to_phone_number
   if params[:phone].present?
