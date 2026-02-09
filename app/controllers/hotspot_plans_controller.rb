@@ -41,7 +41,7 @@ end
       name: "Hotspot Free Trial",
       hotspot_subscribers: "unlimited",
       price: "0",
-      expiry_days: 7,
+      expiry_days: 14,
       status: "active",
         expiry:  Time.current + 7.days
 

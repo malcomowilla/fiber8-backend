@@ -82,7 +82,8 @@ rescue ActiveRecord::RecordNotFound
       short_code: params[:short_code],
       sms_provider: params[:sms_provider],
       partnerID: params[:partnerID],
-      sms_setting_updated_at: Time.current
+      sms_setting_updated_at: Time.current,
+      username: params[:username],
 
     )
       if  @sms_setting.save 
@@ -106,8 +107,9 @@ rescue ActiveRecord::RecordNotFound
 
     # Only allow a list of trusted parameters through.
     def sms_setting_params
-      params.require(:sms_setting).permit(:api_key, :api_secret, :sender_id, :short_code, :username, 
-      :sms_provider, :partnerID
+      params.require(:sms_setting).permit(:api_key, :api_secret, :sender_id, 
+      :short_code, :username, 
+      :sms_provider, :partnerID, :username
       )
     end
 end

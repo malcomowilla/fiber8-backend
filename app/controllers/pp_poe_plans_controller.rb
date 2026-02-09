@@ -24,7 +24,7 @@ load_and_authorize_resource except: [:allow_get_current_plan, :index, :create, :
       maximum_pppoe_subscribers: "unlimited",
       
       price: "0",
-      expiry_days: 7,
+      expiry_days: 14,
       status: "active",
        expiry: Time.current + 7.days
 
