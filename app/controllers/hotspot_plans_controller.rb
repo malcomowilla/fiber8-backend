@@ -89,7 +89,8 @@ account = Account.find_by!(subdomain: company_name)
       status: "active",
       plan_name: "Hotspot Plan #{params[:plan][:name]}",
       price: params[:plan][:price],
-      expiry: Time.current + expiry_days.days,
+       expiry: Time.current, 
+      # expiry: Time.current + expiry_days.days,
       description: '4% of hotspot revenue'
 
 
@@ -116,7 +117,8 @@ account = Account.find_by!(subdomain: company_name)
       status: "active",
             price: params[:plan][:price],
             plan_name: "Hotspot Plan #{params[:plan][:name]}",
-              expiry: Time.current + expiry_days.days,
+             expiry: Time.current ,
+              # expiry: Time.current + expiry_days.days,
               description: '4% of hotspot revenue'
 
 
