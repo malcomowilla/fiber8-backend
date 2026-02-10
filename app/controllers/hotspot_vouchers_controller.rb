@@ -119,7 +119,7 @@ end
     
     active_sessions = RadAcct.where(
       acctstoptime: nil,
-      framedprotocol: ''
+      framedprotocol: ""
     ).where('acctupdatetime > ?', 3.minutes.ago)
 
     # Calculate upload/download totals
@@ -564,24 +564,24 @@ def create
     acctstoptime: nil,
     framedprotocol: ''
   ).where('acctupdatetime > ?', 2.minutes.ago)
-  maximum_active_sessions = active_sessions.count
+   maximum_active_sessions = active_sessions.count
 
-if tenant.hotspot_plan.present?
+# if tenant.hotspot_plan.present?
 
-  if !tenant.hotspot_plan.name == 'Free Hotspot'
-    plan_limit = tenant.hotspot_plan.hotspot_subscribers.to_i
-    #  plan_limit = HotspotPlan.find_by(name: tenant.hotspot_plan.name).hotspot_subscribers.to_i
-Rails.logger.info "Hotspot Plan Maximum Subscribers =>#{tenant.hotspot_plan.hotspot_subscribers}"
+#   if !tenant.hotspot_plan.name == 'Hotspot Free Trial'
+#     plan_limit = tenant.hotspot_plan.hotspot_subscribers.to_i
+#     #  plan_limit = HotspotPlan.find_by(name: tenant.hotspot_plan.name).hotspot_subscribers.to_i
+# Rails.logger.info "Hotspot Plan Maximum Subscribers =>#{tenant.hotspot_plan.hotspot_subscribers}"
 
     
-    if maximum_active_sessions >= plan_limit
-      render json: { 
-        error: "Maximum active sessions (#{plan_limit}) reached.Please upgrade your plan." 
-      }, status: :unprocessable_entity
-      return
-    end
-  end
-  end
+#     if maximum_active_sessions >= plan_limit
+#       render json: { 
+#         error: "Maximum active sessions (#{plan_limit}) reached.Please upgrade your plan." 
+#       }, status: :unprocessable_entity
+#       return
+#     end
+#   end
+#   end
 
 
 

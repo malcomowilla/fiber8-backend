@@ -20,22 +20,22 @@ load_and_authorize_resource except: [:allow_get_current_plan, :index, :create, :
 
   if plans.empty?
     default_plan = PpPoePlan.first_or_initialize(
-      name: "Free Trial",
+      name: "PPPOE Free Trial",
       maximum_pppoe_subscribers: "unlimited",
       
       price: "0",
       expiry_days: 14,
       status: "active",
-       expiry: Time.current + 7.days
+       expiry: Time.current + 14.days
 
     )
     default_plan.update(
-       name: "Free Trial",
+       name: "PPPOE Free Trial",
       maximum_pppoe_subscribers: "unlimited",
       price: "0",
-      expiry_days: 7,
+      expiry_days: 14,
       status: "active",
-       expiry: Time.current + 7.days
+       expiry: Time.current + 14.days
 
     )
     plans = [default_plan]
@@ -87,7 +87,8 @@ ActsAsTenant.with_tenant(account) do
       status: "active",
       plan_name:"PPPoE Plan #{params[:plan][:name]}",
       price: params[:plan][:price],
-       expiry:   Time.current + expiry_days.days
+      expiry: Time.current 
+      #  expiry:   Time.current + expiry_days.days
       # billing_cycle: params[:plan][:billing_cycle],
       # condition: false
     )
@@ -111,8 +112,10 @@ ActsAsTenant.with_tenant(account) do
       expiry_days: params[:plan][:expiry_days],
        status: "active",
       price: params[:plan][:price],
-             expiry:   Time.current + expiry_days.days,
+            #  expiry:   Time.current + expiry_days.days,
                    plan_name:"PPPoE Plan #{params[:plan][:name]}",
+                         expiry: Time.current 
+
 
 
       # billing_cycle: params[:plan][:billing_cycle],
@@ -158,7 +161,8 @@ ActsAsTenant.with_tenant(account) do
   end
 
   def plan_params
-    params.permit(:name, :maximum_pppoe_subscribers, :expiry_days, :billing_cycle)
+    params.permit(:name, :maximum_pppoe_subscribers, 
+    :expiry_days, :billing_cycle)
   end
 end
 

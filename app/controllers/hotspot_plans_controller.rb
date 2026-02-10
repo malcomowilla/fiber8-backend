@@ -43,7 +43,8 @@ end
       price: "0",
       expiry_days: 14,
       status: "active",
-        expiry:  Time.current + 7.days
+      expiry:  Time.current + 14.days,
+      description: "Hotspot Free trial for 14 days"
 
     )
     default_plan.update(
@@ -52,7 +53,8 @@ end
       price: "0",
       expiry_days: 7,
       status: "active",
-              expiry: Time.current + 7.days
+      expiry: Time.current + 14.days,
+      description: "Hotspot Free trial for 14 days"
 
     )
     plans = [default_plan]
@@ -66,6 +68,9 @@ end
     @plans = HotspotPlan.all
     render json: @plans, each_serializer: HotspotPlanSerializer
   end
+
+
+  
 
   def create
 company_name = params[:plan][:company_name]
@@ -84,7 +89,9 @@ account = Account.find_by!(subdomain: company_name)
       status: "active",
       plan_name: "Hotspot Plan #{params[:plan][:name]}",
       price: params[:plan][:price],
-             expiry: Time.current + expiry_days.days
+      expiry: Time.current + expiry_days.days,
+      description: '4% of hotspot revenue'
+
 
       # billing_cycle: params[:plan][:billing_cycle],
       # condition: false
@@ -109,7 +116,8 @@ account = Account.find_by!(subdomain: company_name)
       status: "active",
             price: params[:plan][:price],
             plan_name: "Hotspot Plan #{params[:plan][:name]}",
-              expiry: Time.current + expiry_days.days
+              expiry: Time.current + expiry_days.days,
+              description: '4% of hotspot revenue'
 
 
      
@@ -185,6 +193,9 @@ account = Account.find_by!(subdomain: company_name)
   end
 
   def plan_params
-    params.permit(:name, :hotspot_subscribers, :expiry_days, :billing_cycle)
+    params.permit(:name, :hotspot_subscribers, :expiry_days, 
+    :billing_cycle)
   end
+
+
 end
