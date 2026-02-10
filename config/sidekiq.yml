@@ -51,6 +51,10 @@ development:
       class: DeleteRadactJob
       cron: "* * * * *"
 
+    populate_radius_job:
+      class: PopulateRadiusJob
+      cron: "* * * * *"
+
     delete_session_job:
       class: DeleteSessionJob
       cron: "* * * * *"

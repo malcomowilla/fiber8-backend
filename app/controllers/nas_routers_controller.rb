@@ -269,7 +269,8 @@ end
 
 
   def nas_router_params
-    params.require(:nas_router).permit(:name, :ip_address, :username, :password, :location)
+    params.require(:nas_router).permit(:name, :ip_address,
+     :username, :password, :location)
   end
     # Use callbacks to share common setup or constraints between actions.
     def find_nas_router
