@@ -87,8 +87,7 @@ ActsAsTenant.with_tenant(account) do
       status: "active",
       plan_name:"PPPoE Plan #{params[:plan][:name]}",
       price: params[:plan][:price],
-      expiry: Time.current 
-      #  expiry:   Time.current + expiry_days.days
+       expiry:   Time.current + expiry_days.days
       # billing_cycle: params[:plan][:billing_cycle],
       # condition: false
     )
@@ -112,10 +111,8 @@ ActsAsTenant.with_tenant(account) do
       expiry_days: params[:plan][:expiry_days],
        status: "active",
       price: params[:plan][:price],
-            #  expiry:   Time.current + expiry_days.days,
+             expiry:   Time.current + expiry_days.days,
                    plan_name:"PPPoE Plan #{params[:plan][:name]}",
-                         expiry: Time.current 
-
 
 
       # billing_cycle: params[:plan][:billing_cycle],
