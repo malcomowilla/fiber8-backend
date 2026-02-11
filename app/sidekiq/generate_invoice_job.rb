@@ -328,16 +328,20 @@ class GenerateInvoiceJob
     pppoe_clients = 0
     pppoe_charge = 0
 
-    if hotspot_billable
-      hotspot_total, hotspot_charge = calculate_hotspot_charge(tenant)
-    end
+    # if hotspot_billable
+    #   hotspot_total, hotspot_charge = calculate_hotspot_charge(tenant)
+    # end
 
-    if pppoe_billable
+    # if pppoe_billable
+    #   pppoe_clients, pppoe_charge = calculate_pppoe_charge(tenant)
+    # end
+    if hotspot_billable || pppoe_billable
+      hotspot_total, hotspot_charge = calculate_hotspot_charge(tenant)
       pppoe_clients, pppoe_charge = calculate_pppoe_charge(tenant)
     end
 
     total_amount = hotspot_charge + pppoe_charge
-    # return if total_amount.zero?
+    return if total_amount.zero?
 
     invoice = Invoice.create!(
       invoice_number: generate_invoice_number,
