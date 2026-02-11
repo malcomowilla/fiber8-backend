@@ -280,7 +280,7 @@ class GenerateInvoiceJob
         next unless hotspot_billable || pppoe_billable
 
         # last_invoice = tenant.invoices.order(created_at: :desc).first
-        last_invoice = tenant.invoices.where(status: 'unpaid').order(created_at: :desc).first
+        last_invoice = tenant.invoices.where(status:  'unpaid').order(created_at: :desc).first
 
         if last_invoice&.last_invoiced_at.present? &&
            last_invoice.last_invoiced_at > 30.days.ago
@@ -484,14 +484,13 @@ class GenerateInvoiceJob
                       .sum(:amount)
 
     # hotspot_charge = hotspot_total * HOTSPOT_PERCENTAGE
-      hotspot_charge = (hotspot_total * HOTSPOT_PERCENTAGE).round
-
+     hotspot_charge = (hotspot_total * HOTSPOT_PERCENTAGE).round
     [hotspot_total, hotspot_charge]
   end
 
   def calculate_pppoe_charge(tenant)
     pppoe_clients = Subscriber.where(account_id: tenant.id).count
-    pppoe_charge = pppoe_clients * 25
+    pppoe_charge = pppoe_clients * PPPoE_PRICE_PER_CLIENT
     [pppoe_clients, pppoe_charge]
   end
 
@@ -499,27 +498,27 @@ class GenerateInvoiceJob
   # HELPERS
   # -----------------------
 
-  # def invoice_description(hotspot_total, hotspot_charge, pppoe_clients,
-  #    pppoe_charge)
-  #   <<~DESC
-  #   Billing Summary:
-  #   Hotspot revenue: #{hotspot_total} KES
-  #   Hotspot charge (4%): #{hotspot_charge} KES
-  #   PPPoE clients: #{pppoe_clients}
-  #   PPPoE charge (25 KES per client): #{pppoe_charge} KES
-  #   DESC
-  # end
+  def invoice_description(hotspot_total, hotspot_charge, pppoe_clients,
+     pppoe_charge)
+    <<~DESC
+    Billing Summary:
+    Hotspot revenue: #{hotspot_total} KES
+    Hotspot charge (4%): #{hotspot_charge} KES
+    PPPoE clients: #{pppoe_clients}
+    PPPoE charge (25 KES per client): #{pppoe_charge} KES
+    DESC
+  end
 
 
-  def invoice_description(hotspot_total, hotspot_charge, pppoe_clients, pppoe_charge)
-  [
-    "Billing Summary",
-    "Hotspot revenue: #{hotspot_total} KSH",
-    "Hotspot charge (4% of total revenue): #{hotspot_charge} KSH",
-    "PPPoE clients: #{pppoe_clients}",
-    "PPPoE charge (25 KSH per client): #{pppoe_charge} KSH"
-  ].join("\n")
-end
+#   def invoice_description(hotspot_total, hotspot_charge, pppoe_clients, pppoe_charge)
+#   [
+#     "Billing Summary",
+#     "Hotspot revenue: #{hotspot_total} KSH",
+#     "Hotspot charge (4% of total revenue): #{hotspot_charge} KSH",
+#     "PPPoE clients: #{pppoe_clients}",
+#     "PPPoE charge (25 KSH per client): #{pppoe_charge} KSH"
+#   ].join("\n")
+# end
 
 
   def generate_invoice_number
