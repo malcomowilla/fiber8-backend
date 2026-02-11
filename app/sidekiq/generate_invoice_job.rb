@@ -477,6 +477,11 @@ class GenerateInvoiceJob
 
 
   
+  def calculate_pppoe_charge(tenant)
+    pppoe_clients = Subscriber.count
+    pppoe_charge = pppoe_clients * PPPoE_PRICE_PER_CLIENT
+    [pppoe_clients, pppoe_charge]
+  end
 
   def calculate_hotspot_charge(tenant)
     hotspot_total = HotspotMpesaRevenue
@@ -489,11 +494,7 @@ class GenerateInvoiceJob
     [hotspot_total, hotspot_charge]
   end
 
-  def calculate_pppoe_charge(tenant)
-    pppoe_clients = ActsAsTenant.current_tenant.subscribers.count
-    pppoe_charge = pppoe_clients * PPPoE_PRICE_PER_CLIENT
-    [pppoe_clients, pppoe_charge]
-  end
+  
 
 
   # -----------------------
