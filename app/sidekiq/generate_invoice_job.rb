@@ -483,13 +483,15 @@ class GenerateInvoiceJob
                       .where(created_at: Time.current.beginning_of_month..Time.current)
                       .sum(:amount)
 
-    hotspot_charge = hotspot_total * HOTSPOT_PERCENTAGE
+    # hotspot_charge = hotspot_total * HOTSPOT_PERCENTAGE
+      hotspot_charge = (hotspot_total * HOTSPOT_PERCENTAGE).round
+
     [hotspot_total, hotspot_charge]
   end
 
   def calculate_pppoe_charge(tenant)
     pppoe_clients = Subscriber.where(account_id: tenant.id).count
-    pppoe_charge = pppoe_clients * PPPoE_PRICE_PER_CLIENT
+    pppoe_charge = pppoe_clients * 25
     [pppoe_clients, pppoe_charge]
   end
 
