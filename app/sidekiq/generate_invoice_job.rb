@@ -468,7 +468,7 @@ class GenerateInvoiceJob
         Rails.logger.info "Failed to send message: #{sms_data['responses'][0]['response-description']}"
       end
     else
-      Rails.logger.error "Failed to send message: #{response.body}"
+      Rails.logger.info "Failed to send message: #{response.body}"
     end
   end
 
@@ -478,6 +478,7 @@ class GenerateInvoiceJob
   def calculate_hotspot_charge(tenant)
     hotspot_total = HotspotMpesaRevenue
                       .where(account_id: tenant.id)
+                      .where(created_at: Time.current.beginning_of_month..Time.current)
                       .sum(:amount)
 
     hotspot_charge = hotspot_total * HOTSPOT_PERCENTAGE
@@ -494,28 +495,37 @@ class GenerateInvoiceJob
   # HELPERS
   # -----------------------
 
-  def invoice_description(hotspot_total, hotspot_charge, pppoe_clients,
-     pppoe_charge)
-    <<~DESC
-    Billing Summary:
-    Hotspot revenue: #{hotspot_total} KES
-    Hotspot charge (4%): #{hotspot_charge} KES
-    PPPoE clients: #{pppoe_clients}
-    PPPoE charge (25 KES per client): #{pppoe_charge} KES
-    DESC
-  end
+  # def invoice_description(hotspot_total, hotspot_charge, pppoe_clients,
+  #    pppoe_charge)
+  #   <<~DESC
+  #   Billing Summary:
+  #   Hotspot revenue: #{hotspot_total} KES
+  #   Hotspot charge (4%): #{hotspot_charge} KES
+  #   PPPoE clients: #{pppoe_clients}
+  #   PPPoE charge (25 KES per client): #{pppoe_charge} KES
+  #   DESC
+  # end
+
+
+  def invoice_description(hotspot_total, hotspot_charge, pppoe_clients, pppoe_charge)
+  [
+    "Billing Summary",
+    "Hotspot revenue: #{hotspot_total} KSH",
+    "Hotspot charge (4% of total revenue): #{hotspot_charge} KSH",
+    "PPPoE clients: #{pppoe_clients}",
+    "PPPoE charge (25 KSH per client): #{pppoe_charge} KSH"
+  ].join("\n")
+end
+
 
   def generate_invoice_number
-    "INV#{Time.current.to_i}#{rand(100..999)}"
+    "INV#{rand(100..999)}"
   end
 
-  def send_invoice_sms(tenant, invoice)
-    admin = tenant.users.where(role: "super_administrator").first
-    return unless admin&.phone_number
 
-    message = "Hello #{admin.username}, invoice #{invoice.invoice_number} " \
-              "amounting to #{invoice.total} KES has been generated."
 
-    Rails.logger.info message
-  end
 end
+
+
+
+
