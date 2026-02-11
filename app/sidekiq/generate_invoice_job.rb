@@ -343,17 +343,52 @@ class GenerateInvoiceJob
     total_amount = hotspot_charge + pppoe_charge
     return if total_amount.zero?
 
+
+        # Create structured description as JSON
+    invoice_description_json = {
+      summary: "Billing Summary",
+      items: []
+    }
+
+    # Add hotspot item if applicable
+    if hotspot_charge > 0
+      invoice_description_json[:items] << {
+        description: "Hotspot Revenue Share",
+        details: "4% of total hotspot revenue",
+        quantity: hotspot_total,
+        unit: "KES",
+        rate: "4%",
+        amount: hotspot_charge,
+        currency: "KES"
+      }
+    end
+
+    # Add PPPoE item if applicable
+    if pppoe_charge > 0
+      invoice_description_json[:items] << {
+        description: "PPPoE Client Management",
+        details: "Per client monthly charge",
+        quantity: pppoe_clients,
+        unit: "clients",
+        rate: "25 KES/client",
+        amount: pppoe_charge,
+        currency: "KES"
+      }
+    end
+
+
     invoice = Invoice.create!(
       invoice_number: generate_invoice_number,
       plan_name: "Usage Billing",
       invoice_date: Time.current,
       due_date: Time.current + 2.days,
-      invoice_desciption: invoice_description(
-        hotspot_total,
-        hotspot_charge,
-        pppoe_clients,
-        pppoe_charge
-      ),
+      # invoice_desciption: invoice_description(
+      #   hotspot_total,
+      #   hotspot_charge,
+      #   pppoe_clients,
+      #   pppoe_charge
+      # ),
+      invoice_desciption: invoice_description_json.to_json,
       total: total_amount,
       status: "unpaid",
       account_id: tenant.id,
