@@ -38,7 +38,8 @@ expiry_days = params[:plan][:expiry_days]
       expiry_days: params[:plan][:expiry_days],
       price: params[:plan][:price],
       status: "active",
-  expiry:  Time.current + expiry_days.days,
+      expiry:  Time.current,
+  # expiry:  Time.current + expiry_days.days,
     plan_name:"PPPoE Plan #{params[:plan][:name]}",
 
 
@@ -49,7 +50,8 @@ expiry_days = params[:plan][:expiry_days]
       expiry_days: params[:plan][:expiry_days],
        price: params[:plan][:price],
        status: "active",
-         expiry:  Time.current + expiry_days.days,
+        expiry:  Time.current,
+        #  expiry:  Time.current + expiry_days.days,
          plan_name:"PPPoE Plan #{params[:plan][:name]}",
 
 
@@ -82,7 +84,8 @@ Invoice.create(
       expiry_days: params[:plan][:expiry_days],
        price: params[:plan][:price],
        status: "active",
-         expiry:  Time.current + expiry_days.days,
+        #  expiry:  Time.current + expiry_days.days,
+         expiry:  Time.current,
          plan_name:"Hotspot Plan #{params[:plan][:name]}",
 
     )
@@ -92,7 +95,8 @@ Invoice.create(
       expiry_days: params[:plan][:expiry_days],
        price: params[:plan][:price],
        status: "active",
-         expiry:  Time.current + expiry_days.days,
+        #  expiry:  Time.current + expiry_days.days,
+         expiry:  Time.current,
          plan_name:"Hotspot Plan #{params[:plan][:name]}"
 
 

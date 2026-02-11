@@ -49,6 +49,7 @@
 
 
 #    existing_invoice = tenant.invoices.where(plan_name: "PPPoE Plan #{tenant.pp_poe_plan.name}").order(created_at: :desc).first
+#    
 
          
 
@@ -278,7 +279,8 @@ class GenerateInvoiceJob
 
         next unless hotspot_billable || pppoe_billable
 
-        last_invoice = tenant.invoices.order(created_at: :desc).first
+        # last_invoice = tenant.invoices.order(created_at: :desc).first
+        last_invoice = tenant.invoices.where(status: 'unpaid').order(created_at: :desc).first
 
         if last_invoice&.last_invoiced_at.present? &&
            last_invoice.last_invoiced_at > 30.days.ago
