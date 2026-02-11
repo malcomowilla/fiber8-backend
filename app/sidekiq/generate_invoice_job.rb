@@ -490,7 +490,7 @@ class GenerateInvoiceJob
   end
 
   def calculate_pppoe_charge(tenant)
-    pppoe_clients = Subscriber.count
+    pppoe_clients = ActsAsTenant.current_tenant.subscribers.count
     pppoe_charge = pppoe_clients * PPPoE_PRICE_PER_CLIENT
     [pppoe_clients, pppoe_charge]
   end
