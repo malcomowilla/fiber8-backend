@@ -273,6 +273,7 @@ class GenerateInvoiceJob
     Account.find_each do |tenant|
       ActsAsTenant.with_tenant(tenant) do
         Rails.logger.info "Processing invoice for => #{tenant.subdomain}"
+        Rails.logger.info "Processing invoice for id => #{tenant.subdomain}"
 
         hotspot_billable = hotspot_plan_billable?(tenant)
         pppoe_billable   = pppoe_plan_billable?(tenant)
@@ -494,7 +495,11 @@ class GenerateInvoiceJob
     [pppoe_clients, pppoe_charge]
   end
 
+
   # -----------------------
+
+
+
   # HELPERS
   # -----------------------
 
