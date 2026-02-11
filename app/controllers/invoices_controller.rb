@@ -37,8 +37,10 @@ def unpaid_invoices_amount
 end
 
 
-
-
+def get_invoice
+   @invoice = Invoice.find_by(id: params[:id])
+   render json: @invoice, status: :ok
+end
 
    def update_last_activity
 if current_user

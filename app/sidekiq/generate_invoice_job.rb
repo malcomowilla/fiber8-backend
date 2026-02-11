@@ -368,7 +368,7 @@ class GenerateInvoiceJob
       invoice_description_json[:items] << {
         description: "PPPoE Client Management",
         details: "Per client monthly charge",
-        quantity: pppoe_clients,
+        quantity: "#{pppoe_clients} clients",
         unit: "clients",
         rate: "25 KES/client",
         amount: pppoe_charge,
