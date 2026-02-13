@@ -152,12 +152,25 @@ if current_user
 def upload_hotspot_file
   require "tempfile"
 
-  router_ip = params[:router_ip]
+ router_ip = params[:router_ip]
   username  = params[:router_username]
   password  = params[:router_password]
   subdomain = request.headers["X-Subdomain"]
+  full_domain = request.headers["X-Domain"]  # e.g., "twintech.owitech.co.ke"
 
   raise "Missing router details" if router_ip.blank? || username.blank? || password.blank?
+
+  # Extract the base domain from X-Domain
+  # e.g., "twintech.owitech.co.ke" => "owitech.co.ke"
+  base_domain = full_domain.to_s.split('.').last(2).join('.') if full_domain.present?
+
+  # Determine which platform to use
+  if base_domain == "owitech.co.ke"
+    platform_domain = "owitech.co.ke"
+  else
+    platform_domain = "aitechs.co.ke"   # fallback
+  end
+
 
   login_html = <<~HTML
     <html>
@@ -174,9 +187,8 @@ def upload_hotspot_file
           var ip = "$(ip)";
           var username = "$(username)";
 
-          var redirectUrl = `https://#{subdomain}.aitechs.co.ke/hotspot-page?mac=${mac}&ip=${ip}&username=${username}`;
-
-          console.log("Hotspot redirect:", redirectUrl);
+           var redirectUrl = `https://#{subdomain}.#{platform_domain}/hotspot-page?mac=${mac}&ip=${ip}&username=${username}`;
+           
 
           window.location.href = redirectUrl;
         </script>
