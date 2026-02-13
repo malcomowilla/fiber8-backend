@@ -162,8 +162,8 @@ def upload_hotspot_file
 
   # Extract the base domain from X-Domain
   # e.g., "twintech.owitech.co.ke" => "owitech.co.ke"
-  base_domain = full_domain.to_s.split('.').last(2).join('.') if full_domain.present?
-
+  # base_domain = full_domain.to_s.split('.').last(2).join('.') if full_domain.present?
+base_domain = full_domain.to_s.split('.').last(3).join('.') if full_domain.present?
   # Determine which platform to use
   if base_domain == "owitech.co.ke"
     platform_domain = "owitech.co.ke"
@@ -188,7 +188,7 @@ def upload_hotspot_file
           var username = "$(username)";
 
            var redirectUrl = `https://#{subdomain}.#{platform_domain}/hotspot-page?mac=${mac}&ip=${ip}&username=${username}`;
-           
+
 
           window.location.href = redirectUrl;
         </script>
