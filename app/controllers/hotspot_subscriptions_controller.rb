@@ -48,10 +48,10 @@ def set_tenant
     mac = params[:mac]
 
 # Rails.logger.info "IP from check session: #{ip}"
-session =   RadAcct.where(framedipaddress: ip, framedprotocol: '').order(acctupdatetime: :desc).first ||
+session = RadAcct.where(callingstationid: mac, framedprotocol: '', ).order(acctupdatetime: :desc).first || 
+                    RadAcct.where(framedipaddress: ip, framedprotocol: '').order(acctupdatetime: :desc).first
 
 
-RadAcct.where(callingstationid: mac, framedprotocol: '', ).order(acctupdatetime: :desc).first 
           
          
 # Rails.logger.info "Session record found: #{session.inspect}"

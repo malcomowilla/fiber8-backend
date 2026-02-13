@@ -702,11 +702,6 @@ end
     # :item, :due_date,
     #    :invoice_date, :invoice_number, :amount, :status, :description,
     #     :quantity
-package_amount = Package.find_by(name: params[:subscription][:package_name]).price
-
-
-  
-    
 
 
     @subscription = Subscription.create(
@@ -725,14 +720,39 @@ package_amount = Package.find_by(name: params[:subscription][:package_name]).pri
   validity_period_units: params[:subscription][:validity_period_units],
   validity:  params[:subscription][:validity],
   expiration_date:  params[:subscription][:expiration_date],
-  service_type: params[:subscription][:service_type]
+  service_type: params[:subscription][:service_type],
+  include_installation_fee: params[:subscription][:include_installation_fee],
+  installation_fee: params[:subscription][:installation_fee]
 
     )
 
+package_amount = Package.find_by(name: params[:subscription][:package_name]).price
+
+
+  
+    package_amount_and_installation_fee = package_amount + @subscription.installation_fee.to_i
 
 
   if ActsAsTenant.current_tenant.subscriber_setting.invoice_created_or_paid == true
-      invoice = SubscriberInvoice.create(
+    if @subscription.include_installation_fee
+      
+invoice = SubscriberInvoice.create(
+         invoice_date: Time.current,
+        invoice_number: generate_invoice_number,
+        # amount: package_amount,
+        amount: package_amount_and_installation_fee,
+        status: "unpaid",
+        item: params[:subscription][:package_name],
+        due_date: Time.current,
+        subscriber_id: @subscription.subscriber_id,
+        subscription_id: @subscription.id,
+        description: "Internet installation and subscription charges for => #{params[:subscription][:package_name]}",
+
+
+      )
+      
+    else
+       invoice = SubscriberInvoice.create(
          invoice_date: Time.current,
         invoice_number: generate_invoice_number,
         amount: package_amount,
@@ -741,10 +761,12 @@ package_amount = Package.find_by(name: params[:subscription][:package_name]).pri
         due_date: Time.current,
         subscriber_id: @subscription.subscriber_id,
         subscription_id: @subscription.id,
-        description: "Subscription invoice for => #{params[:subscription][:package_name]}",
+        description: "Subscription  invoice for => #{params[:subscription][:package_name]}",
 
       )
       
+    end
+     
 
 company_name_invoice = ActsAsTenant.current_tenant.company_setting.company_name || 'Aitechs'
 phone_number_customer = Subscriber.find_by(id:@subscription.subscriber_id).phone_number
@@ -760,8 +782,6 @@ subscriber_account_number = Subscriber.find_by(id:@subscription.subscriber_id).r
           subscriber_account_number,
         ActsAsTenant.current_tenant,
       
-
-
 
       )
     end
@@ -1233,7 +1253,7 @@ end
       :last_subscribed, :expiry, :ip_address,
        :ppoe_username, :ppoe_password, :type, :network_name, :mac_address, 
        :validity_period_units, :validity, :service_type, :mac_address,
-        :expiration_date, :package_name)
+        :expiration_date, :package_name, :include_installation_fee, :installation_fee)
     end
 
    

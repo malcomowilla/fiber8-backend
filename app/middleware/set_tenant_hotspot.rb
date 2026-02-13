@@ -25,8 +25,14 @@ class SetTenantHotspot
 'hotspot_packages',
 'hotspot_templates',
 'get_active_hotspot_users',
-
+'create_package',
       'update_hotspot_package',
+       'update_package',
+      'package',
+      'import',
+      'subscriber',
+'delete_subscriber',
+ 'update_subscriber',
       
 # 'create_ticket',
 # 'update_ticket',
@@ -102,7 +108,7 @@ class SetTenantHotspot
     # expired_hotspot = account.hotspot_plan.present? && account.hotspot_plan.expiry <= Time.current
 
     # expired_pppoe || expired_hotspot
-  expired_hotspot = account.hotspot_plan&.expiry&.present? && account&.hotspot_plan&.expiry <= Time.current
+  expired_hotspot = account.hotspot_and_dial_plan&.expiry&.present? && account&.hotspot_and_dial_plan&.expiry <= Time.current
   
 
   expired_hotspot

@@ -32,27 +32,23 @@ expiry_days = params[:plan][:expiry_days]
 
 
     if plan_type == 'pppoe'
-        @plan = PpPoePlan.first_or_initialize(
+        @plan = HotspotAndDialPlan.first_or_initialize(
       name: params[:plan][:name],
-      maximum_pppoe_subscribers: params[:plan][:maximum_pppoe_subscribers],
       expiry_days: params[:plan][:expiry_days],
       price: params[:plan][:price],
       status: "active",
       expiry:  Time.current,
   # expiry:  Time.current + expiry_days.days,
-    plan_name:"PPPoE Plan #{params[:plan][:name]}",
 
 
     )
 @plan.update(
      name: params[:plan][:name],
-      maximum_pppoe_subscribers: params[:plan][:maximum_pppoe_subscribers],
       expiry_days: params[:plan][:expiry_days],
        price: params[:plan][:price],
        status: "active",
         expiry:  Time.current,
         #  expiry:  Time.current + expiry_days.days,
-         plan_name:"PPPoE Plan #{params[:plan][:name]}",
 
 
 )
@@ -78,20 +74,16 @@ Invoice.create(
 
       
     elsif plan_type == 'hotspot'
-       @hotspot_plan = HotspotPlan.first_or_initialize(
+       @hotspot_plan = HotspotAndDialPlan.first_or_initialize(
       name: params[:plan][:name],
-      hotspot_subscribers: params[:plan][:hotspot_subscribers],
       expiry_days: params[:plan][:expiry_days],
-       price: params[:plan][:price],
        status: "active",
         #  expiry:  Time.current + expiry_days.days,
          expiry:  Time.current,
-         plan_name:"Hotspot Plan #{params[:plan][:name]}",
 
     )
 @hotspot_plan.update(
    name: params[:plan][:name],
-      hotspot_subscribers: params[:plan][:hotspot_subscribers],
       expiry_days: params[:plan][:expiry_days],
        price: params[:plan][:price],
        status: "active",

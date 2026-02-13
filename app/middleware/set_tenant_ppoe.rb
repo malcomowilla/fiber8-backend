@@ -25,16 +25,16 @@ class SetTenantPpoe
 #       'sms_provider_settings',
 
 # 'get_all_admins',
-'subscriber',
-'delete_subscriber',
- 'update_subscriber',
+
       # 'subscribers',
       # 'update_hotspot_package',
 # 'router_settings',
       'update_package',
       'package',
       'import',
-      
+      'subscriber',
+'delete_subscriber',
+ 'update_subscriber',
 # 'subscribers',
 # 'total_subscribers',
 # 'subscribers_offline',

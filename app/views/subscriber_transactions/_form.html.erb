@@ -1,0 +1,52 @@
+<%= form_with(model: subscriber_transaction) do |form| %>
+  <% if subscriber_transaction.errors.any? %>
+    <div style="color: red">
+      <h2><%= pluralize(subscriber_transaction.errors.count, "error") %> prohibited this subscriber_transaction from being saved:</h2>
+
+      <ul>
+        <% subscriber_transaction.errors.each do |error| %>
+          <li><%= error.full_message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div>
+    <%= form.label :type, style: "display: block" %>
+    <%= form.text_field :type %>
+  </div>
+
+  <div>
+    <%= form.label :credit, style: "display: block" %>
+    <%= form.text_field :credit %>
+  </div>
+
+  <div>
+    <%= form.label :debit, style: "display: block" %>
+    <%= form.text_field :debit %>
+  </div>
+
+  <div>
+    <%= form.label :date, style: "display: block" %>
+    <%= form.text_field :date %>
+  </div>
+
+  <div>
+    <%= form.label :title, style: "display: block" %>
+    <%= form.text_field :title %>
+  </div>
+
+  <div>
+    <%= form.label :description, style: "display: block" %>
+    <%= form.text_field :description %>
+  </div>
+
+  <div>
+    <%= form.label :account_id, style: "display: block" %>
+    <%= form.number_field :account_id %>
+  </div>
+
+  <div>
+    <%= form.submit %>
+  </div>
+<% end %>

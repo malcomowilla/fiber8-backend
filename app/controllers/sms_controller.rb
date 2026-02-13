@@ -128,7 +128,7 @@ end
     # Use callbacks to share common setup or constraints between actions.
 
 def get_text_sms_balance(selected_provider)
-  api_key = SmsSetting.find_by(sms_provider: selected_provider)&.api_key
+  api_key = SmsSetting.find_by(sms_provider: 'TextSms')&.api_key
   partnerId = SmsSetting.find_by(sms_provider: selected_provider)&.partnerID
 
 

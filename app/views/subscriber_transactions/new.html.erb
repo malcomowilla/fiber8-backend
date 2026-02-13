@@ -1,0 +1,11 @@
+<% content_for :title, "New subscriber transaction" %>
+
+<h1>New subscriber transaction</h1>
+
+<%= render "form", subscriber_transaction: @subscriber_transaction %>
+
+<br>
+
+<div>
+  <%= link_to "Back to subscriber transactions", subscriber_transactions_path %>
+</div>

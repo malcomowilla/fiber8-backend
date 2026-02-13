@@ -14,7 +14,10 @@ class HotspotCustomizationsController < ApplicationController
   Time.zone = GeneralSetting.first&.timezone || Rails.application.config.time_zone
     Rails.logger.info "Setting time zone #{Time.zone}"
 
-end
+    end
+
+
+
 
 def set_tenant
     host = request.headers['X-Subdomain']

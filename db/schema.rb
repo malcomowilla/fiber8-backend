@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_02_10_113427) do
+ActiveRecord::Schema[7.2].define(version: 2026_02_12_101434) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -344,6 +344,17 @@ ActiveRecord::Schema[7.2].define(version: 2026_02_10_113427) do
     t.datetime "updated_at", null: false
   end
 
+  create_table "hotspot_and_dial_plans", force: :cascade do |t|
+    t.datetime "expiry"
+    t.string "status"
+    t.integer "expiry_days"
+    t.string "company_name"
+    t.string "name"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.integer "account_id"
+  end
+
   create_table "hotspot_customizations", force: :cascade do |t|
     t.boolean "customize_template_and_package_per_location"
     t.integer "account_id"
@@ -496,6 +507,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_02_10_113427) do
     t.string "invoice_desciption"
     t.string "plan_name"
     t.datetime "last_invoiced_at"
+    t.integer "amount_paid"
   end
 
   create_table "ip_networks", force: :cascade do |t|
@@ -854,6 +866,18 @@ ActiveRecord::Schema[7.2].define(version: 2026_02_10_113427) do
     t.string "expiration_reminder_days"
   end
 
+  create_table "subscriber_transactions", force: :cascade do |t|
+    t.string "type"
+    t.string "credit"
+    t.string "debit"
+    t.string "date"
+    t.string "title"
+    t.string "description"
+    t.integer "account_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
+
   create_table "subscriber_wallet_balances", force: :cascade do |t|
     t.integer "account_id"
     t.datetime "created_at", null: false
@@ -929,6 +953,8 @@ ActiveRecord::Schema[7.2].define(version: 2026_02_10_113427) do
     t.datetime "expiration_sms_sent_at"
     t.datetime "expiry_reminder_sent_at"
     t.datetime "invoice_expired_created_at"
+    t.boolean "include_installation_fee", default: false
+    t.string "installation_fee"
   end
 
   create_table "support_tickets", force: :cascade do |t|

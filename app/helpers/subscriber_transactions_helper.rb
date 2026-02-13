@@ -1,0 +1,2 @@
+module SubscriberTransactionsHelper
+end

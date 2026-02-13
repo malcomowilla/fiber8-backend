@@ -33,19 +33,7 @@ if current_user
 
 
 
-
-
-  # GET /subscriber_settings or /subscriber_settings.json
-  def index
-    @subscriber_settings = SubscriberSetting.all
-    render json: @subscriber_settings
-  end
-
-
-
-
-
-
+  
 
  def set_tenant
     host = request.headers['X-Subdomain']
@@ -55,6 +43,14 @@ if current_user
   rescue ActiveRecord::RecordNotFound
     render json: { error: 'Invalid tenant' }, status: :not_found
   end
+
+
+
+  def index
+    @subscriber_settings = SubscriberSetting.all
+    render json: @subscriber_settings
+  end
+
 
 
   def get_allow_subcriber_setting

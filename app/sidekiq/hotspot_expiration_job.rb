@@ -20,7 +20,7 @@ hotspot_subscriptions.each do |subscription|
   next unless subscription.voucher.present?
 
   # Fetch the PPPoE plan linked to this subscription/account
-  plan = tenant&.hotspot_plan
+  plan = tenant&.hotspot_and_dial_plan
 
   expired_hotspot = plan&.expiry.present? && plan.expiry <= Time.current
 

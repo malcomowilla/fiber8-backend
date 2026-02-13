@@ -1,0 +1,16 @@
+<p style="color: green"><%= notice %></p>
+
+<% content_for :title, "Hotspot and dial plans" %>
+
+<h1>Hotspot and dial plans</h1>
+
+<div id="hotspot_and_dial_plans">
+  <% @hotspot_and_dial_plans.each do |hotspot_and_dial_plan| %>
+    <%= render hotspot_and_dial_plan %>
+    <p>
+      <%= link_to "Show this hotspot and dial plan", hotspot_and_dial_plan %>
+    </p>
+  <% end %>
+</div>
+
+<%= link_to "New hotspot and dial plan", new_hotspot_and_dial_plan_path %>

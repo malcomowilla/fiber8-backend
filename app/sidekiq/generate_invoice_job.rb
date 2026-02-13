@@ -275,13 +275,13 @@ class GenerateInvoiceJob
         Rails.logger.info "Processing invoice for => #{tenant.subdomain}"
         Rails.logger.info "Processing invoice for id => #{tenant.id}"
 
-        hotspot_billable = hotspot_plan_billable?(tenant)
-        pppoe_billable   = pppoe_plan_billable?(tenant)
-
-        next unless hotspot_billable || pppoe_billable
+        # hotspot_billable = hotspot_plan_billable?(tenant)
+        # pppoe_billable   = pppoe_plan_billable?(tenant)
+        hotspot_and_dial_plan_billable = hotspot_and_dial_plan_billable?(tenant)
+        next unless hotspot_and_dial_plan_billable
 
         # last_invoice = tenant.invoices.order(created_at: :desc).first
-        last_invoice = tenant.invoices.where(status:  'unpaid').order(created_at: :desc).first
+        last_invoice = tenant.invoices.where(status: 'unpaid').order(created_at: :desc).first
 
         if last_invoice&.last_invoiced_at.present? &&
            last_invoice.last_invoiced_at > 30.days.ago
@@ -300,27 +300,19 @@ class GenerateInvoiceJob
   # BILLABLE CONDITIONS
   # -----------------------
 
-  def hotspot_plan_billable?(tenant)
-    tenant.hotspot_plan.present? &&
-      tenant.hotspot_plan.name.present? &&
-      tenant.hotspot_plan.name != "Hotspot Free Trial" &&
-      tenant.hotspot_plan.expiry.present? &&
-      tenant.hotspot_plan.expiry - 1.day < Time.current
+  def hotspot_and_dial_plan_billable?(tenant)
+    tenant.hotspot_and_dial_plan_billable?.present? &&
+      tenant.hotspot_and_dial_plan_billable?.name.present? &&
+      # tenant.hotspot_plan.name != "Hotspot Free Trial" &&
+      tenant.hotspot_and_dial_plan_billable?.expiry.present? &&
+      tenant.hotspot_and_dial_plan_billable?.expiry - 1.day < Time.current
   end
 
-  def pppoe_plan_billable?(tenant)
-    tenant.pp_poe_plan.present? &&
-      tenant.pp_poe_plan.name.present? &&
-      tenant.pp_poe_plan.name != "PPPOE Free Trial" &&
-      tenant.pp_poe_plan.expiry.present? &&
-      tenant.pp_poe_plan.expiry - 1.day < Time.current
-  end
+  
 
-  # -----------------------
-  # INVOICE GENERATION
-  # -----------------------
 
-  def generate_usage_invoice(tenant, hotspot_billable, pppoe_billable)
+  def generate_usage_invoice(tenant, hotspot_and_dial_plan_billable
+     )
     Rails.logger.info "Generating invoice for #{tenant.subdomain}"
 
     hotspot_total = 0
@@ -335,7 +327,7 @@ class GenerateInvoiceJob
     # if pppoe_billable
     #   pppoe_clients, pppoe_charge = calculate_pppoe_charge(tenant)
     # end
-    if hotspot_billable || pppoe_billable
+    if hotspot_and_dial_plan_billable
       hotspot_total, hotspot_charge = calculate_hotspot_charge(tenant)
       pppoe_clients, pppoe_charge = calculate_pppoe_charge(tenant)
     end

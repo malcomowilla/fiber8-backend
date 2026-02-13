@@ -25,7 +25,20 @@ end
 
 
 
-
+def set_tenant
+    host = request.headers['X-Subdomain']
+    @account = Account.find_by(subdomain: host)
+    ActsAsTenant.current_tenant = @account
+    EmailConfiguration.configure(@account, ENV['SYSTEM_ADMIN_EMAIL'])
+    # EmailSystemAdmin.configure(@current_account, current_system_admin)
+  
+    # Rails.logger.info "set_current_tenant #{ActsAsTenant.current_tenant.inspect}"
+    # set_current_tenant(@account)
+  rescue ActiveRecord::RecordNotFound
+    render json: { error: 'Invalid tenant' }, status: :not_found
+  
+    
+  end
 
 
   
@@ -64,6 +77,8 @@ end
   end
 
 
+
+
   def allow_get_current_hotspot_plan
     @plans = HotspotPlan.all
     render json: @plans, each_serializer: HotspotPlanSerializer
@@ -72,15 +87,14 @@ end
   
 
   def create
+    
 company_name = params[:plan][:company_name]
 expiry_days = params[:plan][:expiry_days]
-
 
 account = Account.find_by!(subdomain: company_name)
 
     ActsAsTenant.with_tenant(account) do
     
-
     @plan = HotspotPlan.first_or_initialize(
       name: params[:plan][:name],
       hotspot_subscribers: params[:plan][:hotspot_subscribers],
@@ -90,23 +104,8 @@ account = Account.find_by!(subdomain: company_name)
       price: params[:plan][:price],
       expiry: Time.current + expiry_days.days,
       description: '4% of hotspot revenue'
-
-
-      # billing_cycle: params[:plan][:billing_cycle],
-      # condition: false
     )
 
-
-  #  account_id = Account.find_by(subdomain: params[:plan][:company_name])
-  #     @plan.update!(account_id: account_id&.id)
-
-   # @my_admin.password = generate_secure_password(16)
-   # @my_admin.password_confirmation = generate_secure_password(16)
-   # 
-   # @my_admin.password = generate_secure_password(16)
-   # @my_admin.password_confirmation = generate_secure_password(16)
-    
-   # Calculate expiration time
 
     @plan.update(
       name: params[:plan][:name],
@@ -117,10 +116,9 @@ account = Account.find_by!(subdomain: company_name)
             plan_name: "Hotspot Plan #{params[:plan][:name]}",
               expiry: Time.current + expiry_days.days,
               description: '4% of hotspot revenue'
-
-
-     
     )
+
+
     if @plan.save
       render json: @plan, status: :created
     else
@@ -170,20 +168,7 @@ account = Account.find_by!(subdomain: company_name)
 
 
 
-  def set_tenant
-    host = request.headers['X-Subdomain']
-    @account = Account.find_by(subdomain: host)
-    ActsAsTenant.current_tenant = @account
-    EmailConfiguration.configure(@account, ENV['SYSTEM_ADMIN_EMAIL'])
-    # EmailSystemAdmin.configure(@current_account, current_system_admin)
   
-    # Rails.logger.info "set_current_tenant #{ActsAsTenant.current_tenant.inspect}"
-    # set_current_tenant(@account)
-  rescue ActiveRecord::RecordNotFound
-    render json: { error: 'Invalid tenant' }, status: :not_found
-  
-    
-  end
 
   private
 

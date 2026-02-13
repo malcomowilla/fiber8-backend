@@ -2,6 +2,8 @@ require 'sidekiq/web'
 
 
 Rails.application.routes.draw do
+  resources :subscriber_transactions
+  resources :hotspot_and_dial_plans
   resources :subscriber_wallet_balances
   resources :subscriber_invoices
   resources :pp_poe_mpesa_revenues
@@ -80,7 +82,9 @@ mount ActionCable.server => '/cable'
 mount Sidekiq::Web => "/sidekiq" # mount Sidekiq::Web in your Rails app
 
 scope '/api' do
+    resources :subscriber_transactions
 
+    resources :hotspot_and_dial_plans
 
     resources :subscriber_wallet_balances
     resources :subscriber_invoices
@@ -145,6 +149,9 @@ resources :company_ids
   # resources :hotspot_plans
 
 end
+
+
+get '/api/get_hotspot_and_dial_plan', to: 'hotspot_and_dial_plans#get_current_hotspot_and_dial_plan'  
 
 get '/api/get_invoice', to: 'invoices#get_invoice'
 get '/api/get_subscriber_details_by_invoice', to: 'subscriber_invoices#get_subscriber_details_by_invoice_id'

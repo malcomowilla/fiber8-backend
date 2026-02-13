@@ -1,0 +1,19 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  type: 
+  credit: MyString
+  debit: MyString
+  date: MyString
+  title: MyString
+  description: MyString
+  account_id: 1
+
+two:
+  type: 
+  credit: MyString
+  debit: MyString
+  date: MyString
+  title: MyString
+  description: MyString
+  account_id: 1

@@ -23,6 +23,7 @@ class Account < ApplicationRecord
     
     has_one :license_setting, dependent: :destroy
     has_one :hotspot_plan, dependent: :destroy
+    has_one :hotspot_and_dial_plan, dependent: :destroy
     has_one :calendar_setting, dependent: :destroy
     # belongs_to :pp_poe_plan
     # belongs_to :hotspot_plan

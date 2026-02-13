@@ -256,6 +256,35 @@ nas_routers.each do |nas|
 end
 
 
+
+elsif  bill_ref = data["BillRefNumber"].starts_with?("INV")
+
+bill_ref = data["BillRefNumber"]
+paid_amount = data["TransAmount"].to_i
+
+invoice = Invoice.where(invoice_number: bill_ref,
+status: "unpaid"
+).first
+
+if invoice.total == bill_ref
+invoice.update!(status: 'paid', 
+           amount_paid: paid_amount,
+           total: data["TransAmount"]
+           )
+
+      hotspot_plan = HotspotAndDialPlan.find_by(account_id: invoice.account_id,
+
+      )
+      hotspot_plan.update(
+      
+      status: "active",
+     
+      expiry: Time.current + 30.days,
+      )
+
+end
+
+
   else
 
  bill_ref = data["BillRefNumber"]

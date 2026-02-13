@@ -1,5 +1,6 @@
 class HotspotPlanSerializer < ActiveModel::Serializer
-  attributes :id,:hotspot_subscribers, :name, :expiry_days, :billing_cycle, :expiry, :status,
+  attributes :id,:hotspot_subscribers, :name, :expiry_days, 
+  :billing_cycle, :expiry, :status,
   :condition, :company_name
   
   # belongs_to :account
