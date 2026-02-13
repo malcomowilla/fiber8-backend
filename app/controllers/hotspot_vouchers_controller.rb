@@ -482,7 +482,7 @@ voucher_record = HotspotVoucher.create!(
 
  stk_response = hotspot_payment[:response]
  checkout_request_id = stk_response['CheckoutRequestID']
-create_voucher_radcheck(voucher_code, params[:package])
+create_voucher_radcheck(voucher_code, params[:package], voucher_record.account_id)
 
 calculate_expiration(params[:package], voucher_record)
 
@@ -636,7 +636,7 @@ def create
       # Save within transaction - will rollback if any fail
       if @hotspot_voucher.save!
         # Create radcheck entry
-        create_voucher_radcheck(voucher_code, params[:package])
+        create_voucher_radcheck(voucher_code, params[:package], @hotspot_voucher.account_id)
         
         # Add to created list
         created_vouchers << @hotspot_voucher
@@ -682,7 +682,7 @@ end
 
 
 
-  def create_voucher_radcheck(hotspot_voucher, package)
+  def create_voucher_radcheck(hotspot_voucher, package, account_id)
 # ActiveRecord::Base.connection.execute("
 # INSERT INTO radcheck (username, radiusattribute, op, value) 
 # SELECT '#{hotspot_voucher}', 'Cleartext-Password', ':=', '#{hotspot_voucher}'
@@ -703,7 +703,7 @@ end
 # INSERT INTO radusergroup (username, groupname, priority) 
 # VALUES ('#{hotspot_voucher}', '#{package}', 1)
 # ")
-hotspot_package = "hotspot_#{package.parameterize(separator: '_')}"
+hotspot_package = "hotspot_#{account_id}_#{package.parameterize(separator: '_')}"
 
 # rad_check = RadCheck.find_or_initialize_by(
 #       username: pppoe_username,
@@ -766,7 +766,7 @@ end
            date: Time.current)
 
           create_voucher_radcheck(@hotspot_voucher.voucher, @hotspot_voucher.package,
-           @hotspot_voucher.shared_users)
+           @hotspot_voucher.shared_users, @hotspot_voucher.account_id)
 
         render json: @hotspot_voucher, status: :ok
       else

@@ -287,8 +287,9 @@ def create
   @hotspot_package = HotspotPackage.new(hotspot_package_params)
   # use_radius = ActsAsTenant.current_tenant.&router_setting&.use_radius
 
- update_freeradius_policies(params[:name], params[:shared_users], params[:upload_limit], params[:download_limit],
-        params[:weekdays])
+ update_freeradius_policies(params[:name], 
+ params[:shared_users], params[:upload_limit], params[:download_limit],
+        params[:weekdays], @hotspot_package.account_id)
     if @hotspot_package.save
     
            ActivtyLog.create(action: 'create', ip: request.remote_ip,
@@ -309,8 +310,9 @@ def update
   @hotspot_package = set_hotspot_package
 
   if @hotspot_package
-    update_freeradius_policies(params[:name], params[:shared_users], params[:upload_limit], params[:download_limit],
-        params[:weekdays])
+    update_freeradius_policies(params[:name], params[:shared_users],
+     params[:upload_limit], params[:download_limit],
+        params[:weekdays], @hotspot_package.account_id)
     ActivtyLog.create(action: 'update', ip: request.remote_ip,
  description: "Updated hotspot package #{@hotspot_package.name}",
           user_agent: request.user_agent, user: current_user.username || current_user.email,
@@ -338,7 +340,7 @@ ActivtyLog.create(action: 'delete', ip: request.remote_ip,
  description: "Deleted hotspot package #{@hotspot_package.name}",
           user_agent: request.user_agent, user: current_user.username || current_user.email,
            date: Time.current)
-  group_name = "hotspot_#{@hotspot_package.name.parameterize(separator: '_')}"
+  group_name = "hotspot_#{@hotspot_package.account_id}_#{@hotspot_package.name.parameterize(separator: '_')}"
 
 
   ActiveRecord::Base.transaction do
@@ -420,8 +422,9 @@ end
 
 
 
-def update_freeradius_policies(package_name, shared_users, upload_limit, download_limit, weekdays)
-  group_name = "hotspot_#{package_name.parameterize(separator: '_')}"
+def update_freeradius_policies(package_name, shared_users, 
+  upload_limit, download_limit, weekdays, account_id)
+  group_name = "hotspot_#{account_id}_#{package_name.parameterize(separator: '_')}"
 
   ActiveRecord::Base.transaction do
     # Speed limits
