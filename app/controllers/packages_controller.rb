@@ -779,7 +779,8 @@ def delete
     return render json: { error: "pppoe package not found" }, status: :not_found
   end
 
-  group_name = "#{@package.name.parameterize(separator: '_')}"
+  # group_name = "#{@package.name.parameterize(separator: '_')}"
+  group_name = "pppoe_#{@package.account_id}_#{@package.name.parameterize(separator: '_')}"
 
 
   ActiveRecord::Base.transaction do
@@ -1133,13 +1134,17 @@ def update_freeradius_policies(package, account_id)
 
     
 
-    # ✅ Optionally handle burst limits if applicable
-    if package.upload_burst_limit.present? && package.download_burst_limit.present?
-      burst_reply = RadGroupReply.find_or_initialize_by(groupname: group_name,
-       radiusattribute: 'Mikrotik-Burst-Limit')
-      burst_reply.update!(op: ':=', value: "#{package.upload_burst_limit}M/#{package.download_burst_limit}M")
-    end
+    # if package.upload_burst_limit.present? && package.download_burst_limit.present?
+    #   burst_reply = RadGroupReply.find_or_initialize_by(groupname: group_name,
+    #    radiusattribute: 'Mikrotik-Burst-Limit')
+    #   burst_reply.update!(op: ':=', value: "#{package.upload_burst_limit}M/#{package.download_burst_limit}M")
+
+    # end
+
+
   end
+
+
 end
 
 
