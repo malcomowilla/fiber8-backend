@@ -325,7 +325,7 @@ if current_user
                 
                 if @package.save
                   # Call the method to update FreeRADIUS policies after saving the package
-                  # update_freeradius_policies(@package)
+                  update_freeradius_policies(@package, @package.account_id)
                   ActivtyLog.create(action: 'create', ip: request.remote_ip,
  description: "Created package #{@package.name}",
           user_agent: request.user_agent, user: current_user.username || current_user.email,
@@ -605,7 +605,7 @@ if current_user
  package = Package.find_by(id: params[:id])
                           if package
                             package.update(package_params)
-                            # update_freeradius_policies(package)
+                            update_freeradius_policies(package, package.account_id)
                             ActivtyLog.create(action: 'update', ip: request.remote_ip,
  description: "Updated package #{package.name}",
           user_agent: request.user_agent, user: current_user.username || current_user.email,
@@ -1107,12 +1107,14 @@ def fetch_profile_limitation_id(package_name)
 end
 
 
-def update_freeradius_policies(package)
+def update_freeradius_policies(package, account_id)
   # Ensure the package is of type PppoePackage
   # return unless package.is_a?(PppoePackage)
 
   # Define the group name for PPPOE package
-  group_name = "#{package.name.parameterize(separator: '_')}"
+  # group_name = "#{package.name.parameterize(separator: '_')}"
+    group_name = "pppoe_#{account_id}_#{package.name.parameterize(separator: '_')}"
+
 
   ActiveRecord::Base.transaction do
     # ✅ Update or create speed limits in RadGroupReply for PPPOE
