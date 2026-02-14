@@ -131,6 +131,8 @@ config.active_storage.service = :local
 # config.hosts << "fiber8.aitechs.co.ke"
 config.hosts << /.*\.aitechs\.co\.ke/
 
+config.hosts << /.*\.owitech\.co\.ke/
+
 config.action_cable.url = "wss://localhost:3000/cable"
 # config.action_cable.url = "ws://localhost:4000/cable"
 config.action_dispatch.trusted_proxies = [
