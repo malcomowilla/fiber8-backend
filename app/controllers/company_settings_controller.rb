@@ -156,6 +156,8 @@ logo_url: @company_settings&.logo&.attached? ? rails_blob_url(@company_settings.
   match ? match[1] : nil
 end
 
+
+
     # Only allow a list of trusted parameters through.
     def company_setting_params
       params.permit(:company_name, :contact_info,

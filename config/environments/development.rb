@@ -148,7 +148,9 @@ config.action_dispatch.trusted_proxies = [
     /http:\/\/localhost:\d+/,
     /http:\/\/localhost:\d+/,
     /http:\/\/127\.0\.0\.1:\d+/,
-    /https?:\/\/(www\.)?aitechs\.co\.ke/
+    /https?:\/\/(www\.)?aitechs\.co\.ke/,
+    /https?:\/\/(www\.)?owitech\.co\.ke/
+
 
 ]
 end
