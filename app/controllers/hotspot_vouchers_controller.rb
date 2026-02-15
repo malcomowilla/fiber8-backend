@@ -928,7 +928,6 @@ def login_with_hotspot_voucher
     return render json: { error: 'Voucher expired' }, status: :forbidden
   end
 
-  # 🔹 Shared users check
   active_sessions = get_active_sessions(params[:voucher])
   package = HotspotPackage.find_by(name: @hotspot_voucher.package)
   shared_users = package&.shared_users.to_i
