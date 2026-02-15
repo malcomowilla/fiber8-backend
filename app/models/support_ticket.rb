@@ -16,3 +16,5 @@ class SupportTicket < ApplicationRecord
     TicketsChannel.broadcast_to(account, tickets_data)
   end
 end
+
+

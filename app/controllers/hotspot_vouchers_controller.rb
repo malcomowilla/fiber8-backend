@@ -353,8 +353,10 @@ nas_routers.each do |nas|
           
           # Execute the command
           ssh.exec!(command)
+          if subscription.status === 'blocked'
+             subscription.update!(status: 'active', expiry: Time.current + 30.days)
 
-          subscription.update!(status: 'active')
+          end
           puts "UnBlocked #{subscription.ppoe_username} (#{subscription.ip_address}) on MikroTik."
         end
       end
@@ -368,17 +370,34 @@ end
 
    
 
-    PpPoeMpesaRevenue.create(
+    pppoe_revenue = PpPoeMpesaRevenue.create(
       amount: data["TransAmount"],
       payment_method: "Mpesa",
       time_paid: data["TransTime"],
       account_number:  bill_ref,
       reference: data["TransID"],
       customer_name: data['FirstName'],
-      type: "outbound",
-      account_id: invoice.account_id
+      payment_type: "Deposit",
+      account_id: invoice.account_id,
+      subscriber_id: subscription.subscriber_id
+
     )
-     
+     SubscriberTransaction.create!(
+            type: 'Deposit',
+            credit: pppoe_revenue.credit,
+            debit: pppoe_revenue.amount,
+            date:  pppoe_revenue.time_paid,
+            title:  pppoe_revenue.reference,
+            description: 'Payment made via M-Pesa',
+            account_id:  pppoe_revenue.account_id,
+            subscriber_id: pppoe_revenue.subscriber_id
+          )
+
+      SubscriberWalletBalance.create(
+        subscriber_id: pppoe_revenue.subscriber_id,
+        amount: pppoe_revenue.amount,
+        account_id: pppoe_revenue.account_id
+      )
   end
 
   head :ok

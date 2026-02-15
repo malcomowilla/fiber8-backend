@@ -110,6 +110,11 @@ end
     }
   end
 
+voucher_status = {
+      expired: HotspotVoucher.where(status: 'expired').count,
+      active: HotspotVoucher.where(status: 'active').count,
+      used: HotspotVoucher.where(status: 'used').count,
+    }
 
 
   hotspot_data = {
@@ -125,6 +130,7 @@ end
   )
 
 
+    VoucherChannel.broadcast_to(account, voucher_status)
   RadacctChannel.broadcast_to(account, radacct_data)
   BandwidthChannel.broadcast_to(account, bandwidth_data)
 end

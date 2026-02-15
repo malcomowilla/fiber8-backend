@@ -17,7 +17,6 @@ class HotspotVoucher < ApplicationRecord
     }
 
     VoucherChannel.broadcast_to(account, voucher_status)
-    
   end
 
   def broadcast_hotspot_voucher_stats
