@@ -86,7 +86,7 @@ log_output = `journalctl -u loophole -n 200 --no-page`
 
       # Restart cloudflared and your backend service
       `systemctl restart loophole`
-      `systemctl restart aitechs-fiber8-backend`
+      # `systemctl restart aitechs-fiber8-backend`
 
       Rails.logger.info "[Tunnel Monitor] Services restarted successfully."
     else
