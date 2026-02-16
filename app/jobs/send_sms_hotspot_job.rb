@@ -6,7 +6,7 @@ class SendSmsHotspotJob < ApplicationJob
       ActsAsTenant.with_tenant(voucher.account) do
 
    
-        next unless voucher # Skip if this tenant does NOT own this voucher
+        # next unless voucher 
 
 sms_sent_at_voucher = HotspotVoucher.find_by(voucher: voucher.voucher).sms_sent_at_voucher
 
@@ -21,7 +21,6 @@ HotspotMpesaRevenue.find_or_create_by(
       payment_method: "Mpesa",
       time_paid: data["TransTime"],
       account_id: voucher.account_id,
-
       name: data['FirstName']
     )
 end

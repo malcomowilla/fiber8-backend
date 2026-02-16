@@ -238,10 +238,10 @@ nas_routers.each do |nas|
 
       SendSmsHotspotJob.perform_now(voucher.voucher, data)
 
-      HotspotNotificationsChannel.broadcast_to(
-        session.ip,
-        message: "Payment received! You are now connected."
-      )
+      # HotspotNotificationsChannel.broadcast_to(
+      #   session.ip,
+      #   message: "Payment received! You are now connected."
+      # )
     end
 
   rescue RestClient::Unauthorized
@@ -501,7 +501,8 @@ voucher_record = HotspotVoucher.create!(
 
  stk_response = hotspot_payment[:response]
  checkout_request_id = stk_response['CheckoutRequestID']
-create_voucher_radcheck(voucher_code, params[:package], voucher_record.account_id)
+create_voucher_radcheck(voucher_code, params[:package], 
+voucher_record.account_id)
 
 calculate_expiration(params[:package], voucher_record)
 
