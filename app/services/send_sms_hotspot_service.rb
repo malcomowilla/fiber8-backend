@@ -5,16 +5,15 @@ class SendSmsHotspotService
 
 def send_sms(voucher_code, data)
    voucher = HotspotVoucher.find_by(voucher: voucher_code)
-      ActsAsTenant.with_tenant(voucher.account) do
 
    
         # next unless voucher 
 
 sms_sent_at_voucher = HotspotVoucher.find_by(voucher: voucher.voucher).sms_sent_at_voucher
 
-
+account = Account.find_by(id: voucher.account_id)
 if sms_sent_at_voucher.nil?
-send_sms_for_tenant(voucher, ActsAsTenant.current_tenant)
+send_sms_for_tenant(voucher, account)
      
 HotspotMpesaRevenue.find_or_create_by(
       amount: data["TransAmount"],
@@ -27,7 +26,7 @@ HotspotMpesaRevenue.find_or_create_by(
     )
 end
 
-    end
+    
 end
 
 
