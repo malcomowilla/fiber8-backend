@@ -34,16 +34,20 @@ Rails.application.configure do
 #   host: '102.221.35.116',
 #   protocol: 'http'
 # }
-  config.action_mailer.delivery_method = :smtp
-config.action_mailer.smtp_settings = {
-  address:              'smtp.gmail.com',
-  port:                 465,
-  domain:               'captive-portal.onrender.com/',
-  user_name:            'malcomowilla@gmail.com',
-  password:             ENV['GOOGLE_APP_PASSWORD'],
-  authentication:       'plain',
-  enable_starttls_auto: true
-}
+  config.action_mailer.delivery_method = :mailtrap
+    config.action_mailer.mailtrap_settings = {
+      api_key: ENV['MAILTRAP_API_KEY']
+    }
+
+# config.action_mailer.smtp_settings = {
+#   address:              'smtp.gmail.com',
+#   port:                 465,
+#   domain:               'captive-portal.onrender.com/',
+#   user_name:            'malcomowilla@gmail.com',
+#   password:             ENV['GOOGLE_APP_PASSWORD'],
+#   authentication:       'plain',
+#   enable_starttls_auto: true
+# }
   # Do not eager load code on boot.
   config.eager_load = false
 
