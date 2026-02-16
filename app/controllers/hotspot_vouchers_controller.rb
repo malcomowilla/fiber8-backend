@@ -941,7 +941,6 @@ def login_with_hotspot_voucher
     end
   end
 
-  # 🔹 Login via MikroTik REST API (HTTP)
   nas_routers = NasRouter.where(account_id: account.id)
 
   nas_routers.each do |router|

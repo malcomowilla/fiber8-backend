@@ -1,7 +1,8 @@
 class HotspotVoucherSerializer < ActiveModel::Serializer
   attributes :id, :voucher, :status, :expiration, :speed_limit,
    :phone, :package, :shared_users,
-  :created_at, :updated_at, :ip, :mac, :last_logged_in, :sms_sent
+  :created_at, :updated_at, :ip, :mac, :last_logged_in, :sms_sent,
+  :payment_method, :reference, :amount, :customer, :time_paid
 
 
   
@@ -16,6 +17,40 @@ def expiration
 end
 
 
+def time_paid
+  time_paid = HotspotMpesaRevenue.find_by(voucher: self.object.voucher)
+   time_paid&.time_paid&.strftime("%B %d, %Y at %I:%M %p") if time_paid&.time_paid.present?
+  
+end
+
+
+def payment_method
+  payment_method = HotspotMpesaRevenue.find_by(voucher: self.object.voucher)
+  payment_method&.payment_method if payment_method&.payment_method.present?
+  
+end
+
+
+
+def reference
+  reference =  HotspotMpesaRevenue.find_by(voucher: self.object.voucher)
+  reference&.reference if reference&.reference.present?
+  
+end
+
+
+def amount
+  amount = HotspotMpesaRevenue.find_by(voucher: self.object.voucher)
+  amount&.amount if amount&.amount.present?
+  
+end
+
+
+def customer
+  customer = HotspotMpesaRevenue.find_by(voucher: self.object.voucher)
+  customer&.customer if customer&.customer.present?
+  
+end
 
 
 
@@ -27,6 +62,8 @@ def shared_users
     "Unlimited"
   end
 end
+
+
 
 
 
