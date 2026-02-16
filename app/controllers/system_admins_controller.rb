@@ -2,7 +2,7 @@ class SystemAdminsController < ApplicationController
   # before_action :set_system_admin, only: %i[ show edit update destroy ]
 
   
-before_action :set_system_admin_email_settings
+# before_action :set_system_admin_email_settings
 
 # set_current_tenant_through_filter
 
