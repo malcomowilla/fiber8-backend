@@ -48,7 +48,7 @@ end
 
 def customer
   customer = HotspotMpesaRevenue.find_by(voucher: self.object.voucher)
-  customer&.customer if customer&.customer.present?
+  customer&.name if customer&.name.present?
   
 end
 
