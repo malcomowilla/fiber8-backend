@@ -3,7 +3,7 @@
 class SendSmsHotspotService
   
 
-def send_sms(voucher_code, data)
+def self.send_sms(voucher_code, data)
    voucher = HotspotVoucher.find_by(voucher: voucher_code)
 
    
