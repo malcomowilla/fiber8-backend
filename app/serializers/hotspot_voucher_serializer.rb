@@ -16,10 +16,13 @@ def expiration
   object.expiration.strftime("%B %d, %Y at %I:%M %p") if object.expiration.present?
 end
 
+Time.zone.strptime(object.time_paid, "%Y%m%d%H%M%S").strftime("%B %d, %Y at %I:%M %p")
 
 def time_paid
   time_paid = HotspotMpesaRevenue.find_by(voucher: self.object.voucher)
-   time_paid&.time_paid&.strftime("%B %d, %Y at %I:%M %p") if time_paid&.time_paid.present?
+  #  time_paid&.time_paid&.strftime("%B %d, %Y at %I:%M %p") if time_paid&.time_paid.present?
+  Time.zone.strptime(time_paid&.time_paid, "%Y%m%d%H%M%S").strftime("%B %d, %Y at %I:%M %p") if time_paid&.time_paid.present?
+
   
 end
 
