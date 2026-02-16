@@ -32,7 +32,7 @@ end
 
 
 private
-def send_sms_for_tenant(voucher, tenant)
+def self.send_sms_for_tenant(voucher, tenant)
     sms_setting = tenant.sms_provider_setting
   HotspotVoucher.find_by(voucher: voucher.voucher).update(sms_sent_at_voucher: Time.now, sms_sent: true)
 
@@ -54,7 +54,7 @@ def send_sms_for_tenant(voucher, tenant)
 
 
 
-  def send_voucher_sms_leopard(voucher, tenant)
+  def self.send_voucher_sms_leopard(voucher, tenant)
         expiration = voucher.expiration.strftime("%B %d, %Y at %I:%M %p") if voucher.expiration.present?
 
     message = "Your voucher code is: #{voucher.voucher}. This code is valid until #{expiration}."
@@ -81,7 +81,7 @@ sms_setting = tenant.sms_setting
   ##
   ## TextSMS
   ##
-  def send_voucher_text_sms(voucher, tenant)
+  def self.send_voucher_text_sms(voucher, tenant)
     expiration = voucher.expiration.strftime("%B %d, %Y at %I:%M %p") if voucher.expiration.present?
 
     message = "Your voucher code is: #{voucher.voucher}. This code is valid until #{expiration}."
