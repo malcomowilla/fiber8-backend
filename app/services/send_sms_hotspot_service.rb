@@ -1,8 +1,10 @@
-class SendSmsHotspotJob < ApplicationJob
-  queue_as :default
 
-  def perform(voucher_code, data)
-      voucher = HotspotVoucher.find_by(voucher: voucher_code)
+
+class SendSmsHotspotService
+  
+
+def send_sms(voucher_code, data)
+   voucher = HotspotVoucher.find_by(voucher: voucher_code)
       ActsAsTenant.with_tenant(voucher.account) do
 
    
@@ -25,19 +27,13 @@ HotspotMpesaRevenue.find_or_create_by(
     )
 end
 
-
-        
-    
     end
-  end
+end
 
 
 
-  
-
-  private
-
-  def send_sms_for_tenant(voucher, tenant)
+private
+def send_sms_for_tenant(voucher, tenant)
     sms_setting = tenant.sms_provider_setting
   HotspotVoucher.find_by(voucher: voucher.voucher).update(sms_sent_at_voucher: Time.now, sms_sent: true)
 
@@ -109,12 +105,12 @@ sms_setting = tenant.sms_setting
     response = Net::HTTP.get_response(uri)
     Rails.logger.info "TextSMS response for voucher #{voucher.voucher}: #{response.body}"
   end
+
+
+
+
+
+
+
+
 end
-
-
-
-
-
-
-
-                    

@@ -236,8 +236,8 @@ nas_routers.each do |nas|
       voucher.update!(status: "used", last_logged_in: Time.now,
        ip: session.ip)
 
-      SendSmsHotspotJob.perform_now(voucher.voucher, data)
-
+      # SendSmsHotspotJob.perform_now(voucher.voucher, data)
+SendSmsHotspotService.send_sms(voucher.voucher, data)
       # HotspotNotificationsChannel.broadcast_to(
       #   session.ip,
       #   message: "Payment received! You are now connected."
@@ -335,7 +335,6 @@ send_invoice_paid_notification = SubscriberSetting.find_by(account_id: 21).invoi
           bill_ref,
           invoice.account,
           subscriber_phone_number
-          
         )
           end
 
