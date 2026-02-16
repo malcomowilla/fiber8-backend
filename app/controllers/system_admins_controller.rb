@@ -2,13 +2,12 @@ class SystemAdminsController < ApplicationController
   # before_action :set_system_admin, only: %i[ show edit update destroy ]
 
   
-# before_action :set_system_admin_email_settings
+before_action :set_system_admin_email_settings
 
 # set_current_tenant_through_filter
 
 # before_action :set_tenant
 
-  # before_action :set_system_admin_email_settings
   def index
     @system_admins = SystemAdmin.all
     render json: @system_admins
@@ -399,7 +398,7 @@ end
   def set_system_admin_email_settings
 # @current_account = ActsAsTenant.current_tenant
 #     EmailSystemAdmin.configure(@current_account, current_system_admin)
-  @current_account=ActsAsTenant.current_tenant 
+  @current_account = ActsAsTenant.current_tenant 
   EmailConfiguration.configure(@current_account, ENV['SYSTEM_ADMIN_EMAIL'])
 
   end

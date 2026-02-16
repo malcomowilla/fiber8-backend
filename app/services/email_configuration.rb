@@ -11,10 +11,7 @@ class EmailConfiguration
       Rails.logger.info "configuring system admin email settings."
       email_setting = current_account&.email_setting
 
-      # Rails.application.config.action_mailer.delivery_method = :mailtrap
-      # Rails.application.config.action_mailer.mailtrap_settings = {
-      #   api_key: "d848f326f33a7aa8db359e399fd7c510"
-      # }
+     
       
       Rails.application.config.action_mailer.delivery_method = :smtp
 Rails.application.config.action_mailer.smtp_settings = {
@@ -37,7 +34,6 @@ Rails.application.config.action_mailer.smtp_settings = {
 
 
 
-  # Rails.application.config.action_mailer.delivery_method = :mailtrap
 
 
 
@@ -70,15 +66,7 @@ Rails.application.config.action_mailer.smtp_settings = {
     elsif email_setting.present?
       Rails.logger.info "Configuring SMTP with Email Settings"
  Rails.logger.info "Configuring Mailtrap with API Key super adminn #{account.email_setting.api_key}"
-      # Rails.application.config.action_mailer.delivery_method = :mailtrap
-      # Rails.application.config.action_mailer.mailtrap_settings = {
-      #   api_key: 'd848f326f33a7aa8db359e399fd7c510'
-      # }
-     
-      # Rails.application.config.action_mailer.delivery_method = :mailtrap
-      # Rails.application.config.action_mailer.mailtrap_settings = {
-      #   api_key: account.email_setting.api_key
-      # }
+      
       Rails.application.config.action_mailer.delivery_method = :smtp
       Rails.application.config.action_mailer.smtp_settings = {
         user_name: email_setting.smtp_username,
@@ -124,17 +112,10 @@ Rails.application.config.action_mailer.smtp_settings = {
   end
 
   def self.set_fallback_settings
-    Rails.application.config.action_mailer.delivery_method = :smtp
-    Rails.application.config.action_mailer.smtp_settings = {
-      user_name: 'aitechsent.net',
-      password: 'aitechsent.net',
-      address: 'smtp.mailtrap.io',
-      port: 2525,
-      domain: 'aitechsent.net',
-      authentication: :login,
-      ssl: true,                      # Enable SSL for port 465
-  tls: false  
-    }
+    Rails.application.config.action_mailer.delivery_method = :mailtrap
+      Rails.application.config.action_mailer.mailtrap_settings = {
+        api_key: ENV['MAILTRAP_API_KEY']
+      }
   end
   
 end
