@@ -16,7 +16,6 @@ def expiration
   object.expiration.strftime("%B %d, %Y at %I:%M %p") if object.expiration.present?
 end
 
-Time.zone.strptime(object.time_paid, "%Y%m%d%H%M%S").strftime("%B %d, %Y at %I:%M %p")
 
 def time_paid
   time_paid = HotspotMpesaRevenue.find_by(voucher: self.object.voucher)
