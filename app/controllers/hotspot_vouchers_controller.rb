@@ -229,7 +229,7 @@ nas_routers.each do |nas|
 
 
       voucher.update!(status: "used", last_logged_in: Time.now,
-       ip: session.ip)
+       ip: session.ip, used_voucher: true)
 
       # SendSmsHotspotJob.perform_now(voucher.voucher, data)
 SendSmsHotspotService.send_sms(voucher.voucher, data)
@@ -958,7 +958,7 @@ def login_with_hotspot_voucher
 
       if response.code == 200
         @hotspot_voucher.update!(status: 'used', last_logged_in: Time.now, 
-        ip: params[:ip], mac: params[:mac])
+        ip: params[:ip], mac: params[:mac], used_voucher: true)
 
         return render json: {
           message: 'Connected successfully',

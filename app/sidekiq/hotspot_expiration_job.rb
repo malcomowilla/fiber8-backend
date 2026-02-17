@@ -58,7 +58,7 @@ expired_vouchers = HotspotVoucher.where('expiration < ?', Time.current).where(ac
 
 
           # Only send SMS if it hasn't been sent before
-          if voucher.sms_sent_at.nil?
+          if voucher.sms_sent_at.nil? || voucher.used_voucher
              send_expiration_sms(voucher, tenant) # Unified function to send SMS based on provider
              voucher.update!(sms_sent_at: Time.current) # Track when the SMS was sent
           end

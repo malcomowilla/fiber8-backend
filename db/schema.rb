@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_02_16_021725) do
+ActiveRecord::Schema[7.2].define(version: 2026_02_17_155913) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -498,6 +498,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_02_16_021725) do
     t.string "reference"
     t.string "amount"
     t.string "customer"
+    t.boolean "used_voucher", default: false
   end
 
   create_table "invoices", force: :cascade do |t|
