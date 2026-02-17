@@ -48,9 +48,20 @@ if current_user
 
   # GET /hotspot_mpesa_revenues or /hotspot_mpesa_revenues.json
   def index
-    @hotspot_mpesa_revenues = HotspotMpesaRevenue.all
-    render json: @hotspot_mpesa_revenues
+    # @hotspot_mpesa_revenues = HotspotMpesaRevenue.all
+    # render json: @hotspot_mpesa_revenues
+    @hotspot_mpesa_revenues = Rails.cache.fetch("hotspot_revenues_index", expires_in: 5.minutes) do
+    HotspotMpesaRevenue.order(created_at: :desc).to_a
   end
+
+    render json: @@hotspot_mpesa_revenues
+  end
+
+
+
+
+
+
 def todays_revenue
   # start_time = Time.current.beginning_of_day
   # end_time = Time.current

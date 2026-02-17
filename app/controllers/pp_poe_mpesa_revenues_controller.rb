@@ -34,8 +34,14 @@ end
 
   # GET /pp_poe_mpesa_revenues or /pp_poe_mpesa_revenues.json
   def index
-    @pp_poe_mpesa_revenues = PpPoeMpesaRevenue.all
-    render json: @pp_poe_mpesa_revenues
+    # @pp_poe_mpesa_revenues = PpPoeMpesaRevenue.all
+    # render json: @pp_poe_mpesa_revenues
+    
+      @pp_poe_mpesa_revenues = Rails.cache.fetch("pp_poe_mpesa_revenues_index", expires_in: 5.minutes) do
+    PpPoeMpesaRevenue.order(created_at: :desc).to_a
+  end
+    
+    
   end
 
   
