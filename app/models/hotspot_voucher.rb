@@ -3,7 +3,11 @@ class HotspotVoucher < ApplicationRecord
   acts_as_tenant(:account)
   # after_commit :broadcast_hotspot_voucher_stats, on: [:create, :update, :destroy] 
   after_commit :broadcast_hotspot_voucher_status, on: [:create, :update, :destroy]
+after_commit :clear_cache
 
+def clear_cache
+  Rails.cache.delete("hotspot_vouchers_index")
+end
 
 
 

@@ -79,26 +79,21 @@ end
 
 
   # GET /hotspot_vouchers or /hotspot_vouchers.json
-  def index
-    Rails.logger.info "Router IP: #{params.inspect}"
+  # def index
 
-    @hotspot_vouchers = HotspotVoucher.all.order(created_at: :desc)
-    render json: @hotspot_vouchers
-    
-# client_ip = request.env['HTTP_X_FORWARDED_FOR'] || request.remote_ip
-# Rails.logger.info "Client IP: #{client_ip}"
+  #   @hotspot_vouchers = HotspotVoucher.all.order(created_at: :desc)
+  #   render json: @hotspot_vouchers
+  
+  # end
 
 
-# local_ip = Socket.ip_address_list.detect do |intf|
-#   intf.ipv4_private? && !intf.ipv4_loopback?
-# end&.ip_address
-
-# Rails.logger.info "Server IP: #{local_ip || 'Not found'}"
-
+def index
+  @hotspot_vouchers = Rails.cache.fetch("hotspot_vouchers_index", expires_in: 5.minutes) do
+    HotspotVoucher.order(created_at: :desc).to_a
   end
 
-
-
+  render json: @hotspot_vouchers
+end
 
   def hotspot_traffic
   # Cache key that includes timestamp for time-based invalidation
