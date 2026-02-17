@@ -41,7 +41,7 @@ end
     PpPoeMpesaRevenue.order(created_at: :desc).to_a
   end
     
-    
+    render json: @pp_poe_mpesa_revenues
   end
 
   

@@ -54,7 +54,7 @@ if current_user
     HotspotMpesaRevenue.order(created_at: :desc).to_a
   end
 
-    render json: @@hotspot_mpesa_revenues
+    render json: @hotspot_mpesa_revenues
   end
 
 
