@@ -2,10 +2,8 @@ class HotspotMpesaRevenue < ApplicationRecord
 
 
   acts_as_tenant(:account)
-belongs_to :hotspot_voucher,
-             primary_key: :voucher,
-             foreign_key: :voucher,
-             optional: true
+ belongs_to :hotspot_voucher
+
     
   scope :today, -> {
     where(created_at: Time.current.beginning_of_day..Time.current)
