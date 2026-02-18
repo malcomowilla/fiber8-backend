@@ -53,7 +53,9 @@ if current_user
   #   @hotspot_mpesa_revenues = Rails.cache.fetch("hotspot_revenues_index", expires_in: 5.minutes) do
   #   HotspotMpesaRevenue.order(created_at: :desc).to_a
   # end
-HotspotMpesaRevenue.order(created_at: :desc).to_a
+
+@hotspot_mpesa_revenues = HotspotMpesaRevenue.all
+# HotspotMpesaRevenue.order(created_at: :desc).to_a
     render json: @hotspot_mpesa_revenues
   end
 
