@@ -32,108 +32,108 @@ class RadAcct < ApplicationRecord
   self.ignored_columns = ["class"]
   # after_commit :broadcast_radacct_stats, on: [:create, :update, :destroy]
 
-  def broadcast_radacct_stats
-  threshold_time = 3.minutes.ago
+#   def broadcast_radacct_stats
+#   threshold_time = 3.minutes.ago
 
-  online = 0
-  offline = 0
+#   online = 0
+#   offline = 0
 
-  account.subscribers.find_each do |subscriber|
-    # Assume offline unless proven online
-    subscriber_online = false
+#   account.subscribers.find_each do |subscriber|
+#     # Assume offline unless proven online
+#     subscriber_online = false
 
-    subscriber.subscriptions.each do |subscription|
-      next unless subscription.ip_address.present?
+#     subscriber.subscriptions.each do |subscription|
+#       next unless subscription.ip_address.present?
 
-      if RadAcct.where(
-        acctstoptime: nil,
-        framedprotocol: 'PPP',
-        framedipaddress: subscription.ip_address
-      ).where('acctupdatetime > ?', threshold_time).exists?
-        subscriber_online = true
-        break
-      end
-    end
-
-
-
-
-
-    if subscriber_online
-      online += 1
-    else
-      offline += 1
-    end
-  end
+#       if RadAcct.where(
+#         acctstoptime: nil,
+#         framedprotocol: 'PPP',
+#         framedipaddress: subscription.ip_address
+#       ).where('acctupdatetime > ?', threshold_time).exists?
+#         subscriber_online = true
+#         break
+#       end
+#     end
 
 
 
 
-    active_sessions = RadAcct.where(
-    acctstoptime: nil,
-    framedprotocol: 'PPP'
-  ).where('acctupdatetime > ?', 3.minutes.ago)
+
+#     if subscriber_online
+#       online += 1
+#     else
+#       offline += 1
+#     end
+#   end
 
 
-  total_download = active_sessions.sum("COALESCE(acctinputoctets, 0)")
-  total_upload   = active_sessions.sum("COALESCE(acctoutputoctets, 0)")
-  total_bytes    = total_download + total_upload
 
-  radacct_data = {
-    online_radacct: online,
-    offline_radacct: offline,
+
+#     active_sessions = RadAcct.where(
+#     acctstoptime: nil,
+#     framedprotocol: 'PPP'
+#   ).where('acctupdatetime > ?', 3.minutes.ago)
+
+
+#   total_download = active_sessions.sum("COALESCE(acctinputoctets, 0)")
+#   total_upload   = active_sessions.sum("COALESCE(acctoutputoctets, 0)")
+#   total_bytes    = total_download + total_upload
+
+#   radacct_data = {
+#     online_radacct: online,
+#     offline_radacct: offline,
   
-    timestamp: Time.current
-  }
+#     timestamp: Time.current
+#   }
 
 
 
-  bandwidth_data = {
-     total_bandwidth: format_bytes(total_bytes),
-    total_download: format_bytes(total_download),
-    total_upload: format_bytes(total_upload),
-  }
+#   bandwidth_data = {
+#      total_bandwidth: format_bytes(total_bytes),
+#     total_download: format_bytes(total_download),
+#     total_upload: format_bytes(total_upload),
+#   }
 
 
 
-  active_sessions = RadAcct.where(acctstoptime: nil, framedprotocol: '')
+#   active_sessions = RadAcct.where(acctstoptime: nil, framedprotocol: '')
 
-  total_bytes = 0
+#   total_bytes = 0
 
-  active_user_data = active_sessions.map do |session|
-    download_bytes = session.acctinputoctets || 0
-    upload_bytes = session.acctoutputoctets || 0
-    session_total = download_bytes + upload_bytes
-    total_bytes += session_total
+#   active_user_data = active_sessions.map do |session|
+#     download_bytes = session.acctinputoctets || 0
+#     upload_bytes = session.acctoutputoctets || 0
+#     session_total = download_bytes + upload_bytes
+#     total_bytes += session_total
 
-    {
-      username: session.username,
-      ip_address: session.framedipaddress.to_s,
-      mac_address: session.callingstationid,
-      up_time: format_uptime(session.acctsessiontime),
-      download: format_bytes(download_bytes),
-      upload: format_bytes(upload_bytes),
-      start_time: session.acctstarttime.strftime("%B %d, %Y at %I:%M %p"),
-      nas_port: session.nasportid
-    }
-  end
+#     {
+#       username: session.username,
+#       ip_address: session.framedipaddress.to_s,
+#       mac_address: session.callingstationid,
+#       up_time: format_uptime(session.acctsessiontime),
+#       download: format_bytes(download_bytes),
+#       upload: format_bytes(upload_bytes),
+#       start_time: session.acctstarttime.strftime("%B %d, %Y at %I:%M %p"),
+#       nas_port: session.nasportid
+#     }
+#   end
 
-  hotspot_data = {
-active_user_count: active_user_data.size,
-  total_upload: format_bytes(total_upload),
-  total_download: format_bytes(total_download),
-  total_bandwidth: format_bytes(total_bytes),
-  users: active_user_data
-  }
+#   hotspot_data = {
+# active_user_count: active_user_data.size,
+#   total_upload: format_bytes(total_upload),
+#   total_download: format_bytes(total_download),
+#   total_bandwidth: format_bytes(total_bytes),
+#   users: active_user_data
+#   }
 
-  HotspotChannel.broadcast_to(account, 
-    hotspot_data
+#   HotspotChannel.broadcast_to(account, 
+#     hotspot_data
  
-  )
+#   )
 
-  RadacctChannel.broadcast_to(account, radacct_data)
-  BandwidthChannel.broadcast_to(account, bandwidth_data)
-end
+#   RadacctChannel.broadcast_to(account, radacct_data)
+#   BandwidthChannel.broadcast_to(account, bandwidth_data)
+# end
 
 
 

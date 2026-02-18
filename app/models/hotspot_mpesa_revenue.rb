@@ -2,6 +2,7 @@ class HotspotMpesaRevenue < ApplicationRecord
 
 
   acts_as_tenant(:account)
+belongs_to :hotspot_voucher
 
     
   scope :today, -> {

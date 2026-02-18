@@ -17,44 +17,29 @@ def expiration
 end
 
 
-def time_paid
-  time_paid = HotspotMpesaRevenue.find_by(voucher: self.object.voucher)
-  #  time_paid&.time_paid&.strftime("%B %d, %Y at %I:%M %p") if time_paid&.time_paid.present?
-  Time.zone.strptime(time_paid&.time_paid, "%Y%m%d%H%M%S").strftime("%B %d, %Y at %I:%M %p") if time_paid&.time_paid.present?
 
-  
-end
+  def time_paid
+    return unless object.hotspot_mpesa_revenue&.time_paid.present?
 
+    Time.zone.strptime(object.hotspot_mpesa_revenue.time_paid, "%Y%m%d%H%M%S")
+            .strftime("%B %d, %Y at %I:%M %p")
+  end
 
-def payment_method
-  payment_method = HotspotMpesaRevenue.find_by(voucher: self.object.voucher)
-  payment_method&.payment_method if payment_method&.payment_method.present?
-  
-end
+  def payment_method
+    object.hotspot_mpesa_revenue&.payment_method
+  end
 
+  def reference
+    object.hotspot_mpesa_revenue&.reference
+  end
 
+  def amount
+    object.hotspot_mpesa_revenue&.amount
+  end
 
-def reference
-  reference =  HotspotMpesaRevenue.find_by(voucher: self.object.voucher)
-  reference&.reference if reference&.reference.present?
-  
-end
-
-
-def amount
-  amount = HotspotMpesaRevenue.find_by(voucher: self.object.voucher)
-  amount&.amount if amount&.amount.present?
-  
-end
-
-
-def customer
-  customer = HotspotMpesaRevenue.find_by(voucher: self.object.voucher)
-  customer&.name if customer&.name.present?
-  
-end
-
-
+  def customer
+    object.hotspot_mpesa_revenue&.name
+  end
 
 def shared_users
   package = HotspotPackage.find_by(name: self.object.package)
