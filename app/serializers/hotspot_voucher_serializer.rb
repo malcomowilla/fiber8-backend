@@ -25,6 +25,10 @@ end
             .strftime("%B %d, %Y at %I:%M %p")
   end
 
+  def time_paid
+    object.hotspot_mpesa_revenue&.time_paid&.strftime("%B %d, %Y at %I:%M %p")
+  end
+
   def payment_method
     object.hotspot_mpesa_revenue&.payment_method
   end
