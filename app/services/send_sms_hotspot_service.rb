@@ -18,9 +18,11 @@ HotspotMpesaRevenue.create(
       payment_method: "Mpesa",
       time_paid: data["TransTime"],
       account_id: voucher.account_id,
-      name: data['FirstName']
+      name: data['FirstName'],
+      hotspot_voucher_id: voucher.id
+
     )
-    
+
 sms_sent_at_voucher = HotspotVoucher.find_by(voucher: voucher_code).sms_sent_at_voucher
 
 account = Account.find_by(id: voucher.account_id)

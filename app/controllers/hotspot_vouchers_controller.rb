@@ -95,6 +95,31 @@ def index
   render json: @hotspot_vouchers
 end
 
+
+
+def payment_info_for_voucher
+  
+
+    Time.zone.strptime(object.hotspot_mpesa_revenue.time_paid, "%Y%m%d%H%M%S")
+            .strftime("%B %d, %Y at %I:%M %p")
+  
+
+    object.hotspot_mpesa_revenue&.time_paid&.strftime("%B %d, %Y at %I:%M %p")
+  
+
+    object.hotspot_mpesa_revenue&.payment_method
+  
+
+    object.hotspot_mpesa_revenue&.reference
+  
+
+    object.hotspot_mpesa_revenue&.amount
+  
+
+    object.hotspot_mpesa_revenue&.name
+  
+end
+
   def hotspot_traffic
   # Cache key that includes timestamp for time-based invalidation
   cache_key = "hotspot_traffic_#{Time.current.beginning_of_minute.to_i}"

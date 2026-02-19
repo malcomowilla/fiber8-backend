@@ -4,7 +4,7 @@ class HotspotVoucher < ApplicationRecord
   # after_commit :broadcast_hotspot_voucher_stats, on: [:create, :update, :destroy] 
   after_commit :broadcast_hotspot_voucher_status, on: [:create, :update, :destroy]
 after_commit :clear_cache
-# has_one :hotspot_mpesa_revenue
+has_one :hotspot_mpesa_revenue
 
 
 

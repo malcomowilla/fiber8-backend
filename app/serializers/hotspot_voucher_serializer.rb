@@ -17,34 +17,30 @@ def expiration
 end
 
 
+def time_paid
+  revenue = object.hotspot_mpesa_revenue
+  return unless revenue&.time_paid.present?
 
-  # def time_paid
-  #   return unless object.hotspot_mpesa_revenue&.time_paid.present?
+  # M-Pesa format string: "20260124133744"
+  Time.zone.strptime(revenue.time_paid, "%Y%m%d%H%M%S")
+      .strftime("%B %d, %Y at %I:%M %p")
+end
 
-  #   Time.zone.strptime(object.hotspot_mpesa_revenue.time_paid, "%Y%m%d%H%M%S")
-  #           .strftime("%B %d, %Y at %I:%M %p")
-  # end
+def payment_method
+  object.hotspot_mpesa_revenue&.payment_method
+end
 
-  # def time_paid
-  #   object.hotspot_mpesa_revenue&.time_paid&.strftime("%B %d, %Y at %I:%M %p")
-  # end
+def reference
+  object.hotspot_mpesa_revenue&.reference
+end
 
-  # def payment_method
-  #   object.hotspot_mpesa_revenue&.payment_method
-  # end
+def amount
+  object.hotspot_mpesa_revenue&.amount
+end
 
-  # def reference
-  #   object.hotspot_mpesa_revenue&.reference
-  # end
-
-  # def amount
-  #   object.hotspot_mpesa_revenue&.amount
-  # end
-
-  # def customer
-  #   object.hotspot_mpesa_revenue&.name
-  # end
-
+def customer
+  object.hotspot_mpesa_revenue&.name
+end
 def shared_users
   package = HotspotPackage.find_by(name: self.object.package)
   if package && package.shared_users
