@@ -8,14 +8,13 @@ def self.send_sms(voucher_code, data)
 
    
         # next unless voucher 
+return unless voucher
 
 sms_sent_at_voucher = HotspotVoucher.find_by(voucher: voucher_code).sms_sent_at_voucher
 
 account = Account.find_by(id: voucher.account_id)
-if sms_sent_at_voucher.nil?
-send_sms_for_tenant(voucher, account)
-     
-HotspotMpesaRevenue.find_or_create_by(
+
+HotspotMpesaRevenue.create(
       amount: data["TransAmount"],
       voucher: voucher_code,
       reference: data["TransID"],
@@ -24,6 +23,11 @@ HotspotMpesaRevenue.find_or_create_by(
       account_id: voucher.account_id,
       name: data['FirstName']
     )
+
+if sms_sent_at_voucher.nil?
+send_sms_for_tenant(voucher, account)
+     
+
 end
 
     
@@ -38,7 +42,7 @@ def self.send_sms_for_tenant(voucher, tenant)
 
 
     if sms_setting.blank?
-      Rails.logger.info "Tenant #{ActsAsTenant.current_tenant.id} does not have an SMS provider set. Skipping SMS for voucher #{voucher.voucher}."
+      # Rails.logger.info "Tenant #{ActsAsTenant.current_tenant.id} does not have an SMS provider set. Skipping SMS for voucher #{voucher.voucher}."
       return
     end
 
@@ -48,7 +52,7 @@ def self.send_sms_for_tenant(voucher, tenant)
     when "TextSms"
       send_voucher_text_sms(voucher, tenant)
     else
-      Rails.logger.info "Tenant #{ActsAsTenant.current_tenant.id} has unknown SMS provider: #{sms_setting.sms_provider}. Skipping SMS for voucher #{voucher.voucher}."
+      # Rails.logger.info "Tenant #{ActsAsTenant.current_tenant.id} has unknown SMS provider: #{sms_setting.sms_provider}. Skipping SMS for voucher #{voucher.voucher}."
     end
   end
 
@@ -102,7 +106,7 @@ sms_setting = tenant.sms_setting
     uri.query = URI.encode_www_form(params)
 
     response = Net::HTTP.get_response(uri)
-    Rails.logger.info "TextSMS response for voucher #{voucher.voucher}: #{response.body}"
+    # Rails.logger.info "TextSMS response for voucher #{voucher.voucher}: #{response.body}"
   end
 
 

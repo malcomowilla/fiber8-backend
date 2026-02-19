@@ -174,8 +174,13 @@ end
 
 
 def check_payment_status
-Rails.logger.info "Parsed data calback mpesa: #{request.body.read}"
-  data = JSON.parse(request.body.read) rescue {}
+  raw_body = request.body.read
+
+# Rails.logger.info "Parsed data calback mpesa: #{request.body.read}"
+Rails.logger.info "Parsed data callback mpesa: #{raw_body}"
+
+  # data = JSON.parse(request.body.read) rescue {}
+  data = JSON.parse(raw_body) rescue {}
   bill_ref = data["BillRefNumber"]
 
   if bill_ref.start_with?("hotspot_")
