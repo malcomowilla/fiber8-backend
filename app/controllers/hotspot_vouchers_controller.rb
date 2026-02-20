@@ -88,7 +88,7 @@ end
 
 
 def index
-    HotspotVoucher.order(created_at: :desc)
+    HotspotVoucher.order(created_at: :asc)
   
 
   render json: @hotspot_vouchers
