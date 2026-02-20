@@ -211,6 +211,7 @@ Rails.logger.info "Parsed data callback mpesa: #{raw_body}"
     # )
     Rails.logger.info "Hotspot voucher #{voucher_code} paid successfully."
     voucher = HotspotVoucher.find_by(voucher: voucher_code)
+SendSmsHotspotService.send_sms(voucher.voucher, data)
 
 nas_routers = NasRouter.where(account_id: voucher.account_id)
 
@@ -257,11 +258,10 @@ nas_routers.each do |nas|
     Rails.logger.info "REST error logging in device #{session.ip}: #{e.message}"
   end
 end
-SendSmsHotspotService.send_sms(voucher.voucher, data)
 
 
 
-elsif  data["BillRefNumber"].starts_with?("INV")
+elsif data["BillRefNumber"].starts_with?("INV")
 
 bill_ref = data["BillRefNumber"]
 paid_amount = data["TransAmount"].to_i
