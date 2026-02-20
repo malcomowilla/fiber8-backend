@@ -97,28 +97,7 @@ end
 
 
 
-def payment_info_for_voucher
-  
 
-    Time.zone.strptime(object.hotspot_mpesa_revenue.time_paid, "%Y%m%d%H%M%S")
-            .strftime("%B %d, %Y at %I:%M %p")
-  
-
-    object.hotspot_mpesa_revenue&.time_paid&.strftime("%B %d, %Y at %I:%M %p")
-  
-
-    object.hotspot_mpesa_revenue&.payment_method
-  
-
-    object.hotspot_mpesa_revenue&.reference
-  
-
-    object.hotspot_mpesa_revenue&.amount
-  
-
-    object.hotspot_mpesa_revenue&.name
-  
-end
 
   def hotspot_traffic
   # Cache key that includes timestamp for time-based invalidation
@@ -262,7 +241,6 @@ nas_routers.each do |nas|
        ip: session.ip, used_voucher: true)
 
       # SendSmsHotspotJob.perform_now(voucher.voucher, data)
-SendSmsHotspotService.send_sms(voucher.voucher, data)
       # HotspotNotificationsChannel.broadcast_to(
       #   session.ip,
       #   message: "Payment received! You are now connected."
@@ -279,10 +257,11 @@ SendSmsHotspotService.send_sms(voucher.voucher, data)
     Rails.logger.info "REST error logging in device #{session.ip}: #{e.message}"
   end
 end
+SendSmsHotspotService.send_sms(voucher.voucher, data)
 
 
 
-elsif  bill_ref = data["BillRefNumber"].starts_with?("INV")
+elsif  data["BillRefNumber"].starts_with?("INV")
 
 bill_ref = data["BillRefNumber"]
 paid_amount = data["TransAmount"].to_i
