@@ -37,8 +37,8 @@ end
     payload = {
       ShortCode: mpesa.short_code,
       ResponseType: "Completed",
-      ConfirmationURL: "https://#{host}.#{ENV['HOST']}/#{ENV['CONFIRMATION_URL']}",
-      ValidationURL: "https://#{host}.#{ENV['HOST']}/#{ENV['VALIDATION_URL']}",
+      ConfirmationURL: "https://#{host}.#{ENV['HOST2']}/#{ENV['CONFIRMATION_URL']}",
+      ValidationURL: "https://#{host}.#{ENV['HOST2']}/#{ENV['VALIDATION_URL']}",
     }
 
     begin
