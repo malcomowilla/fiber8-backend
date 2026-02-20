@@ -100,7 +100,7 @@ class MpesaService
       PartyA: formatted_phone_number,    
       PartyB: shortcode ,    
       PhoneNumber:formatted_phone_number,     
-      CallBackURL: "https://#{host}.#{ENV['HOST']}/#{ENV['HOTSPOT_PAYMENTS']}",    
+      CallBackURL: "https://#{host}.#{ENV['HOST2']}/#{ENV['HOTSPOT_PAYMENTS']}",    
       AccountReference: "hotspot_#{session_id}_#{voucher_code}",
       TransactionDesc:"Hotspot stk push"
     }
