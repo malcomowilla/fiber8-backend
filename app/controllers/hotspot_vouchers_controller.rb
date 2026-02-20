@@ -88,9 +88,8 @@ end
 
 
 def index
-  @hotspot_vouchers = Rails.cache.fetch("hotspot_vouchers_index", expires_in: 5.minutes) do
-    HotspotVoucher.order(created_at: :desc).to_a
-  end
+    HotspotVoucher.order(created_at: :desc)
+  
 
   render json: @hotspot_vouchers
 end
@@ -210,7 +209,6 @@ Rails.logger.info "Parsed data callback mpesa: #{raw_body}"
     #   time_paid: data["TransTime"]
     # )
     Rails.logger.info "Hotspot voucher #{voucher_code} paid successfully."
-    voucher = HotspotVoucher.find_by(voucher: voucher_code)
 SendSmsHotspotService.send_sms(voucher.voucher, data)
 
 nas_routers = NasRouter.where(account_id: voucher.account_id)

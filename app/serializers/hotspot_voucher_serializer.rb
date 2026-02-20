@@ -2,7 +2,7 @@ class HotspotVoucherSerializer < ActiveModel::Serializer
   attributes :id, :voucher, :status, :expiration, :speed_limit,
    :phone, :package, :shared_users,
   :created_at, :updated_at, :ip, :mac, :last_logged_in, :sms_sent,
-  :payment_method, :reference, :amount, :customer, :time_paid
+  :payment_method, :reference, :amount, :customer, :time_paid, :account_id
 
 
   
