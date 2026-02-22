@@ -59,9 +59,6 @@ class TransactionStatusService
     
 
       
-# post 'mpesa_transactionstatus_result', to: 'hotspot_vouchers#transaction_status_result'
-# post 'mpesa_transactionstatus_timeout', to: 'hotspot_vouchers#transaction_status_timeout'
-
     payload = {    
       Initiator: initiator,
       SecurityCredential: security_credentials,
@@ -71,6 +68,8 @@ class TransactionStatusService
       PartyA: shortcode,   
       IdentifierType: 4,
       ResultURL: "https://#{host}.#{ENV['HOST2']}/mpesa_transactionstatus_result",
+      QueueTimeOutURL: "https://#{host}.#{ENV['HOST2']}/mpesa_transactionstatus_timeout",
+      
       Remarks: 'status check',
       Occasion: 'Hotspot',
      
