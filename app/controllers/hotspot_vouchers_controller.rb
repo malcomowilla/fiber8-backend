@@ -118,7 +118,7 @@ initiator = ActsAsTenant.current_tenant&.hotspot_mpesa_setting.api_initiator_use
 security_credentials = ActsAsTenant.current_tenant&.hotspot_mpesa_setting.api_initiator_password
 host = request.headers['X-Subdomain']
 
-transaction_id = params[:transaction_id]
+transaction_id = params[:receipt_number]
   transaction_status_query = TransactionStatusService.initiate_transaction_status_query(
    shortcode,passkey,consumer_key,
       consumer_secret,transaction_id,initiator,security_credentials,host
