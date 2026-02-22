@@ -154,7 +154,6 @@ voucher_code = HotspotVoucher.find_by(phone: customer_phone_number,
       hotspot_voucher_id: active_status.id,
       name: customer_name,
       account_id: active_status.account_id,
-      hotspot_voucher_id: active_status.id
 
      )
 
