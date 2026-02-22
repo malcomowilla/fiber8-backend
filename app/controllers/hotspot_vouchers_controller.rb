@@ -271,6 +271,7 @@ consumer_secret = ActsAsTenant.current_tenant&.hotspot_mpesa_setting.consumer_se
 initiator = ActsAsTenant.current_tenant&.hotspot_mpesa_setting.api_initiator_username
 security_credentials = ActsAsTenant.current_tenant&.hotspot_mpesa_setting.api_initiator_password
 host = request.headers['X-Subdomain']
+ip = params[:ip]
 
 transaction_id = params[:receipt_number]
   transaction_status_query = TransactionStatusService.initiate_transaction_status_query(
@@ -284,7 +285,10 @@ transaction_id = params[:receipt_number]
 
   if transaction_status_query[:success]
      HotspotNotificationsChannel.broadcast_to(
+        ip,
         message: "Payment received! You are now connected."
+        
+
       )
     render json: { success: true, response: transaction_status_query_response }
     
