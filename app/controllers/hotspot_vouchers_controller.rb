@@ -307,7 +307,7 @@ present_voucher_or_username = HotspotMpesaRevenue.find_by(reference: transaction
 voucher_code = HotspotMpesaRevenue.find_by(reference: transaction_id).hotspot_voucher.voucher
 
 
-nas_routers = NasRouter.where(account_id: HotspotMpesaRevenue.account_id)
+nas_routers = NasRouter.where(account_id: HotspotMpesaRevenue.find_by(reference: transaction_id).account_id)
 
 if present_voucher_or_username
   nas_routers.each do |nas|
