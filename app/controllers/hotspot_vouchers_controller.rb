@@ -143,6 +143,10 @@ def transaction_status_result
 voucher_code = HotspotVoucher.find_by(phone: customer_phone_number,
    status: 'active').voucher
 
+   active_session = TemporarySession.find_or_initialize_by(ip: active_status.ip,
+   account_id: active_status.account_id
+   )
+
    
    if active_status
      HotspotMpesaRevenue.create(
@@ -185,6 +189,11 @@ in with voucher #{voucher_code} on router #{nas.ip_address}"
       active_status.update!(status: "used", 
       last_logged_in: Time.now,
        ip: active_status.ip, used_voucher: true)
+
+
+       active_session.update(
+        paid: true, connected: true
+       )
 
       HotspotNotificationsChannel.broadcast_to(
         active_status.ip,
@@ -278,19 +287,70 @@ transaction_id = params[:receipt_number]
    shortcode,passkey,consumer_key,
       consumer_secret,transaction_id,initiator,security_credentials,host
   )
-
+# receipt_no = HotspotVoucher.find_by(phon: customer_phone_number).hotspot_mpesa_revenue.reference
   transaction_status_query_response = transaction_status_query[:response]
   Rails.logger.info("Transaction Status Query Response: #{transaction_status_query_response}")
 
+unless HotspotMpesaRevenue.find_by(reference: transaction_id).present?
+  render json: {error: 'transaction doesnt exist'}, status: :not_found
+end
+
+if HotspotMpesaRevenue.find_by(reference: transaction_id).hotspot_voucher.expiration.present? && HotspotMpesaRevenue.find_by(reference: transaction_id).hotspot_voucher.expiration < Time.current
+    return render json: { error: 'session expired for voucher or username' }, status: :forbidden
+  end
+
 
   if transaction_status_query[:success]
-     HotspotNotificationsChannel.broadcast_to(
-        ip,
-        message: "Payment received! You are now connected."
-        
+    
+present_voucher_or_username = HotspotMpesaRevenue.find_by(reference: transaction_id).hotspot_voucher.expiration.present?
+voucher_code = HotspotMpesaRevenue.find_by(reference: transaction_id).hotspot_voucher.voucher
 
-      )
-    render json: { success: true, response: transaction_status_query_response }
+
+nas_routers = NasRouter.where(account_id: HotspotMpesaRevenue.account_id)
+
+if present_voucher_or_username
+  nas_routers.each do |nas|
+  begin
+    response = RestClient::Request.execute(
+      method: :post,
+      url: "http://#{nas.ip_address}/rest/ip/hotspot/active/login",
+      user: nas.username,
+      password: nas.password,
+      payload: {
+        ip: ip,
+        user: voucher_code,
+        password: voucher_code
+      }.to_json,
+      headers: {
+        content_type: :json,
+        accept: :json
+      }
+    )
+
+    if response.code == 200
+ 
+
+      HotspotMpesaRevenue.find_by(reference: transaction_id).hotspot_voucher.update!(status: "used", 
+      last_logged_in: Time.now,
+       ip: HotspotMpesaRevenue.find_by(reference: transaction_id).hotspot_voucher.ip, used_voucher: true)
+
+       TemporarySession.find_by(ip: ip).update(paid: true, connected: true)
+    end
+
+  rescue RestClient::Unauthorized
+    Rails.logger.info "REST auth failed for router #{nas.ip_address}"
+
+  rescue RestClient::ExceptionWithResponse => e
+    Rails.logger.info "MikroTik REST error on #{nas.ip_address}: #{e.response}"
+
+  rescue StandardError => e
+    Rails.logger.info "REST error logging in device #{active_status.ip}: #{e.message}"
+  end
+end
+
+
+end
+
     
   else
     render json: { error: 'Failed to fetch transaction status' }
@@ -661,6 +721,19 @@ Rails.logger.info "checkout_request_id: #{checkout_request_id}"
 
 
 end
+
+
+
+
+def receipt_number_status
+ active_session = TemporarySession.find_by(ip: params[:ip])
+ if active_session
+  render json: { paid: active_session.paid, connected: active_session.connected }
+ else
+  render json: { paid: false, connected: false }
+ end
+end
+
 
 
 
@@ -1134,12 +1207,13 @@ def login_with_hotspot_voucher
 
   # 🔹 Find voucher
   @hotspot_voucher = HotspotVoucher.find_by(voucher: params[:voucher])
-  return render json: { error: 'Invalid voucher' }, status: :not_found unless @hotspot_voucher
+  return render json: { error: 'Invalid voucher or username' }, status: :not_found unless @hotspot_voucher
 
   # 🔹 Expiration check
   if @hotspot_voucher.expiration.present? && @hotspot_voucher.expiration < Time.current
-    return render json: { error: 'Voucher expired' }, status: :forbidden
+    return render json: { error: 'Voucher Or Username expired' }, status: :forbidden
   end
+
 
   active_sessions = get_active_sessions(params[:voucher])
   package = HotspotPackage.find_by(name: @hotspot_voucher.package)
