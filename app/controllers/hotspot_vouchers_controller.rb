@@ -292,14 +292,17 @@ transaction_id = params[:receipt_number]
   transaction_status_query_response = transaction_status_query[:response]
   Rails.logger.info("Transaction Status Query Response: #{transaction_status_query_response}")
 
-unless HotspotMpesaRevenue.find_by(reference: transaction_id).present?
-  render json: {error: 'transaction doesnt exist'}, status: :not_found
+
+mpesa_revenue = HotspotMpesaRevenue.find_by(reference: transaction_id)
+
+unless mpesa_revenue
+  return render json: { error: 'Transaction does not exist' }, status: :not_found
 end
 
-if HotspotMpesaRevenue.find_by(reference: transaction_id).hotspot_voucher.present? && HotspotMpesaRevenue.find_by(reference: transaction_id).hotspot_voucher.expiration.present? && HotspotMpesaRevenue.find_by(reference: transaction_id).hotspot_voucher.expiration < Time.current
-    return render json: { error: 'session expired for voucher or username' }, status: :forbidden
-  end
-
+if mpesa_revenue.hotspot_voucher&.expiration.present? && 
+   mpesa_revenue.hotspot_voucher.expiration < Time.current
+  return render json: { error: 'Session expired for voucher or username' }, status: :forbidden
+end
 
   if transaction_status_query[:success]
     
@@ -307,7 +310,7 @@ present_voucher_or_username = HotspotMpesaRevenue.find_by(reference: transaction
 voucher_code = HotspotMpesaRevenue.find_by(reference: transaction_id).hotspot_voucher.voucher
 
 
-nas_routers = NasRouter.where(account_id: HotspotMpesaRevenue.find_by(reference: transaction_id).account_id)
+nas_routers = NasRouter.where(account_id: HotspotMpesaRevenue.find_by(reference: transaction_id)account_id)
 
 if present_voucher_or_username
   nas_routers.each do |nas|
