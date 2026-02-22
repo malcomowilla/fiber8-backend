@@ -97,6 +97,49 @@ end
 
 
 
+def transaction_status_result
+  raw_body = request.body.read
+
+# Rails.logger.info "Parsed data calback mpesa: #{request.body.read}"
+Rails.logger.info "Parsed data callback mpesa transaction result: #{raw_body}"
+
+end
+
+
+
+
+def login_with_receipt_number
+
+  shortcode = ActsAsTenant.current_tenant&.hotspot_mpesa_setting.short_code
+passkey = ActsAsTenant.current_tenant&.hotspot_mpesa_setting.passkey
+consumer_key = ActsAsTenant.current_tenant&.hotspot_mpesa_setting.consumer_key
+consumer_secret = ActsAsTenant.current_tenant&.hotspot_mpesa_setting.consumer_secret
+initiator = ActsAsTenant.current_tenant&.hotspot_mpesa_setting.api_initiator_username
+security_credentials = ActsAsTenant.current_tenant&.hotspot_mpesa_setting.api_initiator_password
+host = request.headers['X-Subdomain']
+
+transaction_id = params[:transaction_id]
+  transaction_status_query = TransactionStatusService.initiate_transaction_status_query(
+   shortcode,passkey,consumer_key,
+      consumer_secret,transaction_id,initiator,security_credentials,host
+  )
+
+  transaction_status_query_response = transaction_status_query[:response]
+  Rails.logger.info("Transaction Status Query Response: #{transaction_status_query_response}")
+
+
+  if transaction_status_query[:success]
+    render json: { success: true, response: transaction_status_query_response }
+    
+  else
+    render json: { error: 'Failed to fetch transaction status' }
+  end
+
+end
+
+
+
+
 
 
   def hotspot_traffic
@@ -491,18 +534,23 @@ session.save!
         consumer_key, consumer_secret, host,voucher_code,session_id
       )
   
+ stk_response = hotspot_payment[:response]
+ checkout_request_id = stk_response['CheckoutRequestID']
+ merchant_request_id = stk_response['MerchantRequestID']
 
       if hotspot_payment[:success]
 voucher_record = HotspotVoucher.create!(
   package: params[:package],
   phone: phone_number,
   voucher: voucher_code,
-  mac: params[:mac]
+  mac: params[:mac],
+  checkout_request_id: checkout_request_id,
+  merchant_request_id: merchant_request_id,
+
+  payment_status: 'pending'
 
 )
 
- stk_response = hotspot_payment[:response]
- checkout_request_id = stk_response['CheckoutRequestID']
 create_voucher_radcheck(voucher_code, params[:package], 
 voucher_record.account_id)
 

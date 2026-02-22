@@ -4,7 +4,8 @@ class StkStatusService
 
 
 
-    def initiate_stk_query(shortcode,passkey,consumer_key,consumer_secret,checkout_request_id
+    def initiate_stk_query(shortcode,passkey,consumer_key,consumer_secret,
+      checkout_request_id
        ) 
     api_url = 'https://api.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials'
 
