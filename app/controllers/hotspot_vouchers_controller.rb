@@ -296,7 +296,7 @@ unless HotspotMpesaRevenue.find_by(reference: transaction_id).present?
   render json: {error: 'transaction doesnt exist'}, status: :not_found
 end
 
-if HotspotMpesaRevenue.find_by(reference: transaction_id).hotspot_voucher.expiration.present? && HotspotMpesaRevenue.find_by(reference: transaction_id).hotspot_voucher.expiration < Time.current
+if HotspotMpesaRevenue.find_by(reference: transaction_id).hotspot_voucher.present? && HotspotMpesaRevenue.find_by(reference: transaction_id).hotspot_voucher.expiration.present? && HotspotMpesaRevenue.find_by(reference: transaction_id).hotspot_voucher.expiration < Time.current
     return render json: { error: 'session expired for voucher or username' }, status: :forbidden
   end
 
