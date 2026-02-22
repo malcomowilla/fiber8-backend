@@ -136,9 +136,127 @@ def transaction_status_result
   Rails.logger.info "Customer Name: #{customer_name}"
   # Rails.logger.info "Phone and Name: #{phone_and_name}"
 
- 
 
-  head :ok
+  active_status = HotspotVoucher.find_by(phone: customer_phone_number,
+   status: 'active')
+  #  receipt_no = HotspotVoucher.find_by(phone: customer_phone_number).hotspot_mpesa_revenue.reference
+voucher_code = HotspotVoucher.find_by(phone: customer_phone_number,
+   status: 'active').voucher
+
+   
+   if active_status
+     HotspotMpesaRevenue.create(
+      amount: amount,
+     voucher: voucher_code,
+      reference: receipt_no,
+      payment_method: "Mpesa",
+      time_paid: finalised_time,
+      hotspot_voucher_id: active_status.id,
+      name: customer_name,
+      account_id: active_status.account_id,
+      hotspot_voucher_id: active_status.id
+
+     )
+
+
+nas_routers = NasRouter.where(account_id:  active_status.account_id)
+nas_routers.each do |nas|
+  begin
+    response = RestClient::Request.execute(
+      method: :post,
+      url: "http://#{nas.ip_address}/rest/ip/hotspot/active/login",
+      user: nas.username,
+      password: nas.password,
+      payload: {
+        ip: active_status.ip,
+        user: voucher_code,
+        password: voucher_code
+      }.to_json,
+      headers: {
+        content_type: :json,
+        accept: :json
+      }
+    )
+
+    if response.code == 200
+ Rails.logger.info "Device #{active_status.ip} successfully logged 
+in with voucher #{voucher_code} on router #{nas.ip_address}"
+
+
+      active_status.update!(status: "used", 
+      last_logged_in: Time.now,
+       ip: active_status.ip, used_voucher: true)
+
+      HotspotNotificationsChannel.broadcast_to(
+        active_status.ip,
+        message: "Payment received! You are now connected."
+      )
+    end
+
+  rescue RestClient::Unauthorized
+    Rails.logger.info "REST auth failed for router #{nas.ip_address}"
+
+  rescue RestClient::ExceptionWithResponse => e
+    Rails.logger.info "MikroTik REST error on #{nas.ip_address}: #{e.response}"
+
+  rescue StandardError => e
+    Rails.logger.info "REST error logging in device #{active_status.ip}: #{e.message}"
+  end
+end
+
+
+
+   else
+used_voucher = HotspotVoucher.find_by(phone: customer_phone_number,
+ status: 'used')
+nas_routers = NasRouter.where(account_id:  used_voucher.account_id)
+nas_routers.each do |nas|
+  begin
+    response = RestClient::Request.execute(
+      method: :post,
+      url: "http://#{nas.ip_address}/rest/ip/hotspot/active/login",
+      user: nas.username,
+      password: nas.password,
+      payload: {
+        ip: active_status.ip,
+        user: used_voucher.voucher,
+        password: used_voucher.voucher
+      }.to_json,
+      headers: {
+        content_type: :json,
+        accept: :json
+      }
+    )
+
+    if response.code == 200
+ Rails.logger.info "Device #{used_voucher.ip} successfully logged 
+in with voucher #{voucher_code} on router #{nas.ip_address}"
+
+
+      used_voucher.update!(
+      last_logged_in: Time.now,
+       ip: used_voucher.ip, used_voucher: true)
+
+      # SendSmsHotspotJob.perform_now(voucher.voucher, data)
+      # HotspotNotificationsChannel.broadcast_to(
+      #   session.ip,
+      #   message: "Payment received! You are now connected."
+      # )
+    end
+
+  rescue RestClient::Unauthorized
+    Rails.logger.info "REST auth failed for router #{nas.ip_address}"
+
+  rescue RestClient::ExceptionWithResponse => e
+    Rails.logger.info "MikroTik REST error on #{nas.ip_address}: #{e.response}"
+
+  rescue StandardError => e
+    Rails.logger.info "REST error logging in device #{used_voucher.ip}: #{e.message}"
+  end
+end
+   end
+
+
 end
 
 
@@ -166,6 +284,9 @@ transaction_id = params[:receipt_number]
 
 
   if transaction_status_query[:success]
+     HotspotNotificationsChannel.broadcast_to(
+        message: "Payment received! You are now connected."
+      )
     render json: { success: true, response: transaction_status_query_response }
     
   else
@@ -293,7 +414,6 @@ Rails.logger.info "Parsed data callback mpesa: #{raw_body}"
 SendSmsHotspotService.send_sms(voucher.voucher, data)
 
 nas_routers = NasRouter.where(account_id: voucher.account_id)
-
 nas_routers.each do |nas|
   begin
     response = RestClient::Request.execute(
@@ -313,7 +433,8 @@ nas_routers.each do |nas|
     )
 
     if response.code == 200
-      Rails.logger.info "Device #{session.ip} successfully logged in with voucher #{voucher_code} on router #{nas.ip_address}"
+      Rails.logger.info "Device #{session.ip} successfully logged 
+    in with voucher #{voucher_code} on router #{nas.ip_address}"
       session.update!(paid: true, connected: true)
 
 
@@ -581,6 +702,7 @@ voucher_record = HotspotVoucher.create!(
   phone: phone_number,
   voucher: voucher_code,
   mac: params[:mac],
+  ip: params[:ip],
   checkout_request_id: checkout_request_id,
   merchant_request_id: merchant_request_id,
 
