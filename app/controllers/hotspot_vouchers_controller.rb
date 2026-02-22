@@ -121,22 +121,24 @@ def transaction_status_result
   receipt_no = params_hash["ReceiptNo"]
   amount = params_hash["Amount"]
   # phone_and_name = params_hash["DebitPartyName"]
-  phone_number = params_hash["DebitPartyPhoneNumber"].split(' - ')[0]
-  customer_name = params_hash["DebitPartyPhoneNumber"].split(' - ')[1]
   transaction_status = params_hash["TransactionStatus"]
   finalised_time = params_hash["FinalisedTime"]
 
+  customer_phone_number = params_hash["DebitPartyName"].split(' - ')[0]
+  customer_name = params_hash["DebitPartyName"].split(' - ')[1]
   Rails.logger.info "ResultCode: #{result_code}"
   Rails.logger.info "TransactionID: #{transaction_id}"
   Rails.logger.info "ReceiptNo: #{receipt_no}"
   Rails.logger.info "Amount: #{amount}"
   Rails.logger.info "Status: #{transaction_status}"
   Rails.logger.info "FinalisedTime: #{finalised_time}"
-  Rails.logger.info "phone number: #{phone_number}"
-  Rails.logger.info "customer name: #{customer_name}"
+  Rails.logger.info "Customer Phone Number: #{customer_phone_number}"
+  Rails.logger.info "Customer Name: #{customer_name}"
+  # Rails.logger.info "Phone and Name: #{phone_and_name}"
 
  
 
+  head :ok
 end
 
 
