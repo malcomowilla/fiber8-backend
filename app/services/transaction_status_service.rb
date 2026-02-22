@@ -78,6 +78,8 @@ class TransactionStatusService
     }
     
 
+
+
     Rails.logger.info("TRansaction Status Request Payload: #{payload}")
     
     response = RestClient.post(

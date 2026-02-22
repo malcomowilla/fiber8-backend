@@ -11,7 +11,8 @@ load_and_authorize_resource except: [:login_with_hotspot_voucher,
 
   set_current_tenant_through_filter
 
-  before_action :set_tenant, except: [:check_payment_status]
+  before_action :set_tenant, except: [:check_payment_status,
+   :transaction_status_result]
   before_action :set_time_zone
 
 
