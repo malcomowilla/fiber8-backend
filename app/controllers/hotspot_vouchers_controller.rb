@@ -3,7 +3,7 @@ class HotspotVouchersController < ApplicationController
 
 load_and_authorize_resource except: [:login_with_hotspot_voucher,
  :make_payment, :check_payment_status, :payment_and_conected_status,
- :stk_push_status
+ :stk_push_status, :transaction_status_result
 
 ]
   # skip_before_action :set_tenant, only: [:check_payment_status]
