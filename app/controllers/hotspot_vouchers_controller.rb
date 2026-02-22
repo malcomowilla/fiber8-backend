@@ -100,11 +100,43 @@ end
 
 def transaction_status_result
   raw_body = request.body.read
+  Rails.logger.info "MPESA STATUS CALLBACK: #{raw_body}"
 
-# Rails.logger.info "Parsed data calback mpesa: #{request.body.read}"
-Rails.logger.info "Parsed data callback mpesa transaction result: #{raw_body}"
+  data = JSON.parse(raw_body) rescue {}
 
+  result = data["Result"] || {}
+
+  result_code = result["ResultCode"]
+  transaction_id = result["TransactionID"]
+  originator_conversation_id = result["OriginatorConversationID"]
+
+  # Extract ResultParameters array safely
+  params_array = result.dig("ResultParameters", "ResultParameter") || []
+
+  # Convert array to hash
+  params_hash = params_array.each_with_object({}) do |item, hash|
+    hash[item["Key"]] = item["Value"]
+  end
+
+  receipt_no = params_hash["ReceiptNo"]
+  amount = params_hash["Amount"]
+  phone_and_name = params_hash["DebitPartyName"]
+  transaction_status = params_hash["TransactionStatus"]
+  finalised_time = params_hash["FinalisedTime"]
+
+  Rails.logger.info "ResultCode: #{result_code}"
+  Rails.logger.info "TransactionID: #{transaction_id}"
+  Rails.logger.info "ReceiptNo: #{receipt_no}"
+  Rails.logger.info "Amount: #{amount}"
+  Rails.logger.info "Status: #{transaction_status}"
+  Rails.logger.info "FinalisedTime: #{finalised_time}"
+  Rails.logger.info "phone and anme: #{phone_and_name}"
+
+ 
+
+  head :ok
 end
+
 
 
 

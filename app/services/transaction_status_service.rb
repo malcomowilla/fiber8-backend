@@ -80,7 +80,7 @@ class TransactionStatusService
 
 
 
-    Rails.logger.info("TRansaction Status Request Payload: #{payload}")
+    Rails.logger.info("Transaction Status Request Payload: #{payload}")
     
     response = RestClient.post(
       'https://api.safaricom.co.ke/mpesa/transactionstatus/v1/query',
