@@ -92,7 +92,7 @@ end
 def index
    host = request.headers['X-Subdomain']
     @account = Account.find_by(subdomain: host)
-  @hotspot_vouchers = Rails.cache.fetch("hotspot_vouchers_#{@account.id}_index", expires_in: 5.minutes) do
+  @hotspot_vouchers = Rails.cache.fetch("hotspot_vouchers_#{@account.id}_index", expires_in: 5.seconds) do
     HotspotVoucher.order(created_at: :desc).to_a
   end
   render json: @hotspot_vouchers
