@@ -95,6 +95,7 @@ def index
   @hotspot_vouchers = Rails.cache.fetch("hotspot_vouchers_#{@account.id}_index", expires_in: 5.minutes) do
     HotspotVoucher.order(created_at: :desc).to_a
   end
+  render json: @hotspot_vouchers
   #  @hotspot_vouchers = HotspotVoucher.order(created_at: :desc)
   # render json: @hotspot_vouchers
 end
