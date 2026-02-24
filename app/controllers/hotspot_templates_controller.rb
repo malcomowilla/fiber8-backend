@@ -44,7 +44,16 @@ if current_user
 
   # GET /hotspot_templates or /hotspot_templates.json
   def index
-    @hotspot_templates = HotspotTemplate.all
+  host = request.headers['X-Subdomain']
+    @account = Account.find_by(subdomain: host)
+   
+  #   @hotspot_mpesa_revenues = Rails.cache.fetch("hotspot_revenues_index_#{@account.id}", expires_in: 2.seconds) do
+  # HotspotMpesaRevenue.order(created_at: :desc).to_a
+  #  end
+
+    @hotspot_templates = Rails.cache.fetch("hotspot_templates_index_#{@account.id}", expires_in: 2.seconds) do
+      HotspotTemplate.all
+    end
     render json: @hotspot_templates
   end
 
