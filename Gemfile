@@ -190,7 +190,11 @@ end
 
 
 
+# Connection pooling for Redis
+gem "connection_pool", "~> 2.4"
 
+# Hiredis for faster Redis protocol parsing (optional but recommended)
+gem "hiredis-client", "~> 0.18"
 
 
 gem 'acts_as_tenant'

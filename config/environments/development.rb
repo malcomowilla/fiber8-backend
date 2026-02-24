@@ -66,7 +66,46 @@ Rails.application.configure do
     config.action_controller.perform_caching = true
     config.action_controller.enable_fragment_cache_logging = true
 
-    config.cache_store = :memory_store
+    # # config.cache_store = :memory_store
+    #  config.cache_store = :memory_store, { 
+    #   size: 64.megabytes 
+    # }
+    
+ # Use Redis as the cache store for production
+  config.cache_store = :redis_cache_store, {
+    # Connection URL from environment variable
+    url: ENV.fetch("REDIS_URL", "redis://localhost:6379/1"),
+    
+    # Namespace prevents key collisions with other apps
+    namespace: "myapp:cache",
+    
+    # Connection pool settings for concurrent access
+    pool: {
+      size: ENV.fetch("RAILS_MAX_THREADS", 5).to_i,
+      timeout: 5
+    },
+    
+    # Reconnect on connection errors
+    reconnect_attempts: 3,
+    reconnect_delay: 0.2,
+    reconnect_delay_max: 1.0,
+    
+    # Error handling - log errors but don't crash
+    error_handler: ->(method:, returning:, exception:) {
+      Rails.logger.error(
+        "Redis cache error: #{exception.class} - #{exception.message}"
+      )
+      Sentry.capture_exception(exception) if defined?(Sentry)
+    },
+    
+    # Compression for large values (saves memory and bandwidth)
+    compress: true,
+    compress_threshold: 1.kilobyte,
+    
+    # Default expiration (optional, can be overridden per-key)
+    expires_in: 1.hour
+  }
+
     config.public_file_server.headers = {
       "Cache-Control" => "public, max-age=#{2.days.to_i}"
     }
