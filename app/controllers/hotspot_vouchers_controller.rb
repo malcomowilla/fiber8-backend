@@ -127,16 +127,7 @@ def transaction_status_result
 
   customer_phone_number = params_hash["DebitPartyName"].split(' - ')[0]
   customer_name = params_hash["DebitPartyName"].split(' - ')[1]
-  Rails.logger.info "ResultCode: #{result_code}"
-  Rails.logger.info "TransactionID: #{transaction_id}"
-  Rails.logger.info "ReceiptNo: #{receipt_no}"
-  Rails.logger.info "Amount: #{amount}"
-  Rails.logger.info "Status: #{transaction_status}"
-  Rails.logger.info "FinalisedTime: #{finalised_time}"
-  Rails.logger.info "Customer Phone Number: #{customer_phone_number}"
-  Rails.logger.info "Customer Name: #{customer_name}"
-  # Rails.logger.info "Phone and Name: #{phone_and_name}"
-
+  
 
   active_status = HotspotVoucher.find_by(phone: customer_phone_number,
    status: 'active')
@@ -313,7 +304,7 @@ present_voucher_or_username = HotspotMpesaRevenue.find_by(reference: transaction
 voucher_code = HotspotMpesaRevenue.find_by(reference: transaction_id).hotspot_voucher.voucher
 
 
-nas_routers = NasRouter.where(account_id: HotspotMpesaRevenue.account_id)
+nas_routers = NasRouter.where(account_id: HotspotMpesaRevenue.find_by(reference: transaction_id).account_id)
 
 if present_voucher_or_username
   nas_routers.each do |nas|
@@ -467,7 +458,7 @@ Rails.logger.info "Parsed data callback mpesa: #{raw_body}"
     Rails.logger.info "Session ID: #{session_id}, Voucher Code: #{voucher_code}"
     session = TemporarySession.find_by(session: session_id, account_id: voucher.account_id)
     unless session
-      Rails.logger.info "Temporary session not found for session_id: #{session_id}"
+      # Rails.logger.info "Temporary session not found for session_id: #{session_id}"
       return head :ok
     end
 
@@ -480,7 +471,6 @@ Rails.logger.info "Parsed data callback mpesa: #{raw_body}"
     #   payment_method: "Mpesa",
     #   time_paid: data["TransTime"]
     # )
-    Rails.logger.info "Hotspot voucher #{voucher_code} paid successfully."
 SendSmsHotspotService.send_sms(voucher.voucher, data)
 
 nas_routers = NasRouter.where(account_id: voucher.account_id)
