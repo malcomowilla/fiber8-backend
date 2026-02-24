@@ -48,11 +48,13 @@ if current_user
 
   # GET /hotspot_mpesa_revenues or /hotspot_mpesa_revenues.json
   def index
+     host = request.headers['X-Subdomain']
+    @account = Account.find_by(subdomain: host)
     # @hotspot_mpesa_revenues = HotspotMpesaRevenue.all
     # render json: @hotspot_mpesa_revenues
-  #   @hotspot_mpesa_revenues = Rails.cache.fetch("hotspot_revenues_index", expires_in: 5.minutes) do
-  @hotspot_mpesa_revenues = HotspotMpesaRevenue.order(created_at: :desc)
-  # end
+    @hotspot_mpesa_revenues = Rails.cache.fetch("hotspot_revenues_index_#{@account.id}", expires_in: 2.seconds) do
+  HotspotMpesaRevenue.order(created_at: :desc).to_a
+   end
 
 # @hotspot_mpesa_revenues = HotspotMpesaRevenue.all
 # HotspotMpesaRevenue.order(created_at: :desc).to_a
