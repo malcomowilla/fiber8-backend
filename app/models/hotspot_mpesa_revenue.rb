@@ -9,6 +9,8 @@ class HotspotMpesaRevenue < ApplicationRecord
 
  def clear_cache
    Rails.cache.delete("hotspot_revenues_index_#{account.id}")
+   Rails.cache.delete("todays_revenue_index_#{account.id}")
+   Rails.cache.delete("this_month_revenue_index_#{account.id}")
  end
 
 

@@ -69,9 +69,13 @@ if current_user
 def todays_revenue
   # start_time = Time.current.beginning_of_day
   # end_time = Time.current
-  # Query
-   today = HotspotMpesaRevenue.today.sum(:amount)
-  render json: today
+   host = request.headers['X-Subdomain']
+    @account = Account.find_by(subdomain: host)
+   todays_revenue = Rails.cache.fetch("todays_revenue_index_#{@account.id}", expires_in: 2.seconds) do
+    HotspotMpesaRevenue.today.sum(:amount)
+  end
+   
+  render json: todays_revenue
 end
  
 
@@ -79,9 +83,12 @@ end
 def this_month_revenue
   # start_time = Time.current.beginning_of_month
   # end_time = Time.current
-
+ host = request.headers['X-Subdomain']
+    @account = Account.find_by(subdomain: host)
   # render json: HotspotMpesaRevenue.where(created_at: start_time..end_time).sum(:amount)
-  this_month = HotspotMpesaRevenue.this_month.sum(:amount)
+  this_month = Rails.cache.fetch("this_month_revenue_index_#{@account.id}", expires_in: 2.seconds) do
+    HotspotMpesaRevenue.this_month.sum(:amount)
+    end
   render json: this_month
 end
 
@@ -90,13 +97,21 @@ end
 def this_year_revenue
   # start_time = Time.current.beginning_of_month
   # end_time = Time.current + 1.year
-  this_year = HotspotMpesaRevenue.this_year.sum(:amount)
-  render json: this_year
+  host = request.headers['X-Subdomain']
+    @account = Account.find_by(subdomain: host)
+
+    Rails.cache.fetch("this_year_revenue_#{host}", expires_in: 1.day) do
+      this_year = HotspotMpesaRevenue.this_year.sum(:amount)
+      render json: this_year
+    end
+  
 end
 
 
 
 def daily_revenue
+      host = request.headers['X-Subdomain']
+        @account = Account.find_by(subdomain: host)
       date = params[:date] ? Date.parse(params[:date]) : Date.current
       
       revenue = HotspotMpesaRevenue.daily_revenue(date)
@@ -208,7 +223,8 @@ def daily_revenue
 
     # Only allow a list of trusted parameters through.
     def hotspot_mpesa_revenue_params
-      params.require(:hotspot_mpesa_revenue).permit(:voucher, :payment_method, :amount,
+      params.require(:hotspot_mpesa_revenue).permit(:voucher, :payment_method,
+       :amount,
        :reference, :time_paid, :account_id)
     end
 end
