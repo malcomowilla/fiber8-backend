@@ -9,7 +9,7 @@ has_one :hotspot_mpesa_revenue
 
 
 def clear_cache
-  Rails.cache.delete("hotspot_vouchers_index")
+  Rails.cache.delete("hotspot_vouchers_index_#{account.id}")
 end
 
 
