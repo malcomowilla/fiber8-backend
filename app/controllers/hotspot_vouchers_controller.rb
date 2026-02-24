@@ -328,11 +328,22 @@ if present_voucher_or_username
     if response.code == 200
  
 
-      HotspotMpesaRevenue.find_by(reference: transaction_id).hotspot_voucher.update!(status: "used", 
+
+#  username: @hotspot_voucher.voucher,
+#           expiration: @hotspot_voucher.expiration&.strftime("%B %d, %Y at %I:%M %p"),
+#           package: @hotspot_voucher.package
+
+   HotspotMpesaRevenue.find_by(reference: transaction_id).hotspot_voucher.update!(status: "used", 
       last_logged_in: Time.now,
        ip: HotspotMpesaRevenue.find_by(reference: transaction_id).hotspot_voucher.ip, used_voucher: true)
 
+       package = HotspotPackage.find_by(name: HotspotMpesaRevenue.find_by(reference: transaction_id).hotspot_voucher.package)
+       expiration_time = HotspotMpesaRevenue.find_by(reference: transaction_id).hotspot_voucher.expiration
        TemporarySession.find_by(ip: ip).update(paid: true, connected: true)
+       render json: { message: 'Connected successfully', 
+       device_ip: ip, username: voucher_code, 
+       expiration: expiration_time&.strftime("%B %d, %Y at %I:%M %p"), 
+       package: package }, status: :ok
     end
 
   rescue RestClient::Unauthorized
@@ -351,7 +362,7 @@ end
 
     
   else
-    render json: { error: 'Failed to fetch transaction status' }
+    render json: { error: 'Failed to fetch transaction status' }, status: :unprocessable_entity
   end
 
 end
@@ -1193,7 +1204,6 @@ end
 
 
 def login_with_hotspot_voucher
-  Rails.logger.info "voucher ip #{params[:ip]}"
 
   return render json: { error: 'voucher is required' }, status: :bad_request unless params[:voucher].present?
   return render json: { error: 'ip is required' }, status: :bad_request unless params[:ip].present?
