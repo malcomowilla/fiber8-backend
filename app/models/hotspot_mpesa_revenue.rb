@@ -3,6 +3,14 @@ class HotspotMpesaRevenue < ApplicationRecord
 
   acts_as_tenant(:account)
  belongs_to :hotspot_voucher
+ after_commit :clear_cache
+
+
+
+ def clear_cache
+   Rails.cache.delete("hotspot_revenues_index_#{account.id}")
+ end
+
 
     
   scope :today, -> {
