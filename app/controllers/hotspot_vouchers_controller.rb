@@ -141,9 +141,9 @@ voucher_code = HotspotVoucher.find_by(phone: customer_phone_number,
 
    
    if active_status
-     HotspotMpesaRevenue.create(
+     HotspotMpesaRevenue.find_or_create_by(
       amount: amount,
-     voucher: voucher_code,
+      voucher: voucher_code,
       reference: receipt_no,
       payment_method: "Mpesa",
       time_paid: finalised_time,
