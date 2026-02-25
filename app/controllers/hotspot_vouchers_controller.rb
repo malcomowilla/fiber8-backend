@@ -433,7 +433,6 @@ Rails.logger.info "Parsed data callback mpesa: #{raw_body}"
   voucher: session.voucher_code,
   mac: session.mac,
   ip: session.ip,
-  paid: true,
   checkout_request_id: session.checkout_request_id,
 account_id: session.account_id,
 
