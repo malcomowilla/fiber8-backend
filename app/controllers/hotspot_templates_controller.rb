@@ -51,9 +51,10 @@ if current_user
   # HotspotMpesaRevenue.order(created_at: :desc).to_a
   #  end
 
-    @hotspot_templates = Rails.cache.fetch("hotspot_templates_index_#{@account.id}", expires_in: 2.seconds) do
-      HotspotTemplate.all
-    end
+    # @hotspot_templates = Rails.cache.fetch("hotspot_templates_index_#{@account.id}", expires_in: 2.seconds) do
+    #   HotspotTemplate.all
+    # end
+     @hotspot_templates = HotspotTemplate.all
     render json: @hotspot_templates
   end
 
