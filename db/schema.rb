@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_02_21_125130) do
+ActiveRecord::Schema[7.2].define(version: 2026_02_25_174910) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -374,6 +374,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_02_21_125130) do
     t.integer "amount"
     t.string "name"
     t.integer "hotspot_voucher_id"
+    t.string "login_by"
   end
 
   create_table "hotspot_mpesa_settings", force: :cascade do |t|
@@ -1102,6 +1103,12 @@ ActiveRecord::Schema[7.2].define(version: 2026_02_21_125130) do
     t.datetime "updated_at", null: false
     t.boolean "paid"
     t.boolean "connected", default: false
+    t.string "hotspot_package"
+    t.string "voucher_code"
+    t.string "phone_number"
+    t.string "mac"
+    t.string "checkout_request_id"
+    t.integer "hotspot_voucher_id"
   end
 
   create_table "ticket_settings", force: :cascade do |t|

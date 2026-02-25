@@ -132,32 +132,36 @@ def transaction_status_result
   customer_name = params_hash["DebitPartyName"].split(' - ')[1]
   
 
-  active_status = HotspotVoucher.find_by(phone: customer_phone_number,
-   status: 'active')
-  #  receipt_no = HotspotVoucher.find_by(phone: customer_phone_number).hotspot_mpesa_revenue.reference
-voucher_code = HotspotVoucher.find_by(phone: customer_phone_number,
-   status: 'active').voucher
+#   active_status = HotspotVoucher.find_by(phone: customer_phone_number,
+#    status: 'active')
+#   #  receipt_no = HotspotVoucher.find_by(phone: customer_phone_number).hotspot_mpesa_revenue.reference
+# voucher_code = HotspotVoucher.find_by(phone: customer_phone_number,
+#    status: 'active').voucher
 
-   active_session = TemporarySession.find_or_initialize_by(ip: active_status.ip,
-   account_id: active_status.account_id
+   active_session = TemporarySession.find_by(
+phone_number: customer_phone_number,
+status: 'pending'
    )
 
-   
-   if active_status
-     HotspotMpesaRevenue.find_or_create_by(
+  # active_status = HotspotVoucher.find_or_create_by(phone: customer_phone_number,
+  #  status: 'active')
+
+      HotspotMpesaRevenue.find_or_create_by(
       amount: amount,
-      voucher: voucher_code,
+      voucher: active_session.voucher_code,
       reference: receipt_no,
       payment_method: "Mpesa",
       time_paid: finalised_time,
-      hotspot_voucher_id: active_status.id,
+      # hotspot_voucher_id: active_session.hotspot_voucher_id,
       name: customer_name,
-      account_id: active_status.account_id,
+      # login_by: 'Mpesa Transaction',
+      account_id: active_session.account_id,
 
      )
 
 
-nas_routers = NasRouter.where(account_id:  active_status.account_id)
+nas_routers = NasRouter.where(account_id: active_session.account_id, 
+)
 nas_routers.each do |nas|
   begin
     response = RestClient::Request.execute(
@@ -166,9 +170,9 @@ nas_routers.each do |nas|
       user: nas.username,
       password: nas.password,
       payload: {
-        ip: active_status.ip,
-        user: voucher_code,
-        password: voucher_code
+        ip: active_session.ip,
+        user: active_session.voucher_code,
+        password: active_session.voucher_code
       }.to_json,
       headers: {
         content_type: :json,
@@ -177,23 +181,15 @@ nas_routers.each do |nas|
     )
 
     if response.code == 200
- Rails.logger.info "Device #{active_status.ip} successfully logged 
-in with voucher #{voucher_code} on router #{nas.ip_address}"
-
-
-      active_status.update!(status: "used", 
-      last_logged_in: Time.now,
-       ip: active_status.ip, used_voucher: true)
+ 
+   
 
 
        active_session.update(
         paid: true, connected: true
        )
 
-      HotspotNotificationsChannel.broadcast_to(
-        active_status.ip,
-        message: "Payment received! You are now connected."
-      )
+     
     end
 
   rescue RestClient::Unauthorized
@@ -209,55 +205,6 @@ end
 
 
 
-   else
-used_voucher = HotspotVoucher.find_by(phone: customer_phone_number,
- status: 'used')
-nas_routers = NasRouter.where(account_id:  used_voucher.account_id)
-nas_routers.each do |nas|
-  begin
-    response = RestClient::Request.execute(
-      method: :post,
-      url: "http://#{nas.ip_address}/rest/ip/hotspot/active/login",
-      user: nas.username,
-      password: nas.password,
-      payload: {
-        ip: active_status.ip,
-        user: used_voucher.voucher,
-        password: used_voucher.voucher
-      }.to_json,
-      headers: {
-        content_type: :json,
-        accept: :json
-      }
-    )
-
-    if response.code == 200
- Rails.logger.info "Device #{used_voucher.ip} successfully logged 
-in with voucher #{voucher_code} on router #{nas.ip_address}"
-
-
-      used_voucher.update!(
-      last_logged_in: Time.now,
-       ip: used_voucher.ip, used_voucher: true)
-
-      # SendSmsHotspotJob.perform_now(voucher.voucher, data)
-      # HotspotNotificationsChannel.broadcast_to(
-      #   session.ip,
-      #   message: "Payment received! You are now connected."
-      # )
-    end
-
-  rescue RestClient::Unauthorized
-    Rails.logger.info "REST auth failed for router #{nas.ip_address}"
-
-  rescue RestClient::ExceptionWithResponse => e
-    Rails.logger.info "MikroTik REST error on #{nas.ip_address}: #{e.response}"
-
-  rescue StandardError => e
-    Rails.logger.info "REST error logging in device #{used_voucher.ip}: #{e.message}"
-  end
-end
-   end
 
 
 end
@@ -304,12 +251,13 @@ end
   if transaction_status_query[:success]
     
 present_voucher_or_username = HotspotMpesaRevenue.find_by(reference: transaction_id).hotspot_voucher.expiration.present?
-voucher_code = HotspotMpesaRevenue.find_by(reference: transaction_id).hotspot_voucher.voucher
 
 
 nas_routers = NasRouter.where(account_id: HotspotMpesaRevenue.find_by(reference: transaction_id).account_id)
 
 if present_voucher_or_username
+  voucher_code = HotspotMpesaRevenue.find_by(reference: transaction_id).hotspot_voucher.voucher
+
   nas_routers.each do |nas|
   begin
     response = RestClient::Request.execute(
@@ -468,26 +416,32 @@ Rails.logger.info "Parsed data callback mpesa: #{raw_body}"
     parts = bill_ref.sub("hotspot_", "").split("_")
     session_id = parts[0]
     voucher_code = parts[1]
-        voucher = HotspotVoucher.find_by(voucher: voucher_code)
-    Rails.logger.info "Session ID: #{session_id}, Voucher Code: #{voucher_code}"
-    session = TemporarySession.find_by(session: session_id, account_id: voucher.account_id)
-    unless session
-      # Rails.logger.info "Temporary session not found for session_id: #{session_id}"
-      return head :ok
-    end
+        session = TemporarySession.find_by(session: session_id, 
+        )
 
+        # voucher = HotspotVoucher.find_by(voucher: voucher_code)
 
-    # Create revenue record
-    # HotspotMpesaRevenue.create!(
-    #   amount: data["TransAmount"],
-    #   voucher: voucher_code,
-    #   reference: data["TransID"],
-    #   payment_method: "Mpesa",
-    #   time_paid: data["TransTime"]
-    # )
+        voucher = HotspotVoucher.create!(
+  package: session.package,
+  phone: session.phone_number,
+  voucher: session.voucher_code,
+  mac: session.mac,
+  ip: session.ip,
+  paid: true,
+  checkout_request_id: session.checkout_request_id,
+account_id: session.account_id,
+
+)
+session.update(hotspot_voucher_id: voucher.id)
+    
+create_voucher_radcheck(voucher_code, session.package, 
+session.account_id)
+
+calculate_expiration(voucher, voucher_record,  session.account_id)
+
 SendSmsHotspotService.send_sms(voucher.voucher, data)
 
-nas_routers = NasRouter.where(account_id: voucher.account_id)
+nas_routers = NasRouter.where(account_id: session.account_id)
 nas_routers.each do |nas|
   begin
     response = RestClient::Request.execute(
@@ -509,11 +463,11 @@ nas_routers.each do |nas|
     if response.code == 200
       Rails.logger.info "Device #{session.ip} successfully logged 
     in with voucher #{voucher_code} on router #{nas.ip_address}"
-      session.update!(paid: true, connected: true)
+      session.update!( connected: true, status: 'used')
 
 
       voucher.update!(status: "used", last_logged_in: Time.now,
-       ip: session.ip, used_voucher: true)
+       used_voucher: true)
 
       # SendSmsHotspotJob.perform_now(voucher.voucher, data)
       # HotspotNotificationsChannel.broadcast_to(
@@ -766,11 +720,20 @@ host = request.headers['X-Subdomain']
 
 session_id = rand(100000..999999).to_s
 
-session = TemporarySession.find_or_initialize_by(ip: params[:ip])
+session = TemporarySession.find_or_initialize_by(ip: params[:ip],
+session: session_id,
+paid: false, 
+connected: false,
+hotspot_package: params[:package],
+voucher_code: voucher_code,
+phone_number: phone_number
 
-session.session   = session_id
-session.paid      = false
-session.connected = false
+)
+session.update(status: 'pending')
+# session.session   = session_id
+# session.paid      = false
+# session.connected = false
+
 session.save!
 
       hotspot_payment = MpesaService.initiate_stk_push(phone_number, 
@@ -784,23 +747,23 @@ session.save!
  merchant_request_id = stk_response['MerchantRequestID']
 
       if hotspot_payment[:success]
-voucher_record = HotspotVoucher.create!(
-  package: params[:package],
-  phone: phone_number,
-  voucher: voucher_code,
-  mac: params[:mac],
-  ip: params[:ip],
-  checkout_request_id: checkout_request_id,
-  merchant_request_id: merchant_request_id,
+# voucher_record = HotspotVoucher.create!(
+#   package: params[:package],
+#   phone: phone_number,
+#   voucher: voucher_code,
+#   mac: params[:mac],
+#   ip: params[:ip],
+#   checkout_request_id: checkout_request_id,
+#   merchant_request_id: merchant_request_id,
 
-  payment_status: 'pending'
+#   payment_status: 'pending'
 
-)
+# )
 
-create_voucher_radcheck(voucher_code, params[:package], 
-voucher_record.account_id)
+# create_voucher_radcheck(voucher_code, params[:package], 
+# voucher_record.account_id)
 
-calculate_expiration(params[:package], voucher_record)
+# calculate_expiration(params[:package], voucher_record)
 
         render json: {
           message: 'Please check your phone to complete the payment',
@@ -1027,7 +990,9 @@ hotspot_package = "hotspot_#{account_id}_#{package.parameterize(separator: '_')}
 #     )
 #     rad_check.update!(op: ':=', value: pppoe_password)
 
-radcheck = RadCheck.find_or_initialize_by(username: hotspot_voucher, radiusattribute: 
+radcheck = RadCheck.find_or_initialize_by(username: hotspot_voucher,
+account_id: account_id,
+radiusattribute: 
 'Cleartext-Password')  
 
 radcheck.update!(op: ':=', value: hotspot_voucher)
@@ -1036,15 +1001,20 @@ radcheck.update!(op: ':=', value: hotspot_voucher)
 # 'Simultaneous-Use')
 # radcheck_simultanesous_use.update!(op: ':=',  value: shared_users)
 
-rad_user_group = RadUserGroup.find_or_initialize_by(username: hotspot_voucher, groupname: hotspot_package, priority: 1)
+rad_user_group = RadUserGroup.find_or_initialize_by(username: hotspot_voucher,
+ groupname: hotspot_package, priority: 1, account_id: account_id)
 rad_user_group.update!(username: hotspot_voucher, groupname: hotspot_package, priority: 1)
 
-rad_reply = RadReply.find_or_initialize_by(username: hotspot_voucher, radiusattribute: 'Idle-Timeout',
+rad_reply = RadReply.find_or_initialize_by(username: hotspot_voucher, 
+radiusattribute: 'Idle-Timeout',
+account_id: account_id,
  op: ':=', value: '5000')
  
-rad_reply.update!(username: hotspot_voucher, radiusattribute: 'Idle-Timeout', op: ':=', value: '5000')
-validity_period_units = HotspotPackage.find_by(name: package).validity_period_units
-validity = HotspotPackage.find_by(name: package).validity
+rad_reply.update!(username: hotspot_voucher, 
+radiusattribute: 'Idle-Timeout', op: ':=', value: '5000')
+
+validity_period_units = HotspotPackage.find_by(name: package, account_id: account_id).validity_period_units
+validity = HotspotPackage.find_by(name: package, account_id: account_id).validity
 
 
 
@@ -1055,7 +1025,9 @@ when 'minutes' then Time.current + validity.minutes
 end&.strftime("%d %b %Y %H:%M:%S")
 
 if expiration_time
-  rad_check = RadCheck.find_or_initialize_by(username: hotspot_voucher, radiusattribute: 'Expiration')
+  rad_check = RadCheck.find_or_initialize_by(username: hotspot_voucher,
+   account_id: account_id,
+   radiusattribute: 'Expiration')
   rad_check.update!(op: ':=', value: expiration_time)
 end
   
@@ -1351,8 +1323,8 @@ end
 
 
 
-def calculate_expiration_send_to_customer(package)
-  hotspot_package = HotspotPackage.find_by(name: package)
+def calculate_expiration_send_to_customer(package, account_id)
+  hotspot_package = HotspotPackage.find_by(name: package, account_id: account_id)
 
 return render json: { error: 'Package not found' }, status: :not_found unless hotspot_package
 
