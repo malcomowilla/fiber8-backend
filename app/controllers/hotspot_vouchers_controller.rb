@@ -160,7 +160,6 @@ status: 'pending'
       # login_by: 'Mpesa Transaction',
       account_id: active_session.account_id,
      )
-     hotspot_mpesa_revenue.save!
 
 
   voucher = HotspotVoucher.find_or_create_by(
@@ -186,6 +185,8 @@ calculate_expiration(active_session.hotspot_package, voucher,
 
 
 hotspot_mpesa_revenue.update(hotspot_voucher_id: voucher.id)
+     hotspot_mpesa_revenue.save!
+
 nas_routers = NasRouter.where(account_id: active_session.account_id, 
 )
 nas_routers.each do |nas|
