@@ -159,6 +159,11 @@ status: 'pending'
 
      )
 
+     create_voucher_radcheck(active_session.voucher_code,
+      active_session.hotspot_package, 
+active_session.account_id)
+
+
 Rails.logger.info "Voucher Code => #{active_session.voucher_code}"
 nas_routers = NasRouter.where(account_id: active_session.account_id, 
 )
@@ -437,7 +442,7 @@ session.update(hotspot_voucher_id: voucher.id)
 create_voucher_radcheck(voucher_code, session.package, 
 session.account_id)
 
-calculate_expiration(voucher, voucher_record,  session.account_id)
+calculate_expiration(session.hotspot_package, voucher, session.account_id)
 
 SendSmsHotspotService.send_sms(voucher.voucher, data)
 
@@ -910,12 +915,14 @@ def create
         voucher: voucher_code
       )
 
-      calculate_expiration(params[:package], @hotspot_voucher)
+      calculate_expiration(params[:package], @hotspot_voucher,
+       @hotspot_voucher.account_id)
       
       # Save within transaction - will rollback if any fail
       if @hotspot_voucher.save!
         # Create radcheck entry
-        create_voucher_radcheck(voucher_code, params[:package], @hotspot_voucher.account_id)
+        create_voucher_radcheck(voucher_code, params[:package], 
+        @hotspot_voucher.account_id)
         
         # Add to created list
         created_vouchers << @hotspot_voucher
@@ -1272,8 +1279,9 @@ end
 
 
 
-def calculate_expiration(package, voucher_created)
-  hotspot_package = HotspotPackage.find_by(name: package)
+def calculate_expiration(package, voucher_created, account_id)
+  hotspot_package = HotspotPackage.find_by(name: package, 
+  account_id: account_id)
 
   return render json: { error: 'Package not found' }, status: :not_found unless hotspot_package
   
