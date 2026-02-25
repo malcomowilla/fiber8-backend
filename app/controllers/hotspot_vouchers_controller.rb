@@ -243,10 +243,9 @@ transaction_id = params[:receipt_number]
 # Find the record once
 mpesa_revenue = HotspotMpesaRevenue.find_by(reference: transaction_id)
 
-# Check existence
-unless mpesa_revenue
-  return render json: { error: 'Transaction does not exist' }, status: :not_found
-end
+# unless mpesa_revenue
+#   return render json: { error: 'Transaction does not exist' }, status: :not_found
+# end
 
 # Safely check expiration through the association
 if mpesa_revenue.hotspot_voucher&.expiration.present? && 
