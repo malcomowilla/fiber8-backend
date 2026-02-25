@@ -140,16 +140,19 @@ def transaction_status_result
 
    active_session = TemporarySession.find_by(
 phone_number: customer_phone_number,
-# status: 'pending'
+status: 'pending'
    )
 
   # active_status = HotspotVoucher.find_or_create_by(phone: customer_phone_number,
   #  status: 'active')
-
       hotspot_mpesa_revenue = HotspotMpesaRevenue.find_or_create_by(
+              reference: receipt_no,
+
+     )
+     hotspot_mpesa_revenue.update(
+
       amount: amount,
       voucher: active_session.voucher_code,
-      reference: receipt_no,
       payment_method: "Mpesa",
       time_paid: finalised_time,
       # hotspot_voucher_id: active_session.hotspot_voucher_id,
@@ -157,15 +160,32 @@ phone_number: customer_phone_number,
       # login_by: 'Mpesa Transaction',
       account_id: active_session.account_id,
      )
-     hotspot_mpesa_revenue.save
-     Rails.logger.info "Hotspot Mpesa Revenue => #{hotspot_mpesa_revenue}"
+     hotspot_mpesa_revenue.save!
+
+
+  voucher = HotspotVoucher.find_or_create_by(
+      voucher: active_session.voucher_code,
+
+
+)
+voucher.update(
+  package: active_session.hotspot_package,
+  phone: active_session.phone_number,
+  
+  ip: active_session.ip,
+account_id: active_session.account_id)
+voucher.save!
+
+    #  Rails.logger.info "Hotspot Mpesa Revenue => #{hotspot_mpesa_revenue}"
 
      create_voucher_radcheck(active_session.voucher_code,
       active_session.hotspot_package, 
 active_session.account_id)
+calculate_expiration(active_session.hotspot_package, voucher,
+ active_session.account_id)
 
 
-
+hotspot_mpesa_revenue.update(hotspot_voucher_id: voucher.id)
 nas_routers = NasRouter.where(account_id: active_session.account_id, 
 )
 nas_routers.each do |nas|
@@ -211,8 +231,6 @@ end
 
 
 
-
-
 end
 
 
@@ -242,9 +260,9 @@ transaction_id = params[:receipt_number]
 # Find the record once
 mpesa_revenue = HotspotMpesaRevenue.find_by(reference: transaction_id)
 
-# unless mpesa_revenue
-#   return render json: { error: 'Transaction does not exist' }, status: :not_found
-# end
+unless mpesa_revenue
+  return render json: { error: 'Transaction does not exist' }, status: :not_found
+end
 
 # Safely check expiration through the association
 if mpesa_revenue.hotspot_voucher&.expiration.present? && 
