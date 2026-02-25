@@ -159,7 +159,7 @@ status: 'pending'
 
      )
 
-
+Rails.logger.info "Voucher Code => #{active_session.voucher_code}"
 nas_routers = NasRouter.where(account_id: active_session.account_id, 
 )
 nas_routers.each do |nas|
