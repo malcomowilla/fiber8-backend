@@ -140,7 +140,7 @@ def transaction_status_result
 
    active_session = TemporarySession.find_by(
 phone_number: customer_phone_number,
-status: 'pending'
+# status: 'pending'
    )
 
   # active_status = HotspotVoucher.find_or_create_by(phone: customer_phone_number,
@@ -156,7 +156,6 @@ status: 'pending'
       name: customer_name,
       # login_by: 'Mpesa Transaction',
       account_id: active_session.account_id,
-
      )
      hotspot_mpesa_revenue.save
      Rails.logger.info "Hotspot Mpesa Revenue => #{hotspot_mpesa_revenue}"
@@ -166,7 +165,7 @@ status: 'pending'
 active_session.account_id)
 
 
-Rails.logger.info "Voucher Code => #{active_session.voucher_code}"
+
 nas_routers = NasRouter.where(account_id: active_session.account_id, 
 )
 nas_routers.each do |nas|
