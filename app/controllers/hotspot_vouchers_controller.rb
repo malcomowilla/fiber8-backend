@@ -439,7 +439,7 @@ account_id: session.account_id,
 )
 session.update(hotspot_voucher_id: voucher.id)
     
-create_voucher_radcheck(voucher_code, session.package, 
+create_voucher_radcheck(voucher_code, session.hotspot_package, 
 session.account_id)
 
 calculate_expiration(session.hotspot_package, voucher, session.account_id)
