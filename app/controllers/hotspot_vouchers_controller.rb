@@ -422,7 +422,7 @@ Rails.logger.info "Parsed data callback mpesa: #{raw_body}"
         # voucher = HotspotVoucher.find_by(voucher: voucher_code)
 
         voucher = HotspotVoucher.create!(
-  package: session.package,
+  package: session.hotspot_package,
   phone: session.phone_number,
   voucher: session.voucher_code,
   mac: session.mac,

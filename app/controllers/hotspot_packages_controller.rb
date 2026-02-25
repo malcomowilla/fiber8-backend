@@ -52,7 +52,7 @@ end
     host = request.headers['X-Subdomain']
     @account = Account.find_by(subdomain: host)
      ActsAsTenant.current_tenant = @account
-    EmailConfiguration.configure(@account, ENV['SYSTEM_ADMIN_EMAIL'])
+    # EmailConfiguration.configure(@account, ENV['SYSTEM_ADMIN_EMAIL'])
     # EmailSystemAdmin.configure(@current_account, current_system_admin)
   
     # set_current_tenant(@account)
@@ -258,7 +258,7 @@ end
 
 
   def allow_get_hotspot_packages
-    Rails.logger.info "Router IP: #{params.inspect}"
+    # Rails.logger.info "Router IP: #{params.inspect}"
 
     @hotspot_packages = HotspotPackage.all
     render json: @hotspot_packages
