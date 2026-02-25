@@ -146,7 +146,7 @@ status: 'pending'
   # active_status = HotspotVoucher.find_or_create_by(phone: customer_phone_number,
   #  status: 'active')
 
-      HotspotMpesaRevenue.find_or_create_by(
+      hotspot_mpesa_revenue = HotspotMpesaRevenue.find_or_create_by(
       amount: amount,
       voucher: active_session.voucher_code,
       reference: receipt_no,
@@ -158,6 +158,8 @@ status: 'pending'
       account_id: active_session.account_id,
 
      )
+     hotspot_mpesa_revenue.save
+     Rails.logger.info "Hotspot Mpesa Revenue => #{hotspot_mpesa_revenue}"
 
      create_voucher_radcheck(active_session.voucher_code,
       active_session.hotspot_package, 
