@@ -92,8 +92,10 @@ end
 def index
    host = request.headers['X-Subdomain']
     @account = Account.find_by!(subdomain: host)
-    @hotspot_vouchers = HotspotVoucher.where(account_id: @account.id).order(created_at: :desc)
-  
+    # @hotspot_vouchers = HotspotVoucher.where(account_id: @account.id).order(created_at: :desc)
+  @hotspot_vouchers =  HotspotVoucher
+                        .includes(:hotspot_mpesa_revenue, :hotspot_package)
+                        .order(created_at: :desc)
   render json: @hotspot_vouchers
   #  @hotspot_vouchers = HotspotVoucher.order(created_at: :desc)
   # render json: @hotspot_vouchers
