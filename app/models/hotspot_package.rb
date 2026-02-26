@@ -1,8 +1,7 @@
 class HotspotPackage < ApplicationRecord
   acts_as_tenant(:account)
   after_commit :clear_cache
-  belongs_to :hotspot_voucher
-
+has_many :hotspot_vouchers
 def clear_cache
    Rails.cache.delete("hotspot_packages_index_#{account.id}")
  end
