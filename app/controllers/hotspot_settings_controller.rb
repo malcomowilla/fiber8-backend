@@ -7,8 +7,8 @@ class HotspotSettingsController < ApplicationController
   before_action :update_last_activity
   load_and_authorize_resource :except => [:get_hotspot_setting]
     before_action :set_time_zone
-  # GET /hotspot_settings or /hotspot_settings.json
-  # 
+ 
+
 
 
 
@@ -148,7 +148,21 @@ if current_user
   # end
   # 
   #
-  #
+  
+
+  def hotspot_setup
+    mac = params[:mac]
+    version = params[:v]
+
+    render plain: generate_hotspot_script(mac, version),
+           content_type: "text/plain"
+  end
+
+
+  
+
+
+
 def upload_hotspot_file
   require "tempfile"
 
@@ -339,6 +353,35 @@ voucher_type: params[:voucher_type],
     def set_hotspot_setting
       @hotspot_setting = HotspotSetting.find(params[:id])
     end
+
+
+def generate_hotspot_script(mac, version)
+    <<~RSC
+    /interface bridge add name=bridge-hotspot comment="Owitech Hotspot"
+    /interface/bridge/port add interface=ether5 bridge=bridge-hotspot
+    /ip pool
+    add name=hotspot-pool ranges=10.3.0.2-10.3.0.254 comment="Hotspot IP Pool Owitech"
+
+    /ip address
+add address=10.3.0.1/24 comment="hotspot network Owitech" interface=bridge-hotspot
+/ip dhcp-server
+add address-pool=hotspot-pool disabled=no interface=bridge-hotspot lease-time=40m name=hotspot-dhcp comment="Hotspot DHCP Owitech"
+
+/ip dhcp-server network
+add address=10.3.0.0/24 comment="hotspot network Owitech" gateway=10.3.0.1 netmask=255.255.255.0 pool=hotspot-dhcp
+    /ip hotspot profile add name=hsprof1 hotspot-address=10.3.0.1
+
+  /ip hotspot add name=hotspot1 interface=bridge-hotspot profile=hsprof1 idle-timeout=00:20:00 keep-alive-timeout=00:20:00 address-pool=hotspot-pool disabled=no comment="Hotspot Owitech"
+
+/ip dns
+set allow-remote-requests=yes
+
+
+    /ip firewall nat add chain=srcnat action=masquerade out-interface=bridge-hotspot
+
+    RSC
+  end
+
 
     # Only allow a list of trusted parameters through.
     def hotspot_setting_params

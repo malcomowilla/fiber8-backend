@@ -101,6 +101,11 @@ def index
 end
 
 
+def start_free_trial
+  
+  
+end
+
 
 def transaction_status_result
   raw_body = request.body.read
@@ -167,6 +172,14 @@ status: 'pending'
 
 
 )
+
+if_expired = voucher.expiration < Time.current
+
+if if_expired
+  Rails.logger.info "Voucher expired"
+  # return render json: { error: 'Voucher expired' }, status: :forbidden
+  
+end
 voucher.update(
   package: active_session.hotspot_package,
   phone: active_session.phone_number,
@@ -211,7 +224,7 @@ nas_routers.each do |nas|
  
    
 
-
+voucher.update(status: 'used')
        active_session.update(
         paid: true, connected: true
        )
@@ -1029,6 +1042,7 @@ radcheck.update!(op: ':=', value: hotspot_voucher)
 rad_user_group = RadUserGroup.find_or_initialize_by(username: hotspot_voucher,
  groupname: hotspot_package, priority: 1, account_id: account_id)
 rad_user_group.update!(username: hotspot_voucher, groupname: hotspot_package, priority: 1)
+
 
 rad_reply = RadReply.find_or_initialize_by(username: hotspot_voucher, 
 radiusattribute: 'Idle-Timeout',
