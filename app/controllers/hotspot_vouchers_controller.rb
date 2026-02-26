@@ -146,11 +146,12 @@ def transaction_status_result
 phone_number: customer_phone_number,
 status: 'pending'
    )
-
+hotspot_package = HotspotPackage.find_by(name:  active_session.hotspot_package)
   # active_status = HotspotVoucher.find_or_create_by(phone: customer_phone_number,
   #  status: 'active')
       hotspot_mpesa_revenue = HotspotMpesaRevenue.find_or_create_by(
               reference: receipt_no,
+
 
      )
 
@@ -187,6 +188,7 @@ voucher.update(
   phone: active_session.phone_number,
   
   ip: active_session.ip,
+  hotspot_package_id: hotspot_package.id,
 account_id: active_session.account_id)
 voucher.save!
 
@@ -459,7 +461,7 @@ Rails.logger.info "Parsed data callback mpesa: #{raw_body}"
         )
 
         # voucher = HotspotVoucher.find_by(voucher: voucher_code)
-
+hotspot_package = HotspotPackage.find_by(name: session.hotspot_package)
         voucher = HotspotVoucher.create!(
   package: session.hotspot_package,
   phone: session.phone_number,
@@ -468,6 +470,8 @@ Rails.logger.info "Parsed data callback mpesa: #{raw_body}"
   ip: session.ip,
   checkout_request_id: session.checkout_request_id,
 account_id: session.account_id,
+  hotspot_package_id: hotspot_package.id
+
 
 )
 session.update(hotspot_voucher_id: voucher.id)
@@ -936,7 +940,7 @@ def create
   number_of_vouchers = 1 if number_of_vouchers < 1
 
   created_vouchers = []
-  
+  hotspot_package = HotspotPackage.find_by(name: params[:package])
   ActiveRecord::Base.transaction do
     number_of_vouchers.times do |index|
       voucher_code = generate_voucher_code
@@ -945,7 +949,8 @@ def create
         package: params[:package],
         shared_users: params[:shared_users],
         phone: params[:phone],
-        voucher: voucher_code
+        voucher: voucher_code,
+        hotspot_package_id: hotspot_package.id
       )
 
       calculate_expiration(params[:package], @hotspot_voucher,
@@ -1082,11 +1087,12 @@ end
   # PATCH/PUT /hotspot_vouchers/1 or /hotspot_vouchers/1.json
   def update
       @hotspot_voucher = set_hotspot_voucher
-
+    hotspot_package = HotspotPackage.find_by(name: params[:package])
       if @hotspot_voucher.update(
         package: params[:package],
         shared_users: params[:shared_users],
         phone: params[:phone],
+        hotspot_package_id: hotspot_package.id
 
       )
       ActivtyLog.create(action: 'update', ip: request.remote_ip,

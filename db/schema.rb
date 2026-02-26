@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_02_25_174910) do
+ActiveRecord::Schema[7.2].define(version: 2026_02_26_194349) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -504,6 +504,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_02_25_174910) do
     t.string "checkout_request_id"
     t.string "payment_status"
     t.string "merchant_request_id"
+    t.integer "hotspot_package_id"
   end
 
   create_table "invoices", force: :cascade do |t|
@@ -1109,6 +1110,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_02_25_174910) do
     t.string "mac"
     t.string "checkout_request_id"
     t.integer "hotspot_voucher_id"
+    t.string "status"
   end
 
   create_table "ticket_settings", force: :cascade do |t|

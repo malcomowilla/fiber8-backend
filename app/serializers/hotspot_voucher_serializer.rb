@@ -41,11 +41,19 @@ end
 def customer
   object.hotspot_mpesa_revenue&.name
 end
+
+# Return the shared users of the hotspot package.
+# If the package is not found or if it does not have shared users,
+# return "Unlimited".
 def shared_users
+  # Find the hotspot package by its name.
   package = HotspotPackage.find_by(name: self.object.package)
+
+  # If the package is found and it has shared users, return the shared users.
   if package && package.shared_users
     package.shared_users
   else
+    # If the package is not found or if it does not have shared users, return "Unlimited".
     "Unlimited"
   end
 end
