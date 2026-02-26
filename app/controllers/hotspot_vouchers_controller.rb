@@ -154,6 +154,16 @@ status: 'pending'
               reference: receipt_no,
 
      )
+
+
+if_expired = hotspot_mpesa_revenue.hotspot_voucher.expiration < Time.current
+
+if if_expired
+  Rails.logger.info "Voucher expired"
+  return render json: { error: 'Voucher expired' }, status: :unprocessable_entity
+  
+end
+
      hotspot_mpesa_revenue.update(
 
       amount: amount,
@@ -173,13 +183,6 @@ status: 'pending'
 
 )
 
-if_expired = voucher.expiration < Time.current
-
-if if_expired
-  Rails.logger.info "Voucher expired"
-  # return render json: { error: 'Voucher expired' }, status: :forbidden
-  
-end
 voucher.update(
   package: active_session.hotspot_package,
   phone: active_session.phone_number,
@@ -341,7 +344,7 @@ if present_voucher_or_username
     Rails.logger.info "MikroTik REST error on #{nas.ip_address}: #{e.response}"
 
   rescue StandardError => e
-    Rails.logger.info "REST error logging in device #{active_status.ip}: #{e.message}"
+    # Rails.logger.info "REST error logging in device #{active_status.ip}: #{e.message}"
   end
 end
 
