@@ -59,7 +59,7 @@ session = RadAcct.where(framedipaddress: ip, framedprotocol: '').order(acctupdat
   if session
     voucher = HotspotVoucher.find_by(voucher: '36819238')
 
-    if voucher && voucher.expiration > Time.current
+    if voucher && voucher.expiration < Time.current
         return render json: {
         session_active: false,
         username: voucher.voucher,
