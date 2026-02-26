@@ -47,7 +47,7 @@ end
 # return "Unlimited".
 def shared_users
   # Find the hotspot package by its name.
-  package = HotspotPackage.find_by(name: self.object.package)
+  package = self.object.hotspot_package
 
   # If the package is found and it has shared users, return the shared users.
   if package && package.shared_users
@@ -74,7 +74,7 @@ end
 
 
  def speed_limit
-  package = HotspotPackage.find_by(name: self.object.package)
+  package = self.object.hotspot_package
 
   if package && package.upload_limit && package.download_limit
     "#{package.upload_limit}M/#{package.download_limit}M"
