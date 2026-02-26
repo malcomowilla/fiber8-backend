@@ -57,17 +57,9 @@ session = RadAcct.where(framedipaddress: ip, framedprotocol: '').order(acctupdat
 # Rails.logger.info "Session record found: #{session.inspect}"
 
   if session
-    voucher = HotspotVoucher.find_by(voucher: '36819238')
+    voucher = HotspotVoucher.find_by(voucher: session.username)
 
-    if voucher && voucher.expiration < Time.current
-        return render json: {
-        session_active: false,
-        username: voucher.voucher,
-        ip: ip
-      }
-    else
-
-
+    if voucher && voucher.expiration > Time.current
       return render json: {
         session_active: true,
         ip: ip,
@@ -75,7 +67,13 @@ session = RadAcct.where(framedipaddress: ip, framedprotocol: '').order(acctupdat
         expiration: voucher.expiration.strftime("%B %d, %Y at %I:%M %p"),
         package: voucher.package
       }
-    
+    else
+
+      return render json: {
+        session_active: false,
+        username: voucher.voucher,
+        ip: ip
+      }
     end
   end
 
