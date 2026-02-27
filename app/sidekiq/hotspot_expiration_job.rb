@@ -16,7 +16,7 @@ class HotspotExpirationJob
 
  hotspot_subscriptions = HotspotVoucher.where(account_id: tenant.id)
 
-hotspot_subscriptions.each do |subscription|
+hotspot_subscriptions.find_each do |subscription|
   next unless subscription.voucher.present?
 
   # Fetch the PPPoE plan linked to this subscription/account
@@ -50,7 +50,7 @@ expired_vouchers = HotspotVoucher.where('expiration < ?', Time.current).where(ac
 # return unless expired_vouchers.present?
        
      
-        expired_vouchers.each do |voucher|
+        expired_vouchers.find_each do |voucher|
 
           voucher.update!(status: 'expired') # Mark as expired in DB
          
@@ -71,7 +71,7 @@ expired_vouchers = HotspotVoucher.where('expiration < ?', Time.current).where(ac
   private
 
   def logout_hotspot_user(voucher)
-  NasRouter.all.each do |router|
+  NasRouter.where(account_id: tenant.id).find_each do |router|
     router_ip = router.ip_address
     router_username = router.username
     router_password = router.password 

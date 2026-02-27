@@ -301,11 +301,11 @@ class GenerateInvoiceJob
   # -----------------------
 
   def hotspot_and_dial_plan_billable?(tenant)
-    tenant.hotspot_and_dial_plan_billable?.present? &&
-      tenant.hotspot_and_dial_plan_billable?.name.present? &&
+    tenant.hotspot_and_dial_plan.present? &&
+      tenant.hotspot_and_dial_plan.name.present? &&
       # tenant.hotspot_plan.name != "Hotspot Free Trial" &&
-      tenant.hotspot_and_dial_plan_billable?.expiry.present? &&
-      tenant.hotspot_and_dial_plan_billable?.expiry - 1.day < Time.current
+      tenant.hotspot_and_dial_plan.expiry.present? &&
+      tenant.hotspot_and_dial_plan.expiry - 1.day < Time.current
   end
 
   
