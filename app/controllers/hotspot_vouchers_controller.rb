@@ -488,7 +488,8 @@ hotspot_package = HotspotPackage.find_by(name: session.hotspot_package)
   ip: session.ip,
   checkout_request_id: session.checkout_request_id,
 account_id: session.account_id,
-  hotspot_package_id: hotspot_package.id
+  hotspot_package_id: hotspot_package.id,
+  status: 'active'
 )
 
     
