@@ -977,7 +977,8 @@ def create
         shared_users: params[:shared_users],
         phone: params[:phone],
         voucher: voucher_code,
-        hotspot_package_id: hotspot_package.id
+        hotspot_package_id: hotspot_package.id,
+        status: 'active'
       )
 
       # calculate_expiration(params[:package], @hotspot_voucher,
