@@ -249,7 +249,7 @@ end
     # @hotspot_packages = Rails.cache.fetch("hotspot_packages_index_#{@account.id}", expires_in: 2.seconds) do
     #   HotspotPackage.all
     # end
-    @hotspot_packages = HotspotPackage.includes(:)
+    @hotspot_packages = HotspotPackage.all
     render json: @hotspot_packages
 
   end
