@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_02_27_041532) do
+ActiveRecord::Schema[7.2].define(version: 2026_02_28_060141) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -444,6 +444,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_02_27_041532) do
     t.datetime "updated_at", null: false
     t.string "email"
     t.string "voucher_type", default: "Mixed"
+    t.string "voucher_expiration"
   end
 
   create_table "hotspot_subscriptions", force: :cascade do |t|
@@ -506,6 +507,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_02_27_041532) do
     t.string "payment_status"
     t.string "merchant_request_id"
     t.integer "hotspot_package_id"
+    t.string "voucher_expiration"
   end
 
   create_table "invoices", force: :cascade do |t|

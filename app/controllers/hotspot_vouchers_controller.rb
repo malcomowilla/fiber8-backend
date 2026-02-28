@@ -194,13 +194,22 @@ voucher.update(
 account_id: active_session.account_id)
 voucher.save!
 
+
+voucher_expiration = HotspotSetting.find_by(account_id: session.account_id).voucher_expiration
+
+
+if voucher_expiration == 'Expiry After Creation'
+calculate_expiration(active_session.hotspot_package, voucher,
+ active_session.account_id)
+end
+
     #  Rails.logger.info "Hotspot Mpesa Revenue => #{hotspot_mpesa_revenue}"
 
      create_voucher_radcheck(active_session.voucher_code,
       active_session.hotspot_package, 
 active_session.account_id)
-calculate_expiration(active_session.hotspot_package, voucher,
- active_session.account_id)
+
+
 
 
 hotspot_mpesa_revenue.update(hotspot_voucher_id: voucher.id)
@@ -234,8 +243,11 @@ voucher.update(status: 'used')
        active_session.update(
         paid: true, connected: true
        )
+       if voucher_expiration == 'Expiry After Login'
+        calculate_expiration(active_session.hotspot_package, voucher,
+ active_session.account_id)
 
-     
+       end     
     end
 
   rescue RestClient::Unauthorized
@@ -267,6 +279,8 @@ initiator = ActsAsTenant.current_tenant&.hotspot_mpesa_setting.api_initiator_use
 security_credentials = ActsAsTenant.current_tenant&.hotspot_mpesa_setting.api_initiator_password
 host = request.headers['X-Subdomain']
 ip = params[:ip]
+
+
 
 transaction_id = params[:receipt_number]
   transaction_status_query = TransactionStatusService.initiate_transaction_status_query(
@@ -462,6 +476,8 @@ Rails.logger.info "Parsed data callback mpesa: #{raw_body}"
         session = TemporarySession.find_by(session: session_id, 
         )
 
+        session.update(hotspot_voucher_id: voucher.id)
+
         # voucher = HotspotVoucher.find_by(voucher: voucher_code)
 hotspot_package = HotspotPackage.find_by(name: session.hotspot_package)
         voucher = HotspotVoucher.create!(
@@ -473,16 +489,18 @@ hotspot_package = HotspotPackage.find_by(name: session.hotspot_package)
   checkout_request_id: session.checkout_request_id,
 account_id: session.account_id,
   hotspot_package_id: hotspot_package.id
-
-
 )
-session.update(hotspot_voucher_id: voucher.id)
+
     
 create_voucher_radcheck(voucher_code, session.hotspot_package, 
 session.account_id)
+voucher_expiration = HotspotSetting.find_by(account_id: session.account_id).voucher_expiration
 
+if voucher_expiration == 'Expiry After Creation'
 calculate_expiration(session.hotspot_package, voucher, session.account_id)
 
+  
+end
 SendSmsHotspotService.send_sms(voucher.voucher, data)
 
 nas_routers = NasRouter.where(account_id: session.account_id)
@@ -512,6 +530,13 @@ nas_routers.each do |nas|
 
       voucher.update!(status: "used", last_logged_in: Time.now,
        used_voucher: true)
+
+if voucher_expiration == 'Expiry After Login'
+calculate_expiration(session.hotspot_package, voucher, session.account_id)
+
+  
+end
+
 
       # SendSmsHotspotJob.perform_now(voucher.voucher, data)
       # HotspotNotificationsChannel.broadcast_to(
@@ -955,9 +980,14 @@ def create
         hotspot_package_id: hotspot_package.id
       )
 
-      calculate_expiration(params[:package], @hotspot_voucher,
-       @hotspot_voucher.account_id)
+      # calculate_expiration(params[:package], @hotspot_voucher,
+      #  @hotspot_voucher.account_id)
       
+       ActsAsTenant.current_tenant.hotspot_setting.voucher_expiration == 'Expiry After Creation' ?
+       calculate_expiration(params[:package], @hotspot_voucher,
+       @hotspot_voucher.account_id) : nil
+
+
       # Save within transaction - will rollback if any fail
       if @hotspot_voucher.save!
         # Create radcheck entry
@@ -1634,7 +1664,10 @@ private
 
     #   })  :   "Your voucher code: #{voucher_code} for #{shared_users} devices. This code is valid until #{voucher_expiration}.
     #  Enjoy your browsing"
-               original_message = "Your voucher code is: #{voucher_code}. This code is valid until #{voucher_expiration}.
+    #  
+    #original_message = "Your voucher code is: #{voucher_code}. This code is valid until #{voucher_expiration}.
+
+               original_message = "Your voucher code is: #{voucher_code}.
   #    Enjoy your browsing"
       
       
@@ -1710,7 +1743,10 @@ private
   #    Enjoy your browsing"
   # end
 
-  original_message = "Your voucher code is: #{voucher_code}. This code is valid until #{voucher_expiration}.
+    # original_message = "Your voucher code is: #{voucher_code}. This code is valid until #{voucher_expiration}.
+
+
+  original_message = "Your voucher code is: #{voucher_code}.
   #    Enjoy your browsing"
   #    
   uri = URI("https://sms.textsms.co.ke/api/services/sendsms")

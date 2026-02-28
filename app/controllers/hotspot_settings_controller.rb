@@ -256,6 +256,7 @@ end
       hotspot_info: @hotspot_settings&.hotspot_info,
       email: @hotspot_settings&.email,
       voucher_type: @hotspot_settings&.voucher_type,
+      voucher_expiration: @hotspot_settings&.voucher_expiration,
       hotspot_banner: @hotspot_settings&.hotspot_banner&.attached? ? 
       # rails_blob_url(@hotspot_settings.hotspot_banner, host: '8209-102-221-35-92.ngrok-free.app', protocol: 'https', port: nil) : nil
       # }, 
@@ -310,6 +311,7 @@ voucher_type: params[:voucher_type],
     hotspot_banner: params[:hotspot_banner],
     email: params[:email],
     voucher_type: params[:voucher_type],
+    voucher_expiration: params[:voucher_expiration],
       )
         render json: {
 
@@ -318,6 +320,7 @@ voucher_type: params[:voucher_type],
         hotspot_info: @hotspot_setting.hotspot_info,
         email: @hotspot_setting.email,
         voucher_type: @hotspot_setting.voucher_type,
+        voucher_expiration: @hotspot_setting.voucher_expiration,
         hotspot_banner: @hotspot_setting.hotspot_banner.attached? ? 
         # rails_blob_url(@hotspot_setting.hotspot_banner, host: 'speeches-air-una-dolls.trycloudflare.com', protocol: 'https', port: nil) : nil
         # }, 
@@ -386,7 +389,8 @@ set allow-remote-requests=yes
     # Only allow a list of trusted parameters through.
     def hotspot_setting_params
       params.permit(:phone_number, :hotspot_name, 
-      :hotspot_info, :hotspot_banner, :account_id, :email, :voucher_type)
+      :hotspot_info, :hotspot_banner, :account_id, :email,
+       :voucher_type, :voucher_expiration)
     end
 end
 

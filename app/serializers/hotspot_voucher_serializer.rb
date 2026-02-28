@@ -45,18 +45,23 @@ end
 # Return the shared users of the hotspot package.
 # If the package is not found or if it does not have shared users,
 # return "Unlimited".
-def shared_users
-  # Find the hotspot package by its name.
-  package = self.object.hotspot_package
+# 
 
-  # If the package is found and it has shared users, return the shared users.
-  if package && package.shared_users
-    package.shared_users
-  else
-    # If the package is not found or if it does not have shared users, return "Unlimited".
-    "Unlimited"
-  end
-end
+
+
+
+# def shared_users
+#   # Find the hotspot package by its name.
+#   package = self.object.hotspot_package
+
+#   # If the package is found and it has shared users, return the shared users.
+#   if package && package.shared_users
+#     package.shared_users
+#   else
+#     # If the package is not found or if it does not have shared users, return "Unlimited".
+#     "Unlimited"
+#   end
+# end
 
 
 
@@ -82,6 +87,7 @@ end
     "Unlimited"
   end
 end
+
 
 # def status
 #   return "expired" if object.expiration.present? && object.expiration < Time.current

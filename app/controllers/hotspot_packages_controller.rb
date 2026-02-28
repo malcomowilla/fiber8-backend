@@ -134,9 +134,6 @@ end
        #  
      end
 
-  
-       
-      
   puts "mikrotik hosts#{data}"
   
     else
@@ -248,10 +245,11 @@ end
   def index
 
     host = request.headers['X-Subdomain']
-    @account = Account.find_by(subdomain: host)
-    @hotspot_packages = Rails.cache.fetch("hotspot_packages_index_#{@account.id}", expires_in: 2.seconds) do
-      HotspotPackage.all
-    end
+    # @account = Account.find_by(subdomain: host)
+    # @hotspot_packages = Rails.cache.fetch("hotspot_packages_index_#{@account.id}", expires_in: 2.seconds) do
+    #   HotspotPackage.all
+    # end
+    @hotspot_packages = HotspotPackage.includes(:)
     render json: @hotspot_packages
 
   end

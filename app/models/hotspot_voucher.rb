@@ -15,7 +15,6 @@ end
 
 
 
-
   def broadcast_hotspot_voucher_status
     voucher_status = {
       expired: HotspotVoucher.where(status: 'expired').count,
