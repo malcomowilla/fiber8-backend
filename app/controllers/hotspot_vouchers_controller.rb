@@ -476,7 +476,6 @@ Rails.logger.info "Parsed data callback mpesa: #{raw_body}"
         session = TemporarySession.find_by(session: session_id, 
         )
 
-        session.update(hotspot_voucher_id: voucher.id)
 
         # voucher = HotspotVoucher.find_by(voucher: voucher_code)
 hotspot_package = HotspotPackage.find_by(name: session.hotspot_package)
@@ -491,6 +490,7 @@ account_id: session.account_id,
   hotspot_package_id: hotspot_package.id,
   status: 'active'
 )
+        session.update(hotspot_voucher_id: voucher.id)
 
     
 create_voucher_radcheck(voucher_code, session.hotspot_package, 
