@@ -244,7 +244,7 @@ voucher.update(status: 'used')
         paid: true, connected: true
        )
        if voucher_expiration == 'Expiry After Login'
-        calculate_expiration(active_session.hotspot_package, voucher,
+        calculate_expiration_login(active_session.hotspot_package, voucher,
  active_session.account_id)
 
        end     
@@ -529,14 +529,14 @@ nas_routers.each do |nas|
       session.update!( connected: true, status: 'used')
 
 
-      voucher.update!(status: "used", last_logged_in: Time.now,
-       used_voucher: true)
-
+     
 if voucher_expiration == 'Expiry After Login'
-calculate_expiration(session.hotspot_package, voucher, session.account_id)
+calculate_expiration_login(session.hotspot_package, 
+voucher, session.account_id)
 
-  
 end
+ voucher.update(status: "used", last_logged_in: Time.now,
+       used_voucher: true)
 
 
       # SendSmsHotspotJob.perform_now(voucher.voucher, data)
@@ -1351,6 +1351,44 @@ end
 
 
 
+def calculate_expiration_login(package, voucher_created, account_id)
+   hotspot_package = HotspotPackage.find_by(name: package, 
+  account_id: account_id)
+
+  return render json: { error: 'Package not found' }, status: :not_found unless hotspot_package
+  
+  # Calculate expiration
+  expiration_time = if hotspot_package.validity.present? && hotspot_package.validity_period_units.present?
+    case hotspot_package.validity_period_units.downcase
+    when 'days'
+      Time.current + hotspot_package.validity.days
+    when 'hours'
+      Time.current + hotspot_package.validity.hours
+    when 'minutes'
+      Time.current + hotspot_package.validity.minutes
+    else
+      nil
+    end
+
+
+    
+
+  # elsif hotspot_package.valid_until.present? && hotspot_package.valid_from.present?
+  #   hotspot_package.valid_until
+  else
+    nil
+  end
+
+  # Update status only if expiration is present
+  if expiration_time.present?
+    voucher_created.update(expiration: expiration_time&.strftime("%B %d, %Y at %I:%M %p"),)
+  end
+
+  # Return both expiration and status
+  {
+    expiration: expiration_time&.strftime("%B %d, %Y at %I:%M %p"),
+  }
+end
 
 
 def calculate_expiration(package, voucher_created, account_id)
