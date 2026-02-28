@@ -237,17 +237,19 @@ nas_routers.each do |nas|
 
     if response.code == 200
  
-   
+     if voucher_expiration == 'Expiry After Login'
+        calculate_expiration_login(active_session.hotspot_package, voucher,
+ active_session.account_id)
+
+       end 
+       
+       
+
 
 voucher.update(status: 'used')
        active_session.update(
         paid: true, connected: true
        )
-       if voucher_expiration == 'Expiry After Login'
-        calculate_expiration_login(active_session.hotspot_package, voucher,
- active_session.account_id)
-
-       end     
     end
 
   rescue RestClient::Unauthorized
@@ -257,7 +259,7 @@ voucher.update(status: 'used')
     Rails.logger.info "MikroTik REST error on #{nas.ip_address}: #{e.response}"
 
   rescue StandardError => e
-    Rails.logger.info "REST error logging in device #{active_status.ip}: #{e.message}"
+    Rails.logger.info "REST error logging in device #{active_session.ip}: #{e.message} on router #{nas.ip_address}"
   end
 end
 
@@ -524,16 +526,15 @@ nas_routers.each do |nas|
     )
 
     if response.code == 200
-      Rails.logger.info "Device #{session.ip} successfully logged 
-    in with voucher #{voucher_code} on router #{nas.ip_address}"
-      session.update!( connected: true, status: 'used')
+    #   Rails.logger.info "Device #{session.ip} successfully logged 
+    # in with voucher #{voucher_code} on router #{nas.ip_address}"
+      session.update!(connected: true, status:'used')
 
 
      
 if voucher_expiration == 'Expiry After Login'
 calculate_expiration_login(session.hotspot_package, 
 voucher, session.account_id)
-
 end
  voucher.update(status: "used", last_logged_in: Time.now,
        used_voucher: true)
