@@ -1070,6 +1070,8 @@ end
 # INSERT INTO radusergroup (username, groupname, priority) 
 # VALUES ('#{hotspot_voucher}', '#{package}', 1)
 # ")
+
+
 hotspot_package = "hotspot_#{account_id}_#{package.parameterize(separator: '_')}"
 
 # rad_check = RadCheck.find_or_initialize_by(
@@ -1354,6 +1356,9 @@ Rails.logger.info "Account not found"
         
 if @hotspot_voucher.expiration.nil?
   
+ create_voucher_radcheck(@hotspot_voucher.voucher, @hotspot_voucher.package, 
+        @hotspot_voucher.account_id)
+
  calculate_expiration_login_with_voucher(package, @hotspot_voucher,
        @hotspot_voucher.account_id)
 
