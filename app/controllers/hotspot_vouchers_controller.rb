@@ -1337,16 +1337,14 @@ Rails.logger.info "Account not found"
 
       if response.code == 200
 
-          ActsAsTenant.current_tenant.hotspot_setting.voucher_expiration == 'Expiry After Login' ?
-       calculate_expiration(params[:package], @hotspot_voucher,
-       @hotspot_voucher.account_id) : nil
+        calculate_expiration(params[:package], @hotspot_voucher,
+       @hotspot_voucher.account_id)
+      
 
         @hotspot_voucher.update!(status: 'used', last_logged_in: Time.now, 
         ip: params[:ip], mac: params[:mac], used_voucher: true)
 
         
-
-
         return render json: {
           message: 'Connected successfully',
           device_ip: params[:ip],
@@ -1367,15 +1365,15 @@ Rails.logger.info "Account not found"
     rescue StandardError => e
       Rails.logger.info "REST login error: #{e.message}"
       next
-    else
-        ActsAsTenant.current_tenant.hotspot_setting.voucher_expiration == 'Expiry After Login' ?
-       calculate_expiration(params[:package], @hotspot_voucher,
-       @hotspot_voucher.account_id) : nil
+       
     end
+    
+  
+
     
   end
 
-  render json: { error: 'Failed to connect on all routers' }, status: :unprocessable_entity
+  return render json: { error: 'Failed to connect on all routers' }, status: :unprocessable_entity
 end
 
   
