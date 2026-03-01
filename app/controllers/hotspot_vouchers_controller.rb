@@ -1350,11 +1350,13 @@ Rails.logger.info "Account not found"
         ip: params[:ip], mac: params[:mac], used_voucher: true)
 
         
-
-
+if @hotspot_voucher.expiration.nil?
+  
  calculate_expiration_login_with_voucher(package, @hotspot_voucher,
        @hotspot_voucher.account_id)
-       
+
+end
+
         return render json: {
           message: 'Connected successfully',
           device_ip: params[:ip],
