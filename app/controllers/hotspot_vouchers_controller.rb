@@ -1350,10 +1350,9 @@ Rails.logger.info "Account not found"
      
 if @hotspot_voucher.expiration.nil?
   
- create_voucher_radcheck(@hotspot_voucher.voucher, @hotspot_voucher.package, 
+ create_voucher_radcheck(@hotspot_voucher.voucher,
+  @hotspot_voucher.package, 
         @hotspot_voucher.account_id)
-
-
 end
 
       if response.code == 200
@@ -1366,9 +1365,6 @@ end
         
 if @hotspot_voucher.expiration.nil?
   
- create_voucher_radcheck(@hotspot_voucher.voucher, @hotspot_voucher.package, 
-        @hotspot_voucher.account_id)
-
  calculate_expiration_login_with_voucher(package, @hotspot_voucher,
        @hotspot_voucher.account_id)
 
