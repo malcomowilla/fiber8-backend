@@ -1297,9 +1297,6 @@ Rails.logger.info "Account not found"
   shared_users = package&.shared_users.to_i
 
 
-
- calculate_expiration_login(package, @hotspot_voucher,
-       @hotspot_voucher.account_id)
       
 
   # @hotspot_voucher = HotspotVoucher.new(
@@ -1353,6 +1350,11 @@ Rails.logger.info "Account not found"
         ip: params[:ip], mac: params[:mac], used_voucher: true)
 
         
+
+
+ calculate_expiration_login_with_voucher(package, @hotspot_voucher,
+       @hotspot_voucher.account_id)
+       
         return render json: {
           message: 'Connected successfully',
           device_ip: params[:ip],
@@ -1432,6 +1434,55 @@ def calculate_expiration_login(package, voucher_created, account_id)
     expiration: expiration_time&.strftime("%B %d, %Y at %I:%M %p"),
   }
 end
+
+
+
+
+
+
+
+
+def calculate_expiration_login_with_voucher(hotspot_package, voucher_created,
+   account_id)
+  #  hotspot_package = HotspotPackage.find_by(name: package, 
+  # account_id: account_id)
+
+  return render json: { error: 'Package not found' }, status: :not_found unless hotspot_package
+  
+  # Calculate expiration
+  expiration_time = if hotspot_package.validity.present? && hotspot_package.validity_period_units.present?
+    case hotspot_package.validity_period_units.downcase
+    when 'days'
+      Time.current + hotspot_package.validity.days
+    when 'hours'
+      Time.current + hotspot_package.validity.hours
+    when 'minutes'
+      Time.current + hotspot_package.validity.minutes
+    else
+      nil
+    end
+
+
+    
+
+  # elsif hotspot_package.valid_until.present? && hotspot_package.valid_from.present?
+  #   hotspot_package.valid_until
+  else
+    nil
+  end
+
+  # Update status only if expiration is present
+  if expiration_time.present?
+    voucher_created.update(expiration: expiration_time&.strftime("%B %d, %Y at %I:%M %p"),)
+  end
+
+  # Return both expiration and status
+  {
+    expiration: expiration_time&.strftime("%B %d, %Y at %I:%M %p"),
+  }
+end
+
+
 
 
 def calculate_expiration(package, voucher_created, account_id)
