@@ -1281,9 +1281,6 @@ Rails.logger.info "Account not found"
   @hotspot_voucher = HotspotVoucher.find_by(voucher: params[:voucher])
   return render json: { error: 'Invalid voucher or username' }, status: :not_found unless @hotspot_voucher
 
- calculate_expiration_login(package, @hotspot_voucher,
-       @hotspot_voucher.account_id)
-      
 
   # 🔹 Expiration check
   if @hotspot_voucher.expiration.present? && @hotspot_voucher.expiration < Time.current
@@ -1296,7 +1293,14 @@ Rails.logger.info "Account not found"
 
   active_sessions = get_active_sessions(params[:voucher])
   package = HotspotPackage.find_by(name: @hotspot_voucher.package)
+
   shared_users = package&.shared_users.to_i
+
+
+
+ calculate_expiration_login(package, @hotspot_voucher,
+       @hotspot_voucher.account_id)
+      
 
   # @hotspot_voucher = HotspotVoucher.new(
   #       package: params[:package],
