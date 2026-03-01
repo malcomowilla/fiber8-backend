@@ -27,15 +27,16 @@ hotspot_subscriptions.find_each do |subscription|
   plan = tenant&.hotspot_and_dial_plan
 
   expired_hotspot = plan&.expiry.present? && plan.expiry <= Time.current
-#   empty_expiry = subscription.expiration.nil?
+  empty_expiry = subscription.expiration.nil?
 
 # expiry_voucher = HotspotSetting.find_by(account_id: tenant.id).voucher_expiration
 
-#   if empty_expiry
-#     calculate_expiration_voucher(subscription.package, subscription, subscription.account_id)
+  if empty_expiry
+    calculate_expiration_voucher(subscription.package, subscription, subscription.account_id)
     
-#   end
-
+  end
+  
+  if  expired_hotspot
     # Deny login by adding reject if not already there
     RadCheck.find_or_create_by!(
       username: subscription.voucher,
