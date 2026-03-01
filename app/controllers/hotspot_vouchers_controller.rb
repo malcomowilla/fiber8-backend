@@ -999,9 +999,11 @@ def create
 
       # Save within transaction - will rollback if any fail
       if @hotspot_voucher.save!
-        # Create radcheck entry
-        create_voucher_radcheck(voucher_code, params[:package], 
-        @hotspot_voucher.account_id)
+
+         ActsAsTenant.current_tenant.hotspot_setting.voucher_expiration == 'Expiry After Creation' ?
+       create_voucher_radcheck(voucher_code, params[:package], 
+        @hotspot_voucher.account_id) : nil
+       
         
         # Add to created list
         created_vouchers << @hotspot_voucher
@@ -1356,6 +1358,8 @@ if @hotspot_voucher.expiration.nil?
        @hotspot_voucher.account_id)
 
 end
+
+
 
         return render json: {
           message: 'Connected successfully',
