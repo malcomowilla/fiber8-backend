@@ -1096,13 +1096,13 @@ rad_user_group = RadUserGroup.find_or_initialize_by(username: hotspot_voucher,
 rad_user_group.update!(username: hotspot_voucher, groupname: hotspot_package, priority: 1)
 
 
-rad_reply = RadReply.find_or_initialize_by(username: hotspot_voucher, 
-radiusattribute: 'Idle-Timeout',
-account_id: account_id,
- op: ':=', value: '5000')
+# rad_reply = RadReply.find_or_initialize_by(username: hotspot_voucher, 
+# radiusattribute: 'Idle-Timeout',
+# account_id: account_id,
+#  op: ':=', value: '5000')
  
-rad_reply.update!(username: hotspot_voucher, 
-radiusattribute: 'Idle-Timeout', op: ':=', value: '5000')
+# rad_reply.update!(username: hotspot_voucher, 
+# radiusattribute: 'Idle-Timeout', op: ':=', value: '5000')
 
 validity_period_units = HotspotPackage.find_by(name: package, account_id: account_id).validity_period_units
 validity = HotspotPackage.find_by(name: package, account_id: account_id).validity
@@ -1293,6 +1293,14 @@ Rails.logger.info "Account not found"
 
 
 
+     
+if @hotspot_voucher.expiration.nil?
+  
+ create_voucher_radcheck(@hotspot_voucher.voucher,
+  @hotspot_voucher.package, 
+        @hotspot_voucher.account_id)
+end
+
 
 
   active_sessions = get_active_sessions(params[:voucher])
@@ -1346,14 +1354,6 @@ Rails.logger.info "Account not found"
         }
       )
 
-
-     
-if @hotspot_voucher.expiration.nil?
-  
- create_voucher_radcheck(@hotspot_voucher.voucher,
-  @hotspot_voucher.package, 
-        @hotspot_voucher.account_id)
-end
 
       if response.code == 200
 
