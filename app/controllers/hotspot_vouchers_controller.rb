@@ -1278,9 +1278,26 @@ def login_with_hotspot_voucher
   end
 
 
+
+
+
   active_sessions = get_active_sessions(params[:voucher])
   package = HotspotPackage.find_by(name: @hotspot_voucher.package)
   shared_users = package&.shared_users.to_i
+
+  # @hotspot_voucher = HotspotVoucher.new(
+  #       package: params[:package],
+  #       shared_users: params[:shared_users],
+  #       phone: params[:phone],
+  #       voucher: voucher_code,
+  #       hotspot_package_id: hotspot_package.id,
+  #       status: 'active'
+  #     )
+
+      # calculate_expiration(params[:package], @hotspot_voucher,
+      #  @hotspot_voucher.account_id)
+      
+     
 
   if active_sessions.any?
     active_voucher_sessions = active_sessions.select { |s| s.include?(params[:voucher]) }
@@ -1314,6 +1331,11 @@ def login_with_hotspot_voucher
       if response.code == 200
         @hotspot_voucher.update!(status: 'used', last_logged_in: Time.now, 
         ip: params[:ip], mac: params[:mac], used_voucher: true)
+
+          ActsAsTenant.current_tenant.hotspot_setting.voucher_expiration == 'Expiry After Login' ?
+       calculate_expiration(params[:package], @hotspot_voucher,
+       @hotspot_voucher.account_id) : nil
+
 
         return render json: {
           message: 'Connected successfully',
