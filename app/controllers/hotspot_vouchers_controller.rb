@@ -1262,12 +1262,12 @@ end
 def login_with_hotspot_voucher
 
   return render json: { error: 'voucher is required' }, status: :bad_request unless params[:voucher].present?
-  return render json: { error: 'ip is required' }, status: :bad_request unless params[:ip].present?
+  # return render json: { error: 'ip is required' }, status: :bad_request unless params[:ip].present?
 
   host = request.headers['X-Subdomain']
   account = Account.find_by(subdomain: host)
-  return render json: { error: 'Account not found' }, status: :not_found unless account
-
+  # return render json: { error: 'Account not found' }, status: :not_found unless account
+Rails.logger.info "Account not found"
   # 🔹 Find voucher
   @hotspot_voucher = HotspotVoucher.find_by(voucher: params[:voucher])
   return render json: { error: 'Invalid voucher or username' }, status: :not_found unless @hotspot_voucher
