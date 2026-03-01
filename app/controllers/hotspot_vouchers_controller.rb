@@ -871,13 +871,12 @@ def send_voucher_to_phone_number
 expiration = HotspotVoucher.find_by(voucher: params[:voucher]).expiration
              if ActsAsTenant.current_tenant.sms_provider_setting.sms_provider == "SMS leopard"
                send_voucher(params[:phone], params[:voucher],
-               expiration.strftime("%B %d, %Y at %I:%M %p"),
                 params[:shared_users]
                )
-               
+      # expiration.strftime("%B %d, %Y at %I:%M %p"), 
+
              elsif ActsAsTenant.current_tenant.sms_provider_setting.sms_provider == "TextSms"
                send_voucher_text_sms(params[:phone], params[:voucher],
-               expiration.strftime("%B %d, %Y at %I:%M %p"), 
                params[:shared_users]
                )
              end
@@ -1685,7 +1684,7 @@ private
 
 
       def send_voucher(phone_number, voucher_code,
-        voucher_expiration, shared_users
+        shared_users
         )
       # api_key = ActsAsTenant.current_tenant.sms_setting.api_key
       # api_secret = ActsAsTenant.current_tenant.sms_setting.api_secret
@@ -1759,7 +1758,7 @@ private
 
 
 
-           def send_voucher_text_sms(phone_number, voucher_code, voucher_expiration,
+           def send_voucher_text_sms(phone_number, voucher_code,
              shared_users
             )
        HotspotVoucher.find_by(voucher: voucher_code).update(sms_sent: true)
