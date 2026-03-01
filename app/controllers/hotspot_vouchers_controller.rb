@@ -1278,7 +1278,7 @@ def login_with_hotspot_voucher
   # return render json: { error: 'Account not found' }, status: :not_found unless account
 Rails.logger.info "Account not found"
   # 🔹 Find voucher
-  @hotspot_voucher = HotspotVoucher.find_by(voucher: '75365255')
+  @hotspot_voucher = HotspotVoucher.find_by(voucher: params[:voucher])
   return render json: { error: 'Invalid voucher or username' }, status: :not_found unless @hotspot_voucher
 
   # 🔹 Expiration check
@@ -1337,12 +1337,10 @@ Rails.logger.info "Account not found"
         }
       )
 
-calculate_expiration_login(package, @hotspot_voucher,
-       @hotspot_voucher.account_id)
-
       if response.code == 200
 
-    
+    calculate_expiration_login(package, @hotspot_voucher,
+       @hotspot_voucher.account_id)
       
 
         @hotspot_voucher.update!(status: 'used', last_logged_in: Time.now, 
