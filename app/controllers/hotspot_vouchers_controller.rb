@@ -148,7 +148,9 @@ def transaction_status_result
 phone_number: customer_phone_number,
 status: 'pending'
    )
-hotspot_package = HotspotPackage.find_by(name: active_session.hotspot_package)
+hotspot_package = HotspotPackage.find_by(name: active_session.hotspot_package,
+account_id: active_session.account_id
+)
   # active_status = HotspotVoucher.find_or_create_by(phone: customer_phone_number,
   #  status: 'active')
   #  
