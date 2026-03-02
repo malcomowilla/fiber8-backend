@@ -31,7 +31,7 @@ def set_tenant
     host = request.headers['X-Subdomain']
     @account = Account.find_by(subdomain: host)
      ActsAsTenant.current_tenant = @account
-    EmailConfiguration.configure(@account, ENV['SYSTEM_ADMIN_EMAIL'])
+    # EmailConfiguration.configure(@account, ENV['SYSTEM_ADMIN_EMAIL'])
     # EmailSystemAdmin.configure(@current_account, current_system_admin)
   
     # set_current_tenant(@account)
