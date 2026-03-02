@@ -103,9 +103,9 @@ def this_year_revenue
     # Rails.cache.fetch("this_year_revenue_#{host}", expires_in: 1.day) do
     #   this_year = HotspotMpesaRevenue.this_year.sum(:amount)
     #   render json: this_year
+    #   end
     this_year = HotspotMpesaRevenue.this_year.sum(:amount)
      render json: this_year
-    end
   
 end
 
