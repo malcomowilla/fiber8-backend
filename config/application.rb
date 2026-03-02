@@ -1,9 +1,9 @@
 require_relative "boot"
 
 require "rails/all"
-require_relative '../app/middleware/set_tenant_ppoe'
+# require_relative '../app/middleware/set_tenant_ppoe'
 require_relative '../app/middleware/check_inactivity'
-require_relative '../app/middleware/set_tenant_hotspot'
+# require_relative '../app/middleware/set_tenant_hotspot'
 require_relative '../app/middleware/block_loophole'
 # require_relative '../app/models/rad_acct_observer'
 
@@ -45,8 +45,8 @@ module Fiber8backend
 end
     Rails.application.config.middleware.delete Rack::Attack
 
-config.middleware.use SetTenantPpoe
-config.middleware.use SetTenantHotspot
+# config.middleware.use SetTenantPpoe
+# config.middleware.use SetTenantHotspot
 config.middleware.use CheckInactivity
 # config/application.rb
 config.middleware.use BlockLoophole

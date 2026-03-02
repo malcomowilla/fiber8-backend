@@ -183,6 +183,8 @@ gem 'dotenv-rails', groups: [:development, :test]
 
 group :development, :test do
   # other development gems...
+    gem 'bullet'
+
 end
 
 

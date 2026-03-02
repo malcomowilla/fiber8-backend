@@ -1,6 +1,6 @@
 class HotspotVoucher < ApplicationRecord
 
-  acts_as_tenant(:account)
+  # acts_as_tenant(:account)
   # after_commit :broadcast_hotspot_voucher_stats, on: [:create, :update, :destroy] 
   # after_commit :broadcast_hotspot_voucher_status, on: [:create, :update, :destroy]
 after_commit :clear_cache
