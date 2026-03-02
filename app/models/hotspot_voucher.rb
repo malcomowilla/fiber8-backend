@@ -6,6 +6,7 @@ class HotspotVoucher < ApplicationRecord
 after_commit :clear_cache
 has_one :hotspot_mpesa_revenue
 belongs_to :hotspot_package, optional: true
+has_many :temporary_sessions, dependent: :destroy
 
 
 def clear_cache

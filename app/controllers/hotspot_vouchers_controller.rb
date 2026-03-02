@@ -148,14 +148,33 @@ def transaction_status_result
 phone_number: customer_phone_number,
 status: 'pending'
    )
-hotspot_package = HotspotPackage.find_by(name:  active_session.hotspot_package)
+hotspot_package = HotspotPackage.find_by(name: active_session.hotspot_package)
   # active_status = HotspotVoucher.find_or_create_by(phone: customer_phone_number,
   #  status: 'active')
-      hotspot_mpesa_revenue = HotspotMpesaRevenue.find_or_create_by(
+  #  
+  
+      hotspot_mpesa_revenue = HotspotMpesaRevenue.find_by(
               reference: receipt_no,
-
-
      )
+
+      hotspot_mpesa_revenue_reference = HotspotMpesaRevenue.find_by(
+              reference: receipt_no,
+     ).reference 
+unless hotspot_mpesa_revenue_reference == receipt_no
+  HotspotMpesaRevenue.create(
+    reference: receipt_no,
+     amount: amount,
+      voucher: active_session.voucher_code,
+      payment_method: "Mpesa",
+      time_paid: finalised_time,
+      # hotspot_voucher_id: active_session.hotspot_voucher_id,
+      name: customer_name,
+      # login_by: 'Mpesa Transaction',
+      account_id: active_session.account_id,
+      hotspot_voucher_id: active_session.hotspot_voucher_id
+  )
+end
+
 
 
 if_expired = hotspot_mpesa_revenue.hotspot_voucher.expiration < Time.current
@@ -166,17 +185,7 @@ if if_expired
   
 end
 
-     hotspot_mpesa_revenue.update(
-
-      amount: amount,
-      voucher: active_session.voucher_code,
-      payment_method: "Mpesa",
-      time_paid: finalised_time,
-      # hotspot_voucher_id: active_session.hotspot_voucher_id,
-      name: customer_name,
-      # login_by: 'Mpesa Transaction',
-      account_id: active_session.account_id,
-     )
+    
 
 
   voucher = HotspotVoucher.find_or_create_by(
@@ -237,7 +246,7 @@ nas_routers.each do |nas|
     if response.code == 200
  
      if voucher_expiration == 'Expiry After Login'
-        calculate_expiration_login(active_session.hotspot_package, voucher,
+        calculate_expiration(active_session.hotspot_package, voucher,
  active_session.account_id)
 
        end 
@@ -553,10 +562,6 @@ end
     Rails.logger.info "REST error logging in device #{session.ip}: #{e.message}"
   else
      
-if voucher_expiration == 'Expiry After Login'
-calculate_expiration_login(session.hotspot_package, 
-voucher, session.account_id)
-end
   end
   
 end
@@ -1443,12 +1448,15 @@ def calculate_expiration_login(package, voucher_created, account_id)
 
   # Update status only if expiration is present
   if expiration_time.present?
-    voucher_created.update(expiration: expiration_time&.strftime("%B %d, %Y at %I:%M %p"),)
+    voucher_created.update(expiration: expiration_time&.strftime("%B %d, %Y at %I:%M %p"),
+    status: 'active'
+    )
   end
 
   # Return both expiration and status
   {
     expiration: expiration_time&.strftime("%B %d, %Y at %I:%M %p"),
+    status: 'active'
   }
 end
 
@@ -1532,8 +1540,7 @@ def calculate_expiration(package, voucher_created, account_id)
 
   # Update status only if expiration is present
   if expiration_time.present?
-    status = expiration_time > Time.current ? "active" : "expired"
-    voucher_created.update(status: status,  expiration: expiration_time&.strftime("%B %d, %Y at %I:%M %p"),)
+    voucher_created.update(status: 'active',  expiration: expiration_time&.strftime("%B %d, %Y at %I:%M %p"),)
   else
     status = "unknown" # Handle cases with no expiration logic
   end
