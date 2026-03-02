@@ -162,7 +162,7 @@ if_expired = hotspot_mpesa_revenue.hotspot_voucher.expiration < Time.current
 
 if if_expired
   Rails.logger.info "Voucher expired"
-  return render json: { error: 'Voucher expired' }, status: :unprocessable_entity
+  # return render json: { error: 'Voucher expired' }, status: :unprocessable_entity
   
 end
 
