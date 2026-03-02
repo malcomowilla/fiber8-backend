@@ -159,21 +159,16 @@ account_id: active_session.account_id
               reference: receipt_no,
      )
 
-      hotspot_mpesa_revenue_reference = HotspotMpesaRevenue.find_by(
-              reference: receipt_no,
-     ).reference 
-unless hotspot_mpesa_revenue_reference == receipt_no
+unless HotspotMpesaRevenue.exists?(reference: receipt_no)
   HotspotMpesaRevenue.create(
     reference: receipt_no,
-     amount: amount,
-      voucher: active_session.voucher_code,
-      payment_method: "Mpesa",
-      time_paid: finalised_time,
-      # hotspot_voucher_id: active_session.hotspot_voucher_id,
-      name: customer_name,
-      # login_by: 'Mpesa Transaction',
-      account_id: active_session.account_id,
-      hotspot_voucher_id: active_session.hotspot_voucher_id
+    amount: amount,
+    voucher: active_session.voucher_code,
+    payment_method: "Mpesa",
+    time_paid: finalised_time,
+    name: customer_name,
+    account_id: active_session.account_id,
+    hotspot_voucher_id: active_session.hotspot_voucher_id
   )
 end
 
@@ -241,7 +236,7 @@ nas_routers.each do |nas|
     )
 
 
-  calculate_expiration_login(active_session.hotspot_package, voucher,
+  calculate_expiration(active_session.hotspot_package, voucher,
  active_session.account_id)
 
        
