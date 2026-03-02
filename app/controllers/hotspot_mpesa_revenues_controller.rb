@@ -100,9 +100,11 @@ def this_year_revenue
   host = request.headers['X-Subdomain']
     @account = Account.find_by(subdomain: host)
 
-    Rails.cache.fetch("this_year_revenue_#{host}", expires_in: 1.day) do
-      this_year = HotspotMpesaRevenue.this_year.sum(:amount)
-      render json: this_year
+    # Rails.cache.fetch("this_year_revenue_#{host}", expires_in: 1.day) do
+    #   this_year = HotspotMpesaRevenue.this_year.sum(:amount)
+    #   render json: this_year
+    this_year = HotspotMpesaRevenue.this_year.sum(:amount)
+     render json: this_year
     end
   
 end

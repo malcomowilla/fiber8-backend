@@ -1080,6 +1080,11 @@ hotspot_package = "hotspot_#{account_id}_#{package.parameterize(separator: '_')}
 #     )
 #     rad_check.update!(op: ':=', value: pppoe_password)
 
+
+
+qrwm^72&Mal
+
+
 radcheck = RadCheck.find_or_initialize_by(username: hotspot_voucher,
 account_id: account_id,
 radiusattribute: 
