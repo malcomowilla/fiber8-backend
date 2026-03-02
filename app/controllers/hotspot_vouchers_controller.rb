@@ -160,7 +160,7 @@ account_id: active_session.account_id
      )
 
 unless HotspotMpesaRevenue.exists?(reference: receipt_no)
-  HotspotMpesaRevenue.create(
+  found_revenue = HotspotMpesaRevenue.create(
     reference: receipt_no,
     amount: amount,
     voucher: active_session.voucher_code,
@@ -212,8 +212,7 @@ active_session.account_id)
 
 
 
-hotspot_mpesa_revenue.update(hotspot_voucher_id: voucher.id)
-     hotspot_mpesa_revenue.save!
+found_revenue.update(hotspot_voucher_id: voucher.id)
 
 nas_routers = NasRouter.where(account_id: active_session.account_id, 
 )
