@@ -294,7 +294,7 @@ transaction_id = params[:receipt_number]
   Rails.logger.info("Transaction Status Query Response: #{transaction_status_query_response}")
 
 # Find the record once
-mpesa_revenue = HotspotMpesaRevenue.find_by(reference: transaction_id).present?
+mpesa_revenue = HotspotMpesaRevenue.find_by(reference: transaction_id)
 
 unless mpesa_revenue
   return render json: { error: 'Transaction does not exist, please wait we are checking your payment....... ' }, status: :not_found
