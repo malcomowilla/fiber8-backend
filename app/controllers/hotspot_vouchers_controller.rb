@@ -155,12 +155,12 @@ account_id: active_session.account_id
   #  status: 'active')
   #  
   
-      hotspot_mpesa_revenue = HotspotMpesaRevenue.find_by(
-              reference: receipt_no,
-     )
+    #   hotspot_mpesa_revenue = HotspotMpesaRevenue.find_by(
+    #           reference: receipt_no,
+    #  )
 
 unless HotspotMpesaRevenue.exists?(reference: receipt_no)
-  found_revenue = HotspotMpesaRevenue.create(
+  found_revenue = HotspotMpesaRevenue.find_or_create_by(
     reference: receipt_no,
     amount: amount,
     voucher: active_session.voucher_code,
@@ -174,13 +174,13 @@ end
 
 
 
-# if_expired = hotspot_mpesa_revenue.hotspot_voucher.expiration < Time.current
+if_expired = found_revenue.hotspot_voucher.expiration < Time.current
 
-# if if_expired
-#   Rails.logger.info "Voucher expired"
-#   return render json: { error: 'Voucher expired' }, status: :unprocessable_entity
+if if_expired
+  Rails.logger.info "Voucher expired"
+  return render json: { error: 'Voucher expired' }, status: :unprocessable_entity
   
-# end
+end
 
     
 
