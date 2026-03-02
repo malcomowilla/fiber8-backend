@@ -97,8 +97,8 @@ end
 def this_year_revenue
   # start_time = Time.current.beginning_of_month
   # end_time = Time.current + 1.year
-  host = request.headers['X-Subdomain']
-    @account = Account.find_by(subdomain: host)
+  # host = request.headers['X-Subdomain']
+  #   @account = Account.find_by(subdomain: host)
 
     # Rails.cache.fetch("this_year_revenue_#{host}", expires_in: 1.day) do
     #   this_year = HotspotMpesaRevenue.this_year.sum(:amount)
