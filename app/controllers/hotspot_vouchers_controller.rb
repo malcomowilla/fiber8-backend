@@ -205,13 +205,8 @@ account_id: active_session.account_id)
 voucher.save!
 
 
-voucher_expiration = HotspotSetting.find_by(account_id: active_session.account_id).voucher_expiration
+# voucher_expiration = HotspotSetting.find_by(account_id: active_session.account_id).voucher_expiration
 
-
-if voucher_expiration == 'Expiry After Creation'
-calculate_expiration(active_session.hotspot_package, voucher,
- active_session.account_id)
-end
 
     #  Rails.logger.info "Hotspot Mpesa Revenue => #{hotspot_mpesa_revenue}"
 
@@ -245,20 +240,21 @@ nas_routers.each do |nas|
       }
     )
 
-    if response.code == 200
- 
-     if voucher_expiration == 'Expiry After Login'
-        calculate_expiration(active_session.hotspot_package, voucher,
+
+  calculate_expiration_login(active_session.hotspot_package, voucher,
  active_session.account_id)
 
-       end 
        
+    if response.code == 200
+ 
+      
        
 
 
 voucher.update(status: 'used')
        active_session.update(
-        paid: true, connected: true
+        paid: true, connected: true,
+        status: 'used'
        )
     end
 
