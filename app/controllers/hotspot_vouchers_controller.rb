@@ -182,7 +182,6 @@ end
   voucher = HotspotVoucher.find_or_create_by(
       voucher: active_session.voucher_code,
 
-
 )
 
 voucher.update(
@@ -195,7 +194,7 @@ account_id: active_session.account_id)
 voucher.save!
 
 
-voucher_expiration = HotspotSetting.find_by(account_id: session.account_id).voucher_expiration
+voucher_expiration = HotspotSetting.find_by(account_id: active_session.account_id).voucher_expiration
 
 
 if voucher_expiration == 'Expiry After Creation'
@@ -281,6 +280,7 @@ initiator = ActsAsTenant.current_tenant&.hotspot_mpesa_setting.api_initiator_use
 security_credentials = ActsAsTenant.current_tenant&.hotspot_mpesa_setting.api_initiator_password
 host = request.headers['X-Subdomain']
 ip = params[:ip]
+mac = params[:mac]
 
 
 
@@ -294,11 +294,12 @@ transaction_id = params[:receipt_number]
   Rails.logger.info("Transaction Status Query Response: #{transaction_status_query_response}")
 
 # Find the record once
-mpesa_revenue = HotspotMpesaRevenue.find_by(reference: transaction_id)
+mpesa_revenue = HotspotMpesaRevenue.find_by(reference: transaction_id).present?
 
 unless mpesa_revenue
-  return render json: { error: 'Transaction does not exist' }, status: :not_found
+  return render json: { error: 'Transaction does not exist, please wait we are checking your payment....... ' }, status: :not_found
 end
+
 
 # Safely check expiration through the association
 if mpesa_revenue.hotspot_voucher&.expiration.present? && 
@@ -338,18 +339,13 @@ if present_voucher_or_username
     if response.code == 200
  
 
-
-#  username: @hotspot_voucher.voucher,
-#           expiration: @hotspot_voucher.expiration&.strftime("%B %d, %Y at %I:%M %p"),
-#           package: @hotspot_voucher.package
-
    HotspotMpesaRevenue.find_by(reference: transaction_id).hotspot_voucher.update!(status: "used", 
       last_logged_in: Time.now,
        ip: HotspotMpesaRevenue.find_by(reference: transaction_id).hotspot_voucher.ip, used_voucher: true)
 
        package = HotspotPackage.find_by(name: HotspotMpesaRevenue.find_by(reference: transaction_id).hotspot_voucher.package)
        expiration_time = HotspotMpesaRevenue.find_by(reference: transaction_id).hotspot_voucher.expiration
-       TemporarySession.find_by(ip: ip).update(paid: true, connected: true)
+       TemporarySession.find_by(ip: ip, mac: mac).update(paid: true, connected: true)
        render json: { message: 'Connected successfully', 
        device_ip: ip, username: voucher_code, 
        expiration: expiration_time&.strftime("%B %d, %Y at %I:%M %p"), 
@@ -804,7 +800,8 @@ paid: false,
 connected: false,
 hotspot_package: params[:package],
 voucher_code: voucher_code,
-phone_number: phone_number
+phone_number: phone_number,
+mac: params[:mac],
 
 )
 session.update(status: 'pending')
@@ -1127,10 +1124,9 @@ if expiration_time
 end
   
 
-
-
 end
   
+
 
 
   # PATCH/PUT /hotspot_vouchers/1 or /hotspot_vouchers/1.json
@@ -1700,7 +1696,6 @@ end
 
   
 end
-
 
 
 
