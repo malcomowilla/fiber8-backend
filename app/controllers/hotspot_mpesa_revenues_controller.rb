@@ -53,7 +53,9 @@ if current_user
     # @hotspot_mpesa_revenues = HotspotMpesaRevenue.all
     # render json: @hotspot_mpesa_revenues
     @hotspot_mpesa_revenues = Rails.cache.fetch("hotspot_revenues_index_#{@account.id}", expires_in: 2.seconds) do
-  HotspotMpesaRevenue.order(created_at: :desc).to_a
+  HotspotMpesaRevenue
+                  .includes(:hotspot_package) 
+                  .order(created_at: :desc)
    end
 
 # @hotspot_mpesa_revenues = HotspotMpesaRevenue.all
