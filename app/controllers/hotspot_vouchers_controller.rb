@@ -1082,7 +1082,6 @@ hotspot_package = "hotspot_#{account_id}_#{package.parameterize(separator: '_')}
 
 
 
-qrwm^72&Mal
 
 
 radcheck = RadCheck.find_or_initialize_by(username: hotspot_voucher,
