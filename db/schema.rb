@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_03_04_064829) do
+ActiveRecord::Schema[7.2].define(version: 2026_03_04_065740) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -510,6 +510,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_03_04_064829) do
     t.string "merchant_request_id"
     t.integer "hotspot_package_id"
     t.string "voucher_expiration"
+    t.index ["account_id"], name: "index_hotspot_vouchers_on_account_id"
     t.index ["voucher"], name: "index_hotspot_vouchers_on_voucher", unique: true
   end
 
