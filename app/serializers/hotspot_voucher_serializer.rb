@@ -42,12 +42,6 @@ def customer
   object.hotspot_mpesa_revenue&.name
 end
 
-# Return the shared users of the hotspot package.
-# If the package is not found or if it does not have shared users,
-# return "Unlimited".
-# 
-
-
 
 
 # def shared_users
