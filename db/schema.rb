@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_03_04_065740) do
+ActiveRecord::Schema[7.2].define(version: 2026_03_04_081503) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -1120,7 +1120,15 @@ ActiveRecord::Schema[7.2].define(version: 2026_03_04_065740) do
     t.string "checkout_request_id"
     t.integer "hotspot_voucher_id"
     t.string "status"
+    t.index ["connected"], name: "index_temporary_sessions_on_connected"
+    t.index ["hotspot_package"], name: "index_temporary_sessions_on_hotspot_package"
+    t.index ["ip"], name: "index_temporary_sessions_on_ip"
+    t.index ["mac"], name: "index_temporary_sessions_on_mac"
+    t.index ["paid"], name: "index_temporary_sessions_on_paid"
+    t.index ["phone_number"], name: "index_temporary_sessions_on_phone_number"
     t.index ["session"], name: "index_temporary_sessions_on_session", unique: true
+    t.index ["status"], name: "index_temporary_sessions_on_status"
+    t.index ["voucher_code"], name: "index_temporary_sessions_on_voucher_code"
   end
 
   create_table "ticket_settings", force: :cascade do |t|
