@@ -23,7 +23,7 @@ def set_tenant
     host = request.headers['X-Subdomain']
     @account = Account.find_by(subdomain: host)
     ActsAsTenant.current_tenant = @account
-    EmailConfiguration.configure(@account, ENV['SYSTEM_ADMIN_EMAIL'])
+    # EmailConfiguration.configure(@account, ENV['SYSTEM_ADMIN_EMAIL'])
     # EmailSystemAdmin.configure(@current_account, current_system_admin)
   
     # set_current_tenant(@account)
@@ -48,15 +48,14 @@ if current_user
 
   # GET /hotspot_mpesa_revenues or /hotspot_mpesa_revenues.json
   def index
-     host = request.headers['X-Subdomain']
-    @account = Account.find_by(subdomain: host)
+    #  host = request.headers['X-Subdomain']
+    # @account = Account.find_by(subdomain: host)
     # @hotspot_mpesa_revenues = HotspotMpesaRevenue.all
     # render json: @hotspot_mpesa_revenues
-    @hotspot_mpesa_revenues = Rails.cache.fetch("hotspot_revenues_index_#{@account.id}", expires_in: 2.seconds) do
-  HotspotMpesaRevenue
+  @hotspot_mpesa_revenues = HotspotMpesaRevenue
                   .includes(:hotspot_voucher) 
                   .order(created_at: :desc)
-   end
+   
 
 # @hotspot_mpesa_revenues = HotspotMpesaRevenue.all
 # HotspotMpesaRevenue.order(created_at: :desc).to_a
@@ -71,11 +70,10 @@ if current_user
 def todays_revenue
   # start_time = Time.current.beginning_of_day
   # end_time = Time.current
-   host = request.headers['X-Subdomain']
-    @account = Account.find_by(subdomain: host)
-   todays_revenue = Rails.cache.fetch("todays_revenue_index_#{@account.id}", expires_in: 2.seconds) do
-    HotspotMpesaRevenue.today.sum(:amount)
-  end
+  #  host = request.headers['X-Subdomain']
+  #   @account = Account.find_by(subdomain: host)
+    todays_revenue = HotspotMpesaRevenue.today.sum(:amount)
+  
    
   render json: todays_revenue
 end
@@ -85,12 +83,11 @@ end
 def this_month_revenue
   # start_time = Time.current.beginning_of_month
   # end_time = Time.current
- host = request.headers['X-Subdomain']
-    @account = Account.find_by(subdomain: host)
+#  host = request.headers['X-Subdomain']
+#     @account = Account.find_by(subdomain: host)
   # render json: HotspotMpesaRevenue.where(created_at: start_time..end_time).sum(:amount)
-  this_month = Rails.cache.fetch("this_month_revenue_index_#{@account.id}", expires_in: 2.seconds) do
-    HotspotMpesaRevenue.this_month.sum(:amount)
-    end
+    this_month = HotspotMpesaRevenue.this_month.sum(:amount)
+    
   render json: this_month
 end
 
