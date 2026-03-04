@@ -43,40 +43,82 @@ def set_tenant
 
   end
 
- def check_session
-  ip = params[:ip]
-    mac = params[:mac]
-
-# Rails.logger.info "IP from check session: #{ip}"
-session = RadAcct.where(framedipaddress: ip, framedprotocol: '').order(acctupdatetime: :desc).first || RadAcct.where(callingstationid: mac, framedprotocol: '', ).order(acctupdatetime: :desc).first 
 
 
-                    
-          
+#  def check_session
+#   ip = params[:ip]
+#     mac = params[:mac]
+
+# # Rails.logger.info "IP from check session: #{ip}"
+# session = RadAcct.where(framedipaddress: ip, framedprotocol: '').order(acctupdatetime: :desc).first || RadAcct.where(callingstationid: mac, framedprotocol: '', ).order(acctupdatetime: :desc).first 
+
          
-# Rails.logger.info "Session record found: #{session.inspect}"
+# # Rails.logger.info "Session record found: #{session.inspect}"
 
-  if session
-    voucher = HotspotVoucher.find_by(voucher: session.username)
+#   if session
+#     voucher = HotspotVoucher.find_by(voucher: session.username)
 
-    if voucher && voucher.expiration > Time.current
-      return render json: {
-        session_active: true,
-        ip: ip,
-        username: voucher.voucher,
-        expiration: voucher.expiration.strftime("%B %d, %Y at %I:%M %p"),
-        package: voucher.package
-      }
-    else
+#     if voucher && voucher.expiration > Time.current
+#       return render json: {
+#         session_active: true,
+#         ip: ip,
+#         username: voucher.voucher,
+#         expiration: voucher.expiration.strftime("%B %d, %Y at %I:%M %p"),
+#         package: voucher.package
+#       }
+#     else
 
-      return render json: {
-        session_active: false,
-        username: voucher.voucher,
-        ip: ip
-      }
-    end
+#       return render json: {
+#         session_active: false,
+#         username: voucher.voucher,
+#         ip: ip
+#       }
+#     end
+#   end
+
+# end
+
+
+
+
+
+def check_session
+  ip = params[:ip]
+  mac = params[:mac]
+
+  session = RadAcct
+              .where(framedipaddress: ip, framedprotocol: '')
+              .order(acctupdatetime: :desc)
+              .first ||
+            RadAcct
+              .where(callingstationid: mac, framedprotocol: '')
+              .order(acctupdatetime: :desc)
+              .first
+
+  unless session
+    return render json: {
+      session_active: false,
+      message: "No active session found"
+    }
   end
 
+  voucher = HotspotVoucher.find_by(voucher: session.username)
+
+  if voucher && voucher.expiration > Time.current
+    render json: {
+      session_active: true,
+      ip: ip,
+      username: voucher.voucher,
+      expiration: voucher.expiration.strftime("%B %d, %Y at %I:%M %p"),
+      package: voucher.package
+    }
+  else
+    render json: {
+      session_active: false,
+      ip: ip,
+      username: voucher&.voucher
+    }
+  end
 end
 
 
