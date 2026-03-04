@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_03_04_062002) do
+ActiveRecord::Schema[7.2].define(version: 2026_03_04_064829) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -414,6 +414,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_03_04_062002) do
     t.string "weekdays", default: [], array: true
     t.string "shared_users", default: "1"
     t.string "location"
+    t.index ["name"], name: "index_hotspot_packages_on_name"
   end
 
   create_table "hotspot_plans", force: :cascade do |t|
@@ -445,6 +446,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_03_04_062002) do
     t.string "email"
     t.string "voucher_type", default: "Mixed"
     t.string "voucher_expiration"
+    t.index ["account_id"], name: "index_hotspot_settings_on_account_id"
   end
 
   create_table "hotspot_subscriptions", force: :cascade do |t|
@@ -508,6 +510,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_03_04_062002) do
     t.string "merchant_request_id"
     t.integer "hotspot_package_id"
     t.string "voucher_expiration"
+    t.index ["voucher"], name: "index_hotspot_vouchers_on_voucher", unique: true
   end
 
   create_table "invoices", force: :cascade do |t|
@@ -599,6 +602,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_03_04_062002) do
     t.string "last_status"
     t.datetime "last_status_changed_at"
     t.datetime "last_notification_sent_at"
+    t.index ["account_id"], name: "index_nas_routers_on_account_id"
   end
 
   create_table "nas_settings", force: :cascade do |t|
@@ -940,6 +944,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_03_04_062002) do
     t.string "password_digest"
     t.string "node"
     t.string "status"
+    t.index ["ref_no"], name: "index_subscribers_on_ref_no", unique: true
   end
 
   create_table "subscriptions", force: :cascade do |t|
@@ -1114,6 +1119,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_03_04_062002) do
     t.string "checkout_request_id"
     t.integer "hotspot_voucher_id"
     t.string "status"
+    t.index ["session"], name: "index_temporary_sessions_on_session", unique: true
   end
 
   create_table "ticket_settings", force: :cascade do |t|
