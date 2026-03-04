@@ -574,8 +574,8 @@ get "/password/reset/edit", to: "password_resets#edit"
 get "/api/password/reset/edit", to: "password_resets#edit"
 patch "password/reset/edit", to: "password_resets#update"
 patch "/api/password/reset/edit", to: "password_resets#update"
-  post '/api/sign_in' , to: 'sessions#create'
-  post '/sign_in' , to: 'sessions#create'
+  post '/api/sign_in' , to: 'sessions#signin'
+  post '/sign_in' , to: 'sessions#signin'
 
   post '/api/sign_up', to: 'users#create_users' 
   delete '/api/logout', to: 'sessions#destroy'

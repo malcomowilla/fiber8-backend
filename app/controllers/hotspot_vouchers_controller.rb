@@ -4,7 +4,6 @@ class HotspotVouchersController < ApplicationController
 load_and_authorize_resource except: [:login_with_hotspot_voucher,
  :make_payment, :check_payment_status, :payment_and_conected_status,
  :stk_push_status, :transaction_status_result,:login_with_receipt_number,
- :receipt_number_status
 
 ]
   # skip_before_action :set_tenant, only: [:check_payment_status]
@@ -1044,36 +1043,8 @@ end
 
 
   def create_voucher_radcheck(hotspot_voucher, package, account_id)
-# ActiveRecord::Base.connection.execute("
-# INSERT INTO radcheck (username, radiusattribute, op, value) 
-# SELECT '#{hotspot_voucher}', 'Cleartext-Password', ':=', '#{hotspot_voucher}'
-# WHERE NOT EXISTS (
-#   SELECT 1 FROM radcheck WHERE username = '#{hotspot_voucher}' AND radiusattribute = 'Cleartext-Password'
-# )
-# ")
-
-# ActiveRecord::Base.connection.execute("
-# INSERT INTO radcheck (username, radiusattribute, op, value) 
-# SELECT '#{hotspot_voucher}', 'Simultaneous-Use', ':=', '#{shared_users}'
-# WHERE NOT EXISTS (
-#   SELECT 1 FROM radcheck WHERE username = '#{hotspot_voucher}' AND radiusattribute = 'Simultaneous-Use'
-# )
-# ")
-
-# ActiveRecord::Base.connection.execute("
-# INSERT INTO radusergroup (username, groupname, priority) 
-# VALUES ('#{hotspot_voucher}', '#{package}', 1)
-# ")
-
 
 hotspot_package = "hotspot_#{account_id}_#{package.parameterize(separator: '_')}"
-
-# rad_check = RadCheck.find_or_initialize_by(
-#       username: pppoe_username,
-#       radiusattribute: 'Cleartext-Password'
-#     )
-#     rad_check.update!(op: ':=', value: pppoe_password)
-
 
 
 
@@ -1085,22 +1056,18 @@ radiusattribute:
 
 radcheck.update!(op: ':=', value: hotspot_voucher)
 
-# radcheck_simultanesous_use = RadCheck.find_or_initialize_by(username: hotspot_voucher, radiusattribute: 
-# 'Simultaneous-Use')
-# radcheck_simultanesous_use.update!(op: ':=',  value: shared_users)
-
 rad_user_group = RadUserGroup.find_or_initialize_by(username: hotspot_voucher,
  groupname: hotspot_package, priority: 1, account_id: account_id)
 rad_user_group.update!(username: hotspot_voucher, groupname: hotspot_package, priority: 1)
 
 
-# rad_reply = RadReply.find_or_initialize_by(username: hotspot_voucher, 
-# radiusattribute: 'Idle-Timeout',
-# account_id: account_id,
-#  op: ':=', value: '5000')
+rad_reply = RadReply.find_or_initialize_by(username: hotspot_voucher, 
+radiusattribute: '',
+account_id: account_id,
+ op: ':=', value: '5000')
  
-# rad_reply.update!(username: hotspot_voucher, 
-# radiusattribute: 'Idle-Timeout', op: ':=', value: '5000')
+rad_reply.update!(username: hotspot_voucher, 
+radiusattribute: 'Idle-Timeout', op: ':=', value: '5000')
 
 validity_period_units = HotspotPackage.find_by(name: package, account_id: account_id).validity_period_units
 validity = HotspotPackage.find_by(name: package, account_id: account_id).validity
