@@ -43,9 +43,9 @@ def set_time_zone
   Rails.logger.info "Setting time zone #{Time.zone}"
 end
 
-    rescue_from CanCan::AccessDenied do |exception|
-      render json: { error: "Access Denied: #{exception.message}" }, status: :forbidden
-    end
+    # rescue_from CanCan::AccessDenied do |exception|
+    #   render json: { error: "Access Denied: #{exception.message}" }, status: :forbidden
+    # end
 
     
     before_action :set_tenant
@@ -153,7 +153,7 @@ def set_tenant
   host = request.headers['X-Subdomain']
   @account = Account.find_by(subdomain: host)
   @current_account= ActsAsTenant.current_tenant 
-  EmailConfiguration.configure(@current_account, ENV['SYSTEM_ADMIN_EMAIL'])
+  # EmailConfiguration.configure(@current_account, ENV['SYSTEM_ADMIN_EMAIL'])
   # EmailSystemAdmin.configure(@current_account, current_system_admin)
 
   # set_current_tenant(@account)
