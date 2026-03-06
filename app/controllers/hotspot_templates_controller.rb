@@ -32,7 +32,7 @@ if current_user
     host = request.headers['X-Subdomain']
     @account = Account.find_by(subdomain: host)
   
-    EmailConfiguration.configure(@account, ENV['SYSTEM_ADMIN_EMAIL'])
+    # EmailConfiguration.configure(@account, ENV['SYSTEM_ADMIN_EMAIL'])
     set_current_tenant(@account)
   rescue ActiveRecord::RecordNotFound
     render json: { error: 'Invalid tenant' }, status: :not_found
@@ -51,10 +51,10 @@ if current_user
   # HotspotMpesaRevenue.order(created_at: :desc).to_a
   #  end
 
-    # @hotspot_templates = Rails.cache.fetch("hotspot_templates_index_#{@account.id}", expires_in: 2.seconds) do
-    #   HotspotTemplate.all
-    # end
-     @hotspot_templates = HotspotTemplate.all
+    @hotspot_templates = Rails.cache.fetch("hotspot_templates_index_#{@account.id}", expires_in: 5.seconds) do
+      HotspotTemplate.all
+    end
+    #  @hotspot_templates = HotspotTemplate.all
     render json: @hotspot_templates
   end
 
