@@ -57,8 +57,11 @@ Rails.application.configure do
 #   authentication:       'plain',
 #   enable_starttls_auto: true
 # }
-  # Do not eager load code on boot.
-  config.eager_load = false
+# 
+  # Eager load code on boot. This eager loads most of Rails and
+  # your application in memory, allowing both threaded web servers
+  # and those relying on copy on write to perform better.
+  config.eager_load = true
 
   # Show full error reports.
   config.consider_all_requests_local = true
