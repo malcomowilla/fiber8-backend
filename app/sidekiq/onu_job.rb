@@ -2,7 +2,7 @@
 
 
 
-class ONUJob 
+class OnuJob 
   include Sidekiq::Job
   queue_as :onu
   
