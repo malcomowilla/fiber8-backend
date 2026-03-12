@@ -1,5 +1,19 @@
 
 class HotspotPageController < ApplicationController
+before_action :set_tenant
+
+
+  def set_tenant
+  host = request.headers['X-Subdomain']
+  @account = Account.find_by(subdomain: host)
+  ActsAsTenant.current_tenant = @account
+  EmailConfiguration.configure(@account, ENV['SYSTEM_ADMIN_EMAIL'])
+
+  # set_current_tenant(@account)
+rescue ActiveRecord::RecordNotFound
+  render json: { error: 'Invalid tenant' }, status: :not_found
+
+  end
    def data
     subdomain = request.headers["X-Subdomain"]
     account = Account.find_by(subdomain: subdomain)
