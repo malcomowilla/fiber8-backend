@@ -1,5 +1,5 @@
 
-class LoadSubscriberTransaction
+class LoadSubscriberTransactionJob
   include Sidekiq::Job
   queue_as :default
 
