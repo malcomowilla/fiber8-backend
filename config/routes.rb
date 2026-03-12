@@ -150,7 +150,7 @@ resources :company_ids
 
 end
 
-
+get '/api/hotspot_page_data', to: 'hotspot_page#data'
 post '/api/receipt_number_status', to: 'hotspot_vouchers#receipt_number_status'
 post 'mpesa_transactionstatus_result', to: 'hotspot_vouchers#transaction_status_result'
 post 'mpesa_transactionstatus_timeout', to: 'hotspot_vouchers#transaction_status_timeout'

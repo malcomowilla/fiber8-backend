@@ -1,6 +1,8 @@
 class Account < ApplicationRecord
     has_many :users, dependent: :destroy
-    
+    has_many :hotspot_templates
+    has_one :hotspot_customization
+    has_many :ads
     has_many :packages, dependent: :destroy
     has_many :nas_routers, dependent: :destroy
     has_many :zones, dependent: :destroy
