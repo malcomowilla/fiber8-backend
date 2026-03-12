@@ -10,7 +10,7 @@ class HotspotPageController < ApplicationController
       {
         templates: account.hotspot_templates,
         ads: account.ads,
-        ad_settings: account.ad_settings,
+        ad_settings: account.ad_setting,
         hotspot_settings: account.hotspot_setting,
         customization: account.hotspot_customization,
         # company: {
