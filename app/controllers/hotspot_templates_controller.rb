@@ -36,8 +36,6 @@ if current_user
     set_current_tenant(@account)
   rescue ActiveRecord::RecordNotFound
     render json: { error: 'Invalid tenant' }, status: :not_found
-  
-    
   end
 
 
