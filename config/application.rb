@@ -1,15 +1,15 @@
 require_relative "boot"
 
 require "rails/all"
-# require_relative '../app/middleware/set_tenant_ppoe'
+require_relative '../app/middleware/set_tenant_ppoe'
 require_relative '../app/middleware/check_inactivity'
-# require_relative '../app/middleware/set_tenant_hotspot'
+require_relative '../app/middleware/set_tenant_hotspot'
 require_relative '../app/middleware/block_loophole'
 # require_relative '../app/models/rad_acct_observer'
 
 # require "rails/observers/active_record/observer"
 
-# require_relative '../app/middleware/blocked_user'
+require_relative '../app/middleware/blocked_user'
 
 
 
@@ -28,8 +28,8 @@ module Fiber8backend
   class Application < Rails::Application
     # config.session_store :cookie_store, key: '_hue_session', domain: :all
     # puts("Loading cookies session store KEY")
-    # config.middleware.use Rack::Attack
-    # config.middleware.use BlockedUser
+    config.middleware.use Rack::Attack
+    config.middleware.use BlockedUser
     # 
 
 
@@ -45,8 +45,8 @@ module Fiber8backend
 end
     Rails.application.config.middleware.delete Rack::Attack
 
-# config.middleware.use SetTenantPpoe
-# config.middleware.use SetTenantHotspot
+config.middleware.use SetTenantPpoe
+config.middleware.use SetTenantHotspot
 config.middleware.use CheckInactivity
 # config/application.rb
 config.middleware.use BlockLoophole
