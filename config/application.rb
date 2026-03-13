@@ -43,11 +43,11 @@ module Fiber8backend
     match ? match[1] : nil
   end
 end
-    Rails.application.config.middleware.delete Rack::Attack
 
 config.middleware.use SetTenantPpoe
 config.middleware.use SetTenantHotspot
 config.middleware.use CheckInactivity
+config.middleware.use Rack::Attack
 # config/application.rb
 config.middleware.use BlockLoophole
 
