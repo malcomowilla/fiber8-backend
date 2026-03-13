@@ -45,7 +45,20 @@ class Rack::Attack
       "/.env.production",
       "/.git",
       "/phpmyadmin",
-      "/wp-admin"
+      "/wp-admin",
+      "/wp-login.php",
+      "/wp-admin/install.php",
+      "/wp-admin/upgrade.php",
+      "/wp-admin/admin-ajax.php",
+      "/wp-admin/admin-post.php",
+      "/wp-admin/admin-ajax.php", 
+      "/wp-admin/admin-post.php",
+      "/wp-login.php",
+      "/wp-admin/install.php",
+      "/wp-admin/upgrade.php",
+      "/wp-admin/admin-ajax.php", 
+      "/api/user",
+      "_internal/api/setup.php"
     ]
 
     bad_paths.any? { |path| req.path.start_with?(path) }
