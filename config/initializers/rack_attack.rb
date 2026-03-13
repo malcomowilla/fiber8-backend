@@ -35,6 +35,33 @@ class Rack::Attack
     Rails.logger.info "[Rack::Attack] Throttled request: #{payload[:request].ip} for #{payload[:request].path}"
   end
 
+
+
+
+# Block suspicious paths
+  blocklist("block suspicious paths") do |req|
+    bad_paths = [
+      "/.env",
+      "/.env.production",
+      "/.git",
+      "/phpmyadmin",
+      "/wp-admin"
+    ]
+
+    bad_paths.any? { |path| req.path.start_with?(path) }
+  end
+
+  # Block scanners by user agent
+  blocklist("block scanners") do |req|
+    req.user_agent =~ /(nikto|sqlmap|nmap|masscan|dirbuster)/i
+  end
+
+  # Rate limit requests
+  throttle('req/ip', limit: 100, period: 1.minute) do |req|
+    req.ip
+  end
+
+
   ### Custom Throttle Response ###
 #   self.throttled_responder = lambda do |env|
 
