@@ -15,6 +15,14 @@ end
 
 
 
+  def online?
+    RadAcct.where(
+      acctstoptime: nil,
+      username: voucher,
+      framedprotocol: ''
+    ).where('acctupdatetime > ?', 3.minutes.ago).exists?
+  end
+
 
   # def broadcast_hotspot_voucher_status
   #   voucher_status = {
