@@ -120,8 +120,8 @@ nas_routers.each do |nas|
       password: nas.password,
       payload: {
         ip: voucher.ip,
-        user: voucher.code,
-        password: voucher.code
+        user: voucher.voucher,
+        password: voucher.voucher
       }.to_json,
       headers: {
         content_type: :json,
