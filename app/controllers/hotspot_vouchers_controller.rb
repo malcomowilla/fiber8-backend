@@ -113,20 +113,23 @@ voucher = HotspotVoucher.find_by(voucher: params[:voucher])
 nas_routers = NasRouter.where(account_id: voucher.account_id)
 nas_routers.each do |nas|
   begin
+ active_users = RestClient::Request.execute(
+      method: :get,
+      url: "http://#{nas.ip_address}/rest/ip/hotspot/active",
+      user: nas.username,
+      password: nas.password
+    )
+
+    users = JSON.parse(active_users.body)
+
+    active = users.find { |u| u["user"] == voucher.voucher }
     response = RestClient::Request.execute(
       method: :post,
       url: "http://#{nas.ip_address}/rest/ip/hotspot/active/remove",
       user: nas.username,
       password: nas.password,
-      payload: {
-        ip: voucher.ip,
-        user: voucher.voucher,
-        password: voucher.voucher
-      }.to_json,
-      headers: {
-        content_type: :json,
-        accept: :json
-      }
+       payload: { ".id": active[".id"] }.to_json,
+        headers: { content_type: :json }
     )
 
     if response.code == 200
