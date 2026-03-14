@@ -115,7 +115,7 @@ nas_routers.each do |nas|
   begin
     response = RestClient::Request.execute(
       method: :post,
-      url: "http://#{nas.ip_address}/rest/ip/hotspot/active/logout",
+      url: "http://#{nas.ip_address}/rest/ip/hotspot/active/remove",
       user: nas.username,
       password: nas.password,
       payload: {
