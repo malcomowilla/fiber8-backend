@@ -102,6 +102,58 @@ def index
 end
 
 
+
+
+
+
+    def logout_user
+            
+   host = request.headers['X-Subdomain']
+    @account = Account.find_by!(subdomain: host)
+voucher = HotspotVoucher.find_by(voucher: params[:voucher])
+nas_routers = NasRouter.where(account_id: session.account_id)
+nas_routers.each do |nas|
+  begin
+    response = RestClient::Request.execute(
+      method: :post,
+      url: "http://#{nas.ip_address}/rest/ip/hotspot/active/logout",
+      user: nas.username,
+      password: nas.password,
+      payload: {
+        ip: voucher.ip,
+        user: voucher.code,
+        password: voucher.code
+      }.to_json,
+      headers: {
+        content_type: :json,
+        accept: :json
+      }
+    )
+
+    if response.code == 200
+  
+
+     render json: 'Successfully logged out user', status: :ok
+     else
+     render json: 'Failed to log out user', status: :unprocessable_entity
+
+    end
+
+  rescue RestClient::Unauthorized
+    Rails.logger.info "REST auth failed for router #{nas.ip_address}"
+
+  rescue RestClient::ExceptionWithResponse => e
+    Rails.logger.info "MikroTik REST error on #{nas.ip_address}: #{e.response}"
+
+  rescue StandardError => e
+    Rails.logger.info "REST error logging in device #{session.ip}: #{e.message}"
+ 
+  end
+  end
+    end
+
+
+
 def start_free_trial
   
   
@@ -502,6 +554,7 @@ calculate_expiration(session.hotspot_package, voucher, session.account_id)
   
 end
 SendSmsHotspotService.send_sms(voucher.voucher, data)
+
 
 nas_routers = NasRouter.where(account_id: session.account_id)
 nas_routers.each do |nas|

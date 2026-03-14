@@ -19,7 +19,7 @@ end
     RadAcct.where(
       acctstoptime: nil,
       username: voucher,
-      framedprotocol: ''
+      # framedprotocol: ''
     ).where('acctupdatetime > ?', 3.minutes.ago).exists?
   end
 
