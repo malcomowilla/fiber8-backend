@@ -153,10 +153,6 @@ nas_routers.each do |nas|
 
 
 
-def start_free_trial
-  
-  
-end
 
 
 def transaction_status_result
