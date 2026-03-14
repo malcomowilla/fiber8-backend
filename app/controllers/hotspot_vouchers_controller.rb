@@ -108,10 +108,9 @@ end
 
     def logout_user
             
-   host = request.headers['X-Subdomain']
-    @account = Account.find_by!(subdomain: host)
+  
 voucher = HotspotVoucher.find_by(voucher: params[:voucher])
-nas_routers = NasRouter.where(account_id: session.account_id)
+nas_routers = NasRouter.where(account_id: voucher.account_id)
 nas_routers.each do |nas|
   begin
     response = RestClient::Request.execute(
@@ -146,7 +145,7 @@ nas_routers.each do |nas|
     Rails.logger.info "MikroTik REST error on #{nas.ip_address}: #{e.response}"
 
   rescue StandardError => e
-    Rails.logger.info "REST error logging in device #{session.ip}: #{e.message}"
+    Rails.logger.info "REST error logging in device #{nas.ip_address}: #{e.message}"
  
   end
   end

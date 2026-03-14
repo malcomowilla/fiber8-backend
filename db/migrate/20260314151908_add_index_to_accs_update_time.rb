@@ -3,3 +3,6 @@ class AddIndexToAccsUpdateTime < ActiveRecord::Migration[7.2]
  add_index :radacct, :acctupdatetime
   end
 end
+
+
+
