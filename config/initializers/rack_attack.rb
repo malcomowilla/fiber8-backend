@@ -85,7 +85,15 @@ class Rack::Attack
       "/www/.env",
       "/tests/.env",
       "/debug/default/view",
-      "/trace.axd"
+      "/trace.axd", 
+      "/new/.env",
+      "/src/config/.env",
+      "/docker/.env",
+      "/dev/.env",
+      "/src/.env",
+      "/prod/.env",
+      "/bin",
+      "/conf/.env"
 
     ]
 
