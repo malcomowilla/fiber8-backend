@@ -515,7 +515,7 @@ def check_payment_status
   raw_body = request.body.read
 
 # Rails.logger.info "Parsed data calback mpesa: #{request.body.read}"
-Rails.logger.info "Parsed data callback mpesa: #{raw_body}"
+# Rails.logger.info "Parsed data callback mpesa: #{raw_body}"
 
   # data = JSON.parse(request.body.read) rescue {}
   data = JSON.parse(raw_body) rescue {}

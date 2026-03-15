@@ -61,11 +61,27 @@ class Rack::Attack
       "/wp-admin/admin-ajax.php", 
       "/wp-admin/admin-post.php",
       "/wp-login.php",
+      "/order",
       "/wp-admin/install.php",
       "/wp-admin/upgrade.php",
       "/wp-admin/admin-ajax.php", 
       "/api/user",
-      "_internal/api/setup.php"
+      "_internal/api/setup.php",
+      "/.vscode/sftp.json",
+      "/sftp.json",
+      "/@vite/env",
+      "/about",
+      "/@vite/client",
+      "/@vite/client/env",
+      "/@vite/client/src/env.d.ts",
+      "/@vite/client/dist",
+      "/@vite/client/dist/env.d.ts",
+      "/@vite/client/dist/index.html",
+      "/@vite/client/dist/assets",
+      "/server-status",
+      "/console", 
+      "/setup"
+
     ]
 
     bad_paths.any? { |path| req.path.start_with?(path) }
