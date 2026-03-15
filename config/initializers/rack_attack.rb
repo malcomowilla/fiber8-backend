@@ -49,6 +49,8 @@ class Rack::Attack
       "dashboard",
       "/env",
       "/config",
+      "billing",
+      "/src/config/.env",
       "/wp-login.php",
       "/wp-admin/install.php",
       "/wp-admin/upgrade.php",
