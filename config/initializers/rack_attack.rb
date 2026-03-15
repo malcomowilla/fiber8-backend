@@ -83,7 +83,9 @@ class Rack::Attack
       "/setup", 
       "/kyc/.env",
       "/www/.env",
-      "/tests/.env"
+      "/tests/.env",
+      "/debug/default/view",
+      "/trace.axd
 
     ]
 
