@@ -98,7 +98,6 @@ class Rack::Attack
   end
 
 
-  ### Custom Throttle Response ###
 #   self.throttled_responder = lambda do |env|
 
 
