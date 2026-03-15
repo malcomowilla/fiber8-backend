@@ -85,7 +85,7 @@ class Rack::Attack
       "/www/.env",
       "/tests/.env",
       "/debug/default/view",
-      "/trace.axd
+      "/trace.axd"
 
     ]
 
