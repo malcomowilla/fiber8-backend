@@ -93,7 +93,9 @@ class Rack::Attack
       "/src/.env",
       "/prod/.env",
       "/bin",
-      "/conf/.env"
+      "/conf/.env",
+      "/v2/.env",
+      "/database/.env"
 
     ]
 
