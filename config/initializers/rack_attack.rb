@@ -71,6 +71,11 @@ class Rack::Attack
       "/sftp.json",
       "/@vite/env",
       "/about",
+      "/.env.vite",
+      "/api/v2/.env",
+      "/.env.example",
+      "/sitemap.xml",
+      "/payment/.env",
       "/@vite/client",
       "/@vite/client/env",
       "/@vite/client/src/env.d.ts",
@@ -95,7 +100,10 @@ class Rack::Attack
       "/bin",
       "/conf/.env",
       "/v2/.env",
-      "/database/.env"
+      "/database/.env",
+      "/api/v1/.env",
+      "/app/.env",
+      "/core/.env"
 
     ]
 
