@@ -1298,7 +1298,6 @@ def login_with_hotspot_voucher
   # host = request.headers['X-Subdomain']
   
   # return render json: { error: 'Account not found' }, status: :not_found unless account
-Rails.logger.info "Account not found"
   # 🔹 Find voucher
   @hotspot_voucher = HotspotVoucher.find_by(voucher: params[:voucher])
   return render json: { error: 'Invalid voucher or username' }, status: :not_found unless @hotspot_voucher
