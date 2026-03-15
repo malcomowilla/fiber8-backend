@@ -1296,9 +1296,7 @@ def login_with_hotspot_voucher
   # return render json: { error: 'ip is required' }, status: :bad_request unless params[:ip].present?
 
   # host = request.headers['X-Subdomain']
-  host = ActsAsTenant.current_tenant.subdomain
-  Rails.logger.info "host =>#{host}"
-  account = Account.find_by(subdomain: host)
+  
   # return render json: { error: 'Account not found' }, status: :not_found unless account
 Rails.logger.info "Account not found"
   # 🔹 Find voucher
@@ -1354,7 +1352,7 @@ end
     end
   end
 
-  nas_routers = NasRouter.where(account_id: account.id)
+  nas_routers = NasRouter.where(account_id: @hotspot_voucher.account_id)
 
   nas_routers.each do |router|
     begin
@@ -1414,9 +1412,6 @@ end
       next
        
     end
-    
-  
-
     
   end
 

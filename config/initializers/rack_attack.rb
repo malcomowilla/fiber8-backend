@@ -80,7 +80,10 @@ class Rack::Attack
       "/@vite/client/dist/assets",
       "/server-status",
       "/console", 
-      "/setup"
+      "/setup", 
+      "/kyc/.env",
+      "/www/.env",
+      "/tests/.env"
 
     ]
 
