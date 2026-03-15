@@ -66,7 +66,7 @@ class Rack::Attack
       "/wp-admin/upgrade.php",
       "/wp-admin/admin-ajax.php", 
       "/api/user",
-      "_internal/api/setup.php",
+      "/_internal/api/setup.php",
       "/.vscode/sftp.json",
       "/sftp.json",
       "/@vite/env",
