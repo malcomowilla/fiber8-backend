@@ -30,7 +30,7 @@ class RadAcct < ApplicationRecord
   acts_as_tenant(:account)
 
   self.ignored_columns = ["class"]
-after_commit :broadcast_if_online, on: [:update, :create]
+after_commit :broadcast_if_online, on: [:update, :create, :destroy, ]
 
 
 

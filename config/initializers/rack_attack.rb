@@ -108,7 +108,10 @@ class Rack::Attack
       "/swagger-ui.html",
       "/payment/.env",
       "/server/.env",
-      "/api/shared/.env"
+      "/api/shared/.env",
+      "/apps/.env", 
+      "/v2/_catalog",
+      "/login.action"
 
     ]
 
