@@ -133,7 +133,13 @@ nas_routers.each do |nas|
     )
 
     if response.code == 200
-  
+  HotspotVoucherChannel.broadcast_to(account, {
+      type: "voucher_online",
+     is_online: false,
+     voucher: HotspotVoucher.find_by(voucher: voucher),
+     id: HotspotVoucher.find_by(voucher: voucher).id
+     
+    })
 
      render json: 'Successfully logged out user', status: :ok
      else
