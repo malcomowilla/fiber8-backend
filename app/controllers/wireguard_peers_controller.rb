@@ -65,44 +65,35 @@ def set_tenant
   end
 
   # POST /wireguard_peers or /wireguard_peers.json
+  def create
 
-def create
-  raw_ips = params[:wireguard_peer][:private_ip].to_s
-  ip_list = raw_ips.split(/[,\s]+/).reject(&:blank?).map(&:strip)
+    @wireguard_peer = WireguardPeer.new(
+      private_ip:  "#{params[:wireguard_peer][:private_ip]}",
 
-  created_peers = []
-  errors = []
-
-  ip_list.each do |ip|
-    peer = WireguardPeer.new(private_ip: ip)
-    if peer.valid?
-      # Perform route addition inside transaction for each
-      ActiveRecord::Base.transaction do
-        if system('ip', 'route', 'add', ip, 'dev', 'wg0')
-          peer.save!
-          created_peers << peer
-          log_activity('create', ip)
-        else
-          errors << "Failed to add route for #{ip}"
-          raise ActiveRecord::Rollback
-        end
-      end
-    else
-      errors << peer.errors.full_messages.join(', ')
+    )
+`ip route add #{params[:wireguard_peer][:private_ip]} dev wg0`
+      if @wireguard_peer.save
+        render json: @wireguard_peer, status: :created   
+        ActivtyLog.create(action: 'create', ip: request.remote_ip,
+ description: "Created wireguard peer for private ip #{@wireguard_peer.private_ip}",
+          user_agent: request.user_agent, user: current_user.username || current_user.email,
+           date: Time.current)
+      else
+         render json: @wireguard_peer.errors, status: :unprocessable_entity 
+      
     end
   end
 
-  if errors.any?
-    render json: { errors: errors, created: created_peers }, status: :unprocessable_entity
-  else
-    render json: created_peers, status: :created
+
+  def testing
+    render json: { message: 'testing' }, status: :ok
+    
   end
-end
 
 
 
-
-def update
+  # PATCH/PUT /wireguard_peers/1 or /wireguard_peers/1.json
+ def update
   @wireguard_peer = WireguardPeer.find(params[:id])
   old_ip = @wireguard_peer.private_ip
 
@@ -186,20 +177,10 @@ end
 
 
 
-
-
-
-def log_activity(action)
-  ActivityLog.create(
-    action: action,
-    ip: request.remote_ip,
-    description: "#{action}d wireguard peer for private ip #{@wireguard_peer.private_ip}",
-    user_agent: request.user_agent,
-    user: current_user&.username || current_user&.email || 'system',
-    date: Time.current
-  )
-end
-
+# ActivtyLog.create(action: 'update', ip: request.remote_ip,
+#  description: "Updated wireguard peer for private ip #{@wireguard_peer.private_ip}",
+#           user_agent: request.user_agent, user: current_user.username || current_user.email,
+#            date: Time.current)
 
 
   # DELETE /wireguard_peers/1 or /wireguard_peers/1.json
