@@ -30,7 +30,26 @@ class RadAcct < ApplicationRecord
   acts_as_tenant(:account)
 
   self.ignored_columns = ["class"]
+after_commit :broadcast_if_online, on: [:update, :create]
+
+
+
   # after_commit :broadcast_radacct_stats, on: [:create, :update, :destroy]
+  # 
+
+
+
+  def broadcast_if_online
+
+    HotspotVoucherChannel.broadcast_to(account, {
+      type: "voucher_online",
+     is_online: true,
+     voucher: HotspotVoucher.find_by(voucher: username),
+     id: HotspotVoucher.find_by(voucher: username).id
+     
+    })
+  
+end
 
 #   def broadcast_radacct_stats
 #   threshold_time = 3.minutes.ago
