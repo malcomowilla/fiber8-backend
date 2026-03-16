@@ -198,9 +198,21 @@ ActivtyLog.create(action: 'delete', ip: request.remote_ip,
   end
 
   private
+
+def log_activity(action)
+  ActivityLog.create(
+    action: action,
+    ip: request.remote_ip,
+    description: "#{action}d wireguard peer for private ip #{@wireguard_peer.private_ip}",
+    user_agent: request.user_agent,
+    user: current_user&.username || current_user&.email || 'system',
+    date: Time.current
+  )
+end
+
     # Use callbacks to share common setup or constraints between actions.
     def set_wireguard_peer
-      @wireguard_peer = WireguardPeer.find(params[:id])
+      @wireguard_peer = WireguardPeer.find_by(id:params[:id])
     end
 
     # Only allow a list of trusted parameters through.
