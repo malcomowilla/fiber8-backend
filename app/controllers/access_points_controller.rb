@@ -50,7 +50,7 @@ class AccessPointsController < ApplicationController
   def update
     access_point = AccessPoint.find_by(id: params[:id])
       if access_point.update(access_point_params)
-        render json: @access_point, status: :ok
+        render json: access_point, status: :ok
       else
        render json: @access_point.errors, status: :unprocessable_entity 
       end
