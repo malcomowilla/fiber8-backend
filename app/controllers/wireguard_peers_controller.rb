@@ -113,28 +113,87 @@ end
 
 
 
-  # PATCH/PUT /wireguard_peers/1 or /wireguard_peers/1.json
-  def update
-          @wireguard_peer = WireguardPeer.find(params[:id])
-
-      if @wireguard_peer.update(
-      private_ip:  "#{params[:wireguard_peer][:private_ip]}",
 
 
-      )
-    `ip route add #{params[:wireguard_peer][:private_ip]} dev wg0`
-ActivtyLog.create(action: 'update', ip: request.remote_ip,
- description: "Updated wireguard peer for private ip #{@wireguard_peer.private_ip}",
-          user_agent: request.user_agent, user: current_user.username || current_user.email,
-           date: Time.current)
-# `ip route replace #{@wireguard_peer.private_ip} dev wg0`
 
-        render json: @wireguard_peer, status: :ok
-      else
-         render json: @wireguard_peer.errors, status: :unprocessable_entity 
-      end
-    
+
+def update
+  @wireguard_peer = WireguardPeer.find(params[:id])
+  old_ip = @wireguard_peer.private_ip
+  new_ip = params[:wireguard_peer][:private_ip].to_s.strip
+
+  # Build the peer object with new attributes for validation
+  @wireguard_peer.assign_attributes(private_ip: new_ip)
+
+  # Validate early to avoid unnecessary system calls
+  unless @wireguard_peer.valid?
+    render json: @wireguard_peer.errors, status: :unprocessable_entity
+    return
   end
+
+  # If IP hasn't changed, just update (no route changes needed)
+  if old_ip == new_ip
+    if @wireguard_peer.save
+      log_activity('update')
+      render json: @wireguard_peer, status: :ok
+    else
+      render json: @wireguard_peer.errors, status: :unprocessable_entity
+    end
+    return
+  end
+
+  # IP changed – manage routes inside a transaction
+  ActiveRecord::Base.transaction do
+    # 1. Remove the old route (ignore failure if it doesn't exist)
+    system('ip', 'route', 'del', old_ip, 'dev', 'wg0')
+
+    # 2. Add the new route
+    unless system('ip', 'route', 'add', new_ip, 'dev', 'wg0')
+      raise "Failed to add route for #{new_ip}"
+    end
+
+    # 3. Save the updated peer
+    unless @wireguard_peer.save
+      raise @wireguard_peer.errors.full_messages.join(', ')
+    end
+
+    # 4. Log success
+    log_activity('update')
+    render json: @wireguard_peer, status: :ok
+  end
+
+rescue => e
+  # If anything failed, try to restore the old route and clean up
+  begin
+    # Attempt to remove the new route (if it was added)
+    system('ip', 'route', 'del', new_ip, 'dev', 'wg0')
+  rescue
+    # Ignore errors during cleanup
+  end
+
+  begin
+    # Restore the old route (ignore if it already exists)
+    system('ip', 'route', 'add', old_ip, 'dev', 'wg0')
+  rescue
+    # Ignore
+  end
+
+  render json: { error: e.message }, status: :unprocessable_entity
+end
+
+
+def log_activity(action)
+  ActivityLog.create(
+    action: action,
+    ip: request.remote_ip,
+    description: "#{action}d wireguard peer for private ip #{@wireguard_peer.private_ip}",
+    user_agent: request.user_agent,
+    user: current_user&.username || current_user&.email || 'system',
+    date: Time.current
+  )
+end
+
+
 
   # DELETE /wireguard_peers/1 or /wireguard_peers/1.json
   def destroy
