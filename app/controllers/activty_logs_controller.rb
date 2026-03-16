@@ -23,11 +23,9 @@ class ActivtyLogsController < ApplicationController
   rescue ActiveRecord::RecordNotFound
     render json: { error: 'Invalid tenant' }, status: :not_found
   
-    
   end
   # GET /activty_logs/1 or /activty_logs/1.json
-  def show
-  end
+  
 
   # GET /activty_logs/new
   def new

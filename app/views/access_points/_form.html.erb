@@ -1,0 +1,57 @@
+<%= form_with(model: access_point) do |form| %>
+  <% if access_point.errors.any? %>
+    <div style="color: red">
+      <h2><%= pluralize(access_point.errors.count, "error") %> prohibited this access_point from being saved:</h2>
+
+      <ul>
+        <% access_point.errors.each do |error| %>
+          <li><%= error.full_message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div>
+    <%= form.label :name, style: "display: block" %>
+    <%= form.text_field :name %>
+  </div>
+
+  <div>
+    <%= form.label :ping, style: "display: block" %>
+    <%= form.text_field :ping %>
+  </div>
+
+  <div>
+    <%= form.label :status, style: "display: block" %>
+    <%= form.text_field :status %>
+  </div>
+
+  <div>
+    <%= form.label :checked_at, style: "display: block" %>
+    <%= form.datetime_field :checked_at %>
+  </div>
+
+  <div>
+    <%= form.label :account_id, style: "display: block" %>
+    <%= form.number_field :account_id %>
+  </div>
+
+  <div>
+    <%= form.label :ip, style: "display: block" %>
+    <%= form.text_field :ip %>
+  </div>
+
+  <div>
+    <%= form.label :response, style: "display: block" %>
+    <%= form.text_field :response %>
+  </div>
+
+  <div>
+    <%= form.label :reachable, style: "display: block" %>
+    <%= form.text_field :reachable %>
+  </div>
+
+  <div>
+    <%= form.submit %>
+  </div>
+<% end %>

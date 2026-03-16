@@ -46,6 +46,10 @@ development:
     generate_clients_conf_job:
       class: GenerateClientsConfJob
       cron: "* * * * *"
+
+      access_point_ping_job:
+      class: AccessPointPingJob
+      cron: "* * * * *"
       
     delete_radact_job:
       class: DeleteRadactJob

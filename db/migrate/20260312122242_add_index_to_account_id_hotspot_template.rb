@@ -3,3 +3,6 @@ class AddIndexToAccountIdHotspotTemplate < ActiveRecord::Migration[7.2]
     add_index :hotspot_templates, :account_id
   end
 end
+
+
+

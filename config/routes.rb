@@ -2,6 +2,7 @@ require 'sidekiq/web'
 
 
 Rails.application.routes.draw do
+  resources :access_points
   resources :subscriber_transactions
   resources :hotspot_and_dial_plans
   resources :subscriber_wallet_balances
@@ -79,10 +80,11 @@ Rails.application.routes.draw do
   # allow_get_admin_settings
  
 mount ActionCable.server => '/cable'
-mount Sidekiq::Web => "/sidekiq" # mount Sidekiq::Web in your Rails app
+mount Sidekiq::Web => "/sidekiq" 
 
 scope '/api' do
     resources :subscriber_transactions
+    resources :access_points
 
     resources :hotspot_and_dial_plans
 

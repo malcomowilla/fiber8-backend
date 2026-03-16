@@ -1,0 +1,16 @@
+<p style="color: green"><%= notice %></p>
+
+<% content_for :title, "Access points" %>
+
+<h1>Access points</h1>
+
+<div id="access_points">
+  <% @access_points.each do |access_point| %>
+    <%= render access_point %>
+    <p>
+      <%= link_to "Show this access point", access_point %>
+    </p>
+  <% end %>
+</div>
+
+<%= link_to "New access point", new_access_point_path %>
