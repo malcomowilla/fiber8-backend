@@ -111,7 +111,8 @@ class Rack::Attack
       "/api/shared/.env",
       "/apps/.env", 
       "/v2/_catalog",
-      "/login.action"
+      "/login.action",
+      "/.DS_Store"
 
     ]
 
