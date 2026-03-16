@@ -51,6 +51,7 @@ class Rack::Attack
       "/config",
       "/billing",
       "/swagger.json",
+      "/swagger/index.html",
       "/v2/api-docs",
       "/src/config/.env",
       "/wp-login.php",
