@@ -61,9 +61,9 @@ if current_user
   def create
     @node = Node.new(
       name: params[:name],
-      latitude: params[:position][:lat],
-      longitude: params[:position][:lng],
-      country: params[:country]
+  latitude: params[:position]&.[](:lat) || params[:latitude],
+  longitude: params[:position]&.[](:lng) || params[:longitude],
+  country: params[:country]
     )
     ActivtyLog.create(action: 'create', ip: request.remote_ip,
  description: "Created node #{@node.name}",
