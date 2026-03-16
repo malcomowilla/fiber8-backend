@@ -103,7 +103,8 @@ class Rack::Attack
       "/database/.env",
       "/api/v1/.env",
       "/app/.env",
-      "/core/.env"
+      "/core/.env",
+      "/swagger-ui.html"
 
     ]
 
