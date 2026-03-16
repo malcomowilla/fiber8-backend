@@ -65,54 +65,39 @@ def set_tenant
   end
 
   # POST /wireguard_peers or /wireguard_peers.json
-  def create
-  private_ip = params[:wireguard_peer][:private_ip].to_s.strip
 
-  @wireguard_peer = WireguardPeer.new(private_ip: private_ip)
+def create
+  raw_ips = params[:wireguard_peer][:private_ip].to_s
+  ip_list = raw_ips.split(/[,\s]+/).reject(&:blank?).map(&:strip)
 
-  # Validate early to avoid unnecessary system calls
-  unless @wireguard_peer.valid?
-    render json: @wireguard_peer.errors, status: :unprocessable_entity
-    return
-  end
+  created_peers = []
+  errors = []
 
-  # Use a transaction to keep database and system state consistent
-  ActiveRecord::Base.transaction do
-    # Attempt to add route
-    success = system('ip', 'route', 'add', private_ip, 'dev', 'wg0')
-
-    unless success
-      raise "Failed to add route for #{private_ip}"
-    end
-
-    # Save the peer
-    if @wireguard_peer.save
-      # Log success
-      ActivityLog.create(
-        action: 'create',
-        ip: request.remote_ip,
-        description: "Created wireguard peer for private ip #{@wireguard_peer.private_ip}",
-        user_agent: request.user_agent,
-        user: current_user&.username || current_user&.email || 'system',
-        date: Time.current
-      )
-      render json: @wireguard_peer, status: :created
+  ip_list.each do |ip|
+    peer = WireguardPeer.new(private_ip: ip)
+    if peer.valid?
+      # Perform route addition inside transaction for each
+      ActiveRecord::Base.transaction do
+        if system('ip', 'route', 'add', ip, 'dev', 'wg0')
+          peer.save!
+          created_peers << peer
+          log_activity('create', ip)
+        else
+          errors << "Failed to add route for #{ip}"
+          raise ActiveRecord::Rollback
+        end
+      end
     else
-      # This shouldn't happen because we validated, but just in case
-      raise @wireguard_peer.errors.full_messages.join(', ')
+      errors << peer.errors.full_messages.join(', ')
     end
   end
 
-rescue => e
-  # If anything fails, rollback the transaction and try to remove the route (if added)
-  # Note: The transaction automatically rolls back DB changes, but we need to clean up the route.
-  # We can attempt to remove the route, but it might not have been added.
-  system('ip', 'route', 'del', private_ip, 'dev', 'wg0') if private_ip.present?
-  render json: { error: e.message }, status: :unprocessable_entity
+  if errors.any?
+    render json: { errors: errors, created: created_peers }, status: :unprocessable_entity
+  else
+    render json: created_peers, status: :created
+  end
 end
-
-
-
 
 
 
@@ -120,18 +105,35 @@ end
 def update
   @wireguard_peer = WireguardPeer.find(params[:id])
   old_ip = @wireguard_peer.private_ip
-  new_ip = params[:wireguard_peer][:private_ip].to_s.strip
 
-  # Build the peer object with new attributes for validation
+  # 1. Parse and clean the incoming IP parameter
+  raw_ips = params[:wireguard_peer][:private_ip].to_s
+  ip_list = raw_ips.split(/[,\s]+/)          # split on commas or whitespace
+                 .reject(&:blank?)           # remove empty strings
+                 .map(&:strip)                # trim each element
+
+  # 2. Validate we have exactly one IP
+  if ip_list.empty?
+    render json: { error: 'Private IP cannot be blank' }, status: :unprocessable_entity
+    return
+  end
+
+  if ip_list.size > 1
+    render json: { error: 'Only one private IP allowed when updating a single peer' }, status: :unprocessable_entity
+    return
+  end
+
+  new_ip = ip_list.first
+
+  # 3. Assign and validate (model validation will check IP format)
   @wireguard_peer.assign_attributes(private_ip: new_ip)
 
-  # Validate early to avoid unnecessary system calls
   unless @wireguard_peer.valid?
     render json: @wireguard_peer.errors, status: :unprocessable_entity
     return
   end
 
-  # If IP hasn't changed, just update (no route changes needed)
+  # 4. If IP unchanged, just save and log
   if old_ip == new_ip
     if @wireguard_peer.save
       log_activity('update')
@@ -142,44 +144,49 @@ def update
     return
   end
 
-  # IP changed – manage routes inside a transaction
+  # 5. IP changed – update routes inside a transaction
   ActiveRecord::Base.transaction do
-    # 1. Remove the old route (ignore failure if it doesn't exist)
+    # Remove old route (ignore if it doesn't exist)
     system('ip', 'route', 'del', old_ip, 'dev', 'wg0')
 
-    # 2. Add the new route
+    # Add new route
     unless system('ip', 'route', 'add', new_ip, 'dev', 'wg0')
       raise "Failed to add route for #{new_ip}"
     end
 
-    # 3. Save the updated peer
+    # Save the peer
     unless @wireguard_peer.save
       raise @wireguard_peer.errors.full_messages.join(', ')
     end
 
-    # 4. Log success
     log_activity('update')
     render json: @wireguard_peer, status: :ok
   end
 
 rescue => e
-  # If anything failed, try to restore the old route and clean up
+  # 6. Clean up if something went wrong
   begin
-    # Attempt to remove the new route (if it was added)
     system('ip', 'route', 'del', new_ip, 'dev', 'wg0')
   rescue
-    # Ignore errors during cleanup
+    # ignore
   end
 
   begin
-    # Restore the old route (ignore if it already exists)
     system('ip', 'route', 'add', old_ip, 'dev', 'wg0')
   rescue
-    # Ignore
+    # ignore
   end
 
   render json: { error: e.message }, status: :unprocessable_entity
 end
+
+
+
+
+
+
+
+
 
 
 def log_activity(action)
