@@ -66,29 +66,53 @@ def set_tenant
 
   # POST /wireguard_peers or /wireguard_peers.json
   def create
+  private_ip = params[:wireguard_peer][:private_ip].to_s.strip
 
-    @wireguard_peer = WireguardPeer.new(
-      private_ip:  "#{params[:wireguard_peer][:private_ip]}",
+  @wireguard_peer = WireguardPeer.new(private_ip: private_ip)
 
-    )
-`ip route add #{params[:wireguard_peer][:private_ip]} dev wg0`
-      if @wireguard_peer.save
-        render json: @wireguard_peer, status: :created   
-        ActivtyLog.create(action: 'create', ip: request.remote_ip,
- description: "Created wireguard peer for private ip #{@wireguard_peer.private_ip}",
-          user_agent: request.user_agent, user: current_user.username || current_user.email,
-           date: Time.current)
-      else
-         render json: @wireguard_peer.errors, status: :unprocessable_entity 
-      
+  # Validate early to avoid unnecessary system calls
+  unless @wireguard_peer.valid?
+    render json: @wireguard_peer.errors, status: :unprocessable_entity
+    return
+  end
+
+  # Use a transaction to keep database and system state consistent
+  ActiveRecord::Base.transaction do
+    # Attempt to add route
+    success = system('ip', 'route', 'add', private_ip, 'dev', 'wg0')
+
+    unless success
+      raise "Failed to add route for #{private_ip}"
+    end
+
+    # Save the peer
+    if @wireguard_peer.save
+      # Log success
+      ActivityLog.create(
+        action: 'create',
+        ip: request.remote_ip,
+        description: "Created wireguard peer for private ip #{@wireguard_peer.private_ip}",
+        user_agent: request.user_agent,
+        user: current_user&.username || current_user&.email || 'system',
+        date: Time.current
+      )
+      render json: @wireguard_peer, status: :created
+    else
+      # This shouldn't happen because we validated, but just in case
+      raise @wireguard_peer.errors.full_messages.join(', ')
     end
   end
 
+rescue => e
+  # If anything fails, rollback the transaction and try to remove the route (if added)
+  # Note: The transaction automatically rolls back DB changes, but we need to clean up the route.
+  # We can attempt to remove the route, but it might not have been added.
+  system('ip', 'route', 'del', private_ip, 'dev', 'wg0') if private_ip.present?
+  render json: { error: e.message }, status: :unprocessable_entity
+end
 
-  def testing
-    render json: { message: 'testing' }, status: :ok
-    
-  end
+
+
   # PATCH/PUT /wireguard_peers/1 or /wireguard_peers/1.json
   def update
           @wireguard_peer = WireguardPeer.find(params[:id])
