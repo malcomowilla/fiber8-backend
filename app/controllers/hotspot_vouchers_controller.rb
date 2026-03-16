@@ -107,7 +107,8 @@ end
 
 
     def logout_user
-            
+            host = request.headers['X-Subdomain']
+    @account = Account.find_by!(subdomain: host)
   
 voucher = HotspotVoucher.find_by(voucher: params[:voucher])
 nas_routers = NasRouter.where(account_id: voucher.account_id)
@@ -133,7 +134,7 @@ nas_routers.each do |nas|
     )
 
     if response.code == 200
-  HotspotVoucherChannel.broadcast_to(account, {
+  HotspotVoucherChannel.broadcast_to(@account, {
       type: "voucher_online",
      is_online: false,
      voucher: HotspotVoucher.find_by(voucher: voucher),
