@@ -200,7 +200,7 @@ ActivtyLog.create(action: 'delete', ip: request.remote_ip,
   private
 
 def log_activity(action)
-  ActivityLog.create(
+  ActivtyLog.create(
     action: action,
     ip: request.remote_ip,
     description: "#{action}d wireguard peer for private ip #{@wireguard_peer.private_ip}",
