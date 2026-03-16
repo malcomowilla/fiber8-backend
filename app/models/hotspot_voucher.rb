@@ -29,7 +29,7 @@ end
 
 def broadcast_if_online
   if online?
-    VoucherChannel.broadcast_to(account, {
+    HotspotVoucherChannel.broadcast_to(account, {
       type: "voucher_online",
      is_online: true,
      voucher: voucher,
