@@ -137,8 +137,8 @@ nas_routers.each do |nas|
   HotspotVoucherChannel.broadcast_to(@account, {
       type: "voucher_online",
      is_online: false,
-     voucher: HotspotVoucher.find_by(voucher: voucher),
-     id: HotspotVoucher.find_by(voucher: voucher).id
+     voucher: HotspotVoucher.find_by(voucher: params[:voucher]),
+     id: HotspotVoucher.find_by(voucher: params[:voucher]).id
      
     })
 
