@@ -65,7 +65,10 @@ def self.send_sms_for_tenant(voucher, tenant)
   def self.send_voucher_sms_leopard(voucher, tenant)
         expiration = voucher.expiration.strftime("%B %d, %Y at %I:%M %p") if voucher.expiration.present?
 
-    message = "Your voucher code is: #{voucher.voucher}. This code is valid until #{expiration}."
+    # message = "Your voucher code is: #{voucher.voucher}. This code is valid until #{expiration}."
+
+
+    message = "Your voucher code is: #{voucher.voucher}"
 sms_setting = tenant.sms_setting
   api_key = sms_setting.api_key
   api_secret = sms_setting.api_secret
@@ -92,7 +95,7 @@ sms_setting = tenant.sms_setting
   def self.send_voucher_text_sms(voucher, tenant)
     expiration = voucher.expiration.strftime("%B %d, %Y at %I:%M %p") if voucher.expiration.present?
 
-    message = "Your voucher code is: #{voucher.voucher}. This code is valid until #{expiration}."
+    message = "Your voucher code is: #{voucher.voucher}."
   # api_key = tenant.sms_setting.find_by(sms_provider: 'TextSms')&.api_key
   # partnerID = tenant.sms_setting.find_by(sms_provider: 'TextSms')&.partnerID
 
