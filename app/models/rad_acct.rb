@@ -41,11 +41,13 @@ after_commit :broadcast_if_online, on: [:update, :create, :destroy, ]
 
   def broadcast_if_online
       is_online = acctstoptime.nil?
+      voucher = HotspotVoucher.find_by(voucher: username)
+  return unless voucher
     HotspotVoucherChannel.broadcast_to(account, {
       type: "voucher_online",
      is_online: is_online,
-     voucher: HotspotVoucher.find_by(voucher: username),
-     id: HotspotVoucher.find_by(voucher: username).id
+     voucher: voucher ,
+     id: voucher.id
      
     })
   

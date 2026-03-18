@@ -8,7 +8,7 @@ after_commit :clear_cache
 has_one :hotspot_mpesa_revenue
 belongs_to :hotspot_package, optional: true
 has_many :temporary_sessions, dependent: :destroy
-after_commit :broadcast_if_online, on: [:update]
+# after_commit :broadcast_if_online, on: [:update]
 
 
 def clear_cache
@@ -27,17 +27,17 @@ end
 
 
 
-def broadcast_if_online
-  if online?
-    HotspotVoucherChannel.broadcast_to(account, {
-      type: "voucher_online",
-     is_online: true,
-     voucher: voucher,
-     id: id
+# def broadcast_if_online
+#   if online?
+#     HotspotVoucherChannel.broadcast_to(account, {
+#       type: "voucher_online",
+#      is_online: true,
+#      voucher: voucher,
+#      id: id
      
-    })
-  end
-end
+#     })
+#   end
+# end
 
   # def broadcast_hotspot_voucher_status
   #   voucher_status = {
