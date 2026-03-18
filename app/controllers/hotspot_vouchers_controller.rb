@@ -306,7 +306,7 @@ nas_routers.each do |nas|
        
 
 
-voucher.update(status: 'used')
+voucher.update(status: 'used', login_by: 'Trasnsaction Code')
        active_session.update(
         paid: true, connected: true,
         status: 'used'
@@ -401,7 +401,8 @@ if present_voucher_or_username
     if response.code == 200
  
 
-   HotspotMpesaRevenue.find_by(reference: transaction_id).hotspot_voucher.update!(status: "used", 
+   HotspotMpesaRevenue.find_by(reference: transaction_id).hotspot_voucher.update!(status: "used",
+   login_by: 'Trasnsaction Code', 
       last_logged_in: Time.now,
        ip: HotspotMpesaRevenue.find_by(reference: transaction_id).hotspot_voucher.ip, used_voucher: true)
 
@@ -596,7 +597,7 @@ calculate_expiration_login(session.hotspot_package,
 voucher, session.account_id)
 end
  voucher.update(status: "used", last_logged_in: Time.now,
-       used_voucher: true)
+       used_voucher: true, login_by: 'Voucher Code')
 
 
       # SendSmsHotspotJob.perform_now(voucher.voucher, data)
@@ -1384,7 +1385,9 @@ end
    
 
         @hotspot_voucher.update!(status: 'used', last_logged_in: Time.now, 
-        ip: params[:ip], mac: params[:mac], used_voucher: true)
+        ip: params[:ip], mac: params[:mac], used_voucher: true,
+        login_by: 'Voucher Code'
+        )
 
         
 if @hotspot_voucher.expiration.nil?
