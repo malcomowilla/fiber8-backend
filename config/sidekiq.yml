@@ -24,15 +24,15 @@ development:
 
     rehydrate_wireguard_job:
       class: RehydrateWireguardJob
-      cron: "* * * * *"
+      cron: "*/2 * * * *"
 
     subscription_expiration_notification_job:
         class: SubscriptionExpirationNotificationJob
-        cron: "* * * * *"
+        cron: "*/5 * * * *"
 
     analytics_job:
         class: AnalyticsJob
-        cron: "* * * * *"
+        cron: "*/2 * * * *"
 
     subscription_expiry_reminder_job:
         class: SubscriptionExpiryReminderJob
@@ -57,15 +57,15 @@ development:
 
     populate_radius_job:
       class: PopulateRadiusJob
-      cron: "* * * * *"
+      cron: "*/2 * * * *"
 
     delete_session_job:
       class: DeleteSessionJob
-      cron: "* * * * *"
+      cron: "*/10 * * * *"
 
     online_stats_broadcast_job:
       class: OnlineStatsBroadcastJob
-      cron: "* * * * *"
+      cron: "*/2 * * * *"
 
     router_notification_job:
       class: RouterNotificationJob
@@ -73,7 +73,7 @@ development:
 
     restart_cloudflared_if_tunnel_missing_job:
       class: RestartCloudflaredIfTunnelMissingJob
-      cron: "* * * * *"
+      cron: "*/3 * * * *"
 
     lock_account_job:
       class: LockAccountJob
@@ -97,7 +97,7 @@ development:
 
     system_metrics_job:
       class: SystemMetricsJob
-      cron: "* * * * *"
+      cron: "*/2 * * * *"
 
     company_id_job:
       class: CompanyIdJob
@@ -105,7 +105,7 @@ development:
 
     inactivity_check_job:
       class: InactivityCheckJob
-      cron: "*/2 * * * *"
+      cron: "*/3 * * * *"
 
 production:
   :queues:
