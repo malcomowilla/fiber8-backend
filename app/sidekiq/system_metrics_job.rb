@@ -142,7 +142,7 @@ Rails.logger.info "Rehydrating wireguard"
             disk_used: '0GB', # Save disk used
             load_average: 0,
             uptime: 0,
-            account_id: ActsAsTenant.current_tenant&.id
+            # account_id: ActsAsTenant.current_tenant&.id
           )
           sys.update(
             cpu_usage: '0%',
@@ -154,7 +154,7 @@ Rails.logger.info "Rehydrating wireguard"
             disk_used: '0GB', # Save disk used
             load_average: 0,
             uptime: 0,
-            account_id: ActsAsTenant.current_tenant.id
+            # account_id: ActsAsTenant.current_tenant.id
           ) 
           return
         end
@@ -219,19 +219,19 @@ Rails.logger.info "Rehydrating wireguard"
           disk_used: metrics[:disk_used], # Save disk used
           load_average: metrics[:load_average],
           uptime: metrics[:uptime],
-          account_id: ActsAsTenant.current_tenant.id
+          # account_id: ActsAsTenant.current_tenant.id
         )
         sys.update(
           cpu_usage: metrics[:cpu_usage],
           memory_total: metrics[:memory_total],
           memory_free: metrics[:memory_free],
-          memory_used: metrics[:memory_used], # Save memory used
+          memory_used: metrics[:memory_used], 
           disk_total: metrics[:disk_total],
           disk_free: metrics[:disk_free],
-          disk_used: metrics[:disk_used], # Save disk used
+          disk_used: metrics[:disk_used], 
           load_average: metrics[:load_average],
           uptime: metrics[:uptime],
-          account_id: ActsAsTenant.current_tenant.id
+          # account_id: ActsAsTenant.current_tenant.id
         ) 
 
         # Rails.logger.info "System Metrics saved: #{sys.inspect}"

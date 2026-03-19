@@ -2,9 +2,9 @@
 
 class SystemMetricsController < ApplicationController
   
-  set_current_tenant_through_filter
+  # set_current_tenant_through_filter
 
-  before_action :set_tenant
+  # before_action :set_tenant
   before_action :update_last_activity, only: [:reboot_router]
   before_action :set_time_zone
 
@@ -31,18 +31,18 @@ if current_user
 
 
 
-  def set_tenant
+  # def set_tenant
 
-    host = request.headers['X-Subdomain']
-    @account = Account.find_by(subdomain: host)
-    ActsAsTenant.current_tenant = @account
-    set_current_tenant(@account)
-    EmailConfiguration.configure(@account, ENV['SYSTEM_ADMIN_EMAIL'])
+  #   host = request.headers['X-Subdomain']
+  #   @account = Account.find_by(subdomain: host)
+  #   ActsAsTenant.current_tenant = @account
+  #   set_current_tenant(@account)
+  #   EmailConfiguration.configure(@account, ENV['SYSTEM_ADMIN_EMAIL'])
   
-    # set_current_tenant(@account)
-  rescue ActiveRecord::RecordNotFound
-    render json: { error: 'Invalid tenant' }, status: :not_found
-  end
+  #   # set_current_tenant(@account)
+  # rescue ActiveRecord::RecordNotFound
+  #   render json: { error: 'Invalid tenant' }, status: :not_found
+  # end
 
 
   def reboot_router
