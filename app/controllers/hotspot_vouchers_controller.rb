@@ -590,7 +590,7 @@ nas_routers.each do |nas|
     # in with voucher #{voucher_code} on router #{nas.ip_address}"
       session.update!(connected: true, status:'used')
 
-voucher.update(status: "used", last_logged_in: Time.now,
+voucher.update(status:"used", last_logged_in: Time.now,
        used_voucher: true, login_by:'Voucher Code')
 
      
