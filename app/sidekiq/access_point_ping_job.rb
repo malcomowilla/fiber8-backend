@@ -18,7 +18,7 @@ class AccessPointPingJob
             # TCP check instead of ping
             begin
               start_time = Time.now
-              Socket.tcp(ip_address, 8728, connect_timeout: 2).close # use 8728 for MikroTik API, or choose appropriate port
+              Socket.tcp(ip_address, 80, connect_timeout: 2).close # use 8728 for MikroTik API, or choose appropriate port
               end_time = Time.now
 
               reachable = true
