@@ -122,7 +122,9 @@ Rails.logger.info "Rehydrating wireguard"
 
     end
 
-  
+    Account.find_each do |tenant|
+      ActsAsTenant.with_tenant(tenant) do
+
 
 
 
@@ -233,7 +235,8 @@ Rails.logger.info "Rehydrating wireguard"
         ) 
 
         # Rails.logger.info "System Metrics saved: #{sys.inspect}"
-     
+      end
+    end
   end
 end
 

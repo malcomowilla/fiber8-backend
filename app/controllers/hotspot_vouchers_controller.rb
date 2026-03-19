@@ -1463,15 +1463,16 @@ def calculate_expiration_login(package, voucher_created, account_id)
 
   # Update status only if expiration is present
   if expiration_time.present?
-    voucher_created.update(expiration: expiration_time&.strftime("%B %d, %Y at %I:%M %p"),
-    status: 'active'
+    voucher_created.update(expiration: 
+    expiration_time&.strftime("%B %d, %Y at %I:%M %p"),
+    # status: 'active'
     )
   end
 
   # Return both expiration and status
   {
     expiration: expiration_time&.strftime("%B %d, %Y at %I:%M %p"),
-    status: 'active'
+    # status: 'active'
   }
 end
 
