@@ -16,15 +16,16 @@ notification_when_unreachable = tenant&.nas_setting&.notification_when_unreachab
 notification_phone_number = tenant&.nas_setting&.notification_phone_number
 
 if notification_when_unreachable
-        nas_routers = NasRouter.all
+        nas_routers = NasRouter.where(account_id: tenant.id)
         nas_routers.each do |nas_router|
   ip_address = nas_router.ip_address
   router_name = nas_router.name # Make sure you have router name
 
   Rails.logger.info "Pinging router at #{ip_address} for tenant #{tenant.id}..."
 
-  output, status = Open3.capture2e("ping -c 3 #{ip_address}")
-  reachable = status.success?
+  # output, status = Open3.capture2e("ping -c 3 #{ip_address}")
+  # reachable = status.success?
+  reachable = tcp_reachable?(ip_address, 8728)
   new_status = reachable ? "reachable" : "unreachable"
 
   now = Time.current
@@ -69,6 +70,32 @@ end
   end
 
 private
+
+
+
+
+def tcp_reachable?(ip, port = 8728, timeout_sec = 3)
+  Timeout.timeout(timeout_sec) do
+    begin
+      socket = TCPSocket.new(ip, port)
+      socket.close
+      true
+    rescue Errno::ECONNREFUSED
+      # Host is reachable but port closed → still reachable
+      true
+    rescue StandardError
+      false
+    end
+  end
+rescue Timeout::Error
+  false
+end
+
+
+
+
+
+
 def send_notification_sms_reachable(phone_number, tenant, router_name, ip_address)
     provider = tenant&.sms_provider_setting.present? && tenant.sms_provider_setting&.sms_provider
 
