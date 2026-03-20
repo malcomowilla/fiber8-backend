@@ -1,0 +1,37 @@
+<%= form_with(model: access_point_setting) do |form| %>
+  <% if access_point_setting.errors.any? %>
+    <div style="color: red">
+      <h2><%= pluralize(access_point_setting.errors.count, "error") %> prohibited this access_point_setting from being saved:</h2>
+
+      <ul>
+        <% access_point_setting.errors.each do |error| %>
+          <li><%= error.full_message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div>
+    <%= form.label :notification_when_unreachable, style: "display: block" %>
+    <%= form.check_box :notification_when_unreachable %>
+  </div>
+
+  <div>
+    <%= form.label :unreachable_duration_minutes, style: "display: block" %>
+    <%= form.text_field :unreachable_duration_minutes %>
+  </div>
+
+  <div>
+    <%= form.label :notification_phone_number, style: "display: block" %>
+    <%= form.text_field :notification_phone_number %>
+  </div>
+
+  <div>
+    <%= form.label :account_id, style: "display: block" %>
+    <%= form.number_field :account_id %>
+  </div>
+
+  <div>
+    <%= form.submit %>
+  </div>
+<% end %>

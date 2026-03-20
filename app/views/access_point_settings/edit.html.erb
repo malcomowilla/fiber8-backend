@@ -1,0 +1,12 @@
+<% content_for :title, "Editing access point setting" %>
+
+<h1>Editing access point setting</h1>
+
+<%= render "form", access_point_setting: @access_point_setting %>
+
+<br>
+
+<div>
+  <%= link_to "Show this access point setting", @access_point_setting %> |
+  <%= link_to "Back to access point settings", access_point_settings_path %>
+</div>

@@ -1,0 +1,10 @@
+<p style="color: green"><%= notice %></p>
+
+<%= render @access_point_setting %>
+
+<div>
+  <%= link_to "Edit this access point setting", edit_access_point_setting_path(@access_point_setting) %> |
+  <%= link_to "Back to access point settings", access_point_settings_path %>
+
+  <%= button_to "Destroy this access point setting", @access_point_setting, method: :delete %>
+</div>

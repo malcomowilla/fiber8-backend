@@ -1,0 +1,2 @@
+module AccessPointSettingsHelper
+end

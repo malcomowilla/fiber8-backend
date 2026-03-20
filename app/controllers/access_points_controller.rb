@@ -74,6 +74,9 @@ class AccessPointsController < ApplicationController
     # Only allow a list of trusted parameters through.
     def access_point_params
       params.require(:access_point).permit(:name, :ping,
-       :status, :checked_at, :account_id, :ip, :response, :reachable)
+       :status, :checked_at, :account_id, :ip, :response, :reachable,
+       
+       :longitude, :latitude
+       )
     end
 end

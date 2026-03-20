@@ -10,9 +10,18 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_03_18_153722) do
+ActiveRecord::Schema[7.2].define(version: 2026_03_20_101508) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
+
+  create_table "access_point_settings", force: :cascade do |t|
+    t.boolean "notification_when_unreachable"
+    t.string "unreachable_duration_minutes"
+    t.string "notification_phone_number"
+    t.integer "account_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
 
   create_table "access_points", force: :cascade do |t|
     t.string "name"
@@ -25,6 +34,10 @@ ActiveRecord::Schema[7.2].define(version: 2026_03_18_153722) do
     t.boolean "reachable", default: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.datetime "last_status_changed_at"
+    t.datetime "last_notification_sent_at"
+    t.string "latitude"
+    t.string "longitude"
   end
 
   create_table "accounts", force: :cascade do |t|
