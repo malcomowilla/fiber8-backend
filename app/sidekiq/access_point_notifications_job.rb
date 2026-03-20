@@ -90,7 +90,6 @@ def tcp_reachable?(ip, port = 80, timeout_sec = 3)
       true
     rescue StandardError
       false
-      Rails.logger.info "Ping failed for access point at #{ip_address} for tenant #{tenant.id}..."
     end
   end
 rescue Timeout::Error
