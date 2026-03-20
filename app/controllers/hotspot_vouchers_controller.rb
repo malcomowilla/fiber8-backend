@@ -553,13 +553,13 @@ account_id: session.account_id,
 create_voucher_radcheck(voucher_code, session.hotspot_package, 
 session.account_id)
 voucher_expiration = HotspotSetting.find_by(account_id: session.account_id).voucher_expiration
+SendSmsHotspotService.send_sms(voucher.voucher, data)
 
 if voucher_expiration == 'Expiry After Creation'
-calculate_expiration(session.hotspot_package, voucher, session.account_id)
+calculate_expiration_login(session.hotspot_package, voucher, session.account_id)
 
-  
 end
-SendSmsHotspotService.send_sms(voucher.voucher, data)
+
 
 
 nas_routers = NasRouter.where(account_id: session.account_id)
@@ -591,7 +591,7 @@ voucher.update(status:"used", last_logged_in: Time.now,
 
      
 if voucher_expiration == 'Expiry After Login'
-calculate_expiration_login_with_voucher(session.hotspot_package, 
+calculate_expiration_login(session.hotspot_package, 
 voucher, session.account_id)
 end
  
