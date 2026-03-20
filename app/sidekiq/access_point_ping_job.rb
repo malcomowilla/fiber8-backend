@@ -6,6 +6,7 @@ class AccessPointPingJob
     Account.find_each do |tenant| 
       ActsAsTenant.with_tenant(tenant) do
 
+        Rails.logger.info "Checking access points for tenant #{tenant.id}"
         nas_routers = AccessPoint.where(account_id: tenant.id)
         nas_routers.each do |nas_router|
           ip_address = nas_router.ip
