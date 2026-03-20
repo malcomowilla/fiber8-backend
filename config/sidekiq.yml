@@ -49,7 +49,7 @@ development:
 
       access_point_ping_job:
       class: AccessPointPingJob
-      cron: "*/3 * * * *"
+      cron: "*/1 * * * *"
 
       access_point_notifications_job:
       class: AccessPointNotificationsJob
