@@ -82,6 +82,7 @@ class AccessPointSettingsController < ApplicationController
     # Only allow a list of trusted parameters through.
     def access_point_setting_params
       params.require(:access_point_setting).permit(:notification_when_unreachable,
-       :unreachable_duration_minutes, :notification_phone_number, :account_id)
+       :unreachable_duration_minutes, :notification_phone_number,
+        :account_id)
     end
 end
