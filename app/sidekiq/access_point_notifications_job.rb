@@ -81,7 +81,6 @@ private
 def tcp_reachable?(ip, port = 80, timeout_sec = 3)
   Timeout.timeout(timeout_sec) do
     begin
-      Rails.logger.info "Pinging access point at #{ip_address} for tenant #{tenant.id}..."
       socket = TCPSocket.new(ip, port)
       socket.close
       true
