@@ -42,7 +42,7 @@ if notification_when_unreachable
   end
 
   # Check if we should send notification
-  duration = tenant&.access_point_setting&.unreachable_duration_minutes || 0
+  duration = tenant&.access_point_setting&.unreachable_duration_minutes.to_f || 0
   minutes_since_change = (now - (nas_router.last_status_changed_at || now)) / 60.0
   notification_sent = nas_router.last_notification_sent_at
 
