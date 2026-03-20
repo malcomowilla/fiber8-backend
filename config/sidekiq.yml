@@ -47,11 +47,11 @@ development:
       class: GenerateClientsConfJob
       cron: "*/2 * * * *"
 
-      access_point_ping_job:
+    access_point_ping_job:
       class: AccessPointPingJob
       cron: "*/2 * * * *"
 
-      access_point_notifications_job:
+    access_point_notifications_job:
       class: AccessPointNotificationsJob
       cron: "*/2 * * * *"
       
