@@ -1,17 +1,17 @@
 default:
-  :concurrency: 3
+  :concurrency: 5
   :queues:
     - [invoices, 3]
     - [client_conf, 3]
-    - [default, 2]
+    - [default, 5]
     - [radacct, 2]
 
 development:
-  :concurrency: 3
+  :concurrency: 5
   :queues:
     - [invoices, 3]
     - [client_conf, 3]
-    - [default, 2]
+    - [default, 5]
     - [radacct, 2]
 
 :scheduler:
