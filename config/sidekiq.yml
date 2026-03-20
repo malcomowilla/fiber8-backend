@@ -50,6 +50,10 @@ development:
       access_point_ping_job:
       class: AccessPointPingJob
       cron: "*/3 * * * *"
+
+      access_point_notifications_job:
+      class: AccessPointNotificationsJob
+      cron: "*/2 * * * *"
       
     delete_radact_job:
       class: DeleteRadactJob
