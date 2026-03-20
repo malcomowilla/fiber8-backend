@@ -36,6 +36,7 @@ class AccessPointSettingsController < ApplicationController
   # POST /access_point_settings or /access_point_settings.json
   def create
     @access_point_setting = AccessPointSetting.first_or_initialize(access_point_setting_params)
+     @access_point_setting.update(access_point_setting_params)
 
       if @access_point_setting.save
         render json: @access_point_setting, status: :created
