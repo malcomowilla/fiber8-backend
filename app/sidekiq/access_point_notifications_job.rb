@@ -24,7 +24,7 @@ if notification_when_unreachable
   ip_address = nas_router.ip
   router_name = nas_router.name # Make sure you have router name
 
-  Rails.logger.info "Pinging router at #{ip_address} for tenant #{tenant.id}..."
+  Rails.logger.info "Pinging access point at #{ip_address} for tenant #{tenant.id}..."
 
   # output, status = Open3.capture2e("ping -c 3 #{ip_address}")
   # reachable = status.success?
@@ -81,6 +81,7 @@ private
 def tcp_reachable?(ip, port = 80, timeout_sec = 3)
   Timeout.timeout(timeout_sec) do
     begin
+      Rails.logger.info "Pinging access point at #{ip_address} for tenant #{tenant.id}..."
       socket = TCPSocket.new(ip, port)
       socket.close
       true
@@ -89,6 +90,7 @@ def tcp_reachable?(ip, port = 80, timeout_sec = 3)
       true
     rescue StandardError
       false
+      Rails.logger.info "Ping failed for access point at #{ip_address} for tenant #{tenant.id}..."
     end
   end
 rescue Timeout::Error
