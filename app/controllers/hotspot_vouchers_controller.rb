@@ -535,7 +535,10 @@ def check_payment_status
 
 
         # voucher = HotspotVoucher.find_by(voucher: voucher_code)
-hotspot_package = HotspotPackage.find_by(name: session.hotspot_package)
+hotspot_package = HotspotPackage.find_by(name: session.hotspot_package,
+account_id: session.account_id
+
+)
         voucher = HotspotVoucher.create!(
   package: session.hotspot_package,
   phone: session.phone_number,
@@ -556,7 +559,7 @@ voucher_expiration = HotspotSetting.find_by(account_id: session.account_id).vouc
 SendSmsHotspotService.send_sms(voucher.voucher, data)
 
 if voucher_expiration == 'Expiry After Creation'
-calculate_expiration_login(session.hotspot_package, voucher, session.account_id)
+ calculate_expiration_login_with_voucher(hotspot_package, voucher, session.account_id)
 
 end
 
@@ -591,7 +594,8 @@ voucher.update(status:"used", last_logged_in: Time.now,
 
      
 if voucher_expiration == 'Expiry After Login'
-calculate_expiration_login(session.hotspot_package, 
+calculate_expiration_login_with_voucher(hotspot_package, 
+
 voucher, session.account_id)
 end
  
@@ -1388,7 +1392,7 @@ end
         
 if @hotspot_voucher.expiration.nil?
   
- calculate_expiration_login_with_voucher(package, @hotspot_voucher,
+  calculate_expiration_login_with_voucher(package, @hotspot_voucher,
        @hotspot_voucher.account_id)
 
 end

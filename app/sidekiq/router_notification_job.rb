@@ -130,7 +130,8 @@ def send_notification_sms_reachable(phone_number, tenant, router_name, ip_addres
 
 
 
-def send_notification_sms_leopard_unreachable(phone_number,tenant,router_name, ip_address)
+def send_notification_sms_leopard_unreachable(phone_number,tenant,
+  router_name, ip_address)
 
     # provider = ActsAsTenant.current_tenant.sms_provider_setting.sms_provider
 
@@ -178,7 +179,8 @@ end
 
 
 
-  def send_notification_text_sms_unreachable(phone_number,tenant,router_name, ip_address)
+  def send_notification_text_sms_unreachable(phone_number,tenant,
+    router_name, ip_address)
     # api_key = SmsSetting.find_by(sms_provider: 'TextSms')&.api_key
     # partnerID = SmsSetting.find_by(sms_provider: 'TextSms')&.partnerID
 # TextSms
@@ -214,7 +216,8 @@ end
     uri.query = URI.encode_www_form(params)
 
     response = Net::HTTP.get_response(uri)
-    handle_sms_response_text_sms(response, original_message, phone_number, tenant)
+    handle_sms_response_text_sms(response, original_message,
+     phone_number, tenant)
   end
 
 

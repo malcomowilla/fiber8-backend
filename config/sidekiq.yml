@@ -36,7 +36,7 @@ development:
 
     subscription_expiry_reminder_job:
         class: SubscriptionExpiryReminderJob
-        cron: "* * * * *"
+        cron: "*/4 * * * *"
 
     rad_sessions_job:
       class: RadSessionsJob
@@ -53,7 +53,7 @@ development:
       
     delete_radact_job:
       class: DeleteRadactJob
-      cron: "* * * * *"
+      cron: "*/2 * * * *"
 
     populate_radius_job:
       class: PopulateRadiusJob
@@ -69,7 +69,7 @@ development:
 
     router_notification_job:
       class: RouterNotificationJob
-      cron: "* * * * *"
+      cron: "*/2 * * * *"
 
     restart_cloudflared_if_tunnel_missing_job:
       class: RestartCloudflaredIfTunnelMissingJob
@@ -99,9 +99,7 @@ development:
       class: SystemMetricsJob
       cron: "*/2 * * * *"
 
-    company_id_job:
-      class: CompanyIdJob
-      cron: "*/5 * * * *"
+  
 
     inactivity_check_job:
       class: InactivityCheckJob

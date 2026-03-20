@@ -31,8 +31,8 @@ class AnalyticsJob
       AnalyticsEvent.insert_all(batch)
       Rails.logger.info "✅ Insert successful"
     rescue => e
-      Rails.logger.error "❌ insert_all failed: #{e.class} - #{e.message}"
-      Rails.logger.error e.backtrace.join("\n")
+      Rails.logger.info "❌ insert_all failed: #{e.class} - #{e.message}"
+      Rails.logger.info e.backtrace.join("\n")
     end
 
     Rails.logger.info "=== AnalyticsJob finished ==="

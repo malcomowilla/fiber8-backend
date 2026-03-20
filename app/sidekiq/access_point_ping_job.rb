@@ -3,7 +3,7 @@ class AccessPointPingJob
   queue_as :default
 
   def perform
-    Account.find_each do |tenant| # Iterate over all tenants
+    Account.find_each do |tenant| 
       ActsAsTenant.with_tenant(tenant) do
 
         nas_routers = AccessPoint.where(account_id: tenant.id)
@@ -40,7 +40,12 @@ class AccessPointPingJob
           end
         end
 
+
+
+
+
       end
     end
+
   end
 end
