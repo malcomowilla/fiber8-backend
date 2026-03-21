@@ -929,19 +929,21 @@ end
 
 
 def send_voucher_to_phone_number
+    company_name = ActsAsTenant.current_tenant&.company_setting&.company_name
+
   if params[:phone].present?
    HotspotVoucher.find_by(voucher: params[:voucher]).update(phone: params[:phone])
 
 expiration = HotspotVoucher.find_by(voucher: params[:voucher]).expiration
              if ActsAsTenant.current_tenant.sms_provider_setting.sms_provider == "SMS leopard"
                send_voucher(params[:phone], params[:voucher],
-                params[:shared_users]
+                params[:shared_users], company_name
                )
       # expiration.strftime("%B %d, %Y at %I:%M %p"), 
 
              elsif ActsAsTenant.current_tenant.sms_provider_setting.sms_provider == "TextSms"
                send_voucher_text_sms(params[:phone], params[:voucher],
-               params[:shared_users]
+               params[:shared_users], company_name
                )
              end
          
@@ -1821,7 +1823,7 @@ private
 
 
       def send_voucher(phone_number, voucher_code,
-        shared_users
+        shared_users, company_name
         )
       # api_key = ActsAsTenant.current_tenant.sms_setting.api_key
       # api_secret = ActsAsTenant.current_tenant.sms_setting.api_secret
@@ -1845,7 +1847,7 @@ private
     #original_message = "Your voucher code is: #{voucher_code}. This code is valid until #{voucher_expiration}.
 
                original_message = "Your voucher code is: #{voucher_code}.
-  #    Enjoy your browsing"
+  #    Enjoy your browsing (FROM:  #{company_name})"
       
       
               sender_id = "SMS_TEST" # Ensure this is a valid sender ID
@@ -1896,7 +1898,7 @@ private
 
 
            def send_voucher_text_sms(phone_number, voucher_code,
-             shared_users
+             shared_users, company_name
             )
        HotspotVoucher.find_by(voucher: voucher_code).update(sms_sent: true)
 
@@ -1924,7 +1926,7 @@ private
 
 
   original_message = "Your voucher code is: #{voucher_code}.
-  #    Enjoy your browsing"
+  #    Enjoy your browsing (FROM:  #{company_name})"
   #    
   uri = URI("https://sms.textsms.co.ke/api/services/sendsms")
   params = {
