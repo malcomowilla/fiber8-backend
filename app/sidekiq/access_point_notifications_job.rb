@@ -48,7 +48,7 @@ if notification_when_unreachable
 
   if minutes_since_change >= duration
     # Avoid sending multiple notifications for same status
-    if notification_sent.nil? 
+    if notification_sent.nil? || notification_sent < nas_router.last_status_changed_at
       if new_status == "reachable"
         send_notification_sms_reachable(notification_phone_number, 
         tenant, router_name,
@@ -94,6 +94,17 @@ def tcp_reachable?(ip, port = 80, timeout_sec = 3)
 rescue Timeout::Error
   false
 end
+
+
+
+
+
+
+
+
+
+
+
 
 
 

@@ -64,15 +64,10 @@ end
 
       end
       end
-
-
-    
   end
 
+  
 private
-
-
-
 
 def tcp_reachable?(ip, port = 8728, timeout_sec = 3)
   Timeout.timeout(timeout_sec) do
@@ -90,6 +85,12 @@ def tcp_reachable?(ip, port = 8728, timeout_sec = 3)
 rescue Timeout::Error
   false
 end
+
+
+
+
+
+
 
 
 
