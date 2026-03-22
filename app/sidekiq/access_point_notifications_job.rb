@@ -111,7 +111,8 @@ end
 
 
 
-def send_notification_sms_reachable(phone_number, tenant, router_name, ip_address)
+def send_notification_sms_reachable(phone_number, tenant, 
+  router_name, ip_address)
     provider = tenant&.sms_provider_setting.present? && tenant.sms_provider_setting&.sms_provider
 
     case provider
@@ -208,6 +209,7 @@ partner_id_api_key = tenant&.sms_setting
     
   api_key = partner_id_api_key&.api_key
   partnerID = partner_id_api_key&.partnerID
+  shortcode = partner_id_api_key&.sender_id
   end
   
     
@@ -224,8 +226,8 @@ end
       message: original_message,
       mobile: phone_number,
       partnerID: partnerID,
-      shortcode: 'TextSMS',
-      sms_provider: 'TextSms'
+      shortcode: shortcode,
+      # sms_provider: shortcode
 
     }
     uri.query = URI.encode_www_form(params)
@@ -299,6 +301,8 @@ partner_id_api_key = tenant&.sms_setting
     
   api_key = partner_id_api_key&.api_key
   partnerID = partner_id_api_key&.partnerID
+    shortcode = partner_id_api_key&.sender_id
+
   end
   
     
@@ -315,8 +319,7 @@ end
       message: original_message,
       mobile: phone_number,
       partnerID: partnerID,
-      shortcode: 'TextSMS',
-      sms_provider: 'TextSms'
+      shortcode: shortcode,
 
     }
     uri.query = URI.encode_www_form(params)
@@ -329,7 +332,8 @@ end
 
 
 
-  def handle_sms_response_sms_leopard(response, message, phone_number, tenant)
+  def handle_sms_response_sms_leopard(response, message, 
+    phone_number, tenant)
     if response.is_a?(Net::HTTPSuccess)
       sms_data = JSON.parse(response.body)
       if sms_data['responses'] && sms_data['responses'][0]['respose-code'] == 200
@@ -358,7 +362,8 @@ end
 
 
 
- def handle_sms_response_text_sms(response, message, phone_number, tenant)
+ def handle_sms_response_text_sms(response, message, 
+  phone_number, tenant)
     if response.is_a?(Net::HTTPSuccess)
       sms_data = JSON.parse(response.body)
       if sms_data['responses'] && sms_data['responses'][0]['respose-code'] == 200

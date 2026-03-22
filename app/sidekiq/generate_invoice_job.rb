@@ -454,6 +454,7 @@ class GenerateInvoiceJob
   def send_expiration_text_sms(phone_number, due_date, invoice_number, username, plan_name)
     api_key = SmsSetting.find_by(sms_provider: 'TextSms')&.api_key
     partnerID = SmsSetting.find_by(sms_provider: 'TextSms')&.partnerID
+    shortcode = SmsSetting.find_by(sms_provider: 'TextSms')&.sender_id
 
     sms_template = ActsAsTenant.current_tenant.sms_template
     # send_voucher_template = sms_template&.send_voucher_template
@@ -466,8 +467,7 @@ class GenerateInvoiceJob
       message: original_message,
       mobile: phone_number,
       partnerID: partnerID,
-      shortcode: 'TextSMS',
-      sms_provider: 'TextSms'
+      shortcode: shortcode,
 
     }
     uri.query = URI.encode_www_form(params)

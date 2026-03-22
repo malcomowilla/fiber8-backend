@@ -155,6 +155,7 @@ partner_id_api_key = tenant&.sms_setting
     
   api_key = partner_id_api_key&.api_key
   partnerID = partner_id_api_key&.partnerID
+  shortcode = partner_id_api_key&.sender_id
   end
   
     
@@ -172,8 +173,7 @@ end
       message: original_message,
       mobile: phone_number,
       partnerID: partnerID,
-      shortcode: 'TextSMS',
-      sms_provider: 'TextSms'
+      shortcode: shortcode,
 
     }
     uri.query = URI.encode_www_form(params)

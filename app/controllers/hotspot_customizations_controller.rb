@@ -10,9 +10,7 @@ class HotspotCustomizationsController < ApplicationController
 
 
     def set_time_zone
-  Rails.logger.info "Setting time zone"
   Time.zone = GeneralSetting.first&.timezone || Rails.application.config.time_zone
-    Rails.logger.info "Setting time zone #{Time.zone}"
 
     end
 
@@ -67,12 +65,18 @@ if current_user
   def create
     @hotspot_customization = HotspotCustomization.first_or_initialize(
       customize_template_and_package_per_location: params[:customize_template_and_package_per_location],
-      enable_autologin: params[:enable_autologin]
-      
+
+      enable_autologin: params[:enable_autologin],
+      enable_compensation: params[:enable_compensation],
+      compensation_minutes: params[:compensation_minutes],
+      compensation_hours: params[:compensation_hours],
       )
       @hotspot_customization.update(
         customize_template_and_package_per_location: params[:customize_template_and_package_per_location],
-        enable_autologin: params[:enable_autologin]
+        enable_autologin: params[:enable_autologin],
+           enable_compensation: params[:enable_compensation],
+      compensation_minutes: params[:compensation_minutes],
+      compensation_hours: params[:compensation_hours],
         
         )
 

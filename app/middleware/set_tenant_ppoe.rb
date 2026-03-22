@@ -123,7 +123,8 @@ class SetTenantPpoe
     # expired_hotspot = account.hotspot_plan.present? && account.hotspot_plan.expiry <= Time.current
 
     # expired_pppoe || expired_hotspot
-     expired_pppoe = account.pp_poe_plan&.expiry&.present? && account&.pp_poe_plan&.expiry <= Time.current
+    expired_pppoe = account.hotspot_and_dial_plan&.expiry&.present? && account&.hotspot_and_dial_plan&.expiry <= Time.current
+  
 
   expired_pppoe
   end

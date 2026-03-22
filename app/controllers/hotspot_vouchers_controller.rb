@@ -550,11 +550,11 @@ account_id: session.account_id,
   hotspot_package_id: hotspot_package.id,
   status: 'active'
 )
-        session.update(hotspot_voucher_id: voucher.id)
+ session.update(hotspot_voucher_id: voucher.id)
 
-    
-create_voucher_radcheck(voucher_code, session.hotspot_package, 
-session.account_id)
+
+
+
 voucher_expiration = HotspotSetting.find_by(account_id: session.account_id).voucher_expiration
 # company_name = CompanySetting.find_by(account_id: session.account_id).company_name
 SendSmsHotspotService.send_sms(voucher.voucher, data)
@@ -562,6 +562,8 @@ SendSmsHotspotService.send_sms(voucher.voucher, data)
 if voucher_expiration == 'Expiry After Creation'
  calculate_expiration_login_with_voucher(hotspot_package, voucher, session.account_id)
 
+create_voucher_radcheck(voucher_code, session.hotspot_package, 
+session.account_id)
 end
 
 
@@ -588,7 +590,7 @@ nas_routers.each do |nas|
     if response.code == 200
     #   Rails.logger.info "Device #{session.ip} successfully logged 
     # in with voucher #{voucher_code} on router #{nas.ip_address}"
-      session.update!(connected: true, status:'used')
+      session.update!(connected: true, status:'used', paid: true)
 
 voucher.update(status:"used", last_logged_in: Time.now,
        used_voucher: true, login_by:'Voucher Code')
@@ -598,6 +600,10 @@ if voucher_expiration == 'Expiry After Login'
 calculate_expiration_login_with_voucher(hotspot_package, 
 
 voucher, session.account_id)
+
+create_voucher_radcheck(voucher_code, session.hotspot_package, 
+session.account_id)
+
 end
  
 
@@ -1912,6 +1918,7 @@ private
 
   api_key = sms_setting&.api_key
   partnerID = sms_setting&.partnerID 
+   shortcode = sms_setting.sender_id
 
   sms_template = ActsAsTenant.current_tenant.sms_template
   send_voucher_template = sms_template&.send_voucher_template
@@ -1935,7 +1942,7 @@ private
     message: original_message,
     mobile: phone_number,
     partnerID: partnerID,
-    shortcode: 'TextSMS'
+    shortcode: shortcode
   }
   uri.query = URI.encode_www_form(params)
 

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_03_20_123012) do
+ActiveRecord::Schema[7.2].define(version: 2026_03_22_173145) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -388,6 +388,9 @@ ActiveRecord::Schema[7.2].define(version: 2026_03_20_123012) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.boolean "enable_autologin"
+    t.boolean "enable_compensation"
+    t.string "compensation_minutes"
+    t.string "compensation_hours"
   end
 
   create_table "hotspot_mpesa_revenues", force: :cascade do |t|
@@ -541,6 +544,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_03_20_123012) do
     t.string "voucher_expiration"
     t.boolean "is_online"
     t.string "login_by"
+    t.boolean "sent_sms_compensation", default: false
     t.index ["account_id"], name: "index_hotspot_vouchers_on_account_id"
     t.index ["voucher"], name: "index_hotspot_vouchers_on_voucher", unique: true
   end

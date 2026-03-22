@@ -102,13 +102,15 @@ sms_setting = tenant.sms_setting
 sms_setting = tenant.sms_setting
   api_key = sms_setting.api_key
   partnerID = sms_setting.partnerID
+    shortcode = sms_setting.sender_id
+
     uri = URI("https://sms.textsms.co.ke/api/services/sendsms")
     params = {
       apikey: api_key,
       message: message,
       mobile: voucher.phone,
       partnerID: partnerID,
-      shortcode: "TextSMS"
+      shortcode:  shortcode
     }
     uri.query = URI.encode_www_form(params)
 
