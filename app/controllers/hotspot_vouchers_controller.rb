@@ -556,6 +556,7 @@ account_id: session.account_id,
 create_voucher_radcheck(voucher_code, session.hotspot_package, 
 session.account_id)
 voucher_expiration = HotspotSetting.find_by(account_id: session.account_id).voucher_expiration
+# company_name = CompanySetting.find_by(account_id: session.account_id).company_name
 SendSmsHotspotService.send_sms(voucher.voucher, data)
 
 if voucher_expiration == 'Expiry After Creation'
