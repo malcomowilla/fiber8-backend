@@ -1960,8 +1960,8 @@ private
   return 0 unless customization&.enable_compensation
 
   if customization.compensation_minutes.present?
-    customization.compensation_minutes.minutes
-  elsif customization.compensation_hours.present?
+    customization.compensation_minutes.to_i.minutes
+  elsif customization.compensation_hours.to_i.present?
     customization.compensation_hours.hours
   else
     0
