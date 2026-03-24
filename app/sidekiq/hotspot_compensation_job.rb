@@ -117,7 +117,7 @@ extra_time = compensation_duration(tenant)
 final_expiration = expiration_time + extra_time
 
 # Step 3: convert to string ONLY when saving
-formatted_expiration = final_expiration.strftime("%d %b %Y %H:%M:%S")
+formatted_expiration = final_expiration
 
 if final_expiration
   rad_check = RadCheck.find_or_initialize_by(
@@ -126,7 +126,8 @@ if final_expiration
     radiusattribute: 'Expiration'
   )
 
-  rad_check.update!(op: ':=', value: formatted_expiration)
+  rad_check.update!(op: ':=', value: formatted_expiration.strftime("%d %b %Y %H:%M:%S"))
+  
 end
 end
   
@@ -236,7 +237,7 @@ compensation_text =
 original_message = "Sorry for earlier connection issue. Service is now restored and we’ve added bonus time to your account" +
   (compensation_text ? " (#{compensation_text})." : ".") +
   " Please reconnect with your voucher (#{voucher.voucher}). Thank you 🙏, (FROM: #{company_name})"
-  
+
 
     sender_id = "SMS_TEST"
     uri = URI("https://api.smsleopard.com/v1/sms/send")
