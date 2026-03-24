@@ -55,10 +55,7 @@ development:
       class: AccessPointNotificationsJob
       cron: "*/2 * * * *"
       
-    delete_radact_job:
-      class: DeleteRadactJob
-      cron: "*/2 * * * *"
-
+  
     populate_radius_job:
       class: PopulateRadiusJob
       cron: "*/2 * * * *"
