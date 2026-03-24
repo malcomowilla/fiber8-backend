@@ -222,9 +222,22 @@ end
     sms_template = ActsAsTenant.current_tenant.sms_template
     send_voucher_template = sms_template&.send_voucher_template
     # original_message = sms_template ? MessageTemplate.interpolate(send_voucher_template, { voucher_code: voucher_code }) : "Hello, your voucher #{voucher_code} is expired renew now to stay conected."
-original_message =  "Sorry for earlier connection issue. Service is now restored and we’ve added bonus time to your account. 
-    Please reconnect with your voucher (#{voucher.voucher}). Thank you 🙏, (FROM:  #{company_name})
-"
+customization = tenant.hotspot_customization
+
+compensation_text =
+  if customization.compensation_minutes.present?
+    "#{customization.compensation_minutes} minutes"
+  elsif customization.compensation_hours.present?
+    "#{customization.compensation_hours} hours"
+  else
+    nil
+  end
+
+original_message = "Sorry for earlier connection issue. Service is now restored and we’ve added bonus time to your account" +
+  (compensation_text ? " (#{compensation_text})." : ".") +
+  " Please reconnect with your voucher (#{voucher.voucher}). Thank you 🙏, (FROM: #{company_name})"
+  
+
     sender_id = "SMS_TEST"
     uri = URI("https://api.smsleopard.com/v1/sms/send")
     params = {
@@ -265,14 +278,29 @@ partner_id_api_key = tenant&.sms_setting
     
 end 
 
+
+customization = tenant.hotspot_customization
+
+compensation_text =
+  if customization.compensation_minutes.present?
+    "#{customization.compensation_minutes} minutes"
+  elsif customization.compensation_hours.present?
+    "#{customization.compensation_hours} hours"
+  else
+    nil
+  end
     # partnerID = tenant&.sms_setting.present? && tenant.sms_setting.find_by(sms_provider: 'TextSms')&.partnerID
     sms_template = ActsAsTenant.current_tenant.sms_template
     send_voucher_template = sms_template&.send_voucher_template
-    original_message =  "Sorry for earlier connection issue. Service is now restored and we’ve added bonus time to your account. 
-    Please reconnect with your voucher (#{voucher.voucher}). Thank you 🙏, (FROM:  #{company_name})
-"
+#     original_message =  "Sorry for earlier connection issue. Service is now restored and we’ve added bonus time to your account. 
+#     Please reconnect with your voucher (#{voucher.voucher}). Thank you 🙏, (FROM:  #{company_name})
+# "
 
+original_message = "Sorry for earlier connection issue. Service is now restored and we’ve added bonus time to your account" +
+  (compensation_text ? " (#{compensation_text})." : ".") +
+  " Please reconnect with your voucher (#{voucher.voucher}). Thank you 🙏, (FROM: #{company_name})"
     uri = URI("https://sms.textsms.co.ke/api/services/sendsms")
+    
     params = {
       apikey: api_key,
       message: original_message,
