@@ -103,21 +103,30 @@ validity_period_units = HotspotPackage.find_by(name: hotspot_voucher.package, ac
 validity = HotspotPackage.find_by(name: hotspot_voucher.package, account_id: tenant.id).validity
 
 
-
+# Step 1: keep as Time object
 expiration_time = case validity_period_units
 when 'days' then Time.current + validity.days
 when 'hours' then Time.current + validity.hours
 when 'minutes' then Time.current + validity.minutes
-end&.strftime("%d %b %Y %H:%M:%S")
+end
 
+# Step 2: add compensation
+tenant = Account.find_by(id: account_id)
 extra_time = compensation_duration(tenant)
+
 final_expiration = expiration_time + extra_time
 
-if expiration_time
-  rad_check = RadCheck.find_or_initialize_by(username: hotspot_voucher.voucher,
-   account_id: tenant.id,
-   radiusattribute: 'Expiration')
-  rad_check.update!(op: ':=', value: final_expiration)
+# Step 3: convert to string ONLY when saving
+formatted_expiration = final_expiration.strftime("%d %b %Y %H:%M:%S")
+
+if final_expiration
+  rad_check = RadCheck.find_or_initialize_by(
+    username: hotspot_voucher,
+    account_id: account_id,
+    radiusattribute: 'Expiration'
+  )
+
+  rad_check.update!(op: ':=', value: formatted_expiration)
 end
 end
   
