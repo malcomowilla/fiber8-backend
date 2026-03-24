@@ -1159,10 +1159,73 @@ if expiration_time
    radiusattribute: 'Expiration')
   rad_check.update!(op: ':=', value: expiration_time)
 end
+end
+  
+
+
+
+
+
+  def create_voucher_radcheck_compensation(hotspot_voucher, package, 
+    account_id)
+
+hotspot_package = "hotspot_#{account_id}_#{package.parameterize(separator: '_')}"
+
+
+
+
+radcheck = RadCheck.find_or_initialize_by(username: hotspot_voucher,
+account_id: account_id,
+radiusattribute: 
+'Cleartext-Password')  
+
+radcheck.update!(op: ':=', value: hotspot_voucher)
+
+rad_user_group = RadUserGroup.find_or_initialize_by(username: hotspot_voucher,
+ groupname: hotspot_package, priority: 1, account_id: account_id)
+rad_user_group.update!(username: hotspot_voucher, groupname: hotspot_package, priority: 1)
+
+
+rad_reply = RadReply.find_or_initialize_by(username: hotspot_voucher, 
+radiusattribute: '',
+account_id: account_id,
+ op: ':=', value: '5000')
+ 
+rad_reply.update!(username: hotspot_voucher, 
+radiusattribute: 'Idle-Timeout', op: ':=', value: '5000')
+
+validity_period_units = HotspotPackage.find_by(name: package, account_id: account_id).validity_period_units
+validity = HotspotPackage.find_by(name: package, account_id: account_id).validity
+
+
+
+expiration_time = case validity_period_units
+when 'days' then Time.current + validity.days
+when 'hours' then Time.current + validity.hours
+when 'minutes' then Time.current + validity.minutes
+end&.strftime("%d %b %Y %H:%M:%S")
+tenant = Acount.find_by(id: account_id)
+extra_time = compensation_duration(tenant)
+final_expiration = expiration_time + extra_time
+
+if expiration_time
+  rad_check = RadCheck.find_or_initialize_by(username: hotspot_voucher,
+   account_id: account_id,
+   radiusattribute: 'Expiration')
+  rad_check.update!(op: ':=', value: final_expiration)
+end
   
 
 end
-  
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1320,22 +1383,28 @@ def login_with_hotspot_voucher
   return render json: { error: 'Invalid voucher or username' }, status: :not_found unless @hotspot_voucher
 
 
-  # 🔹 Expiration check
   if @hotspot_voucher.expiration.present? && @hotspot_voucher.expiration < Time.current
     return render json: { error: 'Voucher Or Username expired' }, status: :forbidden
   end
 
 
 
-     
+     enable_compensation = ActsAsTenant.current_tenant.hotspot_customization.enable_compensation
 if @hotspot_voucher.expiration.nil?
-  
- create_voucher_radcheck(@hotspot_voucher.voucher,
+  if enable_compensation
+ create_voucher_radcheck_compensation(@hotspot_voucher.voucher,
   @hotspot_voucher.package, 
         @hotspot_voucher.account_id)
+
+  end
+
 end
 
-
+ if @hotspot_voucher.expiration.nil?
+create_voucher_radcheck(@hotspot_voucher.voucher,
+  @hotspot_voucher.package, 
+        @hotspot_voucher.account_id)
+ end
 
   active_sessions = get_active_sessions(params[:voucher])
   package = HotspotPackage.find_by(name: @hotspot_voucher.package)
@@ -1343,22 +1412,7 @@ end
   shared_users = package&.shared_users.to_i
 
 
-      
-
-  # @hotspot_voucher = HotspotVoucher.new(
-  #       package: params[:package],
-  #       shared_users: params[:shared_users],
-  #       phone: params[:phone],
-  #       voucher: voucher_code,
-  #       hotspot_package_id: hotspot_package.id,
-  #       status: 'active'
-  #     )
-
-      # calculate_expiration(params[:package], @hotspot_voucher,
-      #  @hotspot_voucher.account_id)
-      
-     
-
+    
   if active_sessions.any?
     active_voucher_sessions = active_sessions.select { |s| s.include?(params[:voucher]) }
     if active_voucher_sessions.count >= shared_users
@@ -1400,12 +1454,19 @@ end
 
         
 if @hotspot_voucher.expiration.nil?
-  
-  calculate_expiration_login_with_voucher(package, @hotspot_voucher,
+  if enable_compensation
+  calculate_expiration_login_with_voucher_compensation(package, @hotspot_voucher,
        @hotspot_voucher.account_id)
-
+  end
 end
 
+
+if @hotspot_voucher.expiration.nil?
+ calculate_expiration_login_with_voucher(package, @hotspot_voucher,
+       @hotspot_voucher.account_id)
+
+end 
+  
 
 
         return render json: {
@@ -1433,12 +1494,19 @@ end
     
   end
 
-  return render json: { error: 'Failed to connect on all routers' }, status: :unprocessable_entity
+  return render json: { error: 'Failed to connect please try again' }, status: :unprocessable_entity
 end
+
+
+
+
+
+
+
+
 
   
   private
-    # Use callbacks to share common setup or constraints between actions.
     def set_hotspot_voucher
       @hotspot_voucher = HotspotVoucher.find_by(id: params[:id])
     end
@@ -1535,6 +1603,96 @@ def calculate_expiration_login_with_voucher(hotspot_package, voucher_created,
     expiration: expiration_time&.strftime("%B %d, %Y at %I:%M %p"),
   }
 end
+
+
+
+def calculate_expiration_login_with_voucher(hotspot_package,
+   voucher_created,
+   account_id)
+  #  hotspot_package = HotspotPackage.find_by(name: package, 
+  # account_id: account_id)
+
+  return render json: { error: 'Package not found' }, status: :not_found unless hotspot_package
+  
+  # Calculate expiration
+  expiration_time = if hotspot_package.validity.present? && hotspot_package.validity_period_units.present?
+    case hotspot_package.validity_period_units.downcase
+    when 'days'
+      Time.current + hotspot_package.validity.days
+    when 'hours'
+      Time.current + hotspot_package.validity.hours
+    when 'minutes'
+      Time.current + hotspot_package.validity.minutes
+    else
+      nil
+    end
+
+
+    
+
+  # elsif hotspot_package.valid_until.present? && hotspot_package.valid_from.present?
+  #   hotspot_package.valid_until
+  else
+    nil
+  end
+
+  # Update status only if expiration is present
+  if expiration_time.present?
+    voucher_created.update(expiration: expiration_time&.strftime("%B %d, %Y at %I:%M %p"),)
+  end
+
+  # Return both expiration and status
+  {
+    expiration: expiration_time&.strftime("%B %d, %Y at %I:%M %p"),
+  }
+end
+
+
+
+
+
+
+
+def calculate_expiration_login_with_voucher_compensation(hotspot_package,
+   voucher_created,
+   account_id)
+  #  hotspot_package = HotspotPackage.find_by(name: package, 
+  # account_id: account_id)
+
+  return render json: { error: 'Package not found' }, status: :not_found unless hotspot_package
+  
+  # Calculate expiration
+  expiration_time = if hotspot_package.validity.present? && hotspot_package.validity_period_units.present?
+    case hotspot_package.validity_period_units.downcase
+    when 'days'
+      Time.current + hotspot_package.validity.days
+    when 'hours'
+      Time.current + hotspot_package.validity.hours
+    when 'minutes'
+      Time.current + hotspot_package.validity.minutes
+    else
+      nil
+    end
+
+
+  # elsif hotspot_package.valid_until.present? && hotspot_package.valid_from.present?
+  #   hotspot_package.valid_until
+  else
+    nil
+  end
+tenant = Acount.find_by(id: account_id)
+extra_time = compensation_duration(tenant)
+  final_expiration = expiration_time + extra_time
+
+
+  # Update status only if expiration is present
+  if expiration_time.present?
+    voucher_created.update(expiration: final_expiration&.strftime("%B %d, %Y at %I:%M %p"),)
+  end
+
+ 
+end
+
 
 
 
@@ -1795,6 +1953,19 @@ end
 
 private
 
+      def compensation_duration(tenant)
+  customization = tenant.hotspot_customization
+
+  return 0 unless customization&.enable_compensation
+
+  if customization.compensation_minutes.present?
+    customization.compensation_minutes.minutes
+  elsif customization.compensation_hours.present?
+    customization.compensation_hours.hours
+  else
+    0
+  end
+end
 
 
 

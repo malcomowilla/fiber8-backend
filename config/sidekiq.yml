@@ -75,6 +75,10 @@ development:
       class: RouterNotificationJob
       cron: "*/2 * * * *"
 
+    hotspot_compensation_job:
+      class: HotspotCompensationJob
+      cron: "*/2 * * * *"
+
     restart_cloudflared_if_tunnel_missing_job:
       class: RestartCloudflaredIfTunnelMissingJob
       cron: "*/3 * * * *"

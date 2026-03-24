@@ -8,15 +8,24 @@ class HotspotCompensationJob < ApplicationJob
   Account.find_each do |tenant|
       ActsAsTenant.with_tenant(tenant) do
         company_name = tenant.company_setting&.company_name
-        hotspot_vouchers = HotspotVoucher.where(status: 'active', account_id: tenant.id).temporary_sessions.where(paid: false, connected: false)
+        hotspot_vouchers = HotspotVoucher.joins(:temporary_sessions).where(
+          
+          temporary_sessions: { connected: false,
+          paid: false,
+        
+        },
+        status: 'active', 
+        account_id: tenant.id)
 
         hotspot_vouchers.each do |hotspot_voucher|
-          if hotspot_voucher.sent_sms_compensation == false
+          enable_compensation = tenant.hotspot_customization.enable_compensation
+
+          if enable_compensation == true && hotspot_voucher.sent_sms_compensation == false
             send_notification_sms_compensation(hotspot_voucher.phone, 
-            tenant, company_name)
-            
+            tenant, company_name, hotspot_voucher)
+            compensate_hotspot_voucher(hotspot_voucher, tenant)
           end
-          compensate_hotspot_voucher(hotspot_voucher, tenant)
+          
         end
 
       end
@@ -26,16 +35,21 @@ class HotspotCompensationJob < ApplicationJob
 
 
  def send_notification_sms_compensation(phone_number, tenant, 
- company_name)
+ company_name, voucher)
+
+   HotspotVoucher.find_by(voucher: voucher.voucher).update(
+    sent_sms_compensation: true
+    )
+
     provider = tenant&.sms_provider_setting.present? && tenant.sms_provider_setting&.sms_provider
 
     case provider
     when 'TextSms'
       send_notification_text_sms_compensation(phone_number, tenant,
-       company_name)
+       company_name, voucher)
     when 'SMS leopard'
       send_notification_sms_leopard_compensation(phone_number, 
-       tenant, company_name)
+       tenant, company_name, voucher)
     else
       Rails.logger.info "No valid SMS provider configured"
     end
@@ -48,12 +62,15 @@ private
 def compensate_hotspot_voucher(voucher, tenant)
   hotspot_voucher = HotspotVoucher.find_by(voucher: voucher.voucher)
   voucher_expiration = tenant.hotspot_setting.voucher_expiration
-  if voucher_expiration == 'Expiry After Login'
+
+  if voucher_expiration == 'Expiry After Creation'
    create_voucher_radcheck(hotspot_voucher,tenant)
+   calculate_expiration(voucher.package, voucher, tenant)
     
   end
- 
+
 end
+
 
 
 
@@ -61,7 +78,7 @@ end
 
 hotspot_package = "hotspot_#{tenant.id}_#{hotspot_voucher.package.parameterize(separator: '_')}"
 
-radcheck = RadCheck.find_or_initialize_by(username: hotspot_voucher,
+radcheck = RadCheck.find_or_initialize_by(username: hotspot_voucher.voucher,
 account_id: tenant.id,
 radiusattribute: 
 'Cleartext-Password')  
@@ -81,8 +98,8 @@ account_id: tenant.id,
 rad_reply.update!(username: hotspot_voucher, 
 radiusattribute: 'Idle-Timeout', op: ':=', value: '5000')
 
-validity_period_units = HotspotPackage.find_by(name: package, account_id: tenant.id).validity_period_units
-validity = HotspotPackage.find_by(name: package, account_id: tenant.id).validity
+validity_period_units = HotspotPackage.find_by(name: hotspot_voucher.package, account_id: tenant.id).validity_period_units
+validity = HotspotPackage.find_by(name: hotspot_voucher.package, account_id: tenant.id).validity
 
 
 
@@ -92,26 +109,85 @@ when 'hours' then Time.current + validity.hours
 when 'minutes' then Time.current + validity.minutes
 end&.strftime("%d %b %Y %H:%M:%S")
 
+extra_time = compensation_duration(tenant)
+final_expiration = expiration_time + extra_time
+
 if expiration_time
-  rad_check = RadCheck.find_or_initialize_by(username: hotspot_voucher,
+  rad_check = RadCheck.find_or_initialize_by(username: hotspot_voucher.voucher,
    account_id: tenant.id,
    radiusattribute: 'Expiration')
-  rad_check.update!(op: ':=', value: expiration_time)
+  rad_check.update!(op: ':=', value: final_expiration)
+end
 end
   
 
-end
+
+
+
+
+
+def calculate_expiration(package, voucher, tenant)
+
+   hotspot_package = HotspotPackage.find_by(name: package, 
+  account_id: tenant.id)
+    hotspot_voucher = HotspotVoucher.find_by(voucher: voucher.voucher)
+
+
+Rails.logger.info "Hotspot Package Not Found" unless hotspot_package
   
+  expiration_time = if hotspot_package.validity.present? && hotspot_package.validity_period_units.present?
+    case hotspot_package.validity_period_units.downcase
+    when 'days'
+      Time.current + hotspot_package.validity.days
+    when 'hours'
+      Time.current + hotspot_package.validity.hours
+    when 'minutes'
+      Time.current + hotspot_package.validity.minutes
+    else
+      nil
+    end
+
+  else
+    nil
+  end
+
+ extra_time = compensation_duration(tenant)
+ final_expiration = expiration_time + extra_time
+
+
+  if expiration_time.present?
+      hotspot_voucher.update(
+    expiration: final_expiration.strftime("%B %d, %Y at %I:%M %p")
+  )
+  end
+
+end
 
 
 
 
+
+
+
+def compensation_duration(tenant)
+  customization = tenant.hotspot_customization
+
+  return 0 unless customization&.enable_compensation
+
+  if customization.compensation_minutes.present?
+    customization.compensation_minutes.minutes
+  elsif customization.compensation_hours.present?
+    customization.compensation_hours.hours
+  else
+    0
+  end
+end
 
 
 
 
 def send_notification_sms_leopard_compensation(phone_number,tenant,
-    company_name)
+    company_name, voucher)
 
     # provider = ActsAsTenant.current_tenant.sms_provider_setting.sms_provider
 
@@ -137,7 +213,7 @@ end
     send_voucher_template = sms_template&.send_voucher_template
     # original_message = sms_template ? MessageTemplate.interpolate(send_voucher_template, { voucher_code: voucher_code }) : "Hello, your voucher #{voucher_code} is expired renew now to stay conected."
 original_message =  "Sorry for earlier connection issue. Service is now restored and we’ve added bonus time to your account. 
-    Please reconnect. Thank you 🙏, (FROM:  #{company_name})
+    Please reconnect with your voucher (#{voucher.voucher}). Thank you 🙏, (FROM:  #{company_name})
 "
     sender_id = "SMS_TEST"
     uri = URI("https://api.smsleopard.com/v1/sms/send")
@@ -159,7 +235,7 @@ original_message =  "Sorry for earlier connection issue. Service is now restored
 
 
   def send_notification_text_sms_compensation(phone_number,tenant, 
-    company_name)
+    company_name, voucher)
     # api_key = SmsSetting.find_by(sms_provider: 'TextSms')&.api_key
     # partnerID = SmsSetting.find_by(sms_provider: 'TextSms')&.partnerID
 # TextSms
@@ -183,7 +259,7 @@ end
     sms_template = ActsAsTenant.current_tenant.sms_template
     send_voucher_template = sms_template&.send_voucher_template
     original_message =  "Sorry for earlier connection issue. Service is now restored and we’ve added bonus time to your account. 
-    Please reconnect. Thank you 🙏, (FROM:  #{company_name})
+    Please reconnect with your voucher (#{voucher.voucher}). Thank you 🙏, (FROM:  #{company_name})
 "
 
     uri = URI("https://sms.textsms.co.ke/api/services/sendsms")

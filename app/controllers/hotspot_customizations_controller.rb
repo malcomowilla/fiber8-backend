@@ -88,7 +88,9 @@ if current_user
     
   end
 
-  # PATCH/PUT /hotspot_customizations/1 or /hotspot_customizations/1.json
+
+
+  
   def update
     respond_to do |format|
       if @hotspot_customization.update(hotspot_customization_params)
