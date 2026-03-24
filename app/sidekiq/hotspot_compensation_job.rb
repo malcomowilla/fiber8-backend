@@ -1,7 +1,7 @@
 
 
 
-class HotspotCompensationJob < ApplicationJob
+class HotspotCompensationJob 
   include Sidekiq::Job
   queue_as :default
 
