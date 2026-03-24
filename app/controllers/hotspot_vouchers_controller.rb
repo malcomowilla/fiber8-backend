@@ -1205,7 +1205,7 @@ when 'days' then Time.current + validity.days
 when 'hours' then Time.current + validity.hours
 when 'minutes' then Time.current + validity.minutes
 end&.strftime("%d %b %Y %H:%M:%S")
-tenant = Acount.find_by(id: account_id)
+tenant = Account.find_by(id: account_id)
 extra_time = compensation_duration(tenant)
 final_expiration = expiration_time + extra_time
 
@@ -1681,7 +1681,7 @@ def calculate_expiration_login_with_voucher_compensation(hotspot_package,
   else
     nil
   end
-tenant = Acount.find_by(id: account_id)
+tenant = Account.find_by(id: account_id)
 extra_time = compensation_duration(tenant)
   final_expiration = expiration_time + extra_time
 
