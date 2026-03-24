@@ -568,6 +568,9 @@ end
 
 
 
+create_voucher_radcheck(voucher_code, session.hotspot_package, 
+session.account_id)
+
 nas_routers = NasRouter.where(account_id: session.account_id)
 nas_routers.each do |nas|
   begin
@@ -601,8 +604,6 @@ calculate_expiration_login_with_voucher(hotspot_package,
 
 voucher, session.account_id)
 
-create_voucher_radcheck(voucher_code, session.hotspot_package, 
-session.account_id)
 
 end
  
