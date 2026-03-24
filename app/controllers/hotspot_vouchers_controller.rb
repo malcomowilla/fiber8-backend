@@ -1212,7 +1212,7 @@ extra_time = compensation_duration(tenant)
 final_expiration = expiration_time + extra_time
 
 # Step 3: convert to string ONLY when saving
-formatted_expiration = final_expiration.strftime("%d %b %Y %H:%M:%S")
+formatted_expiration = final_expiration
 
 if final_expiration
   rad_check = RadCheck.find_or_initialize_by(
@@ -1221,7 +1221,7 @@ if final_expiration
     radiusattribute: 'Expiration'
   )
 
-  rad_check.update!(op: ':=', value: formatted_expiration)
+  rad_check.update!(op: ':=', value: formatted_expiration.strftime("%d %b %Y %H:%M:%S"))
 end
   
 
