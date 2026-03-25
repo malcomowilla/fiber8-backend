@@ -401,11 +401,11 @@ nas_routers = NasRouter.where(account_id: mpesa_revenue.account_id)
       
 if voucher_expiration == 'Expiry After Login'
 
-
-create_voucher_radcheck(mpesa_revenue.hotspot_voucher.voucher, 
-mpesa_revenue.hotspot_voucher.hotspot_package.name, 
-mpesa_revenue.account_id)
-
+  if mpesa_revenue.hotspot_voucher.expiration.nil? 
+  create_voucher_radcheck(mpesa_revenue.hotspot_voucher.voucher, 
+  mpesa_revenue.hotspot_voucher.hotspot_package.name, 
+  mpesa_revenue.account_id)
+  end
 end
 
     if response.code == 200
