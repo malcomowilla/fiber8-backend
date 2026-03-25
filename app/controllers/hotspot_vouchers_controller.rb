@@ -405,11 +405,10 @@ nas_routers = NasRouter.where(account_id: mpesa_revenue.account_id)
 
       
 
-  if mpesa_revenue.hotspot_voucher.expiration.nil? 
   create_voucher_radcheck(mpesa_revenue.hotspot_voucher.voucher, 
   mpesa_revenue.hotspot_voucher.hotspot_package.name, 
   mpesa_revenue.account_id)
-  end
+  
 
 
       calculate_expiration_login_with_voucher(
