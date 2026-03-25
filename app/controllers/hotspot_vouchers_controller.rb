@@ -615,6 +615,10 @@ voucher.update(status:"used", last_logged_in: Time.now,
 
      
 if voucher_expiration == 'Expiry After Login'
+
+
+create_voucher_radcheck(voucher_code, session.hotspot_package, 
+session.account_id)
 calculate_expiration_login_with_voucher(hotspot_package, 
 
 voucher, session.account_id)
