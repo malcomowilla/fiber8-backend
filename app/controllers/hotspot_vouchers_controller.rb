@@ -1,9 +1,9 @@
 class HotspotVouchersController < ApplicationController
   # before_action :set_hotspot_voucher, only: %i[ show edit update destroy ]
-
+# :transaction_status_result,
 load_and_authorize_resource except: [:login_with_hotspot_voucher,
  :make_payment, :check_payment_status, :payment_and_conected_status,
- :stk_push_status, :transaction_status_result, 
+ :stk_push_status,  
  :login_with_receipt_number, :calculate_expiration_login_with_voucher,
  :create_voucher_radcheck
 
@@ -385,6 +385,19 @@ nas_routers = NasRouter.where(account_id: mpesa_revenue.account_id)
 
   # Rails.logger.info "package => #{ mpesa_revenue.hotspot_voucher.hotspot_package}"
     
+
+
+  if mpesa_revenue.hotspot_voucher.expiration.nil? 
+  create_voucher_radcheck(mpesa_revenue.hotspot_voucher.voucher, 
+  mpesa_revenue.hotspot_voucher.hotspot_package.name, 
+  mpesa_revenue.account_id)
+  end
+
+
+      calculate_expiration_login_with_voucher(
+  mpesa_revenue.hotspot_voucher.hotspot_package, 
+mpesa_revenue.hotspot_voucher, mpesa_revenue.account_id)
+
   nas_routers.each do |nas|
   begin
     response = RestClient::Request.execute(
@@ -404,16 +417,6 @@ nas_routers = NasRouter.where(account_id: mpesa_revenue.account_id)
     )
 
       
-
-  create_voucher_radcheck(mpesa_revenue.hotspot_voucher.voucher, 
-  mpesa_revenue.hotspot_voucher.hotspot_package.name, 
-  mpesa_revenue.account_id)
-  
-
-
-      calculate_expiration_login_with_voucher(
-  mpesa_revenue.hotspot_voucher.hotspot_package, 
-mpesa_revenue.hotspot_voucher, mpesa_revenue.account_id)
 
 
     if response.code == 200
