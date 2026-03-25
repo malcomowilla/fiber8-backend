@@ -370,7 +370,7 @@ if mpesa_revenue.hotspot_voucher&.expiration.present? &&
 end
 
 
-  if transaction_status_query[:success]
+  # if transaction_status_query[:success]
     
 present_voucher_or_username = HotspotMpesaRevenue.find_by(reference: transaction_id).hotspot_voucher.expiration.present?
 
@@ -403,6 +403,7 @@ if present_voucher_or_username
 
    HotspotMpesaRevenue.find_by(reference: transaction_id).hotspot_voucher.update!(status:"used",
    login_by:'Trasnsaction Code', 
+
       last_logged_in: Time.now,
        ip: HotspotMpesaRevenue.find_by(reference: transaction_id).hotspot_voucher.ip, used_voucher: true)
 
@@ -424,7 +425,7 @@ if present_voucher_or_username
   rescue StandardError => e
     # Rails.logger.info "REST error logging in device #{active_status.ip}: #{e.message}"
   end
-end
+
 
 
 end
