@@ -3,7 +3,9 @@ class HotspotVouchersController < ApplicationController
 
 load_and_authorize_resource except: [:login_with_hotspot_voucher,
  :make_payment, :check_payment_status, :payment_and_conected_status,
- :stk_push_status, :transaction_status_result, :login_with_receipt_number,
+ :stk_push_status, :transaction_status_result, 
+ :login_with_receipt_number, :calculate_expiration_login_with_voucher,
+ :create_voucher_radcheck
 
 ]
   # skip_before_action :set_tenant, only: [:check_payment_status]
@@ -402,20 +404,20 @@ nas_routers = NasRouter.where(account_id: mpesa_revenue.account_id)
     )
 
       
-if voucher_expiration == 'Expiry After Login'
 
   if mpesa_revenue.hotspot_voucher.expiration.nil? 
   create_voucher_radcheck(mpesa_revenue.hotspot_voucher.voucher, 
   mpesa_revenue.hotspot_voucher.hotspot_package.name, 
   mpesa_revenue.account_id)
   end
-end
 
-    if response.code == 200
 
       calculate_expiration_login_with_voucher(
   mpesa_revenue.hotspot_voucher.hotspot_package, 
 mpesa_revenue.hotspot_voucher, mpesa_revenue.account_id)
+
+
+    if response.code == 200
 
 
 
