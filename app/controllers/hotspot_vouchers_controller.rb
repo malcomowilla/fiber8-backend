@@ -391,12 +391,15 @@ nas_routers = NasRouter.where(account_id: mpesa_revenue.account_id)
   create_voucher_radcheck(mpesa_revenue.hotspot_voucher.voucher, 
   mpesa_revenue.hotspot_voucher.hotspot_package.name, 
   mpesa_revenue.account_id)
+
+
+    calculate_expiration_login_with_voucher(
+  mpesa_revenue.hotspot_voucher.hotspot_package, 
+mpesa_revenue.hotspot_voucher, mpesa_revenue.account_id)
   end
 
 
-      calculate_expiration_login_with_voucher(
-  mpesa_revenue.hotspot_voucher.hotspot_package, 
-mpesa_revenue.hotspot_voucher, mpesa_revenue.account_id)
+    
 
   nas_routers.each do |nas|
   begin
