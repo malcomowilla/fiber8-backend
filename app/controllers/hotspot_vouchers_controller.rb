@@ -1638,9 +1638,7 @@ def calculate_expiration_login_with_voucher(hotspot_package,
    account_id)
   #  hotspot_package = HotspotPackage.find_by(name: package, 
   # account_id: account_id)
-
-  return render json: { error: 'Package not found' }, status: :not_found unless hotspot_package
-  
+return unless hotspot_package
   # Calculate expiration
   expiration_time = if hotspot_package.validity.present? && hotspot_package.validity_period_units.present?
     case hotspot_package.validity_period_units.downcase
