@@ -380,6 +380,9 @@ nas_routers = NasRouter.where(account_id: mpesa_revenue.account_id)
 # if present_voucher_or_username
   voucher_code = HotspotMpesaRevenue.find_by(reference: transaction_id).hotspot_voucher.voucher
 
+
+  Rails.logger.info "package => #{ mpesa_revenue.hotspot_voucher.hotspot_package}"
+    Rails.logger.info "voucher => #{ mpesa_revenue.hotspot_voucher.voucher}"
   nas_routers.each do |nas|
   begin
     response = RestClient::Request.execute(
