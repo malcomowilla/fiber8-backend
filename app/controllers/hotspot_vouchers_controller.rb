@@ -398,12 +398,26 @@ nas_routers = NasRouter.where(account_id: HotspotMpesaRevenue.find_by(reference:
       }
     )
 
+      
+if voucher_expiration == 'Expiry After Login'
+calculate_expiration_login_with_voucher(
+  mpesa_revenue.hotspot_voucher.hotspot_package, 
+mpesa_revenue.hotspot_voucher, mpesa_revenue.account_id)
+
+
+create_voucher_radcheck(mpesa_revenue.hotspot_voucher.voucher, 
+mpesa_revenue.hotspot_voucher.hotspot_package.name, 
+mpesa_revenue.account_id)
+
+end
+
     if response.code == 200
- 
+
+      
+
 
    HotspotMpesaRevenue.find_by(reference: transaction_id).hotspot_voucher.update!(status:"used",
    login_by:'Trasnsaction Code', 
-
       last_logged_in: Time.now,
        ip: HotspotMpesaRevenue.find_by(reference: transaction_id).hotspot_voucher.ip, used_voucher: true)
 
