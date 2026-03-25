@@ -381,8 +381,8 @@ nas_routers = NasRouter.where(account_id: mpesa_revenue.account_id)
   voucher_code = HotspotMpesaRevenue.find_by(reference: transaction_id).hotspot_voucher.voucher
 
 
-  Rails.logger.info "package => #{ mpesa_revenue.hotspot_voucher.hotspot_package}"
-    Rails.logger.info "voucher => #{ mpesa_revenue.hotspot_voucher.voucher}"
+  # Rails.logger.info "package => #{ mpesa_revenue.hotspot_voucher.hotspot_package}"
+    
   nas_routers.each do |nas|
   begin
     response = RestClient::Request.execute(
@@ -1156,14 +1156,6 @@ rad_user_group = RadUserGroup.find_or_initialize_by(username: hotspot_voucher,
  groupname: hotspot_package, priority: 1, account_id: account_id)
 rad_user_group.update!(username: hotspot_voucher, groupname: hotspot_package, priority: 1)
 
-
-rad_reply = RadReply.find_or_initialize_by(username: hotspot_voucher, 
-radiusattribute: '',
-account_id: account_id,
- op: ':=', value: '5000')
- 
-rad_reply.update!(username: hotspot_voucher, 
-radiusattribute: 'Idle-Timeout', op: ':=', value: '5000')
 
 validity_period_units = HotspotPackage.find_by(name: package, account_id: account_id).validity_period_units
 validity = HotspotPackage.find_by(name: package, account_id: account_id).validity
