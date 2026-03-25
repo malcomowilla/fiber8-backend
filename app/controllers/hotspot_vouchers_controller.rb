@@ -372,12 +372,12 @@ end
 
   # if transaction_status_query[:success]
     
-present_voucher_or_username = HotspotMpesaRevenue.find_by(reference: transaction_id).hotspot_voucher.expiration.present?
+# present_voucher_or_username = HotspotMpesaRevenue.find_by(reference: transaction_id).hotspot_voucher.expiration.present?
 
 
 nas_routers = NasRouter.where(account_id: HotspotMpesaRevenue.find_by(reference: transaction_id).account_id)
 
-if present_voucher_or_username
+# if present_voucher_or_username
   voucher_code = HotspotMpesaRevenue.find_by(reference: transaction_id).hotspot_voucher.voucher
 
   nas_routers.each do |nas|
@@ -431,9 +431,9 @@ if present_voucher_or_username
 end
 
     
-  else
-    render json: { error: 'Failed to fetch transaction status' }, status: :unprocessable_entity
-  end
+  # else
+  #   render json: { error: 'Failed to fetch transaction status' }, status: :unprocessable_entity
+  # end
 
 end
 
