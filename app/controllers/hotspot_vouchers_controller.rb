@@ -383,7 +383,6 @@ nas_routers = NasRouter.where(account_id: mpesa_revenue.account_id)
   voucher_code = HotspotMpesaRevenue.find_by(reference: transaction_id).hotspot_voucher.voucher
 
 
-  # Rails.logger.info "package => #{ mpesa_revenue.hotspot_voucher.hotspot_package}"
     
 
 
