@@ -375,7 +375,7 @@ end
 # present_voucher_or_username = HotspotMpesaRevenue.find_by(reference: transaction_id).hotspot_voucher.expiration.present?
 
 
-nas_routers = NasRouter.where(account_id: HotspotMpesaRevenue.find_by(reference: transaction_id).account_id)
+nas_routers = NasRouter.where(account_id: mpesa_revenue.account_id)
 
 # if present_voucher_or_username
   voucher_code = HotspotMpesaRevenue.find_by(reference: transaction_id).hotspot_voucher.voucher
@@ -400,9 +400,6 @@ nas_routers = NasRouter.where(account_id: HotspotMpesaRevenue.find_by(reference:
 
       
 if voucher_expiration == 'Expiry After Login'
-calculate_expiration_login_with_voucher(
-  mpesa_revenue.hotspot_voucher.hotspot_package, 
-mpesa_revenue.hotspot_voucher, mpesa_revenue.account_id)
 
 
 create_voucher_radcheck(mpesa_revenue.hotspot_voucher.voucher, 
@@ -413,13 +410,16 @@ end
 
     if response.code == 200
 
-      
+      calculate_expiration_login_with_voucher(
+  mpesa_revenue.hotspot_voucher.hotspot_package, 
+mpesa_revenue.hotspot_voucher, mpesa_revenue.account_id)
+
 
 
    HotspotMpesaRevenue.find_by(reference: transaction_id).hotspot_voucher.update!(status:"used",
-   login_by:'Trasnsaction Code', 
+   login_by:'Transaction Code', 
       last_logged_in: Time.now,
-       ip: HotspotMpesaRevenue.find_by(reference: transaction_id).hotspot_voucher.ip, used_voucher: true)
+      used_voucher: true)
 
        package = HotspotPackage.find_by(name: HotspotMpesaRevenue.find_by(reference: transaction_id).hotspot_voucher.package)
        expiration_time = HotspotMpesaRevenue.find_by(reference: transaction_id).hotspot_voucher.expiration
@@ -1592,7 +1592,8 @@ end
 
 
 
-def calculate_expiration_login_with_voucher(hotspot_package, voucher_created,
+def calculate_expiration_login_with_voucher(hotspot_package, 
+  voucher_created,
    account_id)
   #  hotspot_package = HotspotPackage.find_by(name: package, 
   # account_id: account_id)
@@ -1626,10 +1627,8 @@ def calculate_expiration_login_with_voucher(hotspot_package, voucher_created,
     voucher_created.update(expiration: expiration_time&.strftime("%B %d, %Y at %I:%M %p"),)
   end
 
-  # Return both expiration and status
-  {
-    expiration: expiration_time&.strftime("%B %d, %Y at %I:%M %p"),
-  }
+ 
+  
 end
 
 
