@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_03_22_173145) do
+ActiveRecord::Schema[7.2].define(version: 2026_03_28_101518) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -99,6 +99,17 @@ ActiveRecord::Schema[7.2].define(version: 2026_03_22_173145) do
     t.integer "account_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "ad_title"
+    t.string "ad_link"
+    t.string "position", default: "bottom-right"
+    t.integer "ad_duration", default: 15
+    t.integer "skip_after", default: 5
+    t.boolean "can_skip", default: true
+    t.boolean "ad_enabled", default: false
+    t.string "media_type"
+    t.string "reward_type", default: "specific"
+    t.integer "free_minutes", default: 30
+    t.string "selected_package"
   end
 
   create_table "admin_settings", force: :cascade do |t|
@@ -445,6 +456,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_03_22_173145) do
     t.string "weekdays", default: [], array: true
     t.string "shared_users", default: "1"
     t.string "location"
+    t.string "package_speed"
     t.index ["name"], name: "index_hotspot_packages_on_name"
   end
 

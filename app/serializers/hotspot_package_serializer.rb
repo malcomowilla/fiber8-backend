@@ -1,7 +1,7 @@
 class HotspotPackageSerializer < ActiveModel::Serializer
   attributes :id, :name, :price, :download_limit, :upload_limit, :account_id, :tx_rate_limit, :rx_rate_limit, 
   :validity_period_units, :download_burst_limit, :upload_burst_limit, :validity, :speed, :valid,
-  :valid_from, :valid_until, :weekdays, :shared_users, :location
+  :valid_from, :valid_until, :weekdays, :shared_users, :location, :package_speed
 
 
 
@@ -21,10 +21,15 @@ class HotspotPackageSerializer < ActiveModel::Serializer
     object.valid_until.strftime('%I:%M %p') if object.valid_until.present?
   end
 
-  def speed
+  def package_speed
     "#{self.object.upload_limit}M/#{self.object.download_limit}M" if self.object.upload_limit && self.object.download_limit
   end
   
+  
+
+  def speed
+     if self.object.download_limit then "#{self.object.download_limit}Mbps" else "unlimited" end
+  end
   
 
   
@@ -50,6 +55,9 @@ class HotspotPackageSerializer < ActiveModel::Serializer
       nil # Return nil if no match is found
     end
   end
+
+
+  
   
   
 end

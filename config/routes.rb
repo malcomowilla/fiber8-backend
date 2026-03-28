@@ -156,7 +156,7 @@ resources :company_ids
 
 end
 
-
+get '/api/get_ad_settings_by_id', to: 'ad_settings#get_ad_settings_by_id'
 post '/api/disconnect_user', to: 'hotspot_vouchers#logout_user'
 get '/api/hotspot_page_data', to: 'hotspot_page#data'
 post '/api/receipt_number_status', to: 'hotspot_vouchers#receipt_number_status'

@@ -1,6 +1,7 @@
 class AdminSetting < ApplicationRecord
   belongs_to :user
   acts_as_tenant(:account)
+  has_one_attached :media_file 
   scope :for_user, ->(user_id) { where(user_id: user_id) }
   # before_validation :set_user, on: :create
 

@@ -14,6 +14,10 @@ class AdSettingsController < ApplicationController
   end
 
 
+
+
+  
+
 def set_time_zone
   Rails.logger.info "Setting time zone"
   Time.zone = GeneralSetting.first&.timezone || Rails.application.config.time_zone
@@ -46,37 +50,65 @@ def set_tenant
 
 
 
-  # GET /ad_settings/1 or /ad_settings/1.json
-  def show
+
+
+
+def get_ad_settings_by_id
+    # @ad_settings = ActsAsTenant.current_tenant.ad_settings
+    id = params[:id]
+    @ad_settings = AdSetting.find_by(id: id)
+    render json: {
+       ad_title: @ad_settings.ad_title,
+       ad_link: @ad_settings.ad_link,
+       position: @ad_settings.position,
+       ad_duration: @ad_settings.ad_duration,
+       skip_after: @ad_settings.skip_after,
+       can_skip: @ad_settings.can_skip,
+       ad_enabled: @ad_settings.ad_enabled,
+       media_type: @ad_settings.media_type,
+       reward_type: @ad_settings.reward_type,
+       free_minutes: @ad_settings.free_minutes,
+       selected_package: @ad_settings.selected_package
+    }
   end
 
-  # GET /ad_settings/new
-  def new
-    @ad_setting = AdSetting.new
-  end
 
-  # GET /ad_settings/1/edit
-  def edit
-  end
 
   # POST /ad_settings or /ad_settings.json
   def create
-    @ad_setting = AdSetting.first_or_initialize(ad_setting_params)
-    if params[:ad_setting][:enabled] == false
-      ActsAsTenant.current_tenant.ad.update(status: 'inactive')
+    setting = AdSetting.find_or_initialize_by(ad_title: params[:ad_title],
+    )
 
-    else
-      ActsAsTenant.current_tenant.ad.update(status: 'active')
+    setting.assign_attributes(
+      ad_title:    params[:ad_title],
+      ad_link:     params[:ad_link],
+      position:    params[:position],
+      ad_duration: params[:ad_duration],
+      skip_after:  params[:skip_after],
+      can_skip:    params[:can_skip],
+      ad_enabled:  params[:ad_enabled],
+      media_type:  params[:media_type],
+      reward_type: params[:reward_type],
+      free_minutes: params[:free_minutes],
+      selected_package: params[:selected_package]
+    )
+
+    # Attach file if provided
+    if params[:media_file].present?
+      setting.media_file.purge if setting.media_file.attached?
+      setting.media_file.attach(params[:media_file])
     end
-    
- @ad_setting.update(ad_setting_params)
-      if @ad_setting.save
-    render json: @ad_setting, status: :created
-      else
-        render json: @ad_setting.errors, status: :unprocessable_entity 
-      end
-    
+
+    if setting.save
+      render json: { success: true, media_url: setting.media_file.attached? ? url_for(setting.media_file) : nil }
+    else
+      render json: { error: setting.errors.full_messages }, status: 422
+    end
   end
+
+
+
+  
 
   # PATCH/PUT /ad_settings/1 or /ad_settings/1.json
   def update
@@ -93,22 +125,21 @@ def set_tenant
 
   # DELETE /ad_settings/1 or /ad_settings/1.json
   def destroy
+     @ad_setting = AdSetting.find_by(id: params[:id])
     @ad_setting.destroy!
 
-    respond_to do |format|
-      format.html { redirect_to ad_settings_path, status: :see_other, notice: "Ad setting was successfully destroyed." }
-      format.json { head :no_content }
-    end
+       head :no_content 
   end
 
   private
     # Use callbacks to share common setup or constraints between actions.
     def set_ad_setting
-      @ad_setting = AdSetting.find(params[:id])
+      @ad_setting = AdSetting.find_by(id: params[:id])
     end
 
     # Only allow a list of trusted parameters through.
     def ad_setting_params
-      params.require(:ad_setting).permit(:enabled, :to_right, :to_left, :to_top, :account_id)
+      params.require(:ad_setting).permit(:enabled, :to_right, 
+      :to_left, :to_top, :account_id)
     end
 end
