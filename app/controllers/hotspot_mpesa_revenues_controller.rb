@@ -19,6 +19,14 @@ end
 
 
 
+
+
+
+
+
+
+
+
 def set_tenant
     host = request.headers['X-Subdomain']
     @account = Account.find_by(subdomain: host)
@@ -63,8 +71,156 @@ if current_user
   end
 
 
+  
+
+def peak_hour
+  peak = HotspotMpesaRevenue
+    .joins(:hotspot_voucher)
+    .select(
+      "EXTRACT(HOUR FROM hotspot_mpesa_revenues.created_at) AS hour,
+       COUNT(*) AS vouchers_sold,
+       SUM(hotspot_mpesa_revenues.amount) AS total_revenue"
+    )
+    .group("hour")
+    .order("vouchers_sold DESC")
+    .limit(1)
+    .first
+
+  if peak
+    hour = peak.hour.to_i
+
+    formatted_hour = Time.zone.parse("#{hour}:00").strftime("%I:00 %p")
+
+    render json: {
+      title: "Peak Hour",
+      time: formatted_hour,               # e.g. "08:00 PM"
+      vouchers_sold: peak.vouchers_sold.to_i,
+      total_revenue: peak.total_revenue.to_f,
+      description: "Most vouchers & revenue"
+    }
+  else
+    render json: { message: "No data found" }, status: :not_found
+  end
+end
 
 
+
+
+
+
+
+
+  def best_day_summary
+  best_day = HotspotMpesaRevenue
+    .joins(:hotspot_voucher)
+    .select(
+      "DATE(hotspot_mpesa_revenues.created_at) AS day,
+       SUM(hotspot_mpesa_revenues.amount) AS total_revenue,
+       COUNT(*) AS vouchers_sold"
+    )
+    .group("day")
+    .order("total_revenue DESC")
+    .limit(1)
+    .first
+
+  if best_day
+    render json: {
+      title: "Best Day Ever",
+      total_revenue: best_day.total_revenue.to_f,
+      vouchers_sold: best_day.vouchers_sold.to_i,
+      day_name: best_day.day.strftime("%A · %d %b")  # e.g. "Tuesday · 28 Mar"
+    }
+  else
+    render json: { message: "No data found" }, status: :not_found
+  end
+end
+
+
+
+
+def monthly_revenue_detail
+  month_param = params[:month] # e.g. "2026-02"
+  year, month = month_param.split('-').map(&:to_i)
+  account_id = request.headers['X-Subdomain'].to_i
+
+  total_revenue = HotspotMpesaRevenue
+                    .where(account_id: account_id)
+                    .select { |r| Time.strptime(r.time_paid, "%Y%m%d%H%M%S").year == year &&
+                                  Time.strptime(r.time_paid, "%Y%m%d%H%M%S").month == month }
+                    .sum(&:amount)
+
+  render json: { revenue: total_revenue }
+end
+
+
+def most_popular_package
+  package = HotspotMpesaRevenue
+    .joins(:hotspot_voucher)
+    .select(
+      "hotspot_vouchers.package AS package,
+       COUNT(*) AS vouchers_sold,
+       SUM(hotspot_mpesa_revenues.amount) AS total_revenue"
+    )
+    .group("hotspot_vouchers.package")
+    .order("vouchers_sold DESC")
+    .limit(1)
+    .first
+
+  if package
+    render json: {
+      package: package.package,
+      vouchers_sold: package.vouchers_sold.to_i,
+      total_revenue: package.total_revenue.to_f
+    }
+  else
+    render json: { message: "No data found" }, status: :not_found
+  end
+end
+
+
+
+
+
+
+
+
+
+def top_customers
+    top_customers = HotspotMpesaRevenue
+      .joins(:hotspot_voucher)
+      .select(
+        "hotspot_vouchers.phone AS phone,
+         hotspot_mpesa_revenues.name,
+         COUNT(hotspot_mpesa_revenues.id) AS total_purchases,
+         SUM(hotspot_mpesa_revenues.amount) AS total_spent,
+         MAX(hotspot_mpesa_revenues.created_at) AS last_payment_at,
+         ARRAY_AGG(DISTINCT hotspot_vouchers.package) AS packages"
+      )
+      .group("hotspot_vouchers.phone, hotspot_mpesa_revenues.name")
+      .order("total_purchases DESC")
+
+    # render json: top_customers.map { |c|
+    #   {
+    #     phone: c.phone,
+    #     name: c.name,
+    #     total_purchases: c.total_purchases.to_i,
+    #     total_spent: c.total_spent.to_f,
+    #     last_payment_at: c.last_payment_at.strftime("%B %d, %Y at %I:%M %p"),
+    #     packages: c.packages
+    #   }
+    # }
+    render json: top_customers.each_with_index.map { |c, index|
+  {
+    rank: index + 1, # 👈 ranking starts from 1
+    phone: c.phone,
+    name: c.name,
+    purchases: c.total_purchases.to_i,
+    spent: c.total_spent.to_f,
+    last_payment_at: c.last_payment_at.strftime("%B %d, %Y at %I:%M %p"),
+    pkg: c.packages
+  }
+}
+  end
 
 
 def todays_revenue

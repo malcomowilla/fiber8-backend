@@ -27,6 +27,13 @@ class HotspotMpesaRevenue < ApplicationRecord
     where(created_at: Time.current.beginning_of_month..Time.current)
   }
 
+
+  scope :for_month, ->(year, month) {
+    select { |r| Time.strptime(r.time_paid, "%Y%m%d%H%M%S").year == year &&
+                  Time.strptime(r.time_paid, "%Y%m%d%H%M%S").month == month }
+  }
+
+
   scope :this_year, -> {
     where(created_at: Time.current.beginning_of_year..Time.current)
   }

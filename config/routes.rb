@@ -156,6 +156,11 @@ resources :company_ids
 
 end
 
+get '/api/monthly_revenue_detail', to: 'hotspot_mpesa_revenues#monthly_revenue_detail'
+get '/api/peak_hour', to: 'hotspot_mpesa_revenues#peak_hour'
+get '/api/most_popular_package', to: 'hotspot_mpesa_revenues#most_popular_package'
+get '/api/best_day_summary', to: 'hotspot_mpesa_revenues#best_day_summary'
+get '/api/top_hotspot_users', to: 'hotspot_mpesa_revenues#top_customers'
 get '/api/get_ad_settings_by_id', to: 'ad_settings#get_ad_settings_by_id'
 post '/api/disconnect_user', to: 'hotspot_vouchers#logout_user'
 get '/api/hotspot_page_data', to: 'hotspot_page#data'
