@@ -140,16 +140,17 @@ end
 
 def monthly_revenue_detail
   month_param = params[:month] # e.g. "2026-02"
-  year, month = month_param.split('-').map(&:to_i)
-  account_id = request.headers['X-Subdomain'].to_i
+year, month = month_param.split('-').map(&:to_i)
 
-  total_revenue = HotspotMpesaRevenue
-                    .where(account_id: account_id)
-                    .select { |r| Time.strptime(r.time_paid, "%Y%m%d%H%M%S").year == year &&
-                                  Time.strptime(r.time_paid, "%Y%m%d%H%M%S").month == month }
-                    .sum(&:amount)
+# Build start and end of month
+start_time = Time.new(year, month, 1)
+end_time   = start_time.end_of_month
 
-  render json: { revenue: total_revenue }
+total_revenue = HotspotMpesaRevenue
+                  .where(time_paid: start_time.strftime("%Y%m%d%H%M%S")..end_time.strftime("%Y%m%d%H%M%S"))
+                  .sum(:amount)
+
+render json: { revenue: total_revenue }
 end
 
 
