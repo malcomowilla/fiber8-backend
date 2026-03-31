@@ -156,6 +156,7 @@ resources :company_ids
 
 end
 
+get '/api/this_week_revenue', to: 'hotspot_mpesa_revenues#this_week_revenue'
 get '/api/monthly_revenue_detail', to: 'hotspot_mpesa_revenues#monthly_revenue_detail'
 get '/api/peak_hour', to: 'hotspot_mpesa_revenues#peak_hour'
 get '/api/most_popular_package', to: 'hotspot_mpesa_revenues#most_popular_package'

@@ -287,6 +287,17 @@ def daily_revenue
 
 
 
+
+
+def this_week_revenue
+  start_time = Time.current.beginning_of_week
+  end_time = Time.current
+  
+  render json: HotspotMpesaRevenue.where(created_at: start_time..end_time).sum(:amount)
+end
+
+
+
     
     # GET /api/revenue_summary
     def revenue_summary
