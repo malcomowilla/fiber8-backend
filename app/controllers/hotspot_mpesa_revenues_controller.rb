@@ -147,7 +147,7 @@ start_time = Time.new(year, month, 1)
 end_time   = start_time.end_of_month
 
 total_revenue = HotspotMpesaRevenue
-                  .where(time_paid: start_time.strftime("%Y%m%d%H%M%S")..end_time.strftime("%Y%m%d%H%M%S"))
+                  .where(time_paid: start_time..end_time)
                   .sum(:amount)
 
 render json: { revenue: total_revenue }
