@@ -60,7 +60,7 @@ def get_ad_settings_by_id
     @ad_settings = AdSetting.find_by(id: id)
     render json: {
        ad_title: @ad_settings.ad_title,
-       ad_link: @ad_settings&.media_file &.attached? ? rails_blob_url(@@d_settings.media_file,
+       ad_link: @ad_settings&.media_file &.attached? ? rails_blob_url(@d_settings.media_file,
        host: tunnel_host, protocol: 'https', port: nil,
       ) : nil,
        position: @ad_settings.position,
