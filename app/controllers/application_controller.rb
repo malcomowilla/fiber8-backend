@@ -2,7 +2,7 @@ class ApplicationController < ActionController::Base
 
     # set_current_tenant_through_filter
 before_action :set_time_zone
-before_action :block_loophole_requests
+# before_action :block_loophole_requests
 # before_action :authorize_technician
 
 
