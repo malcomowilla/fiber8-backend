@@ -47,3 +47,6 @@ kamal/secrets.key
 .env
 /config/deploy.yml
 config/deploy.yml
+
+# Ignore application configuration
+/config/application.yml
