@@ -46,7 +46,7 @@ end
 
   # GET /company_settings or /company_settings.json
   def index
-    tunnel_host = fetch_loophole_tunnel_hostname
+    # tunnel_host = fetch_loophole_tunnel_hostname
 
     # @company_settings = CompanySetting.first
      @account = ActsAsTenant.current_tenant
@@ -60,10 +60,11 @@ end
       customer_support_phone_number: @company_settings&.customer_support_phone_number,
       customer_support_email: @company_settings&.customer_support_email,
       location: @company_settings&.location,
-     
+           logo_url: @company_settings.logo.attached? ? @company_settings.logo.url : nil
+
       
-  logo_url: @company_settings&.logo&.attached? ? rails_blob_url(@company_settings.logo,
-  host: tunnel_host, protocol: 'https', port: nil) : nil
+  # logo_url: @company_settings&.logo&.attached? ? rails_blob_url(@company_settings.logo,
+  # host: tunnel_host, protocol: 'https', port: nil) : nil
 
 # logo_url: @company_settings&.logo&.attached? ? url_for(@company_settings.logo) : nil,
 
@@ -81,7 +82,7 @@ end
 
 
   def allow_get_company_settings  
-    tunnel_host = fetch_loophole_tunnel_hostname
+    # tunnel_host = fetch_loophole_tunnel_hostname
 
     # account = Account.find_or_create_by(subdomain: host)
     # ActsAsTenant.current_tenant = account
