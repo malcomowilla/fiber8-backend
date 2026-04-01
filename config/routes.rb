@@ -156,6 +156,7 @@ resources :company_ids
 
 end
 
+get '/api/allow_get_ads', to: 'ad_settings#allow_get_ads'
 get '/api/this_week_revenue', to: 'hotspot_mpesa_revenues#this_week_revenue'
 get '/api/monthly_revenue_detail', to: 'hotspot_mpesa_revenues#monthly_revenue_detail'
 get '/api/peak_hour', to: 'hotspot_mpesa_revenues#peak_hour'

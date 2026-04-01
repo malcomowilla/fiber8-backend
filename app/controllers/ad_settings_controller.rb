@@ -14,6 +14,26 @@ class AdSettingsController < ApplicationController
   end
 
 
+  def allow_get_ads
+    @account = ActsAsTenant.current_tenant
+    @ad_settings = @account.ad_settings
+   render json: @ad_settings.map do |ad|
+  {
+    ad_title: ad.ad_title,
+    ad_link: ad.media_file.attached? ? ad.media_file.url : nil,
+    position: ad.position,
+    ad_duration: ad.ad_duration,
+    skip_after: ad.skip_after,
+    can_skip: ad.can_skip,
+    ad_enabled: ad.ad_enabled,
+    media_type: ad.media_type,
+    reward_type: ad.reward_type,
+    free_minutes: ad.free_minutes,
+    selected_package: ad.selected_package
+  
+  }
+end
+  end
 
 
   
