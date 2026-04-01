@@ -140,6 +140,15 @@ def get_ad_settings_by_id
       @ad_setting = AdSetting.find_by(id: params[:id])
     end
 
+
+def fetch_loophole_tunnel_hostname
+  log_output = `journalctl -u loophole -n 200 --no-pager`.strip
+    # output = File.read("/var/log/loophole.log")
+
+  match = log_output.match(%r{https://([a-z0-9\-]+\.loophole\.site)})
+  match ? match[1] : nil
+end
+
     # Only allow a list of trusted parameters through.
     def ad_setting_params
       params.require(:ad_setting).permit(:enabled, :to_right, 
