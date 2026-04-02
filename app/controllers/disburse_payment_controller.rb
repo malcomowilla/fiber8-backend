@@ -49,8 +49,8 @@ def set_tenant
     payload = {
       
     OriginatorConversationID: "600997_Test_32et3241ed8yu", 
-    InitiatorName: mpesa.api_initiator_username,
-    SecurityCredential: mpesa.api_initiator_password,
+    InitiatorName: ENV['API_INITIATOR_USERNAME'],
+    SecurityCredential: ENV['API_INITIATOR_PASSWORD'],
     CommandID: "BusinessPayment", 
     Amount: params[:amount], 
     PartyA: ENV['B2C_SHORTCODE'], 
@@ -93,8 +93,10 @@ def fetch_access_token
     return nil unless mpesa
 
 
-    consumer_key = mpesa.consumer_key
-    consumer_secret = mpesa.consumer_secret
+    # consumer_key = mpesa.consumer_key
+    # consumer_secret = mpesa.consumer_secret
+    consumer_key = ENV['CONSUMER_KEY']
+    consumer_secret = ENV['CONSUMER_SECRET']
     Rails.logger.info "Mpesa consumer key: #{consumer_key}"
     Rails.logger.info "Mpesa consumer secret: #{consumer_secret}"
 
