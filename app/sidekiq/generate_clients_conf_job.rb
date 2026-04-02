@@ -9,7 +9,6 @@ class GenerateClientsConfJob
     Rails.logger.info "Generating clients.conf"
 
 
-
     
     File.open('/etc/freeradius/3.0/clients.conf', 'w') do |f|
       Na.find_each do |nas|

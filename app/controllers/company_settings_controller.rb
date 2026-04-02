@@ -102,7 +102,7 @@ end
       # logo_url: @company_settings&.logo&.attached? ? rails_blob_url(@company_settings.logo,
       #  host: tunnel_host, protocol: 'https', port: nil,
       # ) : nil
-      logo_url: @company_settings.logo.attached? ? @company_settings.logo.url : nil
+      logo_url: @company_settings.&logo.attached? ? @company_settings.&logo.url : nil
 
       # logo_url: @company_settings&.logo&.attached? ? url_for(@company_settings.logo) : nil,
       }
