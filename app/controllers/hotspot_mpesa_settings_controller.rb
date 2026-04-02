@@ -147,6 +147,7 @@ render json: @mpesa_setting, serializer: MpesaSettingSerializer
         consumer_key: params[:consumer_key],
         consumer_secret: params[:consumer_secret],
         short_code: params[:short_code],
+
         #  api_initiator_password: params[:api_initiator_password],
       # api_initiator_username: params[:api_initiator_username],
 
@@ -156,10 +157,11 @@ render json: @mpesa_setting, serializer: MpesaSettingSerializer
       consumer_key: params[:consumer_key],
         consumer_secret: params[:consumer_secret],
       short_code: params[:short_code],
-      api_initiator_password: params[:api_initiator_password],
-      api_initiator_username: params[:api_initiator_username],
+      phone_number: params[:phone_number],
+      # api_initiator_password: params[:api_initiator_password],
+      # api_initiator_username: params[:api_initiator_username],
 
-        account_type: params[:account_type]
+        # account_type: params[:account_type]
 
     )
       if @hotspot_mpesa_setting_setting.save 
@@ -206,7 +208,7 @@ render json: @mpesa_setting, serializer: MpesaSettingSerializer
     # Only allow a list of trusted parameters through.
     def hotspot_mpesa_setting_params
       params.require(:hotspot_mpesa_setting).permit(:account_type, :short_code, 
-      :consumer_key, 
+      :consumer_key, :phone_number,
       :consumer_secret, :passkey, :api_initiator_password, :api_initiator_username)
     end
 end

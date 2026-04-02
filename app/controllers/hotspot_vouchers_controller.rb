@@ -876,10 +876,10 @@ def make_payment
 host = request.headers['X-Subdomain']
   phone_number = params[:phone_number]
   amount = params[:amount]
-  shortcode = ActsAsTenant.current_tenant&.hotspot_mpesa_setting.short_code
-  passkey = ActsAsTenant.current_tenant&.hotspot_mpesa_setting.passkey
-  consumer_key = ActsAsTenant.current_tenant&.hotspot_mpesa_setting.consumer_key
-  consumer_secret = ActsAsTenant.current_tenant&.hotspot_mpesa_setting.consumer_secret
+  shortcode = ActsAsTenant.current_tenant&.hotspot_mpesa_setting.short_code || ENV['SHORTCODE']
+  passkey = ActsAsTenant.current_tenant&.hotspot_mpesa_setting.passkey || ENV['PASSKEY']
+  consumer_key = ActsAsTenant.current_tenant&.hotspot_mpesa_setting.consumer_key || ENV['CONSUMER_KEY']
+  consumer_secret = ActsAsTenant.current_tenant&.hotspot_mpesa_setting.consumer_secret || ENV['CONSUMER_SECRET']
 
   voucher_code = generate_voucher_code
 #   session_id = rand(100000..999999).to_s

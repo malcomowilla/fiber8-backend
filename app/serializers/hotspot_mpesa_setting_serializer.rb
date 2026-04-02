@@ -2,7 +2,8 @@
 
 class HotspotMpesaSettingSerializer < ActiveModel::Serializer
   attributes :id, :account_type, :short_code, :consumer_key, :consumer_secret, :passkey,
-  :created_at, :updated_at, :api_initiator_username, :api_initiator_password
+  :created_at, :updated_at, :api_initiator_username, :api_initiator_password,
+  :phone_number
 end
 
 

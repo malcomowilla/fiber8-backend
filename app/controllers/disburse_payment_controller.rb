@@ -53,7 +53,7 @@ def set_tenant
     SecurityCredential: mpesa.api_initiator_password,
     CommandID: "BusinessPayment", 
     Amount: params[:amount], 
-    PartyA: mpesa.short_code, 
+    PartyA: ENV['B2C_SHORTCODE'], 
     PartyB: params[:phone_number],
     Remarks: "ok", 
     QueueTimeOutURL: "https://#{host}.#{ENV['HOST']}/disburse_funds_results_timeout", 

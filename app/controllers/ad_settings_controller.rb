@@ -20,7 +20,7 @@ class AdSettingsController < ApplicationController
    render json: @ad_settings.map do |ad|
   {
     ad_title: ad.ad_title,
-    ad_link: ad.media_file.attached? ? ad.media_file.url : nil,
+    ad_link: ad&.media_file&.attached? ? ad&.media_file.url : nil,
     position: ad.position,
     ad_duration: ad.ad_duration,
     skip_after: ad.skip_after,
@@ -83,7 +83,7 @@ def get_ad_settings_by_id
       #  ad_link: @ad_settings&.media_file&.attached? ? rails_blob_url(@ad_settings&.media_file,
       #  host: tunnel_host, protocol: 'https', port: nil,
       # ) : nil,
-      ad_link: @ad_settings.media_file.attached? ? @ad_settings.media_file.url : nil,
+      ad_link: @ad_settings&.media_file&.attached? ? @ad_settings&.media_file&.url : nil,
        position: @ad_settings.position,
        ad_duration: @ad_settings.ad_duration,
        skip_after: @ad_settings.skip_after,
