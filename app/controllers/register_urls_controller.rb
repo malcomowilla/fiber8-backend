@@ -62,7 +62,9 @@ end
   private
 
   def fetch_access_token
-    # mpesa = HotspotMpesaSetting.find_by(account_type: "Paybill")
+     host = request.headers['X-Subdomain']
+    @account = Account.find_by!(subdomain: host)
+    mpesa = HotspotMpesaSetting.find_by(account_id: @account.id)
     # return nil unless mpesa
 
     consumer_key     = mpesa.consumer_key
