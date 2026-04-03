@@ -52,7 +52,7 @@ def set_tenant
       
     OriginatorConversationID: "600997_Test_32et3241ed8yu", 
     InitiatorName: ENV['API_INITIATOR_USERNAME'],
-    SecurityCredential: ENV['API_INITIATOR_PASSWORD'],
+    SecurityCredential: ENV['B2C_API_INITIATOR_PASSWORD'],
     CommandID: "BusinessPayment", 
     Amount: params[:amount], 
     PartyA: ENV['B2C_SHORTCODE'], 
