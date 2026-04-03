@@ -44,7 +44,7 @@ end
 
     begin
       response = RestClient.post(
-          "https://api.safaricom.co.ke/mpesa/b2c/v2/registerurl",
+          "https://api.safaricom.co.ke/mpesa/c2b/v2/registerurl",
         payload.to_json,
         { content_type: :json, Authorization: "Bearer #{token}" }
       )
@@ -62,8 +62,8 @@ end
   private
 
   def fetch_access_token
-    mpesa = HotspotMpesaSetting.find_by(account_type: "Paybill")
-    return nil unless mpesa
+    # mpesa = HotspotMpesaSetting.find_by(account_type: "Paybill")
+    # return nil unless mpesa
 
     consumer_key     = mpesa.consumer_key
     consumer_secret  = mpesa.consumer_secret
