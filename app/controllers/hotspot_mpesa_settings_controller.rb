@@ -142,14 +142,17 @@ render json: @mpesa_setting, serializer: MpesaSettingSerializer
  
   # POST /hotspot_mpesa_settings or /hotspot_mpesa_settings.json
   def create
+     host = request.headers['X-Subdomain']
+    @account = Account.find_by(subdomain: host)
     # @sms_setting = SmsSetting.find_or_initialize_by(sms_setting_params)
       @hotspot_mpesa_setting_setting = HotspotMpesaSetting.find_or_initialize_by(
-        consumer_key: params[:consumer_key],
-        consumer_secret: params[:consumer_secret],
-        short_code: params[:short_code],
+        # consumer_key: params[:consumer_key],
+        # consumer_secret: params[:consumer_secret],
+        # short_code: params[:short_code],
 
         #  api_initiator_password: params[:api_initiator_password],
       # api_initiator_username: params[:api_initiator_username],
+      tenant_id: @account.id,
 
       ) 
       @hotspot_mpesa_setting_setting.update(
@@ -158,6 +161,7 @@ render json: @mpesa_setting, serializer: MpesaSettingSerializer
         consumer_secret: params[:consumer_secret],
       short_code: params[:short_code],
       phone_number: params[:phone_number],
+      no_api_keys: params[:no_api_keys],
       # api_initiator_password: params[:api_initiator_password],
       # api_initiator_username: params[:api_initiator_username],
 
@@ -208,7 +212,7 @@ render json: @mpesa_setting, serializer: MpesaSettingSerializer
     # Only allow a list of trusted parameters through.
     def hotspot_mpesa_setting_params
       params.require(:hotspot_mpesa_setting).permit(:account_type, :short_code, 
-      :consumer_key, :phone_number,
+      :consumer_key, :phone_number, :no_api_keys,
       :consumer_secret, :passkey, :api_initiator_password, :api_initiator_username)
     end
 end

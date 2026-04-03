@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_04_03_105352) do
+ActiveRecord::Schema[7.2].define(version: 2026_04_03_163837) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -434,6 +434,8 @@ ActiveRecord::Schema[7.2].define(version: 2026_04_03_105352) do
     t.string "api_initiator_password"
     t.string "api_initiator_username"
     t.string "phone_number"
+    t.integer "tenant_id"
+    t.boolean "no_api_keys", default: false
   end
 
   create_table "hotspot_packages", force: :cascade do |t|
@@ -492,6 +494,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_04_03_105352) do
     t.string "email"
     t.string "voucher_type", default: "Mixed"
     t.string "voucher_expiration"
+    t.boolean "has_api_key"
     t.index ["account_id"], name: "index_hotspot_settings_on_account_id"
   end
 

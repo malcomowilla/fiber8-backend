@@ -270,7 +270,8 @@ class GenerateInvoiceJob
   def perform
     Account.find_each do |tenant|
       ActsAsTenant.with_tenant(tenant) do
-        process_subscription_invoice(tenant)
+        tenant.hotspot_mpesa_setting.no_api_keys == false ? process_subscription_invoice(tenant) : nil
+        # process_subscription_invoice(tenant)
       end
     end
   end
