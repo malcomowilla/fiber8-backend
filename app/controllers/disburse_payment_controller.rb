@@ -47,7 +47,7 @@ def set_tenant
     # return render json: { error: "M-Pesa Settings Not Found" }, status: :not_found unless mpesa
 
 
- host = request.headers['X-Subdomain']
+   host = request.headers['X-Subdomain']
     payload = {
       
     OriginatorConversationID: "600997_Test_32et3241ed8yu", 
