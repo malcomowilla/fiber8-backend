@@ -8,10 +8,13 @@ class PayIspsJob
     Account.find_each do |tenant|
       ActsAsTenant.with_tenant(tenant) do
         # Pay out tenants without API keys
-        if tenant.hotspot_mpesa_setting&.no_api_keys
-          process_tenant_payout(tenant)
-        end
-
+        # if tenant.hotspot_mpesa_setting&.no_api_keys
+        #   process_tenant_payout(tenant)
+        # end
+         setting = tenant.hotspot_mpesa_setting
+    next if setting.nil?                     # skip tenants with no settings
+    next if setting.no_api_keys == true
+process_tenant_payout(tenant)
         # Generate platform fee invoice for everyone (once per 30 days)
         process_platform_fee_invoice(tenant)
       end
@@ -123,7 +126,8 @@ class PayIspsJob
       CommandID: "BusinessPayment",
       Amount: amount,
       PartyA: ENV['B2C_SHORTCODE'],
-      PartyB: format_phone(phone_number),
+      partyB: phone_number,
+      # PartyB: format_phone(phone_number),
       Remarks: "ISP payout",
       QueueTimeOutURL: "#{callback_base_url(tenant)}/b2c_timeout",
       ResultURL: "#{callback_base_url(tenant)}/b2c_result",
