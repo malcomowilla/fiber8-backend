@@ -668,22 +668,22 @@ invoice = Invoice.where(invoice_number: bill_ref,
 status: "unpaid"
 ).first
 
-if invoice.total == bill_ref
+
+invoices.map do |invoice|
+
+if invoice.total == bill_ref.to_i
 invoice.update!(status: 'paid', 
            amount_paid: paid_amount,
-           total: data["TransAmount"]
+           total: data["TransAmount"],
+           expiry: Time.current + 30.days
            )
+tenant = Account.find_by(id: invoice.account_id)
 
-      hotspot_plan = HotspotAndDialPlan.find_by(account_id: invoice.account_id,
+tenant.hotspot_and_dial_plan.update(
+  name: 'Hotspot And PPPOE Plan',
+)
 
-      )
-      hotspot_plan.update(
-      
-      status: "active",
-     
-      expiry: Time.current + 30.days,
-      )
-
+end
 end
 
 

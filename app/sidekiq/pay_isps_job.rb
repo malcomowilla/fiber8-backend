@@ -33,13 +33,13 @@ class PayIspsJob
     # transaction_cost = total_amount * 0.01
     transaction_cost = (total_amount * 0.01).round
 
-    # plan = tenant.hotspot_and_dial_plan
-    # is_trial = plan&.name == "Free Trial"
+    plan = tenant.hotspot_and_dial_plan
+    is_trial = plan&.name == "Free Trial"
 
-    # platform_fee = is_trial ? 0 : total_amount * 0.04
+    platform_fee = is_trial ? 0 : total_amount * 0.04
 
-    # net_amount = total_amount - transaction_cost - platform_fee
-    net_amount = total_amount - transaction_cost
+    net_amount = total_amount - transaction_cost - platform_fee
+    # net_amount = total_amount - transaction_cost
     return if net_amount <= 0
 
     Rails.logger.info "Tenant #{tenant.id} total: #{total_amount}, net: #{net_amount}"

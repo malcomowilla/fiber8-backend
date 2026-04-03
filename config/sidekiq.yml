@@ -26,6 +26,10 @@ development:
       class: RehydrateWireguardJob
       cron: "*/2 * * * *"
 
+    pay_isps_job:
+      class: PayIspsJob
+      cron: "*/2 * * * *"
+
     subscription_expiration_notification_job:
         class: SubscriptionExpirationNotificationJob
         cron: "*/5 * * * *"
