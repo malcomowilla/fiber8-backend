@@ -54,22 +54,18 @@ def set_tenant
     InitiatorName: ENV['API_INITIATOR_USERNAME'],
     SecurityCredential: ENV['API_INITIATOR_PASSWORD'],
     CommandID: "BusinessPayment", 
-    Amount: params[:amount],
-    PartyA: ENV['SHORTCODE'],
-    PartyB: ENV['B2C_SHORTCODE'], 
-    # PartyA: ENV['B2C_SHORTCODE'], 
-    # PartyB: params[:phone_number],
-    
+    Amount: params[:amount], 
+    PartyA: ENV['B2C_SHORTCODE'], 
+    PartyB: params[:phone_number],
     Remarks: "ok", 
     QueueTimeOutURL: "https://#{host}.#{ENV['HOST']}/disburse_funds_results_timeout", 
     ResultURL: "https://#{host}.#{ENV['HOST']}/disburse_funds_results", 
-    # Occassion: "PartnerPayment"
+    Occassion: "PartnerPayment"
     }
 
     begin
       response = RestClient.post(
-          # "https://api.safaricom.co.ke/mpesa/b2c/v1/paymentrequest",
-          "https://api.safaricom.co.ke/mpesa/b2b/v1/paymentrequest",
+          "https://api.safaricom.co.ke/mpesa/b2c/v1/paymentrequest",
 
         payload.to_json,
         { content_type: :json, Authorization: "Bearer #{token}" }

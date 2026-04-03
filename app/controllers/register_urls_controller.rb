@@ -44,7 +44,7 @@ end
 
     begin
       response = RestClient.post(
-          "https://api.safaricom.co.ke/mpesa/c2b/v2/registerurl",
+          "https://api.safaricom.co.ke/mpesa/b2c/v2/registerurl",
         payload.to_json,
         { content_type: :json, Authorization: "Bearer #{token}" }
       )
