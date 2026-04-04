@@ -1087,7 +1087,7 @@ def create
       # calculate_expiration(params[:package], @hotspot_voucher,
       #  @hotspot_voucher.account_id)
       
-       ActsAsTenant.current_tenant.hotspot_setting.voucher_expiration == 'Expiry After Creation' ?
+       ActsAsTenant.current_tenant&.hotspot_setting&.voucher_expiration == 'Expiry After Creation' ?
        calculate_expiration(params[:package], @hotspot_voucher,
        @hotspot_voucher.account_id) : nil
 
@@ -1095,7 +1095,7 @@ def create
       # Save within transaction - will rollback if any fail
       if @hotspot_voucher.save!
 
-         ActsAsTenant.current_tenant.hotspot_setting.voucher_expiration == 'Expiry After Creation' ?
+         ActsAsTenant.current_tenant&.hotspot_setting&.voucher_expiration == 'Expiry After Creation' ?
        create_voucher_radcheck(voucher_code, params[:package], 
         @hotspot_voucher.account_id) : nil
        
