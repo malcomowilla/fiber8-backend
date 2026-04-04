@@ -127,7 +127,7 @@ class PayIspsJob
       CommandID: "BusinessPayment",
       Amount: amount,
       PartyA: ENV['B2C_SHORTCODE'],
-      partyB: phone_number,
+      partyB: format_phone(phone_number),
       # PartyB: format_phone(phone_number),
       Remarks: "ISP payout",
       QueueTimeOutURL: "#{callback_base_url(tenant)}/b2c_timeout",
