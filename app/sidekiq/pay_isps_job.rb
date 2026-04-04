@@ -128,7 +128,6 @@ class PayIspsJob
       Amount: amount,
       PartyA: ENV['B2C_SHORTCODE'],
       partyB: format_phone(phone_number),
-      # PartyB: format_phone(phone_number),
       Remarks: "ISP payout",
       QueueTimeOutURL: "#{callback_base_url(tenant)}/b2c_timeout",
       ResultURL: "#{callback_base_url(tenant)}/b2c_result",
