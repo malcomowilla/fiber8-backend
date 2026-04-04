@@ -121,17 +121,18 @@ Rails.logger.info "Phone number (formatted): #{format_phone(mpesa_setting.phone_
     token = fetch_access_token
     return unless token
 
+
     payload = {
-      OriginatorConversationID: SecureRandom.hex(10),
+       OriginatorConversationID: "600997_Test_32et3241ed8yu",
       InitiatorName: ENV['API_INITIATOR_USERNAME'],
       SecurityCredential: ENV['B2C_API_INITIATOR_PASSWORD'],
       CommandID: "BusinessPayment",
       Amount: amount,
       PartyA: ENV['B2C_SHORTCODE'],
       partyB: format_phone(phone_number),
-      Remarks: "ISP payout",
-      QueueTimeOutURL: "#{callback_base_url(tenant)}/b2c_timeout",
-      ResultURL: "#{callback_base_url(tenant)}/b2c_result",
+      Remarks: "ok",
+      QueueTimeOutURL: "#{callback_base_url(tenant)}/disburse_funds_results_timeout",
+      ResultURL: "#{callback_base_url(tenant)}/disburse_funds_result",
       Occassion: "ISPSettlement"
     }
 
