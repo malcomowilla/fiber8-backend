@@ -836,9 +836,9 @@ end
 
 
 def stk_push_status
-    shortcode = ActsAsTenant.current_tenant&.hotspot_mpesa_setting.short_code
-  passkey = ActsAsTenant.current_tenant&.hotspot_mpesa_setting.passkey
-  consumer_key = ActsAsTenant.current_tenant&.hotspot_mpesa_setting.consumer_key
+    shortcode = ActsAsTenant.current_tenant&.hotspot_mpesa_setting.short_code || ENV['B2C_SHORTCODE']
+  passkey = ActsAsTenant.current_tenant&.hotspot_mpesa_setting.passkey || ENV['CONSUMER_  ']
+  consumer_key = ActsAsTenant.current_tenant&.hotspot_mpesa_setting.consumer_key || ENV['CONSUMER_SECRET']
   consumer_secret = ActsAsTenant.current_tenant&.hotspot_mpesa_setting.consumer_secret
  checkout_request_id = params[:checkout_request_id]
 Rails.logger.info "checkout_request_id: #{checkout_request_id}"
