@@ -3,7 +3,6 @@ class HotspotVouchersController < ApplicationController
 # :transaction_status_result,
 load_and_authorize_resource except: [:login_with_hotspot_voucher,
  :make_payment, :check_payment_status, :payment_and_conected_status,
- :stk_push_status,  
  :login_with_receipt_number, :calculate_expiration_login_with_voucher,
  :create_voucher_radcheck, :receipt_number_status
 
@@ -837,9 +836,9 @@ end
 
 def stk_push_status
     shortcode = ActsAsTenant.current_tenant&.hotspot_mpesa_setting.short_code || ENV['B2C_SHORTCODE']
-  passkey = ActsAsTenant.current_tenant&.hotspot_mpesa_setting.passkey || ENV['CONSUMER_  ']
-  consumer_key = ActsAsTenant.current_tenant&.hotspot_mpesa_setting.consumer_key || ENV['CONSUMER_SECRET']
-  consumer_secret = ActsAsTenant.current_tenant&.hotspot_mpesa_setting.consumer_secret
+  passkey = ActsAsTenant.current_tenant&.hotspot_mpesa_setting.passkey || ENV['PASSKEY']
+  consumer_key = ActsAsTenant.current_tenant&.hotspot_mpesa_setting.consumer_key || ENV['CONSUMER_KEY']
+  consumer_secret = ActsAsTenant.current_tenant&.hotspot_mpesa_setting.consumer_secret || ENV['CONSUMER_SECRET']
  checkout_request_id = params[:checkout_request_id]
 Rails.logger.info "checkout_request_id: #{checkout_request_id}"
   stk_push_query = StkStatusService.initiate_stk_query(
