@@ -8,13 +8,14 @@ class PayIspsJob
     Account.find_each do |tenant|
       ActsAsTenant.with_tenant(tenant) do
         # Pay out tenants without API keys
-        # if tenant.hotspot_mpesa_setting&.no_api_keys
-        #   process_tenant_payout(tenant)
-        # end
-         setting = tenant.hotspot_mpesa_setting
-    next if setting.nil?                     # skip tenants with no settings
-    next if setting.no_api_keys == true
-process_tenant_payout(tenant)
+        if tenant.hotspot_mpesa_setting&.no_api_keys
+          process_tenant_payout(tenant)
+        end
+#          setting = tenant.hotspot_mpesa_setting
+#     next if setting.nil?  
+#     next unless setting.no_api_keys == true  
+#      # or next if setting.no_api_keys == false                   # skip tenants with no settings
+# process_tenant_payout(tenant)
         # Generate platform fee invoice for everyone (once per 30 days)
         process_platform_fee_invoice(tenant)
       end
