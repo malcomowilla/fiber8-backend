@@ -882,7 +882,7 @@ host = request.headers['X-Subdomain']
   consumer_secret = ActsAsTenant.current_tenant&.hotspot_mpesa_setting.consumer_secret || ENV['CONSUMER_SECRET']
 
   voucher_code = generate_voucher_code
-#    = rand(100000..999999).to_s
+#   session_id = rand(100000..999999).to_s
 # TemporarySession.create!(
 #   session: session_id,
 #   ip: params[:ip],    

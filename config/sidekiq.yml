@@ -22,10 +22,7 @@ development:
       class: GenerateInvoiceJob
       cron: "*/2 * * * *"
 
-    rehydrate_wireguard_job:
-      class: RehydrateWireguardJob
-      cron: "*/2 * * * *"
-
+  
     pay_isps_job:
       class: PayIspsJob
       cron: "*/2 * * * *"
