@@ -22,7 +22,10 @@ development:
       class: GenerateInvoiceJob
       cron: "*/2 * * * *"
 
-  
+    rehydrate_wireguard_job:
+      class: RehydrateWireguardJob
+      cron: "*/2 * * * *"
+
     pay_isps_job:
       class: PayIspsJob
       cron: "*/2 * * * *"
@@ -77,10 +80,7 @@ development:
       class: HotspotCompensationJob
       cron: "*/2 * * * *"
 
-    restart_cloudflared_if_tunnel_missing_job:
-      class: RestartCloudflaredIfTunnelMissingJob
-      cron: "*/3 * * * *"
-
+   
     lock_account_job:
       class: LockAccountJob
       cron: "*/3 * * * *"
