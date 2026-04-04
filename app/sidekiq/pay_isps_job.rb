@@ -52,6 +52,7 @@ class PayIspsJob
 
     # Mark revenues as paid
     revenues.update_all(paid_out: true, paid_out_at: Time.current)
+Rails.logger.info "Phone number (formatted): #{format_phone(mpesa_setting.phone_number)}"
 
     # Send B2C payout
     send_b2c(mpesa_setting.phone_number, net_amount.to_i, tenant)
