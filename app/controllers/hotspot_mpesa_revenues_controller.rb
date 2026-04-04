@@ -290,10 +290,20 @@ def daily_revenue
 
 
 def this_week_revenue
-  start_time = Time.current.beginning_of_week
-  end_time = Time.current
+  # start_time = Time.current.beginning_of_week
+  # end_time = Time.current
   
-  render json: HotspotMpesaRevenue.where(created_at: start_time..end_time).sum(:amount)
+  # render json: HotspotMpesaRevenue.where(created_at: start_time..end_time).sum(:amount)
+
+start_time = [
+  Time.zone.now.beginning_of_week,
+  Time.zone.now.beginning_of_month
+].max
+
+render json: HotspotMpesaRevenue.where(created_at: start_time..Time.zone.now).sum(:amount)
+
+
+
 end
 
 
