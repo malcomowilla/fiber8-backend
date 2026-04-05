@@ -47,17 +47,30 @@ transaction_cost = (total_amount * 0.01).ceil
 
     net_amount = total_amount - transaction_cost - platform_fee
     return if net_amount <= 0
+     return if net_amount < 10 
 
     Rails.logger.info "Tenant #{tenant.id} total: #{total_amount}, net: #{net_amount}"
 
     # Mark revenues as paid
-    revenues.update_all(paid_out: true, paid_out_at: Time.current)
+    # revenues.update_all(paid_out: true, paid_out_at: Time.current)
 Rails.logger.info "Phone number (formatted): #{format_phone(mpesa_setting.phone_number)}"
 
     # Send B2C payout
-    send_b2c(mpesa_setting.phone_number, net_amount.to_i, tenant)
+    success = send_b2c(mpesa_setting.phone_number, net_amount.to_i, tenant)
+     if success
+    revenues.update_all(paid_out: true, paid_out_at: Time.current)
+    Rails.logger.info "B2C succeeded and revenues marked paid for tenant #{tenant.id}"
+  else
+    Rails.logger.error "B2C failed for tenant #{tenant.id} – revenues NOT marked paid, will retry later"
+    # Optionally: raise error to trigger Sidekiq retry
+    # raise "B2C payment failed for tenant #{tenant.id}"
   end
 
+  end
+
+
+
+  
   # --------------------------
   # 📄 GENERATE PLATFORM FEE INVOICE (once per 30 days)
   # --------------------------
@@ -135,19 +148,30 @@ Rails.logger.info "Phone number (formatted): #{format_phone(mpesa_setting.phone_
       ResultURL: "https://#{tenant.subdomain}.#{ENV['HOST']}/disburse_funds_result",
       Occassion: "ISPSettlement"
     }
-
-    begin
-      response = RestClient.post(
-        "https://api.safaricom.co.ke/mpesa/b2c/v1/paymentrequest",
-        payload.to_json,
-        { content_type: :json, Authorization: "Bearer #{token}" }
-      )
+ begin
+    response = RestClient.post(
+      "https://api.safaricom.co.ke/mpesa/b2c/v1/paymentrequest",
+      payload.to_json,
+      { content_type: :json, Authorization: "Bearer #{token}" }
+    )
+    parsed = JSON.parse(response.body)
+    # Safaricom returns ResultCode == "0" on success
+    if parsed["ResultCode"] == "0" || parsed["ResponseCode"] == "0"
       Rails.logger.info "B2C success: #{response.body}"
-    rescue RestClient::ExceptionWithResponse => e
-      Rails.logger.error "B2C error: #{e.response.body}"
+      return true
+    else
+      Rails.logger.info "B2C API returned error: #{parsed}"
+      return false
     end
+  rescue RestClient::ExceptionWithResponse => e
+    Rails.logger.info "B2C exception: #{e.response.body}"
+    return false
+  end
   end
 
+
+
+  
   # --------------------------
   # 🔐 ACCESS TOKEN
   # --------------------------
