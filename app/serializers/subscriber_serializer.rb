@@ -13,6 +13,8 @@ class SubscriberSerializer < ActiveModel::Serializer
      object.subscriptions.pluck(:package_name)
 
    end
+
+
    
    def created_at
      
@@ -26,6 +28,8 @@ class SubscriberSerializer < ActiveModel::Serializer
      
    end
 
+
+   
    def status
         if self.object.subscriptions.exists?
          self.object.status = 'active'

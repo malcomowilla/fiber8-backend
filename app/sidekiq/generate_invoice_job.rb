@@ -1,84 +1,24 @@
+
 # class GenerateInvoiceJob
-#    include Sidekiq::Job
-#     queue_as :invoices
-#     sidekiq_options lock: :until_executed, lock_timeout: 0
+#   include Sidekiq::Job
+#   queue_as :invoices
 
+#   SUBSCRIPTION_FEE = 500
 
-    
 #   def perform
 #     Account.find_each do |tenant|
 #       ActsAsTenant.with_tenant(tenant) do
-#         # Rails.logger.info "Processing plan invoice for => #{tenant.subdomain}"
-
-#     Rails.logger.info "Processing hotspot and pppoe plan invoice for => #{tenant.subdomain}"
-
-
-#         if tenant.hotspot_plan.present? && tenant.hotspot_plan&.name.present? && tenant.hotspot_plan.name != 'Hotspot Free Trial'
-
-#         if tenant.hotspot_plan.present? && tenant.hotspot_plan&.expiry.present? && tenant.hotspot_plan&.expiry - 1.days < Time.current
-
-
-#                     Rails.logger.info "Processing hotspot plan invoice for => #{tenant.subdomain}"
-
-#    existing_invoice = tenant.invoices.where(plan_name: "Hotspot Plan #{tenant.hotspot_plan.name}").order(created_at: :desc).first
-
-# if existing_invoice.nil? ||  existing_invoice.last_invoiced_at < 30.days.ago
-#   process_hotspot_plan_invoice(
-#     tenant,
-#     tenant.hotspot_plan.name,
-#     tenant.hotspot_plan.price,
-#     tenant.hotspot_plan.expiry_days,
-#     tenant.hotspot_plan.expiry
-#   )
-
-#   # send_expiration_sms(tenant.hotspot_plan.phone, tenant.hotspot_plan.expiry, existing_invoice.invoice_number, tenant)
-# else
-#     Rails.logger.info "Skipping invoice for #{tenant.subdomain} — already invoiced hotspot."
-# end
-#         end
-#         end
-        
-
-
-#         # Process PPPoE plan
-#          if tenant.pp_poe_plan.present? && tenant.pp_poe_plan&.name.present? && tenant.pp_poe_plan.name != 'PPPOE Free Trial'
-#          if tenant.pp_poe_plan.present? && tenant.pp_poe_plan.expiry.present? && tenant.pp_poe_plan.expiry - 1.days < Time.current
-
-
-#                     Rails.logger.info "Processing pppoe plan invoice for => #{tenant.subdomain}"
-
-
-#    existing_invoice = tenant.invoices.where(plan_name: "PPPoE Plan #{tenant.pp_poe_plan.name}").order(created_at: :desc).first
-#    
-
-         
-
-# if existing_invoice.nil? ||  existing_invoice.last_invoiced_at < 30.days.ago
-#   process_pppoe_plan_invoice(
-#     tenant,
-#     tenant.pp_poe_plan.name,
-#     tenant.pp_poe_plan.price,
-#     tenant.pp_poe_plan.expiry_days,
-#     tenant.pp_poe_plan.expiry
-#   )
-
-# else
-#       Rails.logger.info "Skipping invoice for #{tenant.subdomain} — already invoiced ppoe."
-
-# end
-#         end
+#         # return unless tenant.hotspot_mpesa_setting.no_api_keys.nil?
+#         # tenant.hotspot_mpesa_setting.no_api_keys == false ? process_subscription_invoice(tenant) : nil
+#         setting = tenant.hotspot_mpesa_setting
+#     next if setting.nil?                     # skip tenants with no settings
+#     next if setting.no_api_keys == true      # skip if they use the "no API keys" mode
+#     # only reach here if setting exists and no_api_keys is false (i.e., they have API keys)
+#     process_subscription_invoice(tenant)
+    
+#         # process_subscription_invoice(tenant)
 #       end
-      
-
-
-
-#       end
-
-
 #     end
-
-
-
 #   end
 
 #   private
@@ -87,76 +27,77 @@
 
 
 
-# def process_hotspot_plan_invoice(tenant, plan_name, plan_amount, expiry_days, expiry)
-    
-# Rails.logger.info "Processing hotspot plan invoice for => #{tenant.subdomain}"
-# invoice = Invoice.create!(
-#         invoice_number: generate_invoice_number,
-#         plan_name: "Hotspot Plan #{plan_name}",
-#          invoice_date: Time.current,
-#         due_date: expiry - 1.days,
-#         invoice_desciption: "payment for hotspot license => #{plan_name}",
-#         total: plan_amount,
-#         status: "unpaid",
-#         account_id: tenant.id,
-#         last_invoiced_at: Time.current,
 
-#       )
+#   def process_subscription_invoice(tenant)
+#     plan = tenant.hotspot_and_dial_plan
+#     return unless plan.present?
+#     return unless plan.expiry.present?
+#     # return unless plan.name == "Free Trial"
+#     # ✅ Trigger 5 days before expiry
+#     return unless plan.expiry - 5.days <= Time.current
 
-#       # send_expiration_sms(phone_number, due_date, invoice_number, username, plan_name)
-#        send_expiration_sms(tenant.users.where(role: "super_administrator").first.phone_number, invoice.due_date, invoice.invoice_number, tenant.users.where(role: "super_administrator").first.username, invoice.plan_name)
-    
-# end
+#     # last_invoice = tenant.invoices.where(plan_name: "Subscription Fee").order(created_at: :desc).first
+#     last_invoice = tenant.invoices.where(status: 'unpaid').order(created_at: :desc).first
 
+#     # ✅ Prevent duplicate invoices
+#     if last_invoice&.last_invoiced_at.present? &&
+#        last_invoice.last_invoiced_at > 25.days.ago
+#       Rails.logger.info "Skipping invoice for #{tenant.subdomain}"
+#       return
+#     end
 
+#     create_subscription_invoice(tenant, plan)
+#   end
 
+#   def create_subscription_invoice(tenant, plan)
+#     invoice = Invoice.create!(
+#       invoice_number: generate_invoice_number,
+#       plan_name: "Subscription Fee",
+#       invoice_date: Time.current,
+#       due_date: plan.expiry,
+#       invoice_desciption: {
+#         summary: "Monthly Subscription",
+#         items: [
+#           {
+#             description: "System Access Fee",
+#             details: "Monthly ISP billing platform access",
+#             amount: SUBSCRIPTION_FEE,
+#             currency: "KES"
+#           }
+#         ]
+#       }.to_json,
+#       total: SUBSCRIPTION_FEE,
+#       status: "unpaid",
+#       account_id: tenant.id,
+#       last_invoiced_at: Time.current
+#     )
 
-
-
-#   def process_pppoe_plan_invoice(tenant, plan_name, plan_amount, expiry_days, expiry)
-#     Rails.logger.info "Processing PPPoE plan invoice for => #{tenant.subdomain}"
-
-#   invoice =  Invoice.create!(
-#         invoice_number: generate_invoice_number,
-#         plan_name: "PPPoE Plan #{plan_name}",
-#         invoice_date: Time.current,
-#         due_date: expiry - 1.days,
-#         invoice_desciption: "payment for pppoe license => #{plan_name}",
-#         total: plan_amount,
-#         status: "unpaid",
-#         account_id: tenant.id,
-#         last_invoiced_at: Time.current,
-
-#       )
-
-#  send_expiration_sms(tenant.users.where(role: "super_administrator").first.phone_number, 
-#  invoice.due_date, invoice.invoice_number,
-#   tenant.users.where(role: "super_administrator").first.username, 
-#   invoice.plan_name)
-
-    
+#     send_invoice_sms(
+#       tenant.users.where(role: "super_administrator").first.phone_number,
+#       invoice.due_date,
+#       invoice.invoice_number,
+#       tenant.users.where(role: "super_administrator").first.username,
+#       invoice.plan_name
+#     )
 #   end
 
 
 
 
-#   def generate_invoice_number
-#     "INV#{rand(100..999)}"
-#   end
 
 
 
 
 
-
-
-#   def send_expiration_sms(phone_number, due_date, invoice_number, username, plan_name)
+#   def send_invoice_sms(phone_number, due_date, 
+#     invoice_number, username, plan_name)
 #     provider = ActsAsTenant.current_tenant.sms_provider_setting.sms_provider
     
 
 #     case provider
 #     when 'TextSms'
-#       send_expiration_text_sms(phone_number, due_date, invoice_number, username, plan_name)
+#       send_expiration_text_sms(phone_number, due_date, invoice_number, 
+#       username, plan_name)
 #     when 'SMS leopard'
 #       send_expiration(phone_number, due_date, invoice_number, username, plan_name)
 #     else
@@ -164,9 +105,13 @@
 #     end
 #   end
 
-  
 
-#   def send_expiration(phone_number, due_date, invoice_number, username, plan_name)
+
+
+
+# def send_expiration(phone_number, due_date, invoice_number, 
+    
+#   endusername, plan_name)
 
 #     # provider = ActsAsTenant.current_tenant.sms_provider_setting.sms_provider
 
@@ -196,9 +141,11 @@
 
 
   
-#   def send_expiration_text_sms(phone_number, due_date, invoice_number, username, plan_name)
+#   def send_expiration_text_sms(phone_number, due_date, invoice_number, 
+#     username, plan_name)
 #     api_key = SmsSetting.find_by(sms_provider: 'TextSms')&.api_key
 #     partnerID = SmsSetting.find_by(sms_provider: 'TextSms')&.partnerID
+#     shortcode = SmsSetting.find_by(sms_provider: 'TextSms')&.sender_id
 
 #     sms_template = ActsAsTenant.current_tenant.sms_template
 #     # send_voucher_template = sms_template&.send_voucher_template
@@ -211,8 +158,7 @@
 #       message: original_message,
 #       mobile: phone_number,
 #       partnerID: partnerID,
-#       shortcode: 'TextSMS',
-#       sms_provider: 'TextSms'
+#       shortcode: shortcode,
 
 #     }
 #     uri.query = URI.encode_www_form(params)
@@ -247,16 +193,25 @@
 #         Rails.logger.info "Failed to send message: #{sms_data['responses'][0]['response-description']}"
 #       end
 #     else
-#       Rails.logger.error "Failed to send message: #{response.body}"
+#       Rails.logger.info "Failed to send message: #{response.body}"
 #     end
 #   end
 
 
-  
 
 
-  
+
+
+
+#   def generate_invoice_number
+#     "INV#{SecureRandom.hex(3).upcase}"
+#   end
 # end
+# 
+
+
+
+
 
 
 
@@ -264,88 +219,137 @@
 class GenerateInvoiceJob
   include Sidekiq::Job
   queue_as :invoices
+  sidekiq_options lock: :until_executed, lock_timeout: 0
 
+  PPPoE_PRICE_PER_CLIENT = 25
+  HOTSPOT_PERCENTAGE = 0.04
   SUBSCRIPTION_FEE = 500
 
   def perform
     Account.find_each do |tenant|
       ActsAsTenant.with_tenant(tenant) do
-        # return unless tenant.hotspot_mpesa_setting.no_api_keys.nil?
-        # tenant.hotspot_mpesa_setting.no_api_keys == false ? process_subscription_invoice(tenant) : nil
-        setting = tenant.hotspot_mpesa_setting
-    next if setting.nil?                     # skip tenants with no settings
-    next if setting.no_api_keys == true      # skip if they use the "no API keys" mode
-    # only reach here if setting exists and no_api_keys is false (i.e., they have API keys)
-    process_subscription_invoice(tenant)
-    
-        # process_subscription_invoice(tenant)
+        Rails.logger.info "Processing invoice for => #{tenant.subdomain}"
+        Rails.logger.info "Processing invoice for id => #{tenant.id}"
+
+        # hotspot_billable = hotspot_plan_billable?(tenant)
+        # pppoe_billable   = pppoe_plan_billable?(tenant)
+        hotspot_and_dial_plan_billable = hotspot_and_dial_plan_billable?(tenant)
+        next unless hotspot_and_dial_plan_billable
+
+        # last_invoice = tenant.invoices.order(created_at: :desc).first
+        last_invoice = tenant.invoices.where(status: 'unpaid').order(created_at: :desc).first
+
+        if last_invoice&.last_invoiced_at.present? &&
+           last_invoice.last_invoiced_at > 25.days.ago
+          Rails.logger.info "Skipping invoice for #{tenant.subdomain} — recently invoiced"
+          next
+        end
+
+        generate_usage_invoice(tenant, hotspot_billable, pppoe_billable)
       end
     end
   end
 
   private
 
+  # -----------------------
+  # BILLABLE CONDITIONS
+  # -----------------------
 
+  def hotspot_and_dial_plan_billable?(tenant)
+    tenant.hotspot_and_dial_plan.present? &&
+      tenant.hotspot_and_dial_plan.name.present? &&
+      # tenant.hotspot_plan.name != "Hotspot Free Trial" &&
+      tenant.hotspot_and_dial_plan.expiry.present? &&
+      return unless tenant.hotspot_and_dial_plan.expiry - 5.days <= Time.current
 
-
-
-
-  def process_subscription_invoice(tenant)
-    plan = tenant.hotspot_and_dial_plan
-    return unless plan.present?
-    return unless plan.expiry.present?
-    # return unless plan.name == "Free Trial"
-    # ✅ Trigger 5 days before expiry
-    return unless plan.expiry - 5.days <= Time.current
-
-    # last_invoice = tenant.invoices.where(plan_name: "Subscription Fee").order(created_at: :desc).first
-    last_invoice = tenant.invoices.where(status: 'unpaid').order(created_at: :desc).first
-
-    # ✅ Prevent duplicate invoices
-    if last_invoice&.last_invoiced_at.present? &&
-       last_invoice.last_invoiced_at > 25.days.ago
-      Rails.logger.info "Skipping invoice for #{tenant.subdomain}"
-      return
-    end
-
-    create_subscription_invoice(tenant, plan)
   end
 
-  def create_subscription_invoice(tenant, plan)
+  
+
+
+  def generate_usage_invoice(tenant, hotspot_and_dial_plan_billable
+     )
+    Rails.logger.info "Generating invoice for #{tenant.subdomain}"
+
+    hotspot_total = 0
+    hotspot_charge = 0
+    pppoe_clients = 0
+    pppoe_charge = 0
+
+    # if hotspot_billable
+    #   hotspot_total, hotspot_charge = calculate_hotspot_charge(tenant)
+    # end
+
+    # if pppoe_billable
+    #   pppoe_clients, pppoe_charge = calculate_pppoe_charge(tenant)
+    # end
+    if hotspot_and_dial_plan_billable
+      hotspot_total, hotspot_charge = calculate_hotspot_charge(tenant)
+      pppoe_clients, pppoe_charge = calculate_pppoe_charge(tenant)
+    end
+
+    total_amount = hotspot_charge + pppoe_charge
+    # return if total_amount.zero?
+    
+    total_amount = SUBSCRIPTION_FEE if total_amount.zero?
+
+        # Create structured description as JSON
+    invoice_description_json = {
+      summary: "Billing Summary",
+      items: []
+    }
+
+    # Add hotspot item if applicable
+    if hotspot_charge > 0
+      invoice_description_json[:items] << {
+        description: "Hotspot Revenue Share",
+        details: "4% of total hotspot revenue",
+        quantity: hotspot_total,
+        unit: "KES",
+        rate: "4%",
+        amount: hotspot_charge,
+        currency: "KES"
+      }
+    end
+
+    # Add PPPoE item if applicable
+    if pppoe_charge > 0
+      invoice_description_json[:items] << {
+        description: "PPPoE Client Management",
+        details: "Per client monthly charge",
+        quantity: "#{pppoe_clients} clients",
+        unit: "clients",
+        rate: "25 KES/client",
+        amount: pppoe_charge,
+        currency: "KES"
+      }
+    end
+
+
     invoice = Invoice.create!(
       invoice_number: generate_invoice_number,
-      plan_name: "Subscription Fee",
+      plan_name: "Usage Billing",
       invoice_date: Time.current,
-      due_date: plan.expiry,
-      invoice_desciption: {
-        summary: "Monthly Subscription",
-        items: [
-          {
-            description: "System Access Fee",
-            details: "Monthly ISP billing platform access",
-            amount: SUBSCRIPTION_FEE,
-            currency: "KES"
-          }
-        ]
-      }.to_json,
-      total: SUBSCRIPTION_FEE,
+      due_date: Time.current + 5.days,
+      # invoice_desciption: invoice_description(
+      #   hotspot_total,
+      #   hotspot_charge,
+      #   pppoe_clients,
+      #   pppoe_charge
+      # ),
+      invoice_desciption: invoice_description_json.to_json,
+      total: total_amount,
       status: "unpaid",
       account_id: tenant.id,
       last_invoiced_at: Time.current
     )
 
-    send_invoice_sms(
-      tenant.users.where(role: "super_administrator").first.phone_number,
-      invoice.due_date,
-      invoice.invoice_number,
-      tenant.users.where(role: "super_administrator").first.username,
-      invoice.plan_name
-    )
+    send_invoice_sms(tenant.users.where(role: "super_administrator").first.phone_number, 
+ invoice.due_date, invoice.invoice_number,
+  tenant.users.where(role: "super_administrator").first.username, 
+  invoice.plan_name)
   end
-
-
-
-
 
 
 
@@ -371,7 +375,11 @@ class GenerateInvoiceJob
 
 
 
-def send_expiration(phone_number, due_date, invoice_number, 
+
+
+
+
+  def send_expiration(phone_number, due_date, invoice_number, 
     
   endusername, plan_name)
 
@@ -403,8 +411,7 @@ def send_expiration(phone_number, due_date, invoice_number,
 
 
   
-  def send_expiration_text_sms(phone_number, due_date, invoice_number, 
-    username, plan_name)
+  def send_expiration_text_sms(phone_number, due_date, invoice_number, username, plan_name)
     api_key = SmsSetting.find_by(sms_provider: 'TextSms')&.api_key
     partnerID = SmsSetting.find_by(sms_provider: 'TextSms')&.partnerID
     shortcode = SmsSetting.find_by(sms_provider: 'TextSms')&.sender_id
@@ -460,12 +467,68 @@ def send_expiration(phone_number, due_date, invoice_number,
   end
 
 
+  
+
+  def calculate_hotspot_charge(tenant)
+    hotspot_total = HotspotMpesaRevenue
+                      .where(account_id: tenant.id)
+                      .where(created_at: Time.current.beginning_of_month..Time.current)
+                      .sum(:amount)
+
+    # hotspot_charge = hotspot_total * HOTSPOT_PERCENTAGE
+     hotspot_charge = (hotspot_total * HOTSPOT_PERCENTAGE).round
+    [hotspot_total, hotspot_charge]
+  end
 
 
 
+  def calculate_pppoe_charge(tenant)
+    pppoe_clients = Subscriber.where(account_id: tenant.id, status: 'active').count
+    pppoe_charge = pppoe_clients * PPPoE_PRICE_PER_CLIENT
+    [pppoe_clients, pppoe_charge]
+  end
+
+
+  # -----------------------
+
+
+
+  # HELPERS
+  # -----------------------
+
+  def invoice_description(hotspot_total, hotspot_charge, pppoe_clients,
+     pppoe_charge)
+    <<~DESC
+    Billing Summary:
+    Hotspot revenue: #{hotspot_total} KES
+    Hotspot charge (4%): #{hotspot_charge} KES
+    PPPoE clients: #{pppoe_clients}
+    PPPoE charge (25 KES per client): #{pppoe_charge} KES
+    DESC
+  end
+
+
+#   def invoice_description(hotspot_total, hotspot_charge, pppoe_clients, pppoe_charge)
+#   [
+#     "Billing Summary",
+#     "Hotspot revenue: #{hotspot_total} KSH",
+#     "Hotspot charge (4% of total revenue): #{hotspot_charge} KSH",
+#     "PPPoE clients: #{pppoe_clients}",
+#     "PPPoE charge (25 KSH per client): #{pppoe_charge} KSH"
+#   ].join("\n")
+# end
 
 
   def generate_invoice_number
-    "INV#{SecureRandom.hex(3).upcase}"
+    "INV#{rand(100..999)}"
   end
+
+
+
 end
+
+
+
+
+
+

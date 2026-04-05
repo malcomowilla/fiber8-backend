@@ -53,7 +53,7 @@ transaction_cost = (total_amount * 0.01).ceil
 
     # Mark revenues as paid
     # revenues.update_all(paid_out: true, paid_out_at: Time.current)
-Rails.logger.info "Phone number (formatted): #{format_phone(mpesa_setting.phone_number)}"
+# Rails.logger.info "Phone number (formatted): #{format_phone(mpesa_setting.phone_number)}"
 
     # Send B2C payout
     success = send_b2c(mpesa_setting.phone_number, net_amount.to_i, tenant)
@@ -70,7 +70,7 @@ Rails.logger.info "Phone number (formatted): #{format_phone(mpesa_setting.phone_
 
 
 
-  
+
   # --------------------------
   # 📄 GENERATE PLATFORM FEE INVOICE (once per 30 days)
   # --------------------------

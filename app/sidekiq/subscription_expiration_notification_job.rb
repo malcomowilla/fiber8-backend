@@ -19,7 +19,6 @@ class SubscriptionExpirationNotificationJob
         next if expired_ppoe_subscriptions.empty?
 
         mpesa_setting = HotspotMpesaSetting.find_by(
-          account_type: "Paybill",
           account_id: tenant.id
         )
 
