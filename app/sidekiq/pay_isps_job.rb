@@ -131,8 +131,8 @@ Rails.logger.info "Phone number (formatted): #{format_phone(mpesa_setting.phone_
       PartyA: ENV['B2C_SHORTCODE'],
       partyB: format_phone(phone_number),
       Remarks: "ok",
-      QueueTimeOutURL: "https://#{tenant}.#{ENV['HOST']}/disburse_funds_results_timeout",
-      ResultURL: "https://#{tenant}.#{ENV['HOST']}/disburse_funds_result",
+      QueueTimeOutURL: "https://#{tenant.subdomain}.#{ENV['HOST']}/disburse_funds_results_timeout",
+      ResultURL: "https://#{tenant.subdomain}.#{ENV['HOST']}/disburse_funds_result",
       Occassion: "ISPSettlement"
     }
 
