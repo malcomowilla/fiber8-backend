@@ -129,7 +129,7 @@ Rails.logger.info "Phone number (formatted): #{format_phone(mpesa_setting.phone_
       CommandID: "BusinessPayment",
       Amount: amount,
       PartyA: ENV['B2C_SHORTCODE'],
-      partyB: format_phone(phone_number),
+      PartyB: format_phone(phone_number),
       Remarks: "ok",
       QueueTimeOutURL: "https://#{tenant.subdomain}.#{ENV['HOST']}/disburse_funds_results_timeout",
       ResultURL: "https://#{tenant.subdomain}.#{ENV['HOST']}/disburse_funds_result",
