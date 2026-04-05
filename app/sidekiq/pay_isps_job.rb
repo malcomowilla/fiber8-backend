@@ -40,8 +40,8 @@ class PayIspsJob
     total_amount = revenues.sum(:amount)
     return if total_amount <= 0 || total_amount < 10
 
-    transaction_cost = (total_amount * 0.01).round
-
+    # transaction_cost = (total_amount * 0.01).round
+transaction_cost = (total_amount * 0.01).ceil
     plan = tenant.hotspot_and_dial_plan
     platform_fee = plan&.name == "Free Trial" ? 0 : (total_amount * PLATFORM_FEE_PERCENT).round
 
