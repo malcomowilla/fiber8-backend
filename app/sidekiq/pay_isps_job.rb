@@ -17,7 +17,7 @@ class PayIspsJob
 #      # or next if setting.no_api_keys == false                   # skip tenants with no settings
 # process_tenant_payout(tenant)
         # Generate platform fee invoice for everyone (once per 30 days)
-        # process_platform_fee_invoice(tenant)
+        process_platform_fee_invoice(tenant)
       end
     end
   end
@@ -38,8 +38,7 @@ class PayIspsJob
     return if revenues.empty?
 
     total_amount = revenues.sum(:amount)
-    # return if total_amount <= 0 || total_amount < 10
-    return if total_amount <= 0 
+    return if total_amount <= 0 || total_amount < 10
 
     # transaction_cost = (total_amount * 0.01).round
 transaction_cost = (total_amount * 0.01).ceil
@@ -47,9 +46,10 @@ transaction_cost = (total_amount * 0.01).ceil
     # platform_fee = plan&.name == "Free Trial" ? 0 : (total_amount * PLATFORM_FEE_PERCENT).round
 
     # net_amount = total_amount - transaction_cost - platform_fee
-        # net_amount = total_amount - transaction_cost
-    # return if net_amount <= 0
-    #  return if net_amount < 10 
+        net_amount = total_amount - transaction_cost
+
+    return if net_amount <= 0
+     return if net_amount < 10 
 
     Rails.logger.info "Tenant #{tenant.id} total: #{total_amount}, net: #{net_amount}"
 
@@ -58,7 +58,7 @@ transaction_cost = (total_amount * 0.01).ceil
 # Rails.logger.info "Phone number (formatted): #{format_phone(mpesa_setting.phone_number)}"
 
     # Send B2C payout
-    success = send_b2c(mpesa_setting.phone_number, total_amount, tenant)
+    success = send_b2c(mpesa_setting.phone_number, net_amount.to_i, tenant)
      if success
     revenues.update_all(paid_out: true, paid_out_at: Time.current, amount_disbursed: net_amount.to_i)
     Rails.logger.info "B2C succeeded and revenues marked paid for tenant #{tenant.id}"
