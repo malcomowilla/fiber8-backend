@@ -68,7 +68,7 @@ def self.send_sms_for_tenant(voucher, tenant)
     # message = "Your voucher code is: #{voucher.voucher}. This code is valid until #{expiration}."
 
 
-    message = "Your voucher code is: #{voucher.voucher} (FROM: ) "
+    message = "Your voucher code is: #{voucher.voucher} (FROM: )"
 sms_setting = tenant.sms_setting
   api_key = sms_setting.api_key
   api_secret = sms_setting.api_secret
@@ -115,6 +115,8 @@ sms_setting = tenant.sms_setting
     uri.query = URI.encode_www_form(params)
 
     response = Net::HTTP.get_response(uri)
+
+    
     # Rails.logger.info "TextSMS response for voucher #{voucher.voucher}: #{response.body}"
   end
 

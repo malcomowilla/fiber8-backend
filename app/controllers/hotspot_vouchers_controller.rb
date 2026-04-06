@@ -2069,30 +2069,30 @@ end
               if response.is_a?(Net::HTTPSuccess)
                 sms_data = JSON.parse(response.body)
             
-                if sms_data['success']
                   sms_recipient = sms_data['recipients'][0]['number']
                   sms_status = sms_data['recipients'][0]['status']
                   
-                  puts "Recipient: #{sms_recipient}, Status: #{sms_status}"
+                  Rails.logger.info "Recipient: #{sms_recipient}, Status: #{sms_status}"
             
                   # Save the original message and response details in your database
                   SystemAdminSm.create!(
                     user: sms_recipient,
                     message: original_message,
                     status: sms_status,
-                    date:Time.now.strftime('%Y-%m-%d %I:%M:%S %p'),
+                    date: Time.now.strftime("%B %d, %Y at %I:%M %p"),
+                   
                     system_user: 'system',
                     sms_provider: 'SMS leopard'
                   )
                   
                   # Return a JSON response or whatever is appropriate for your application
                   # render json: { success: true, message: "Message sent successfully", recipient: sms_recipient, status: sms_status }
-                else
+                  
                   # render json: { error: "Failed to send message: #{sms_data['message']}" }
-                  Rails.logger.info "Failed to send message: #{sms_data['message']}"
-                end
+                  Rails.logger.info "Sent message: #{sms_data['message']}"
+                
               else
-                puts "Failed to send message: #{response.body}"
+                Rails.logger.info "Failed to send message: #{response.body}"
                 # render json: { error: "Failed to send message: #{response.body}" }
               end
             end
@@ -2148,27 +2148,26 @@ end
   if response.is_a?(Net::HTTPSuccess)
     sms_data = JSON.parse(response.body)
 
-    if sms_data['responses'] && sms_data['responses'][0]['respose-code'] == 200
       sms_recipient = sms_data['responses'][0]['mobile']
       sms_status = sms_data['responses'][0]['response-description']
 
-      puts "Recipient: #{sms_recipient}, Status: #{sms_status}"
+       Rails.logger.info  "Recipient: #{sms_recipient}, Status: #{sms_status}"
 
       # Save the message and response details in your database
-      SystemAdminSm.create!(
+     
+ SystemAdminSm.create!(
         user: sms_recipient,
         message: original_message,
         status: sms_status,
         date: Time.now.strftime("%B %d, %Y at %I:%M %p"),
         system_user: 'system',
-        sms_provider: 'Text Sms'
-      )
+        sms_provider: 'Text Sms')
 
-
-    else
+    
       # render json: { error: "Failed to send message: #{sms_data['responses'][0]['response-description']}" }
-       Rails.logger.info "Failed to send message: #{sms_data['responses'][0]['response-description']}"
-    end
+       Rails.logger.info "sent message: #{sms_data['responses'][0]['response-description']}"
+       
+    
   else
     puts "Failed to send message: #{response.body}"
     # render json: { error: "Failed to send message: #{response.body}" }
