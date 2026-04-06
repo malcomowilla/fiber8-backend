@@ -3,7 +3,7 @@ class HotspotVoucherSerializer < ActiveModel::Serializer
    :phone, :package, :shared_users,
   :created_at, :updated_at, :ip, :mac, :last_logged_in, :sms_sent,
   :payment_method, :reference, :amount, :customer, :time_paid, 
-  :is_online, :login_by
+  :is_online, :login_by, :amount_disbursed
   
 
   def is_online
