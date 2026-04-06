@@ -17,7 +17,7 @@ class PayIspsJob
 #      # or next if setting.no_api_keys == false                   # skip tenants with no settings
 # process_tenant_payout(tenant)
         # Generate platform fee invoice for everyone (once per 30 days)
-        process_platform_fee_invoice(tenant)
+        # process_platform_fee_invoice(tenant)
       end
     end
   end
