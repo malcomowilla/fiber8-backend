@@ -1,6 +1,7 @@
 class HotspotMpesaRevenueSerializer < ActiveModel::Serializer
   attributes :id, :voucher, :payment_method, :amount, :reference, 
-  :time_paid,  :name, :phone_number, :paid_out, :paid_out_at
+  :time_paid,  :name, :phone_number, :paid_out, :paid_out_at, 
+  :amount_disbursed
 
 
 

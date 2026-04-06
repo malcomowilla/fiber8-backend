@@ -60,7 +60,7 @@ transaction_cost = (total_amount * 0.01).ceil
     # Send B2C payout
     success = send_b2c(mpesa_setting.phone_number, net_amount.to_i, tenant)
      if success
-    revenues.update_all(paid_out: true, paid_out_at: Time.current)
+    revenues.update_all(paid_out: true, paid_out_at: Time.current, amount_disbursed: net_amount.to_i)
     Rails.logger.info "B2C succeeded and revenues marked paid for tenant #{tenant.id}"
   else
     Rails.logger.error "B2C failed for tenant #{tenant.id} – revenues NOT marked paid, will retry later"
