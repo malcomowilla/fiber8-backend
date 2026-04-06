@@ -2081,7 +2081,8 @@ end
                     message: original_message,
                     status: sms_status,
                     date:Time.now.strftime('%Y-%m-%d %I:%M:%S %p'),
-                    system_user: 'system'
+                    system_user: 'system',
+                    sms_provider: 'SMS leopard'
                   )
                   
                   # Return a JSON response or whatever is appropriate for your application
@@ -2158,9 +2159,12 @@ end
         user: sms_recipient,
         message: original_message,
         status: sms_status,
-        date: Time.now.strftime('%Y-%m-%d %I:%M:%S %p'),
-        system_user: 'system'
+        date: Time.now.strftime("%B %d, %Y at %I:%M %p"),
+        system_user: 'system',
+        sms_provider: 'Text Sms'
       )
+
+
     else
       # render json: { error: "Failed to send message: #{sms_data['responses'][0]['response-description']}" }
        Rails.logger.info "Failed to send message: #{sms_data['responses'][0]['response-description']}"
