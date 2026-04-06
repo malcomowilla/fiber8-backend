@@ -38,7 +38,8 @@ class PayIspsJob
     return if revenues.empty?
 
     total_amount = revenues.sum(:amount)
-    return if total_amount <= 0 || total_amount < 10
+    # return if total_amount <= 0 || total_amount < 10
+    return if total_amount <= 0 
 
     # transaction_cost = (total_amount * 0.01).round
 transaction_cost = (total_amount * 0.01).ceil
@@ -49,7 +50,7 @@ transaction_cost = (total_amount * 0.01).ceil
         net_amount = total_amount - transaction_cost
 Rails.logger.info "Tenant #{tenant.id} total: #{total_amount}, net: #{net_amount}"
     return if net_amount <= 0
-     return if net_amount < 10 
+    #  return if net_amount < 10 
 
     Rails.logger.info "Tenant #{tenant.id} total: #{total_amount}, net: #{net_amount}"
 
@@ -58,7 +59,7 @@ Rails.logger.info "Tenant #{tenant.id} total: #{total_amount}, net: #{net_amount
 # Rails.logger.info "Phone number (formatted): #{format_phone(mpesa_setting.phone_number)}"
 
     # Send B2C payout
-    success = send_b2c(mpesa_setting.phone_number, net_amount.to_i, tenant)
+    success = send_b2c(mpesa_setting.phone_number, total_amount.to_i, tenant)
      if success
     revenues.update_all(paid_out: true, paid_out_at: Time.current, amount_disbursed: net_amount.to_i)
     Rails.logger.info "B2C succeeded and revenues marked paid for tenant #{tenant.id}"
