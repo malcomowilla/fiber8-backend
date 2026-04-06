@@ -2,7 +2,7 @@
 class HotspotExpirationJob
   include Sidekiq::Job
   queue_as :default
-     sidekiq_options lock: :until_executed, lock_timeout: 0
+    #  sidekiq_options lock: :until_executed, lock_timeout: 0
 
 
   def perform
@@ -14,11 +14,34 @@ class HotspotExpirationJob
         # expired_vouchers = HotspotVoucher.where('expiration <= ?', Time.current)
 # expired_vouchers = tenant&.hotspot_vouchers&.present? && tenant&.hotspot_vouchers&.where('expiration < ?', Time.current)
 
+
+
+
+
+expired_vouchers = HotspotVoucher.where('expiration < ?', Time.current).where(account_id: tenant.id)
+# return unless expired_vouchers.present?
+       
+     
+        expired_vouchers.find_each do |voucher|
+
+          voucher.update!(status: 'expired')
+         
+          # Only send SMS if it hasn't been sent before
+          if voucher.sms_sent_at.nil? && voucher.used_voucher  
+             send_expiration_sms(voucher, tenant) # Unified function to send SMS based on provider
+             voucher.update!(sms_sent_at: Time.current) # Track when the SMS was sent
+          end
+#  logout_hotspot_user(voucher, tenant)
+        end
+
+
+
+
+
+
+
+
  hotspot_subscriptions = HotspotVoucher.where(account_id: tenant.id)
-
-
-
-
 
 hotspot_subscriptions.find_each do |subscription|
   next unless subscription.voucher.present?
@@ -36,7 +59,7 @@ hotspot_subscriptions.find_each do |subscription|
     
   # end
 
-  if  expired_hotspot
+  if expired_hotspot
     # Deny login by adding reject if not already there
     RadCheck.find_or_create_by!(
       username: subscription.voucher,
@@ -58,24 +81,11 @@ end
 
 
 
-expired_vouchers = HotspotVoucher.where('expiration < ?', Time.current).where(account_id: tenant.id)
-# return unless expired_vouchers.present?
-       
-     
-        expired_vouchers.find_each do |voucher|
-
-          voucher.update!(status: 'expired') # Mark as expired in DB
-         
-          
 
 
-          # Only send SMS if it hasn't been sent before
-          if voucher.sms_sent_at.nil? && voucher.used_voucher  
-             send_expiration_sms(voucher, tenant) # Unified function to send SMS based on provider
-             voucher.update!(sms_sent_at: Time.current) # Track when the SMS was sent
-          end
-#  logout_hotspot_user(voucher, tenant)
-        end
+
+
+
       end
     end
   end
@@ -139,12 +149,14 @@ end
         Rails.logger.info("Successfully removed user #{voucher.voucher} from router #{router.name || router_ip}: #{output}")
       end
     rescue Net::SSH::AuthenticationFailed
-      Rails.logger.error("SSH authentication failed for MikroTik router #{router.name || router_ip}")
+      Rails.logger.info("SSH authentication failed for MikroTik router #{router.name || router_ip}")
     rescue StandardError => e
-      Rails.logger.error("Failed to logout user #{voucher.voucher} from router #{router.name || router_ip}: #{e.message}")
+      Rails.logger.info("Failed to logout user #{voucher.voucher} from router #{router.name || router_ip}: #{e.message}")
     end
   end
 end
+
+
 
 
   def send_expiration_sms(voucher, tenant)
