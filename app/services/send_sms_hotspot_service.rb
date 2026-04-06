@@ -95,7 +95,7 @@ sms_setting = tenant.sms_setting
 
    SystemAdminSm.create!(
           user: sms_recipient,
-          message: original_message,
+          message: message,
           status: sms_status,
           date: Time.now.strftime("%B %d, %Y at %I:%M %p"),
           system_user: 'system',
@@ -105,7 +105,7 @@ sms_setting = tenant.sms_setting
 
    SystemAdminSm.create!(
           user: sms_recipient,
-          message: original_message,
+          message: message,
           status: sms_status,
           date: Time.now.strftime("%B %d, %Y at %I:%M %p"),
           system_user: 'system',
