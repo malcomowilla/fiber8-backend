@@ -43,9 +43,11 @@ class PayIspsJob
     # transaction_cost = (total_amount * 0.01).round
 transaction_cost = (total_amount * 0.01).ceil
     plan = tenant.hotspot_and_dial_plan
-    platform_fee = plan&.name == "Free Trial" ? 0 : (total_amount * PLATFORM_FEE_PERCENT).round
+    # platform_fee = plan&.name == "Free Trial" ? 0 : (total_amount * PLATFORM_FEE_PERCENT).round
 
-    net_amount = total_amount - transaction_cost - platform_fee
+    # net_amount = total_amount - transaction_cost - platform_fee
+        net_amount = total_amount - transaction_cost
+
     return if net_amount <= 0
      return if net_amount < 10 
 
