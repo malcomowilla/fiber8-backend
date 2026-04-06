@@ -47,7 +47,7 @@ transaction_cost = (total_amount * 0.01).ceil
 
     # net_amount = total_amount - transaction_cost - platform_fee
         net_amount = total_amount - transaction_cost
-
+Rails.logger.info "Tenant #{tenant.id} total: #{total_amount}, net: #{net_amount}"
     return if net_amount <= 0
      return if net_amount < 10 
 
@@ -63,7 +63,7 @@ transaction_cost = (total_amount * 0.01).ceil
     revenues.update_all(paid_out: true, paid_out_at: Time.current, amount_disbursed: net_amount.to_i)
     Rails.logger.info "B2C succeeded and revenues marked paid for tenant #{tenant.id}"
   else
-    Rails.logger.error "B2C failed for tenant #{tenant.id} – revenues NOT marked paid, will retry later"
+    Rails.logger.info "B2C failed for tenant #{tenant.id} – revenues NOT marked paid, will retry later"
     # Optionally: raise error to trigger Sidekiq retry
     # raise "B2C payment failed for tenant #{tenant.id}"
   end
