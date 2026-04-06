@@ -86,7 +86,34 @@ sms_setting = tenant.sms_setting
     uri.query = URI.encode_www_form(params)
 
     response = Net::HTTP.get_response(uri)
-    Rails.logger.info "SMS Leopard response for voucher #{voucher.voucher}: #{response.body}"
+    if response.is_a?(Net::HTTPSuccess)
+  sms_data = JSON.parse(response.body)
+
+      sms_recipient = sms_data['responses'][0]['mobile']
+      sms_status = sms_data['responses'][0]['response-description']
+
+
+   SystemAdminSm.create!(
+          user: sms_recipient,
+          message: original_message,
+          status: sms_status,
+          date: Time.now.strftime("%B %d, %Y at %I:%M %p"),
+          system_user: 'system',
+          account_id: tenant.id,
+          sms_provider: 'Sms Leopard')
+ else
+
+   SystemAdminSm.create!(
+          user: sms_recipient,
+          message: original_message,
+          status: sms_status,
+          date: Time.now.strftime("%B %d, %Y at %I:%M %p"),
+          system_user: 'system',
+          account_id: tenant.id,
+          sms_provider: 'Sms Leopard')
+
+ end
+
   end
 
   ##
@@ -115,8 +142,34 @@ sms_setting = tenant.sms_setting
     uri.query = URI.encode_www_form(params)
 
     response = Net::HTTP.get_response(uri)
+ if response.is_a?(Net::HTTPSuccess)
+  sms_data = JSON.parse(response.body)
 
-    
+      sms_recipient = sms_data['responses'][0]['mobile']
+      sms_status = sms_data['responses'][0]['response-description']
+
+
+   SystemAdminSm.create!(
+          user: sms_recipient,
+          message: original_message,
+          status: sms_status,
+          date: Time.now.strftime("%B %d, %Y at %I:%M %p"),
+          system_user: 'system',
+          account_id: tenant.id,
+          sms_provider: 'Text Sms')
+ else
+
+   SystemAdminSm.create!(
+          user: sms_recipient,
+          message: original_message,
+          status: sms_status,
+          date: Time.now.strftime("%B %d, %Y at %I:%M %p"),
+          system_user: 'system',
+          account_id: tenant.id,
+          sms_provider: 'Text Sms')
+
+ end
+
     # Rails.logger.info "TextSMS response for voucher #{voucher.voucher}: #{response.body}"
   end
 
