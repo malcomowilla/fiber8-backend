@@ -1,7 +1,4 @@
 
-
-
-
 require 'open3'
 class AccessPointNotificationsJob
   include Sidekiq::Job
@@ -336,7 +333,6 @@ end
     phone_number, tenant)
     if response.is_a?(Net::HTTPSuccess)
       sms_data = JSON.parse(response.body)
-      if sms_data['responses'] && sms_data['responses'][0]['respose-code'] == 200
         sms_recipient = sms_data['responses'][0]['mobile']
         sms_status = sms_data['responses'][0]['response-description']
         
@@ -351,10 +347,17 @@ end
           sms_provider: 'SMS leopard',
           account_id: tenant.id
         )
-      else
-        Rails.logger.info "Failed to send message: #{sms_data['responses'][0]['response-description']}"
-      end
+    
     else
+       SystemAdminSm.create!(
+          user: sms_recipient,
+          message: message,
+          status: sms_status,
+          date: Time.current,
+          system_user: 'system',
+          sms_provider: 'SMS leopard',
+          account_id: tenant.id
+        )
       Rails.logger.info "Failed to send message: #{response.body}"
     end
   end
@@ -366,7 +369,6 @@ end
   phone_number, tenant)
     if response.is_a?(Net::HTTPSuccess)
       sms_data = JSON.parse(response.body)
-      if sms_data['responses'] && sms_data['responses'][0]['respose-code'] == 200
         sms_recipient = sms_data['responses'][0]['mobile']
         sms_status = sms_data['responses'][0]['response-description']
         
@@ -381,10 +383,17 @@ end
           sms_provider: 'Text SMS',
           account_id: tenant.id
         )
-      else
-        Rails.logger.info "Failed to send message: #{sms_data['responses'][0]['response-description']}"
-      end
+      
     else
+        SystemAdminSm.create!(
+          user: sms_recipient,
+          message: message,
+          status: sms_status,
+          date: Time.current,
+          system_user: 'system',
+          sms_provider: 'Text SMS',
+          account_id: tenant.id
+        )
       Rails.logger.info "Failed to send message: #{response.body}"
     end
   end

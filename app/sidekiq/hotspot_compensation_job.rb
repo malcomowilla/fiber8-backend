@@ -251,7 +251,8 @@ original_message = "Sorry for earlier connection issue. Service is now restored 
     uri.query = URI.encode_www_form(params)
 
     response = Net::HTTP.get_response(uri)
-    handle_sms_response_sms_leopard(response, original_message, phone_number, tenant)
+    handle_sms_response_sms_leopard(response, original_message,
+     phone_number, tenant)
   end
 
 
@@ -314,7 +315,8 @@ original_message = "Sorry for earlier connection issue. Service is now restored 
     uri.query = URI.encode_www_form(params)
 
     response = Net::HTTP.get_response(uri)
-    handle_sms_response_text_sms(response, original_message, phone_number, tenant)
+    handle_sms_response_text_sms(response, original_message, 
+    phone_number, tenant)
   end
 
 
@@ -325,7 +327,6 @@ original_message = "Sorry for earlier connection issue. Service is now restored 
     phone_number, tenant)
     if response.is_a?(Net::HTTPSuccess)
       sms_data = JSON.parse(response.body)
-      if sms_data['responses'] && sms_data['responses'][0]['respose-code'] == 200
         sms_recipient = sms_data['responses'][0]['mobile']
         sms_status = sms_data['responses'][0]['response-description']
         
@@ -340,11 +341,19 @@ original_message = "Sorry for earlier connection issue. Service is now restored 
           sms_provider: 'SMS leopard',
           account_id: tenant.id
         )
-      else
-        Rails.logger.info "Failed to send message: #{sms_data['responses'][0]['response-description']}"
-      end
+      
     else
       Rails.logger.info "Failed to send message: #{response.body}"
+
+        SystemAdminSm.create!(
+          user: sms_recipient,
+          message: message,
+          status: sms_status,
+          date: Time.current,
+          system_user: 'system',
+          sms_provider: 'SMS leopard',
+          account_id: tenant.id
+        )
     end
   end
 
@@ -354,7 +363,6 @@ original_message = "Sorry for earlier connection issue. Service is now restored 
  def handle_sms_response_text_sms(response, message, phone_number, tenant)
     if response.is_a?(Net::HTTPSuccess)
       sms_data = JSON.parse(response.body)
-      if sms_data['responses'] && sms_data['responses'][0]['respose-code'] == 200
         sms_recipient = sms_data['responses'][0]['mobile']
         sms_status = sms_data['responses'][0]['response-description']
         
@@ -369,11 +377,18 @@ original_message = "Sorry for earlier connection issue. Service is now restored 
           sms_provider: 'Text SMS',
           account_id: tenant.id
         )
-      else
-        Rails.logger.info "Failed to send message: #{sms_data['responses'][0]['response-description']}"
-      end
+     
     else
       Rails.logger.info "Failed to send message: #{response.body}"
+       SystemAdminSm.create!(
+          user: sms_recipient,
+          message: message,
+          status: sms_status,
+          date: Time.current,
+          system_user: 'system',
+          sms_provider: 'Text SMS',
+          account_id: tenant.id
+        )
     end
   end
 
