@@ -2102,7 +2102,7 @@ end
 
 
            def send_voucher_text_sms(phone_number, voucher_code,
-             shared_users, company_name
+             shared_users, company_name, current_user
             )
        HotspotVoucher.find_by(voucher: voucher_code).update(sms_sent: true)
 
