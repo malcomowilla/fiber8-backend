@@ -18,7 +18,7 @@ class HotspotExpirationJob
 
 
 
-expired_vouchers = HotspotVoucher.where('expiration < ?', Time.current).where(account_id: tenant.id)
+expired_vouchers = HotspotVoucher.where('expiration < ?', Time.current).where(account_id:  203).where(sms_sent_at: nil)
 # return unless expired_vouchers.present?
        
      
@@ -27,7 +27,7 @@ expired_vouchers = HotspotVoucher.where('expiration < ?', Time.current).where(ac
           voucher.update!(status: 'expired')
          
           # Only send SMS if it hasn't been sent before
-          if voucher.sms_sent_at.nil? && voucher.used_voucher  
+          if voucher.used_voucher && voucher.sms_sent_at.nil?   
              send_expiration_sms(voucher, tenant) # Unified function to send SMS based on provider
              voucher.update!(sms_sent_at: Time.current) # Track when the SMS was sent
           end
