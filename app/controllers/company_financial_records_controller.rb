@@ -90,7 +90,7 @@ if current_user
 
   # PATCH/PUT /company_financial_records/1 or /company_financial_records/1.json
   def update
-     @company_financial_record = CompanyFinancialRecord.find_by(id: params[:id])
+     @company_financial_record = CompanyFinancialRecord.find_by_id(params[:id])
       if @company_financial_record.update(company_financial_record_params)
          render :show, status: :ok, location: @company_financial_record 
       else

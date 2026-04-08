@@ -80,7 +80,7 @@ def get_ad_settings_by_id
     # @ad_settings = ActsAsTenant.current_tenant.ad_settings
     # tunnel_host = fetch_loophole_tunnel_hostname
     id = params[:id]
-    @ad_settings = AdSetting.find_by(id: id)
+    @ad_settings = AdSetting.find_by_id(id)
     render json: {
        ad_title: @ad_settings.ad_title,
       #  ad_link: @ad_settings&.media_file&.attached? ? rails_blob_url(@ad_settings&.media_file,
@@ -152,7 +152,7 @@ def get_ad_settings_by_id
 
   # DELETE /ad_settings/1 or /ad_settings/1.json
   def destroy
-     @ad_setting = AdSetting.find_by(id: params[:id])
+     @ad_setting = AdSetting.find_by_id(params[:id])
     @ad_setting.destroy!
 
        head :no_content 
@@ -161,7 +161,7 @@ def get_ad_settings_by_id
   private
     # Use callbacks to share common setup or constraints between actions.
     def set_ad_setting
-      @ad_setting = AdSetting.find_by(id: params[:id])
+      @ad_setting = AdSetting.find_by_id(params[:id])
     end
 
 

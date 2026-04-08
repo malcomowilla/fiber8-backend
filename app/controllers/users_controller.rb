@@ -1,5 +1,8 @@
   class UsersController < ApplicationController
-    load_and_authorize_resource except: [:authenticate_webauthn, :verify_webauthn, :profile]
+
+
+    load_and_authorize_resource except: [:authenticate_webauthn, 
+    :verify_webauthn, :profile]
 
     rescue_from ActiveRecord::RecordInvalid, with: :creation_error 
 
@@ -90,7 +93,7 @@
     def verify_webauthn
       begin
         # Find the admin user first
-        admin = User.find_by(username: params[:username]) || User.find_by(email: params[:email])
+        admin = User.find_by(username: params[:username]) || User.find_by_email(params[:email])
     
         unless admin
           render json: { error: "User not found" }, status: :not_found

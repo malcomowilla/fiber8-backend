@@ -102,7 +102,7 @@ if current_user
   private
     # Use callbacks to share common setup or constraints between actions.
     def set_company_lead
-      @company_lead = CompanyLead.find_by(id: params[:id])
+      @company_lead = CompanyLead.find_by_id(params[:id])
     end
 
     # Only allow a list of trusted parameters through.

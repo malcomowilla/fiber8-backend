@@ -1536,7 +1536,7 @@ end
   
   private
     def set_hotspot_voucher
-      @hotspot_voucher = HotspotVoucher.find_by(id: params[:id])
+      @hotspot_voucher = HotspotVoucher.find_by_id(params[:id])
     end
 
 
@@ -2080,7 +2080,6 @@ end
                     message: original_message,
                     status: sms_status,
                     date: Time.now.strftime("%B %d, %Y at %I:%M %p"),
-                   
                     system_user: current_user.username,
                     sms_provider: 'SMS leopard'
                   )
@@ -2225,10 +2224,6 @@ end
 
 
 end
-
-
-
-
 
 
 

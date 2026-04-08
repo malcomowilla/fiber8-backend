@@ -70,7 +70,7 @@ if current_user
 
   # PATCH/PUT /client_leads/1 or /client_leads/1.json
   def update
-    @client_lead = ClientLead.find_by(id: params[:id])
+    @client_lead = ClientLead.find_by_id(params[:id])
       if @client_lead.update(client_lead_params)
         ActivtyLog.create(action: 'update', ip: request.remote_ip,
  description: "Updated client lead #{@client_lead.name}",
@@ -99,7 +99,7 @@ if current_user
   private
     # Use callbacks to share common setup or constraints between actions.
     def set_client_lead
-      @client_lead = ClientLead.find_by(id: params[:id])
+      @client_lead = ClientLead.find_by_id(params[:id])
     end
 
     # Only allow a list of trusted parameters through.

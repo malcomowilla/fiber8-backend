@@ -48,7 +48,7 @@ class AccessPointsController < ApplicationController
   end
 
   def update
-    access_point = AccessPoint.find_by(id: params[:id])
+    access_point = AccessPoint.find_by_id(params[:id])
       if access_point.update(access_point_params)
         render json: access_point, status: :ok
       else
@@ -59,7 +59,7 @@ class AccessPointsController < ApplicationController
 
 
   def destroy
-    access_point = AccessPoint.find_by(id: params[:id])
+    access_point = AccessPoint.find_by_id(params[:id])
     access_point.destroy!
 
     
