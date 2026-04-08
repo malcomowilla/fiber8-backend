@@ -18,7 +18,7 @@ class HotspotExpirationJob
 
 
 
-expired_vouchers = HotspotVoucher.where('expiration < ?', Time.current).where(account_id:  203).where(sms_sent_at: nil)
+expired_vouchers = HotspotVoucher.where('expiration < ?', Time.current).where(account_id: tenant.id).where(sms_sent_at: nil)
 # return unless expired_vouchers.present?
        
      
