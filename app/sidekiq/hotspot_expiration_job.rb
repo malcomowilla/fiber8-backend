@@ -268,7 +268,7 @@ end
 
 
 
-def handle_textsms_response(response, message, phone_number)
+def handle_textsms_response(response, message, phone_number, tenant)
     if response.is_a?(Net::HTTPSuccess)
       sms_data = JSON.parse(response.body)
         sms_recipient = sms_data['responses'][0]['mobile']
@@ -307,7 +307,7 @@ def handle_textsms_response(response, message, phone_number)
 
 
 
-  def handle_sms_leopard_response(response, message, phone_number)
+  def handle_sms_leopard_response(response, message, phone_number, tenant)
     if response.is_a?(Net::HTTPSuccess)
       sms_data = JSON.parse(response.body)
         sms_recipient = sms_data['responses'][0]['mobile']
