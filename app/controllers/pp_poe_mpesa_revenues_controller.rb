@@ -8,9 +8,7 @@ class PpPoeMpesaRevenuesController < ApplicationController
 
 
  def set_time_zone
-  Rails.logger.info "Setting time zone"
   Time.zone = GeneralSetting.first&.timezone || Rails.application.config.time_zone
-    Rails.logger.info "Setting time zone #{Time.zone}"
 
 end
 
@@ -34,12 +32,12 @@ end
 
   # GET /pp_poe_mpesa_revenues or /pp_poe_mpesa_revenues.json
   def index
-    # @pp_poe_mpesa_revenues = PpPoeMpesaRevenue.all
+    @pp_poe_mpesa_revenues = PpPoeMpesaRevenue.all
     # render json: @pp_poe_mpesa_revenues
     
-      @pp_poe_mpesa_revenues = Rails.cache.fetch("pp_poe_mpesa_revenues_index", expires_in: 5.minutes) do
-    PpPoeMpesaRevenue.order(created_at: :desc).to_a
-  end
+  #     @pp_poe_mpesa_revenues = Rails.cache.fetch("pp_poe_mpesa_revenues_index", expires_in: 2.seconds) do
+  #   PpPoeMpesaRevenue.order(created_at: :desc).to_a
+  # end
     
     render json: @pp_poe_mpesa_revenues
   end
@@ -47,9 +45,17 @@ end
   
 
 
+
   # POST /pp_poe_mpesa_revenues or /pp_poe_mpesa_revenues.json
   def create
-    @pp_poe_mpesa_revenue = PpPoeMpesaRevenue.new(pp_poe_mpesa_revenue_params)
+    @pp_poe_mpesa_revenue = PpPoeMpesaRevenue.new(
+
+amount: params[:amount],
+payment_method: params[:payment_method],
+time_paid:  Time.current,
+reference: params[:reference],
+ customer_name: params[:customer],
+    )
 
       if @pp_poe_mpesa_revenue.save
         render json: @pp_poe_mpesa_revenue, status: :created
