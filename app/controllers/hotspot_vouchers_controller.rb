@@ -873,6 +873,16 @@ end
 
 def make_payment
 host = request.headers['X-Subdomain']
+
+plan = ActsAsTenant.current_tenant&.hotspot_and_dial_plan
+
+  expired_pppoe = plan&.expiry.present? && plan.expiry <= Time.current
+
+  if expired_pppoe
+    return render json: { error: 'License has expired'}, status: 422 
+    
+  end
+
   phone_number = params[:phone_number]
   amount = params[:amount]
   shortcode = ActsAsTenant.current_tenant&.hotspot_mpesa_setting.short_code || ENV['B2C_SHORTCODE']

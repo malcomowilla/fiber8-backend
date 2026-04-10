@@ -1,3 +1,4 @@
+
 # class WireguardController < ApplicationController
 #   require 'securerandom'
 #   require 'open3'
@@ -615,6 +616,3 @@ end
     CONFIG
   end
 end
-
-
-
