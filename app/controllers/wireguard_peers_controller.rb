@@ -95,6 +95,7 @@ def set_tenant
   @wireguard_peer = WireguardPeer.find_by(id: params[:id])
   old_ip = @wireguard_peer.private_ip
   Rails.logger.info "wireguard peer => #{params[:wireguard_peer][:private_ip]}"
+Rails.logger.info "OLD IP => #{old_ip.inspect}"
 
 unless @wireguard_peer
   render json: { error: 'Peer not found' }, status: :not_found
