@@ -32,7 +32,7 @@ class PayIspsJob
     return unless mpesa_setting&.phone_number.present?
 
     revenues = HotspotMpesaRevenue
-      .where(account_id: tenant.id, paid_out: false)
+      .where(account_id: 202, paid_out: false)
       .where("created_at <= ?", 4.minutes.ago)
 
     return if revenues.empty?
