@@ -11,7 +11,9 @@ before_action :set_time_zone
 
 
  def set_time_zone
+  Rails.logger.info "Setting time zone"
   Time.zone = GeneralSetting.first&.timezone || Rails.application.config.time_zone
+    Rails.logger.info "Setting time zone #{Time.zone}"
 
 end
 
@@ -92,18 +94,11 @@ def set_tenant
 
   # PATCH/PUT /wireguard_peers/1 or /wireguard_peers/1.json
  def update
-  @wireguard_peer = WireguardPeer.find_by(id: params[:id])
+  @wireguard_peer = WireguardPeer.find(params[:id])
   old_ip = @wireguard_peer.private_ip
-  Rails.logger.info "wireguard peer => #{params[:wireguard_peer][:private_ip]}"
-Rails.logger.info "OLD IP => #{old_ip.inspect}"
-
-unless @wireguard_peer
-  render json: { error: 'Peer not found' }, status: :not_found
-  return
-end
 
   # 1. Parse and clean the incoming IP parameter
-  raw_ips = params[:wireguard_peer][:private_ip]
+  raw_ips = params[:wireguard_peer][:private_ip].to_s
   ip_list = raw_ips.split(/[,\s]+/)          # split on commas or whitespace
                  .reject(&:blank?)           # remove empty strings
                  .map(&:strip)                # trim each element
@@ -162,13 +157,13 @@ end
 rescue => e
   # 6. Clean up if something went wrong
   begin
-    system('ip', 'route', 'del', new_ip, 'dev', 'wg0')
+    system('ip', 'route', 'del', new_ip, 'dev', 'wg0' ) if new_ip.present?
   rescue
     # ignore
   end
 
   begin
-    system('ip', 'route', 'add', old_ip, 'dev', 'wg0')
+    system('ip', 'route', 'add', old_ip, 'dev', 'wg0') if old_ip.present?
   rescue
     # ignore
   end
