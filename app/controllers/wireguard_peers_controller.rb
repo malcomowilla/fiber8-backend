@@ -138,7 +138,7 @@ def set_tenant
   # 5. IP changed – update routes inside a transaction
   ActiveRecord::Base.transaction do
     # Remove old route (ignore if it doesn't exist)
-    system('ip', 'route', 'del', old_ip, 'dev', 'wg0')
+    system('ip', 'route', 'del', old_ip, 'dev', 'wg0') if old_ip.present?
 
     # Add new route
     unless system('ip', 'route', 'add', new_ip, 'dev', 'wg0')
