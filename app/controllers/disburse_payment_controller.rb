@@ -37,49 +37,49 @@ def set_tenant
 
 
 
-  # def disburse_funds
-  #   token = fetch_access_token
-  #   Rails.logger.info "Mpesa Access token: #{token}"
-  #   return render json: { error: "Unable to generate access token" }, status: :unprocessable_entity unless token
-  #   # mpesa = ActsAsTenant.current_tenant.hotspot_mpesa_setting.find_by(account_type: "Paybill")
-  #   # mpesa = HotspotMpesaSetting.find_by(account_type: "Paybill")
+  def disburse_funds
+    token = fetch_access_token
+    Rails.logger.info "Mpesa Access token: #{token}"
+    return render json: { error: "Unable to generate access token" }, status: :unprocessable_entity unless token
+    # mpesa = ActsAsTenant.current_tenant.hotspot_mpesa_setting.find_by(account_type: "Paybill")
+    # mpesa = HotspotMpesaSetting.find_by(account_type: "Paybill")
     
-  #   # return render json: { error: "M-Pesa Settings Not Found" }, status: :not_found unless mpesa
+    # return render json: { error: "M-Pesa Settings Not Found" }, status: :not_found unless mpesa
 
 
-  #  host = request.headers['X-Subdomain']
-  #   payload = {
+   host = request.headers['X-Subdomain']
+    payload = {
       
-  #   OriginatorConversationID: "600997_Test_32et3241ed8yu", 
-  #   InitiatorName: ENV['API_INITIATOR_USERNAME'],
-  #   SecurityCredential: ENV['B2C_API_INITIATOR_PASSWORD'],
-  #   CommandID: "BusinessPayment", 
-  #   Amount: params[:amount], 
-  #   PartyA: ENV['B2C_SHORTCODE'], 
-  #   PartyB: params[:phone_number],
-  #   Remarks: "ok", 
-  #   QueueTimeOutURL: "https://#{host}.#{ENV['HOST']}/disburse_funds_results_timeout", 
-  #   ResultURL: "https://#{host}.#{ENV['HOST']}/disburse_funds_results", 
-  #   Occassion: "PartnerPayment"
-  #   }
+    OriginatorConversationID: "600997_Test_32et3241ed8yu", 
+    InitiatorName: ENV['API_INITIATOR_USERNAME'],
+    SecurityCredential: ENV['B2C_API_INITIATOR_PASSWORD'],
+    CommandID: "BusinessPayment", 
+    Amount: params[:amount], 
+    PartyA: ENV['B2C_SHORTCODE'], 
+    PartyB: params[:phone_number],
+    Remarks: "ok", 
+    QueueTimeOutURL: "https://#{host}.#{ENV['HOST']}/disburse_funds_results_timeout", 
+    ResultURL: "https://#{host}.#{ENV['HOST']}/disburse_funds_results", 
+    Occassion: "PartnerPayment"
+    }
 
-  #   begin
-  #     response = RestClient.post(
-  #         "https://api.safaricom.co.ke/mpesa/b2c/v1/paymentrequest",
+    begin
+      response = RestClient.post(
+          "https://api.safaricom.co.ke/mpesa/b2c/v1/paymentrequest",
 
-  #       payload.to_json,
-  #       { content_type: :json, Authorization: "Bearer #{token}" }
-  #     )
+        payload.to_json,
+        { content_type: :json, Authorization: "Bearer #{token}" }
+      )
 
-  #     render json: JSON.parse(response.body), status: :ok
+      render json: JSON.parse(response.body), status: :ok
 
-  #   rescue RestClient::ExceptionWithResponse => e
-  #     Rails.logger.info("Error disbursing funds: #{e.response.body}")
-  #     # render json: { error: "Failed to register callback URLs" }, status: :bad_request
-  #   render json: { error: "#{e.response.body}" }, status: :bad_request
+    rescue RestClient::ExceptionWithResponse => e
+      Rails.logger.info("Error disbursing funds: #{e.response.body}")
+      # render json: { error: "Failed to register callback URLs" }, status: :bad_request
+    render json: { error: "#{e.response.body}" }, status: :bad_request
 
-  #   end
-  # end
+    end
+  end
 
 
 
