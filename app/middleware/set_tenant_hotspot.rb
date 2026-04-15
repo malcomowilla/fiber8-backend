@@ -33,6 +33,8 @@ class SetTenantHotspot
       'subscriber',
 'delete_subscriber',
  'update_subscriber',
+ 'access_points'
+
       
 # 'create_ticket',
 # 'update_ticket',
