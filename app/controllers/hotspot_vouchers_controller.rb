@@ -668,22 +668,24 @@ status: "unpaid"
 ).first
 
 
-invoices.map do |invoice|
 
-if invoice.total == bill_ref.to_i
+if invoice.total.to_i == paid_amount
 invoice.update!(status: 'paid', 
            amount_paid: paid_amount,
            total: data["TransAmount"],
-           expiry: Time.current + 30.days
+           plan_name: "Hotspot And PPPOE Plan"
+          
            )
 tenant = Account.find_by(id: invoice.account_id)
 
 tenant.hotspot_and_dial_plan.update(
   name: 'Hotspot And PPPOE Plan',
+   expiry: Time.current + 30.days,
+   expiry_days: 30
 )
 
 end
-end
+
 
 
   else
@@ -788,7 +790,7 @@ end
             debit: pppoe_revenue.amount,
             date:  pppoe_revenue.time_paid,
             title:  pppoe_revenue.reference,
-            description: 'Payment made via M-Pesa',
+            description: 'Payment for package subscription made via M-Pesa',
             account_id:  pppoe_revenue.account_id,
             subscriber_id: pppoe_revenue.subscriber_id
           )

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_04_06_083248) do
+ActiveRecord::Schema[7.2].define(version: 2026_04_17_104803) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -806,6 +806,9 @@ ActiveRecord::Schema[7.2].define(version: 2026_04_06_083248) do
     t.string "customer_name"
     t.string "payment_type", default: "deposit"
     t.integer "subscriber_id"
+    t.datetime "paid_out_at"
+    t.boolean "paid_out", default: false
+    t.integer "amount_disbursed"
   end
 
   create_table "pp_poe_plans", force: :cascade do |t|
@@ -1033,6 +1036,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_04_06_083248) do
     t.datetime "invoice_expired_created_at"
     t.boolean "include_installation_fee", default: false
     t.string "installation_fee"
+    t.string "billing_mode"
   end
 
   create_table "support_tickets", force: :cascade do |t|

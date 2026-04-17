@@ -433,7 +433,7 @@ def unbock_service
                      verify_host_key: :never, non_interactive: true) do |ssh|
  
         ssh.exec!("ip firewall address-list  remove [find list=aitechs_blocked_list address=#{ip_address}]")
-        subscription.update!(status: 'blocked')
+        subscription.update!(status: 'active')
 
         render json: { message: "UnBlocked #{ppoe_username} (#{ip_address}) on MikroTik and updated status." }
       end
@@ -722,7 +722,8 @@ end
   expiration_date:  params[:subscription][:expiration_date],
   service_type: params[:subscription][:service_type],
   include_installation_fee: params[:subscription][:include_installation_fee],
-  installation_fee: params[:subscription][:installation_fee]
+  installation_fee: params[:subscription][:installation_fee],
+  billing_mode: params[:subscription][:billing_mode],
 
     )
 
@@ -1249,11 +1250,16 @@ end
 
 
     def subscription_params
-      params.require(:subscription).permit(:name, :phone_number, :package, :status, 
+      params.require(:subscription).permit(:name,
+       :phone_number, :package, :status, 
       :last_subscribed, :expiry, :ip_address,
        :ppoe_username, :ppoe_password, :type, :network_name, :mac_address, 
        :validity_period_units, :validity, :service_type, :mac_address,
-        :expiration_date, :package_name, :include_installation_fee, :installation_fee)
+        :expiration_date, :package_name,
+         :include_installation_fee, :installation_fee,
+         :billing_mode,
+         
+         )
     end
 
    

@@ -324,7 +324,7 @@ class GenerateInvoiceJob
   end
 
   def calculate_pppoe_charge(tenant)
-    pppoe_clients = Subscriber.where(account_id: tenant.id, status: 'active').count
+    pppoe_clients = Subscriber.where(status: 'active').count
     pppoe_charge = pppoe_clients * PPPoE_PRICE_PER_CLIENT
     [pppoe_clients, pppoe_charge]
   end

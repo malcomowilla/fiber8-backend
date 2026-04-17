@@ -502,6 +502,21 @@ end
 
 
 
+
+
+def check_peer
+    public_key = params[:public_key]
+
+    result = Wireguard::PeerCheck.new.call(public_key)
+
+    if result[:error]
+      render json: result, status: :unprocessable_entity
+    else
+      render json: result, status: :ok
+    end
+  end
+
+
 def generate_wireguard_app_config
  host = request.headers['X-Subdomain']
 

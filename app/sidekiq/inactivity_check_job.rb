@@ -16,8 +16,8 @@ class InactivityCheckJob
           process_inactivity_checks
         end
       rescue => e
-        Rails.logger.error "Error processing account #{account.subddomain}: #{e.message}"
-        Rails.logger.error e.backtrace.join("\n")
+        Rails.logger.info "Error processing account #{account.subddomain}: #{e.message}"
+        Rails.logger.info e.backtrace.join("\n")
       end
     end
   end

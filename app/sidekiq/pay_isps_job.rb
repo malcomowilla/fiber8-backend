@@ -31,7 +31,7 @@ class PayIspsJob
     mpesa_setting = tenant.hotspot_mpesa_setting
     return unless mpesa_setting&.phone_number.present?
 
-    revenues = HotspotMpesaRevenue
+    revenues = PpPoeMpesaRevenue
       .where(account_id: 202, paid_out: false)
       .where("created_at <= ?", 4.minutes.ago)
 
@@ -93,7 +93,7 @@ transaction_cost = (total_amount * 0.01).ceil
     end
 
     # Calculate total hotspot revenue for the month
-    hotspot_total = HotspotMpesaRevenue
+    hotspot_total = PpPoeMpesaRevenue
                       .where(account_id: tenant.id)
                       .where(created_at: 1.month.ago.beginning_of_month..1.month.ago.end_of_month)
                       .sum(:amount)
