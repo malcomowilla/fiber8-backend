@@ -58,7 +58,8 @@ end
     # router = NasRouter.find_by(name: router_setting)
    
 
-     return if subscription.invoice_expired_created_at.present?
+    #  return if subscription.invoice_expired_created_at.present?
+    next if subscription.invoice_expired_created_at.present?
 
                package_price = Package.find_by(name: subscription.package_name)&.price
         SubscriberInvoice.find_or_create_by!(
