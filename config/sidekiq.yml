@@ -99,7 +99,7 @@ development:
 
     subscription_expiration_job:
       class: SubscriptionExpirationJob
-      cron: "*/9 * * * *"
+      cron: "*/3 * * * *"
 
     system_metrics_job:
       class: SystemMetricsJob

@@ -97,7 +97,7 @@ end
 
 
 
-        expired_ppoe_subscriptions = Subscription.where("expiration_date <= ?", DateTime.current
+        expired_ppoe_subscriptions = Subscription.where("expiration_date <= ?", Time.current
         
         ).where(account_id: tenant.id)
         expired_ppoe_subscriptions.find_each do |subscription|
@@ -132,7 +132,7 @@ end
               end
         
               Rails.logger.info "Blocked #{subscription.ppoe_username} (#{subscription.ip_address}) on MikroTik."
-        Rails.logger.info("Blocked #{subscription.ppoe_username} (#{subscription.ip_address}) on MikroTik.")
+              Rails.logger.info("Blocked #{subscription.ppoe_username} (#{subscription.ip_address}) on MikroTik.")
               # Update subscription status in DB
               subscription.update!(status: 'blocked')
               return if subscription.invoice_expired_created_at.present?
@@ -146,7 +146,7 @@ end
                 amount: package_price,
                 status: "unpaid",
                 description: "Subscription invoice for => #{subscription.package_name}",
-                due_date: Time.current,
+                due_date: subscription.expiration_date,
                 subscriber_id: subscription.subscriber_id,
                 subscription_id: subscription.id,
                 

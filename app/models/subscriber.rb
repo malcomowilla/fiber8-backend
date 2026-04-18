@@ -4,9 +4,11 @@ class Subscriber < ApplicationRecord
         has_secure_password(validations: false)
 has_many :subscriptions, dependent: :destroy
 has_many :subscriber_invoices, dependent: :destroy
+has_many :system_admin_sms, dependent: :destroy
 has_one :subscriber_wallet_balance, dependent: :destroy
 has_many :subscriber_transactions, dependent: :destroy
 after_commit :broadcast_subscriber_stats, on: [:create, :update, :destroy]
+
       # before_create :set_default_status
 
 # after_create :update_subscriber_status   

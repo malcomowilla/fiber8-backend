@@ -651,6 +651,17 @@ end
   end
   
 
+
+
+
+
+
+
+
+
+
+
+
   # POST /subscriptions or /subscriptions.json
   def create
 
@@ -744,7 +755,7 @@ invoice = SubscriberInvoice.create(
         amount: package_amount_and_installation_fee,
         status: "unpaid",
         item: params[:subscription][:package_name],
-        due_date: Time.current,
+        due_date: Time.current + 5.days,
         subscriber_id: @subscription.subscriber_id,
         subscription_id: @subscription.id,
         description: "Internet installation and subscription charges for => #{params[:subscription][:package_name]}",
@@ -759,7 +770,7 @@ invoice = SubscriberInvoice.create(
         amount: package_amount,
         status: "unpaid",
         item: params[:subscription][:package_name],
-        due_date: Time.current,
+        due_date: Time.current + 5.days,
         subscriber_id: @subscription.subscriber_id,
         subscription_id: @subscription.id,
         description: "Subscription  invoice for => #{params[:subscription][:package_name]}",

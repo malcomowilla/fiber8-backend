@@ -84,7 +84,6 @@ class SubscriptionExpiryReminderJob
 
   def paybill_number_for(tenant)
     HotspotMpesaSetting.find_by(
-      account_type: "Paybill",
       account_id: tenant.id
     )&.short_code
   end
@@ -124,7 +123,7 @@ end
 
     sms_template = ActsAsTenant.current_tenant.sms_template
     send_voucher_template = sms_template&.send_voucher_template
-    original_message = "Your service will be  disconnected at #{company_name} for account #{account_number}. You can now make your #{company_name} payment via MPESA Paybill #{paybill_number} Account no: #{account_number}. For assistance call Telephone: #{customer_support_phone_number}"
+    original_message = "Your service will be disconnected at #{company_name} for account #{account_number}. You can now make your #{company_name} payment via MPESA Paybill #{paybill_number} Account no: #{account_number}. For assistance call Telephone: #{customer_support_phone_number}"
 
     sender_id = "SMS_TEST"
     uri = URI("https://api.smsleopard.com/v1/sms/send")
@@ -138,8 +137,14 @@ end
     uri.query = URI.encode_www_form(params)
 
     response = Net::HTTP.get_response(uri)
-    handle_sms_response(response, original_message, phone_number)
+    handle_sms_response_sms_leopard(response, original_message,
+     phone_number, tenant)
   end
+
+
+
+
+
 
   def send_expiration_text_sms(account_number, paybill_number, 
     customer_support_phone_number, phone_number, company_name,tenant)
@@ -179,7 +184,7 @@ end
     uri.query = URI.encode_www_form(params)
 
     response = Net::HTTP.get_response(uri)
-    handle_sms_response(response, original_message, phone_number)
+    handle_sms_response(response, original_message, phone_number, tenant)
   end
 
 
@@ -188,14 +193,55 @@ end
 
 
 
-  def handle_sms_response(response, message, phone_number)
+  def handle_sms_response(response, message, phone_number, tenant)
     if response.is_a?(Net::HTTPSuccess)
       sms_data = JSON.parse(response.body)
-      if sms_data['responses'] && sms_data['responses'][0]['respose-code'] == 200
         sms_recipient = sms_data['responses'][0]['mobile']
         sms_status = sms_data['responses'][0]['response-description']
         
         Rails.logger.info "Recipient: #{sms_recipient}, Status: #{sms_status}"
+subscriber_id = Subscriber.find_by(phone_number: phone_number, account_id: tenant.id).id
+        SystemAdminSm.create!(
+          user: sms_recipient,
+          message: message,
+          status: sms_status,
+          date: Time.current,
+          system_user: 'system',
+          sms_provider: 'Text Sms',
+          account_id: tenant.id,
+          subscriber_id: subscriber_id
+        )
+     
+    else
+      Rails.logger.info "Failed to send message: #{response.body}"
+       SystemAdminSm.create!(
+          user: sms_recipient,
+          message: message,
+          status: sms_status,
+          date: Time.current,
+          system_user: 'system',
+          sms_provider: 'Text Sms',
+          account_id: tenant.id,
+          subscriber_id: subscriber_id
+        )
+    end
+  end
+
+
+
+
+
+
+
+
+  def handle_sms_response_sms_leopard(response, message, phone_number, tenant)
+    if response.is_a?(Net::HTTPSuccess)
+      sms_data = JSON.parse(response.body)
+        sms_recipient = sms_data['responses'][0]['mobile']
+        sms_status = sms_data['responses'][0]['response-description']
+        
+        Rails.logger.info "Recipient: #{sms_recipient}, Status: #{sms_status}"
+subscriber_id = Subscriber.find_by(phone_number: phone_number, account_id: tenant.id).id
 
         SystemAdminSm.create!(
           user: sms_recipient,
@@ -203,16 +249,24 @@ end
           status: sms_status,
           date: Time.current,
           system_user: 'system',
-          sms_provider: 'SMS leopard'
+          sms_provider: 'SMS leopard',
+          account_id: tenant.id,
+          subscriber_id: subscriber_id
         )
-      else
-        Rails.logger.info "Failed to send message: #{sms_data['responses'][0]['response-description']}"
-      end
+     
     else
-      Rails.logger.error "Failed to send message: #{response.body}"
+      Rails.logger.info "Failed to send message: #{response.body}"
+       SystemAdminSm.create!(
+          user: sms_recipient,
+          message: message,
+          status: sms_status,
+          date: Time.current,
+          system_user: 'system',
+          sms_provider: 'SMS leopard',
+          account_id: tenant.id,
+          subscriber_id: subscriber_id
+        )
     end
   end
-
-
 
 end
