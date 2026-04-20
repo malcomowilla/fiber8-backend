@@ -1,0 +1,16 @@
+<p style="color: green"><%= notice %></p>
+
+<% content_for :title, "Partners" %>
+
+<h1>Partners</h1>
+
+<div id="partners">
+  <% @partners.each do |partner| %>
+    <%= render partner %>
+    <p>
+      <%= link_to "Show this partner", partner %>
+    </p>
+  <% end %>
+</div>
+
+<%= link_to "New partner", new_partner_path %>

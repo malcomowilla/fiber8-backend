@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_04_18_064552) do
+ActiveRecord::Schema[7.2].define(version: 2026_04_19_085019) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -792,6 +792,31 @@ ActiveRecord::Schema[7.2].define(version: 2026_04_18_064552) do
     t.string "burst_download_speed"
     t.string "aggregation"
     t.string "subscription"
+  end
+
+  create_table "partners", force: :cascade do |t|
+    t.string "full_name"
+    t.string "partner_type"
+    t.string "status"
+    t.string "email"
+    t.string "phone"
+    t.string "city"
+    t.string "country"
+    t.string "notes"
+    t.string "commission_type"
+    t.integer "commission_rate"
+    t.integer "fixed_amount"
+    t.integer "minimum_payout"
+    t.string "payout_method"
+    t.string "payout_frequency"
+    t.string "mpesa_number"
+    t.string "mpesa_name"
+    t.string "bank_name"
+    t.string "account_number"
+    t.string "account_name"
+    t.integer "account_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
   end
 
   create_table "pp_poe_mpesa_revenues", force: :cascade do |t|

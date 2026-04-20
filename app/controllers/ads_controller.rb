@@ -177,8 +177,10 @@ email: params[:contact][:email],
 
     # Only allow a list of trusted parameters through.
     def ad_params
-      params.require(:ad).permit(:title, :description, :business_name, :business_type, 
-      :offer_text, :discount, :cat_text, :background_color, :text_color, :image,
+      params.require(:ad).permit(:title, :description, :business_name, 
+      :business_type, 
+      :offer_text, :discount, :cat_text, :background_color, :text_color,
+       :image,
        :imagePreview, :target_url, :is_active,  :image_preview)
     end
 end

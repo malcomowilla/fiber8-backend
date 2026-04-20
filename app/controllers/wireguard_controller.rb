@@ -603,7 +603,6 @@ end
        /interface wireguard peers
    add allowed-address=0.0.0.0/0 endpoint-address=102.221.35.92 endpoint-port=51820 interface=wireguard1 persistent-keepalive=25s public-key="#{server_pubkey}"
 
-      
       /ip address add address=#{ip} interface=wireguard1
 
       /ip firewall filter

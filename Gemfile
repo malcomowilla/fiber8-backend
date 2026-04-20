@@ -107,6 +107,14 @@ gem "aws-sdk-s3", require: false
 gem "net-ssh", "~> 7.2"
 
 
+
+
+
+gem 'ed25519', '~> 1.2'
+gem 'bcrypt_pbkdf', '~> 1.0'
+
+
+
 # Use postgresql as the database for Active Record
 gem "pg", "~> 1.1"
 gem 'fcm' 
