@@ -8,6 +8,7 @@ class GenerateClientsConfJob
   def perform
     Rails.logger.info "Generating clients.conf"
 
+    # File.open('/etc/freeradius/3.0/clients.conf', 'w') do |f|
 
     
     File.open('/etc/freeradius/3.0/clients.conf', 'w') do |f|

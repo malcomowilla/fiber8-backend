@@ -150,9 +150,9 @@ tunnel_ip =
       # -----------------------------
       # Check if tunnel IP reachable
       # -----------------------------
-      ping_result = `ping -c 1 -W 1 #{tunnel_ip} > /dev/null 2>&1`
-      reachable = $?.success? ? "YES" : "NO"
-
+      # ping_result = `ping -c 1 -W 1 #{tunnel_ip} > /dev/null 2>&1`
+      # reachable = $?.success? ? "YES" : "NO"
+  reachable = tcp_reachable?(tunnel_ip) ? "YES" : "NO"
       # -----------------------------
       # Build status message
       # -----------------------------
@@ -178,4 +178,31 @@ tunnel_ip =
       db_peer.update(status: lines.join("\n"))
     end
   end
+
+
+
+  private
+
+
+  def tcp_reachable?(ip, port = 80, timeout_sec = 3)
+  Timeout.timeout(timeout_sec) do
+    begin
+      socket = TCPSocket.new(ip, port)
+      socket.close
+      true
+    rescue Errno::ECONNREFUSED
+      # Host is reachable but port closed → still reachable
+      true
+    rescue StandardError
+      false
+    end
+  end
+rescue Timeout::Error
+  false
+end
+
+
+
+
+
 end
