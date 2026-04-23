@@ -643,10 +643,13 @@ end
 
     def signin
      
-        @user = User.find_by(email: params[:email])
+        @user = User.find_by(email: params[:email]) || User.find_by(username: params[:email])
         if @user.nil?
           render json: { error: 'Invalid Credentials' }, status: :not_found and return
         end
+
+
+
 
 if @user.locked_account == true && @user&.locked_at > 5.minutes.ago
   render json: { error: 'Account locked' }, status: :locked # 423 Locked
