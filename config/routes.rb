@@ -158,7 +158,7 @@ resources :company_ids
 
 end
 
-
+get '/api/ppoe_mpesa_revenue_summary', to: 'pp_poe_mpesa_revenues#revenue_summary'
 get '/api/wireguard/check_peer', to: 'wireguard#check_peer'
 get '/api/allow_get_ads', to: 'ad_settings#allow_get_ads'
 get '/api/this_week_revenue', to: 'hotspot_mpesa_revenues#this_week_revenue'

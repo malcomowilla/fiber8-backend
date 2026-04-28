@@ -47,4 +47,6 @@ class HotspotMpesaRevenue < ApplicationRecord
       .group_by_day(:created_at)
       .sum(:amount)
   end
+
+  
 end

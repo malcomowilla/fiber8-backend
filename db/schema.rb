@@ -1027,7 +1027,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_04_19_085019) do
     t.string "password_digest"
     t.string "node"
     t.string "status"
-    t.index ["ref_no"], name: "index_subscribers_on_ref_no", unique: true
+    t.index ["ref_no"], name: "index_subscribers_on_ref_no"
   end
 
   create_table "subscriptions", force: :cascade do |t|
@@ -1141,8 +1141,6 @@ ActiveRecord::Schema[7.2].define(version: 2026_04_19_085019) do
     t.boolean "login_with_passkey", default: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.string "phone_number_verified"
-    t.string "phone_number"
     t.boolean "system_admin_phone_number_verified", default: false
     t.string "system_admin_phone_number"
     t.string "otp"
@@ -1232,9 +1230,9 @@ ActiveRecord::Schema[7.2].define(version: 2026_04_19_085019) do
 
   create_table "users", force: :cascade do |t|
     t.string "email"
+    t.string "password_digest"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.string "password_digest"
     t.string "username"
     t.integer "account_id"
     t.string "phone_number"
