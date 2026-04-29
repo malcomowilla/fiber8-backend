@@ -744,6 +744,11 @@ send_invoice_paid_notification = SubscriberSetting.find_by(account_id: 21).invoi
 
         if invoice.amount.to_s === data["TransAmount"]
 
+          if subscription.status === 'blocked'
+             subscription.update!(status: 'active', expiry: Time.current + 30.days)
+
+          end
+
 nas_routers.each do |nas|
       Rails.logger.info "PPPOE payment received: #{bill_ref}"
     #  ping_result = system("ping -c 1 -W 2 #{nas.ip_address}")
