@@ -57,6 +57,12 @@ end
           begin
     # router = NasRouter.find_by(name: router_setting)
    
+      expired = subscription.expiration_date <= Time.current
+  Rails.logger.info "Subscription #{subscription.id} expired? #{expired}"
+
+  if expired
+    subscription.update(status: 'blocked')
+  end
 
     #  return if subscription.invoice_expired_created_at.present?
     next if subscription.invoice_expired_created_at.present?
@@ -107,7 +113,6 @@ end
         
               Rails.logger.info "Blocked #{subscription.ppoe_username} (#{subscription.ip_address}) on MikroTik."
               # Update subscription status in DB
-              subscription.update!(status: 'blocked')
              
 
             end

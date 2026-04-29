@@ -8,6 +8,7 @@ has_many :system_admin_sms, dependent: :destroy
 has_one :subscriber_wallet_balance, dependent: :destroy
 has_many :subscriber_transactions, dependent: :destroy
 after_commit :broadcast_subscriber_stats, on: [:create, :update, :destroy]
+has_many :pp_poe_mpesa_revenues
 
       # before_create :set_default_status
 

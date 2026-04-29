@@ -310,7 +310,7 @@ class GenerateInvoiceJob
     # Send SMS notification to super admin
     admin = tenant.users.where(role: "super_administrator").first
     if admin&.phone_number.present?
-      send_invoice_sms(admin.phone_number, invoice.due_date, invoice.invoice_number, admin.username, invoice.plan_name)
+      send_invoice_sms(admin.phone_number, invoice.due_date, invoice.invoice_number, admin.username, invoice.plan_name, tenant)
     end
   end
 
@@ -332,21 +332,21 @@ class GenerateInvoiceJob
   # --------------------------
   # SMS helpers (with nil safety)
   # --------------------------
-  def send_invoice_sms(phone_number, due_date, invoice_number, username, plan_name)
+  def send_invoice_sms(phone_number, due_date, invoice_number, username, plan_name, tenant)
     sms_setting = ActsAsTenant.current_tenant.sms_provider_setting
     return unless sms_setting&.sms_provider.present?
 
     case sms_setting.sms_provider
     when 'TextSms'
-      send_expiration_text_sms(phone_number, due_date, invoice_number, username, plan_name)
+      send_expiration_text_sms(phone_number, due_date, invoice_number, username, plan_name, tenant)
     when 'SMS leopard'
-      send_expiration_sms_leopard(phone_number, due_date, invoice_number, username, plan_name)
+      send_expiration_sms_leopard(phone_number, due_date, invoice_number, username, plan_name, tenant)
     else
       Rails.logger.info "No valid SMS provider configured"
     end
   end
 
-  def send_expiration_sms_leopard(phone_number, due_date, invoice_number, username, plan_name)
+  def send_expiration_sms_leopard(phone_number, due_date, invoice_number, username, plan_name, tenant)
     api_key = SmsSetting.find_by(sms_provider: 'SMS leopard')&.api_key
     api_secret = SmsSetting.find_by(sms_provider: 'SMS leopard')&.api_secret
     return unless api_key && api_secret
@@ -363,10 +363,10 @@ class GenerateInvoiceJob
     }
     uri.query = URI.encode_www_form(params)
     response = Net::HTTP.get_response(uri)
-    handle_sms_response(response, message, phone_number)
+    handle_sms_response(response, message, phone_number, tenant)
   end
 
-  def send_expiration_text_sms(phone_number, due_date, invoice_number, username, plan_name)
+  def send_expiration_text_sms(phone_number, due_date, invoice_number, username, plan_name, tenant)
     api_key = SmsSetting.find_by(sms_provider: 'TextSms')&.api_key
     partner_id = SmsSetting.find_by(sms_provider: 'TextSms')&.partnerID
     shortcode = SmsSetting.find_by(sms_provider: 'TextSms')&.sender_id
@@ -384,13 +384,12 @@ class GenerateInvoiceJob
     }
     uri.query = URI.encode_www_form(params)
     response = Net::HTTP.get_response(uri)
-    handle_sms_response(response, message, phone_number)
+    handle_sms_response_text_sms(response, message, phone_number, tenant)
   end
 
-  def handle_sms_response(response, message, phone_number)
+  def handle_sms_response(response, message, phone_number, tenant)
     if response.is_a?(Net::HTTPSuccess)
       sms_data = JSON.parse(response.body)
-      if sms_data['responses'] && sms_data['responses'][0]['respose-code'] == 200
         recipient = sms_data['responses'][0]['mobile']
         status = sms_data['responses'][0]['response-description']
         Rails.logger.info "SMS sent to #{recipient}, status: #{status}"
@@ -401,17 +400,55 @@ class GenerateInvoiceJob
           status: status,
           date: Time.current,
           system_user: 'system',
-          sms_provider: 'SMS leopard'
+          sms_provider: 'SMS leopard',
+           account_id: tenant.id
         )
-      else
-        Rails.logger.info "SMS send failed: #{sms_data['responses'][0]['response-description']}"
-      end
+     
     else
       Rails.logger.info "HTTP error sending SMS: #{response.body}"
     end
   rescue => e
     Rails.logger.error "SMS handling error: #{e.message}"
   end
+
+
+
+
+
+
+
+def handle_sms_response_text_sms(response, message, phone_number, tenant)
+    if response.is_a?(Net::HTTPSuccess)
+      sms_data = JSON.parse(response.body)
+        recipient = sms_data['responses'][0]['mobile']
+        status = sms_data['responses'][0]['response-description']
+        Rails.logger.info "SMS sent to #{recipient}, status: #{status}"
+
+        SystemAdminSm.create!(
+          user: recipient,
+          message: message,
+          status: status,
+          date: Time.current,
+          system_user: 'system',
+          sms_provider: 'SMS leopard',
+           account_id: tenant.id
+        )
+     
+    else
+      Rails.logger.info "HTTP error sending SMS: #{response.body}"
+    end
+  rescue => e
+    Rails.logger.error "SMS handling error: #{e.message}"
+  end
+
+
+
+
+
+
+
+
+
 
   def generate_invoice_number
     "INV#{rand(100..999)}"

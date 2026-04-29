@@ -66,22 +66,22 @@ end
 
 
 def most_popular_package
-  package = PpPoeMpesaRevenuE
-    .joins(:hotspot_voucher)
+  package = PpPoeMpesaRevenue
+    .joins(:subscriber)
     .select(
-      "hotspot_vouchers.package AS package,
-       COUNT(*) AS vouchers_sold,
-       SUM(hotspot_mpesa_revenues.amount) AS total_revenue"
+      "subscribers.package_name AS package,
+       COUNT(*) AS package_sold,
+       SUM(pp_poe_mpesa_revenues.amount) AS total_revenue"
     )
-    .group("hotspot_vouchers.package")
-    .order("vouchers_sold DESC")
+    .group("subscribers.package_name")
+    .order("package_sold DESC")
     .limit(1)
     .first
 
   if package
     render json: {
       package: package.package,
-      vouchers_sold: package.vouchers_sold.to_i,
+      package_sold: package.vouchers_sold.to_i,
       total_revenue: package.total_revenue.to_f
     }
   else
@@ -122,17 +122,17 @@ end
 
 
 def top_customers
-    top_customers = HotspotMpesaRevenue
-      .joins(:hotspot_voucher)
+    top_customers = PpPoeMpesaRevenue
+      .joins(:subscriber)
       .select(
-        "hotspot_vouchers.phone AS phone,
-         hotspot_mpesa_revenues.name,
-         COUNT(hotspot_mpesa_revenues.id) AS total_purchases,
-         SUM(hotspot_mpesa_revenues.amount) AS total_spent,
-         MAX(hotspot_mpesa_revenues.created_at) AS last_payment_at,
-         ARRAY_AGG(DISTINCT hotspot_vouchers.package) AS packages"
+        "subscribers.phone_number AS phone,
+         subscribers.name,
+         COUNT(pp_poe_mpesa_revenues.id) AS total_purchases,
+         SUM(pp_poe_mpesa_revenues.amount) AS total_spent,
+         MAX(pp_poe_mpesa_revenues.created_at) AS last_payment_at,
+         ARRAY_AGG(DISTINCT subscribers.package_name) AS packages"
       )
-      .group("hotspot_vouchers.phone, hotspot_mpesa_revenues.name")
+      .group("subscribers.phone_number, subscribers.name")
       .order("total_purchases DESC")
 
     # render json: top_customers.map { |c|
@@ -164,7 +164,7 @@ def todays_revenue
   # end_time = Time.current
   #  host = request.headers['X-Subdomain']
   #   @account = Account.find_by(subdomain: host)
-    todays_revenue = PpPoeMpesaRevenueue.today.sum(:amount)
+    todays_revenue = PpPoeMpesaRevenue.today.sum(:amount)
   
    
   render json: todays_revenue
@@ -178,7 +178,7 @@ def this_month_revenue
 #  host = request.headers['X-Subdomain']
 #     @account = Account.find_by(subdomain: host)
   # render json: HotspotMpesaRevenue.where(created_at: start_time..end_time).sum(:amount)
-    this_month = PpPoeMpesaRevenueue.this_month.sum(:amount)
+    this_month = PpPoeMpesaRevenue.this_month.sum(:amount)
     
   render json: this_month
 end
@@ -195,7 +195,7 @@ def this_year_revenue
     #   this_year = HotspotMpesaRevenue.this_year.sum(:amount)
     #   render json: this_year
     #   end
-    this_year = PpPoeMpesaRevenueue.this_year.sum(:amount)
+    this_year = PpPoeMpesaRevenue.this_year.sum(:amount)
      render json: this_year
   
 end
@@ -207,15 +207,15 @@ def daily_revenue
         @account = Account.find_by(subdomain: host)
       date = params[:date] ? Date.parse(params[:date]) : Date.current
       
-      revenue = PpPoeMpesaRevenueue.daily_revenue(date)
-      transactions = PpPoeMpesaRevenueue.where(created_at: date.beginning_of_day..date.end_of_day)
+      revenue = PpPoeMpesaRevenue.daily_revenue(date)
+      transactions = PpPoeMpesaRevenue.where(created_at: date.beginning_of_day..date.end_of_day)
       
       render json: {
         success: true,
         date: date,
         total_revenue: revenue,
         transaction_count: transactions.count,
-        transactions: transactions.as_json(only: [:id, :voucher, :amount, :reference, :time_paid, :created_at])
+        transactions: transactions.as_json(only: [:id, :account_number, :customer_name, :amount, :reference, :time_paid, :created_at])
       }
     end
 

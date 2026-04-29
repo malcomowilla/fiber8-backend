@@ -3,8 +3,7 @@ class PpPoeMpesaRevenue < ApplicationRecord
 
 
 
-
-
+belongs_to :subscriber
 
 
   scope :today, -> {
