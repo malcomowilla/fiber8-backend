@@ -143,17 +143,17 @@ sidekiq_options lock: :until_executed, lock_timeout: 0
         Rails.logger.info "ContentionRatioJob Existing queues: #{existing_queues.map { |q| q['name'] }}"
 
         # Step 3: Remove queues with no matching active user
-        # existing_queues.each do |queue|
-        #   queue_name = queue['name']
-        #   Rails.logger.info "ContentionRatioJob Checking queue: #{queue_name}"
+        existing_queues.each do |queue|
+          queue_name = queue['name']
+          Rails.logger.info "ContentionRatioJob Checking queue: #{queue_name}"
 
-        #   pppoe_username = queue_name.split('_')[1].to_s.strip
+          pppoe_username = queue_name.split('_')[1].to_s.strip
 
-        #   unless active_usernames.include?(pppoe_username)
-        #     Rails.logger.info "ContentionRatioJob Removing stale queue: #{queue_name} (pppoe_username: #{pppoe_username})"
-        #     remove_queue(router_ip, router_username, router_password, queue_name)
-        #   end
-        # end
+          unless active_usernames.include?(pppoe_username)
+            Rails.logger.info "ContentionRatioJob Removing stale queue: #{queue_name} (pppoe_username: #{pppoe_username})"
+            remove_queue(router_ip, router_username, router_password, queue_name)
+          end
+        end
 
 
 fetch_ip_firewal_adres_list = fetch_ip_firewal_adres_list(router_ip, router_username, router_password)
@@ -176,16 +176,17 @@ fetch_ip_firewal_adres_list.each do |entry|
   end
 end
 
-        # next if active_users.blank?
+        next if active_users.blank?
         Rails.logger.info "ContentionRatioJob Active users: #{active_users}"
 
         active_users.each do |user|
           pppoe_username = user['name'].to_s.strip
           subscription = Subscription.find_by(ppoe_username: pppoe_username,
+          status: 'active',
           
           account_id: tenant.id
           )
-          # next unless subscription
+          next unless subscription
 
           package = Package.find_by(name: subscription.package_name,
           
