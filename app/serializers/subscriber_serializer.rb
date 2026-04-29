@@ -29,16 +29,15 @@ class SubscriberSerializer < ActiveModel::Serializer
    end
 
 
-   
    def status
-        if self.object.subscriptions.exists?
-         self.object.status = 'active'
-         else
-            self.object.status = 'no subscription'
-        end
+  return 'no subscription' unless object.subscriptions.exists?
 
-      
-   end
+  if object.subscriptions.where(status: 'blocked').exists?
+    'blocked'
+  else
+    'active'
+  end
+end
 
 
 
