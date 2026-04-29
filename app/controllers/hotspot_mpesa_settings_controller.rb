@@ -162,8 +162,8 @@ render json: @mpesa_setting, serializer: MpesaSettingSerializer
       short_code: params[:short_code],
       phone_number: params[:phone_number],
       no_api_keys: params[:no_api_keys],
-      # api_initiator_password: params[:api_initiator_password],
-      # api_initiator_username: params[:api_initiator_username],
+      api_initiator_password: params[:api_initiator_password],
+      api_initiator_username: params[:api_initiator_username],
 
         # account_type: params[:account_type]
 

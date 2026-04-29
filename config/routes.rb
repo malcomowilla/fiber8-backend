@@ -175,6 +175,7 @@ post 'mpesa_transactionstatus_result', to: 'hotspot_vouchers#transaction_status_
 post 'mpesa_transactionstatus_timeout', to: 'hotspot_vouchers#transaction_status_timeout'
 
 get '/api/get_hotspot_and_dial_plan', to: 'hotspot_and_dial_plans#get_current_hotspot_and_dial_plan'  
+get '/get_hotspot_and_dial_plan', to: 'hotspot_and_dial_plans#get_current_hotspot_and_dial_plan'
 post '/api/login_with_receipt_number', to: 'hotspot_vouchers#login_with_receipt_number'
 
 get '/api/get_invoice', to: 'invoices#get_invoice'

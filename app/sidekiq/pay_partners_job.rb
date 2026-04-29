@@ -120,7 +120,7 @@ process_partner(partner)
   # --------------------------
   def send_b2c(phone_number, amount, tenant)
     token = fetch_access_token
-    mpesa_setting = tenant.mpesa_setting
+    mpesa_setting = tenant.hotspot_mpesa_setting
     return false unless token
 
     payload = {
@@ -129,7 +129,7 @@ process_partner(partner)
       SecurityCredential: ENV['B2C_API_INITIATOR_PASSWORD'],
       CommandID: "BusinessPayment",
       Amount: amount,
-      PartyA: ENV['B2C_SHORTCODE'],
+      PartyA: mpesa_setting.short_code || ENV['B2C_SHORTCODE'],
       PartyB: format_phone(phone_number),
       Remarks: "Partner payout",
       QueueTimeOutURL: "https://#{tenant.subdomain}.#{ENV['HOST']}/b2c_timeout",
