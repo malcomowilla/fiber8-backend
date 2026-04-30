@@ -34,7 +34,7 @@ send_sms_for_tenant(company_name, account_no, ActsAsTenant.current_tenant, phone
   
   def send_invoice_sms_leopard(company_name, account_no, tenant, phone_number)
 
-     message = "Tnank you for your payment. Your invoice is now marked as paid at #{company_name || 'Aitechs'}. Account Number #{account_no}.
+     message = "Thank you for your payment. Your invoice is now marked as paid at #{company_name || 'Aitechs'}. Account Number #{account_no}.
     "
 sms_setting = tenant.sms_setting
   api_key = sms_setting.api_key
@@ -61,7 +61,7 @@ sms_setting = tenant.sms_setting
   def send_invoice_text_sms(company_name, account_no, tenant, phone_number)
 
    
-     message = "Tnank you for your payment. Your invoice is now marked as paid at #{company_name || 'Aitechs'}. Account Number #{account_no}.
+     message = "Thank you for your payment. Your invoice is now marked as paid at #{company_name || 'Aitechs'}. Account Number #{account_no}.
     "
   
 sms_setting = tenant.sms_setting

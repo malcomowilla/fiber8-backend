@@ -797,8 +797,7 @@ total_wallet_balance = PpPoeMpesaRevenue
            )
         end
 
-           subscription.update(invoice_expired_created_at:  nil)
-
+          
 # company_name, account_no, tenant
 company_name = CompanySetting.find_by(account_id: subscription.account_id)
 # send_invoice_paid_notification = SubscriberSetting.find_by(account_id: found_subscriber.account_id)&.invoice_created_or_paid
@@ -817,9 +816,12 @@ company_name = CompanySetting.find_by(account_id: subscription.account_id)
            SendInvoicePaidJob.perform_now(
           company_name.company_name,
           bill_ref,
-          invoice.account,
+          found_subscriber.account,
           subscriber_phone_number
         )
+
+         subscription.update(invoice_expired_created_at:  nil)
+
 
           if subscription.status === 'blocked'
              subscription.update!(status: 'active', expiry: Time.current + 30.days)
