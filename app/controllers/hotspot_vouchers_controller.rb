@@ -706,6 +706,11 @@ paid_amount = data["TransAmount"].to_i
 
 pppoe_package = Package.find_by(name: subscription.package_name)
 
+total_wallet_balance = PpPoeMpesaRevenue
+  .where(account_number: bill_ref)
+  .sum(:amount)
+
+
    pppoe_revenue = PpPoeMpesaRevenue.create(
       amount: data["TransAmount"],
       payment_method: "Mpesa",
@@ -737,7 +742,7 @@ pppoe_package = Package.find_by(name: subscription.package_name)
             type: 'Deposit',
             debit: pppoe_revenue.amount,
             date:  pppoe_revenue.time_paid,
-            title:  pppoe_package.reference,
+            title:   pppoe_revenue.reference,
             description: "Payment made via M-Pesa",
             account_id:  pppoe_revenue.account_id,
             subscriber_id: pppoe_revenue.subscriber_id
@@ -756,8 +761,8 @@ pppoe_package = Package.find_by(name: subscription.package_name)
     end
       SubscriberWalletBalance.create(
         subscriber_id: pppoe_revenue.subscriber_id,
-        amount: pppoe_revenue.amount,
-        account_id: pppoe_revenue.account_id
+        amount: total_wallet_balance,
+       account_id: pppoe_revenue.account_id
       )
         # package_amount_paid = data["TransAmount"]
   expiration_time = Time.parse(subscription.expiration_date.to_s)
