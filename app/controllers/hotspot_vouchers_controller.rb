@@ -753,7 +753,7 @@ total_wallet_balance = PpPoeMpesaRevenue
             type: 'Deposit',
             debit: pppoe_revenue.amount,
             date:  pppoe_revenue.time_paid,
-            title:  pppoe_package.reference,
+            title:  pppoe_revenue.reference,
             description: "Payment made via M-Pesa",
             account_id:  pppoe_revenue.account_id,
             subscriber_id: pppoe_revenue.subscriber_id)
