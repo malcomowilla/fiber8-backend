@@ -56,12 +56,21 @@ end
 
 def get_total_bandwidth_and_online_users
   active_sessions = RadAcct.where(
+    # framedprotocol: 'PPP',
+    acctstoptime: nil,
+
+  )
+
+
+
+  active_sessions_count = RadAcct.where(
     framedprotocol: 'PPP',
     acctstoptime: nil,
 
   )
 
-  active_user_count = active_sessions.count
+
+  active_user_count = active_sessions_count.count
 
   total_download = active_sessions.sum("COALESCE(acctinputoctets, 0)")
   total_upload   = active_sessions.sum("COALESCE(acctoutputoctets, 0)")

@@ -749,6 +749,9 @@ send_invoice_paid_notification = SubscriberSetting.find_by(account_id: 21).invoi
 
           end
 
+
+            if subscription.status === 'blocked'
+
 nas_routers.each do |nas|
       Rails.logger.info "PPPOE payment received: #{bill_ref}"
     #  ping_result = system("ping -c 1 -W 2 #{nas.ip_address}")
@@ -767,11 +770,10 @@ nas_routers.each do |nas|
           puts "UnBlocked #{subscription.ppoe_username} (#{subscription.ip_address}) on MikroTik."
         end
       end
+    end
       # rescue StandardError => e
       #   Rails.logger.error "Error removing PPPoE connection for username #{subscription.ppoe_username}: #{e.message}"
       # end
-
-
 end
         
 
