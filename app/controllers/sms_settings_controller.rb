@@ -71,9 +71,12 @@ rescue ActiveRecord::RecordNotFound
   
   def create
     # @sms_setting = SmsSetting.find_or_initialize_by(sms_setting_params)
+      host = request.headers['X-Subdomain']
+    @account = Account.find_by(subdomain: host)
       @sms_setting = SmsSetting.find_or_initialize_by(
-        api_secret: params[:api_secret],
-        api_key: params[:api_key],
+        # api_secret: params[:api_secret],
+        # api_key: params[:api_key],
+      tenant_id: @account.id,
       ) 
     @sms_setting.update!(
       api_key: params[:api_key],

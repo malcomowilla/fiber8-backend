@@ -158,6 +158,9 @@ resources :company_ids
 
 end
 
+
+
+post '/api/change_password', to: 'sessions#change_password'
 get '/api/ppoe_mpesa_revenue_summary', to: 'pp_poe_mpesa_revenues#revenue_summary'
 get '/api/wireguard/check_peer', to: 'wireguard#check_peer'
 get '/api/allow_get_ads', to: 'ad_settings#allow_get_ads'

@@ -641,6 +641,37 @@ end
     #     end
     #     end
 
+
+def change_password
+  token = cookies.encrypted.signed[:jwt_user]
+  Rails.logger.info "current_user => #{token}"
+            
+
+  unless current_user
+    return render json: { error: "Unauthorized" }, status: :unauthorized
+  end
+
+  if params[:password].blank?
+    return render json: { error: "Password can't be blank" }, status: :unprocessable_entity
+  end
+
+  if current_user.update(
+    password: params[:password],
+    password_confirmation: params[:password_confirmation],
+    first_login: false
+  )
+    render json: { message: "Password updated" }, status: :ok
+  else
+    render json: { error: current_user.errors.full_messages }, status: :unprocessable_entity
+  end
+end
+
+
+
+
+
+
+
     def signin
      
         @user = User.find_by(email: params[:email]) || User.find_by(username: params[:email])
@@ -664,8 +695,13 @@ if @user.locked_account == true && @user&.locked_at > 5.minutes.ago
           # reset_login_attempts 
           token = generate_token(user_id: @user.id)
     @user.update(last_login_at: Time.current, status: 'active')
+
           cookies.encrypted.signed[:jwt_user] = { value: token, httponly: true, secure: true,
          sameSite: 'strict'}
+
+
+
+
 
 
          two_factor_passkeys = ActsAsTenant.current_tenant&.admin_setting&.enable_2fa_for_admin_passkeys
@@ -694,7 +730,7 @@ if @user.locked_account == true && @user&.locked_at > 5.minutes.ago
         
  @user.update_column(:inactive, false)
     @user.update_column(:last_activity_active, Time.zone.now)
-render json:@user,   status: :accepted
+render json: @user,   status: :accepted
 
       else
         render json: { error: 'Invalid email or password' }, status: :unauthorized

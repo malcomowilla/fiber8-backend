@@ -10,6 +10,7 @@ attributes :can_manage_subscriber,:can_read_read_subscriber,:can_manage_ticket_s
 :can_manage_free_radius, :can_read_free_radius, :can_manage_mpesa_settings, :can_read_mpesa_settings,
 :can_reboot_router,:can_manage_hotspot_template, :can_read_hotspot_template,
 :can_manage_invoice, :can_read_invoice, :can_manage_equipment, :can_read_equipment,
+:first_login,
 
 
 :date_registered,

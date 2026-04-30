@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_04_30_084731) do
+ActiveRecord::Schema[7.2].define(version: 2026_04_30_134837) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -1327,6 +1327,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_04_30_084731) do
     t.boolean "can_manage_invoice"
     t.boolean "can_read_equipment"
     t.boolean "can_manage_equipment"
+    t.boolean "first_login", default: true
     t.index ["email"], name: "index_users_on_email"
   end
 
