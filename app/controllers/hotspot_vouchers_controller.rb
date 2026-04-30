@@ -770,7 +770,7 @@ total_wallet_balance = PpPoeMpesaRevenue
        account_id: pppoe_revenue.account_id
       )
         # package_amount_paid = data["TransAmount"]
-  expiration_time = Time.parse(subscription.expiration_date.to_s)
+  # expiration_time = Time.parse(subscription.expiration_date.to_s)
 
 
         # expiration_time > Time.current
@@ -800,7 +800,7 @@ total_wallet_balance = PpPoeMpesaRevenue
            subscription.update(invoice_expired_created_at:  nil)
 
 # company_name, account_no, tenant
-company_name = CompanySetting.find_by(account_id: invoice.account_id)
+company_name = CompanySetting.find_by(account_id: subscription.account_id)
 send_invoice_paid_notification = SubscriberSetting.find_by(account_id: found_subscriber.account_id)&.invoice_created_or_paid
 
           if send_invoice_paid_notification

@@ -5,13 +5,13 @@ class SubscriberTransactionSerializer < ActiveModel::Serializer
 
 
    def credit
-     "-#{self.object.credit} Ksh" if object.credit.present?
+     "#{self.object.credit} Ksh" if object.credit.present?
    end
 
 
 
    def debit
-     "#{self.object.debit} Ksh" if object.debit.present?
+     "-#{self.object.debit} Ksh" if object.debit.present?
    end
 
 def date
