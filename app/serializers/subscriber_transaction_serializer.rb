@@ -3,6 +3,17 @@ class SubscriberTransactionSerializer < ActiveModel::Serializer
    :description, :account_id
 
 
+
+   def debit
+     "#{self.object.debit} Ksh" unless object.credit.present?
+   end
+
+
+
+   def debit
+     "#{self.object.debit} Ksh" unless object.debit.present?
+   end
+
 def date
   return unless object.date.present?
 

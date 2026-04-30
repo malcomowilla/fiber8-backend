@@ -759,8 +759,13 @@ total_wallet_balance = PpPoeMpesaRevenue
             subscriber_id: pppoe_revenue.subscriber_id)
 
     end
-      SubscriberWalletBalance.create(
+       @subscriber_wallet_balance = SubscriberWalletBalance.first_or_initialize(
         subscriber_id: pppoe_revenue.subscriber_id,
+        amount: total_wallet_balance,
+       account_id: pppoe_revenue.account_id
+      )
+      @subscriber_wallet_balance.update(
+         subscriber_id: pppoe_revenue.subscriber_id,
         amount: total_wallet_balance,
        account_id: pppoe_revenue.account_id
       )
