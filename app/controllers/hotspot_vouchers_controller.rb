@@ -704,7 +704,7 @@ paid_amount = data["TransAmount"].to_i
         
   subscriber_phone_number = Subscriber.find_by(id: subscription.subscriber_id).phone_number
 
-
+pppoe_package = Package.find_by(name: subscription.package_name)
 
    pppoe_revenue = PpPoeMpesaRevenue.create(
       amount: data["TransAmount"],
@@ -718,17 +718,42 @@ paid_amount = data["TransAmount"].to_i
       subscriber_id: subscription.subscriber_id
 
     )
+
+    if pppoe_package.price === data["TransAmount"].to_i
      SubscriberTransaction.create!(
-            type: 'Deposit',
-            credit: pppoe_revenue.credit,
+            type: 'Payment',
             debit: pppoe_revenue.amount,
             date:  pppoe_revenue.time_paid,
-            title:  pppoe_revenue.reference,
-            description: 'Payment for package subscription made via M-Pesa',
+            title:  pppoe_package.name,
+            description: "Payment for internet subscription",
             account_id:  pppoe_revenue.account_id,
             subscriber_id: pppoe_revenue.subscriber_id
           )
 
+
+
+
+          SubscriberTransaction.create!(
+            type: 'Deposit',
+            debit: pppoe_revenue.amount,
+            date:  pppoe_revenue.time_paid,
+            title:  pppoe_package.reference,
+            description: "Payment made via M-Pesa",
+            account_id:  pppoe_revenue.account_id,
+            subscriber_id: pppoe_revenue.subscriber_id
+          )
+
+    else
+      SubscriberTransaction.create!(
+            type: 'Deposit',
+            debit: pppoe_revenue.amount,
+            date:  pppoe_revenue.time_paid,
+            title:  pppoe_package.reference,
+            description: "Payment made via M-Pesa",
+            account_id:  pppoe_revenue.account_id,
+            subscriber_id: pppoe_revenue.subscriber_id)
+
+    end
       SubscriberWalletBalance.create(
         subscriber_id: pppoe_revenue.subscriber_id,
         amount: pppoe_revenue.amount,
@@ -744,7 +769,7 @@ paid_amount = data["TransAmount"].to_i
         #   amount: package_amount_paid
         # )
 
-        if invoice.amount.to_s === data["TransAmount"]
+        if pppoe_package.price === data["TransAmount"].to_i
 
  invoice = SubscriberInvoice
   .where(
@@ -778,7 +803,7 @@ send_invoice_paid_notification = SubscriberSetting.find_by(account_id: found_sub
           end
 
 
-        if invoice.amount.to_s === data["TransAmount"]
+        if pppoe_package.price === data["TransAmount"].to_i
 
           if subscription.status === 'blocked'
              subscription.update!(status: 'active', expiry: Time.current + 30.days)
