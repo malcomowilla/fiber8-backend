@@ -3,10 +3,12 @@ class SubscriberTransactionSerializer < ActiveModel::Serializer
    :description, :account_id
 
 
+def date
+  return unless object.date.present?
 
-   def date
-     object.date.strftime("%B %d, %Y at %I:%M %p") if object.date.present?
-   end
+  date = object.date.is_a?(String) ? Time.parse(object.date) : object.date
+  date.strftime("%B %d, %Y at %I:%M %p")
+end
 end
 
 
