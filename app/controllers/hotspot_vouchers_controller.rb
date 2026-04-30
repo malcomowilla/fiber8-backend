@@ -699,14 +699,7 @@ end
         subscription = Subscription.find_by(subscriber_id: found_subscriber.id, 
         account_id: found_subscriber.account_id)
 paid_amount = data["TransAmount"].to_i
-          invoice = SubscriberInvoice
-  .where(
-    subscriber_id: found_subscriber.id,
-    account_id: found_subscriber.account_id,
-    status: "unpaid"
-  )
-  .order(:invoice_date)
-  .first
+         
 
         
   subscriber_phone_number = Subscriber.find_by(id: subscription.subscriber_id).phone_number
@@ -721,7 +714,7 @@ paid_amount = data["TransAmount"].to_i
       reference: data["TransID"],
       customer_name: data['FirstName'],
       payment_type: "Deposit",
-      account_id: invoice.account_id,
+      account_id: found_subscriber.account_id,
       subscriber_id: subscription.subscriber_id
 
     )
@@ -751,11 +744,23 @@ paid_amount = data["TransAmount"].to_i
         #   amount: package_amount_paid
         # )
 
+        if invoice.amount.to_s === data["TransAmount"]
+
+ invoice = SubscriberInvoice
+  .where(
+    subscriber_id: found_subscriber.id,
+    account_id: found_subscriber.account_id,
+    status: "unpaid"
+  )
+  .order(:invoice_date)
+  .first
+
        invoice.update!(status: 'paid', description: "Invoice paid for
            wifi package => #{subscription.package_name}",
            
            amount: paid_amount,
            )
+        end
 
            subscription.update(invoice_expired_created_at:  nil)
 
