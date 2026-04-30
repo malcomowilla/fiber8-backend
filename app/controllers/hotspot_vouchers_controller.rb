@@ -801,19 +801,25 @@ total_wallet_balance = PpPoeMpesaRevenue
 
 # company_name, account_no, tenant
 company_name = CompanySetting.find_by(account_id: subscription.account_id)
-send_invoice_paid_notification = SubscriberSetting.find_by(account_id: found_subscriber.account_id)&.invoice_created_or_paid
+# send_invoice_paid_notification = SubscriberSetting.find_by(account_id: found_subscriber.account_id)&.invoice_created_or_paid
 
-          if send_invoice_paid_notification
-        SendInvoicePaidJob.perform_now(
+        #   if send_invoice_paid_notification
+        # SendInvoicePaidJob.perform_now(
+        #   company_name.company_name,
+        #   bill_ref,
+        #   invoice.account,
+        #   subscriber_phone_number
+        # )
+        #   end
+
+
+        if pppoe_package.price === data["TransAmount"].to_i
+           SendInvoicePaidJob.perform_now(
           company_name.company_name,
           bill_ref,
           invoice.account,
           subscriber_phone_number
         )
-          end
-
-
-        if pppoe_package.price === data["TransAmount"].to_i
 
           if subscription.status === 'blocked'
              subscription.update!(status: 'active', expiry: Time.current + 30.days)
