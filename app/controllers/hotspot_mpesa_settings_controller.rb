@@ -65,7 +65,7 @@ if current_user
     # @hotspot_mpesa_settings =  HotspotMpesaSetting.find_by(account_type: params[:account_type])
     # render json: @hotspot_mpesa_settings
 
-     @hotspot_mpesa_settings =  HotspotMpesaSetting.all
+     @hotspot_mpesa_settings = HotspotMpesaSetting.all
     render json: @hotspot_mpesa_settings
   end
 
@@ -74,7 +74,8 @@ if current_user
 
 
   def get_mpesa_settings
-@mpesa_setting = HotspotMpesaSetting.find_by(account_type: params[:account_type])
+# @mpesa_setting = HotspotMpesaSetting.find_by(account_type: params[:account_type])
+@mpesa_setting =  HotspotMpesaSetting.all
 render json: @mpesa_setting, serializer: MpesaSettingSerializer
   end
 
