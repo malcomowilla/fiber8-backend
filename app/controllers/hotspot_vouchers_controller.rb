@@ -696,7 +696,7 @@ end
   
   found_subscriber = Subscriber.find_by(ref_no:  bill_ref)
   nas_routers = NasRouter.where(account_id: found_subscriber.account_id)
-        subscription = Subscription.find_by(id: found_subscriber.id, 
+        subscription = Subscription.find_by(subscriber_id: found_subscriber.id, 
         account_id: found_subscriber.account_id)
 paid_amount = data["TransAmount"].to_i
           invoice = SubscriberInvoice
