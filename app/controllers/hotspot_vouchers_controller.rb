@@ -710,6 +710,37 @@ paid_amount = data["TransAmount"].to_i
 
         
   subscriber_phone_number = Subscriber.find_by(id: subscription.subscriber_id).phone_number
+
+
+
+   pppoe_revenue = PpPoeMpesaRevenue.create(
+      amount: data["TransAmount"],
+      payment_method: "Mpesa",
+      time_paid: data["TransTime"],
+      account_number:  bill_ref,
+      reference: data["TransID"],
+      customer_name: data['FirstName'],
+      payment_type: "Deposit",
+      account_id: invoice.account_id,
+      subscriber_id: subscription.subscriber_id
+
+    )
+     SubscriberTransaction.create!(
+            type: 'Deposit',
+            credit: pppoe_revenue.credit,
+            debit: pppoe_revenue.amount,
+            date:  pppoe_revenue.time_paid,
+            title:  pppoe_revenue.reference,
+            description: 'Payment for package subscription made via M-Pesa',
+            account_id:  pppoe_revenue.account_id,
+            subscriber_id: pppoe_revenue.subscriber_id
+          )
+
+      SubscriberWalletBalance.create(
+        subscriber_id: pppoe_revenue.subscriber_id,
+        amount: pppoe_revenue.amount,
+        account_id: pppoe_revenue.account_id
+      )
         # package_amount_paid = data["TransAmount"]
   expiration_time = Time.parse(subscription.expiration_date.to_s)
 
@@ -730,7 +761,7 @@ paid_amount = data["TransAmount"].to_i
 
 # company_name, account_no, tenant
 company_name = CompanySetting.find_by(account_id: invoice.account_id)
-send_invoice_paid_notification = SubscriberSetting.find_by(account_id: 21).invoice_created_or_paid
+send_invoice_paid_notification = SubscriberSetting.find_by(account_id: found_subscriber.account_id)&.invoice_created_or_paid
 
           if send_invoice_paid_notification
         SendInvoicePaidJob.perform_now(
@@ -779,34 +810,7 @@ end
 
    
 
-    pppoe_revenue = PpPoeMpesaRevenue.create(
-      amount: data["TransAmount"],
-      payment_method: "Mpesa",
-      time_paid: data["TransTime"],
-      account_number:  bill_ref,
-      reference: data["TransID"],
-      customer_name: data['FirstName'],
-      payment_type: "Deposit",
-      account_id: invoice.account_id,
-      subscriber_id: subscription.subscriber_id
-
-    )
-     SubscriberTransaction.create!(
-            type: 'Deposit',
-            credit: pppoe_revenue.credit,
-            debit: pppoe_revenue.amount,
-            date:  pppoe_revenue.time_paid,
-            title:  pppoe_revenue.reference,
-            description: 'Payment for package subscription made via M-Pesa',
-            account_id:  pppoe_revenue.account_id,
-            subscriber_id: pppoe_revenue.subscriber_id
-          )
-
-      SubscriberWalletBalance.create(
-        subscriber_id: pppoe_revenue.subscriber_id,
-        amount: pppoe_revenue.amount,
-        account_id: pppoe_revenue.account_id
-      )
+   
   end
 
   head :ok
