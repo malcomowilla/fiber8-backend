@@ -740,7 +740,7 @@ total_wallet_balance = PpPoeMpesaRevenue
 
           SubscriberTransaction.create!(
             transaction_type: 'Deposit',
-            debit: pppoe_revenue.amount,
+            credit: pppoe_revenue.amount,
             date:  pppoe_revenue.time_paid,
             title:   pppoe_revenue.reference,
             description: "Payment made via M-Pesa",
@@ -751,7 +751,7 @@ total_wallet_balance = PpPoeMpesaRevenue
     else
       SubscriberTransaction.create!(
             transaction_type: 'Deposit',
-            debit: pppoe_revenue.amount,
+            credit: pppoe_revenue.amount,
             date:  pppoe_revenue.time_paid,
             title:  pppoe_revenue.reference,
             description: "Payment made via M-Pesa",
