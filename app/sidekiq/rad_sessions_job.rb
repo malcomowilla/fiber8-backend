@@ -44,7 +44,7 @@ class RadSessionsJob
 
 
     active_sessions = RadAcct.where(
-    framedprotocol: 'PPP',
+    # framedprotocol: 'PPP',
     acctstoptime: nil,
 
   ).where('acctupdatetime > ?', 3.minutes.ago)
