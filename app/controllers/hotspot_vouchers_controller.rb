@@ -726,7 +726,7 @@ total_wallet_balance = PpPoeMpesaRevenue
 
     if pppoe_package.price === data["TransAmount"].to_i
      SubscriberTransaction.create!(
-            type: 'Payment',
+            transaction_type: 'Payment',
             debit: pppoe_revenue.amount,
             date:  pppoe_revenue.time_paid,
             title:  pppoe_package.name,
@@ -739,7 +739,7 @@ total_wallet_balance = PpPoeMpesaRevenue
 
 
           SubscriberTransaction.create!(
-            type: 'Deposit',
+            transaction_type: 'Deposit',
             debit: pppoe_revenue.amount,
             date:  pppoe_revenue.time_paid,
             title:   pppoe_revenue.reference,
@@ -750,7 +750,7 @@ total_wallet_balance = PpPoeMpesaRevenue
 
     else
       SubscriberTransaction.create!(
-            type: 'Deposit',
+            transaction_type: 'Deposit',
             debit: pppoe_revenue.amount,
             date:  pppoe_revenue.time_paid,
             title:  pppoe_revenue.reference,

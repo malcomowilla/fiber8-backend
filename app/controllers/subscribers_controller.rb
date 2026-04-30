@@ -20,8 +20,9 @@ before_action :set_time_zone
   Rails.logger.info "Setting time zone"
   Time.zone = GeneralSetting.first&.timezone || Rails.application.config.time_zone
     Rails.logger.info "Setting time zone #{Time.zone}"
-
 end
+
+
 
 
  def update_last_activity
