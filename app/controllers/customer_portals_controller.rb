@@ -8,6 +8,16 @@ class CustomerPortalsController < ApplicationController
 
 
 
+
+
+
+
+
+
+
+
+  
+
 def set_tenant
 
     
@@ -37,9 +47,8 @@ def set_tenant
     # account_no = Subscriber.find_by(ref_no: params[:password])
 
     customer = Subscriber.find_by(
-      ppoe_username: params[:username],
+     phone_number: params[:phone_number],
       ref_no: params[:password]
-      # ppoe_password: params[:password]
     )
 
     Rails.logger.info " customer => #{customer}"
