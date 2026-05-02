@@ -104,10 +104,10 @@ def set_tenant
                  .map(&:strip)                # trim each element
 
   # 2. Validate we have exactly one IP
-  # if ip_list.empty?
-  #   render json: { error: 'Private IP cannot be blank' }, status: :unprocessable_entity
-  #   return
-  # end
+  if ip_list.empty?
+    render json: { error: 'Private IP cannot be blank' }, status: :unprocessable_entity
+    return
+  end
 
   if ip_list.size > 1
     render json: { error: 'Only one private IP allowed when updating a single peer' }, status: :unprocessable_entity
