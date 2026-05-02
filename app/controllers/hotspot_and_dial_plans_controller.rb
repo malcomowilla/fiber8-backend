@@ -85,6 +85,8 @@ if current_user
 
 
 
+
+
   
   def allow_get_current_hotspot_and_dial_plan
     @plans = HotspotAndDialPlan.all

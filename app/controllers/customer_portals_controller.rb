@@ -36,26 +36,28 @@ def set_tenant
 
     # account_no = Subscriber.find_by(ref_no: params[:password])
 
-    @customer = Subscriber.find_by(
+    customer = Subscriber.find_by(
       ppoe_username: params[:username],
       ref_no: params[:password]
       # ppoe_password: params[:password]
     )
-        if @customer.nil?
+
+    Rails.logger.info " customer => #{customer}"
+        if customer.nil?
           render json: { error: 'User Not Found' }, status: :not_found and return
         end
 
 
        
-        if @customer
+        if customer
           # set_current_tenant(@user.account)
           # session[:user_id] = @user.id
           # reset_login_attempts 
-          token = generate_token(customer_id: @customer.id)
+          token = generate_token(customer_id: customer.id)
           cookies.encrypted.signed[:jwt_customer] = { value: token, httponly: true, secure: true,
          sameSite: 'strict'}
 
-render json:@customer,   status: :accepted  
+render json: customer,   status: :accepted  
 
       else
         render json: { error: 'Invalid username or password' }, status: :unauthorized
