@@ -109,7 +109,7 @@ if current_user
       
       @package = Package.all
    
-      render json: @package, each_serializer:  PackageSerializer
+      render json: @package, each_serializer: PackageSerializer
     end
   
             

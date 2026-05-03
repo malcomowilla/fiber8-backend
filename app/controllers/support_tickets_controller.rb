@@ -2,7 +2,7 @@ class SupportTicketsController < ApplicationController
   set_current_tenant_through_filter
   before_action :set_tenant
 
-  load_and_authorize_resource
+  load_and_authorize_resource except: [:allow_get_support_ticket]
 
   before_action :update_last_activity
   before_action :set_time_zone
@@ -49,7 +49,10 @@ rescue ActiveRecord::RecordNotFound
     render json: @support_tickets
   end
 
-  
+  def allow_get_support_ticket
+    @support_tickets = SupportTicket.where(subscriber_id: params[:subscriber_id])
+    render json: @support_tickets
+  end
 
   def total_tickets
     total_tickets = SupportTicket.count
@@ -83,6 +86,13 @@ end
 
 def create
   @support_ticket = SupportTicket.new(support_ticket_params)
+
+subscriber_id = Subscriber.find_by(name: @support_ticket.customer).id
+  @support_ticket.update(
+    subscriber_id: subscriber_id
+  ) 
+
+
 
   if @support_ticket.valid?
     tenant = ActsAsTenant.current_tenant

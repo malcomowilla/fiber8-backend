@@ -7,8 +7,9 @@ has_many :subscriber_invoices, dependent: :destroy
 has_many :system_admin_sms, dependent: :destroy
 has_one :subscriber_wallet_balance, dependent: :destroy
 has_many :subscriber_transactions, dependent: :destroy
-after_commit :broadcast_subscriber_stats, on: [:create, :update, :destroy]
+# after_commit :broadcast_subscriber_stats, on: [:create, :update, :destroy]
 has_many :pp_poe_mpesa_revenues
+has_many :support_tickets
 
       # before_create :set_default_status
 
@@ -20,13 +21,13 @@ has_many :pp_poe_mpesa_revenues
   # end
 
 
-def broadcast_subscriber_stats
-  subscriber_count = {
-    subscriber_count: Subscriber.count,
-  }
+# def broadcast_subscriber_stats
+#   subscriber_count = {
+#     subscriber_count: Subscriber.count,
+#   }
 
-  SubscriberChannel.broadcast_to(account, subscriber_count)
-end
+#   SubscriberChannel.broadcast_to(account, subscriber_count)
+# end
   
 
     def update_subscriber_status

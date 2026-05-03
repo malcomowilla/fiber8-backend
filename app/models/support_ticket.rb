@@ -1,8 +1,8 @@
 class SupportTicket < ApplicationRecord
   auto_increment :sequence_number
   acts_as_tenant(:account)
-
-  after_commit :broadcast_ticket_stats, on: [:create, :update, :destroy]
+  belongs_to :subscriber, optional: true
+  # after_commit :broadcast_ticket_stats, on: [:create, :update, :destroy]
 
   def broadcast_ticket_stats
     tickets_data = {

@@ -1,6 +1,8 @@
 class PpPoeMpesaRevenuesController < ApplicationController
 
   set_current_tenant_through_filter
+  load_and_authorize_resource except: [:allow_pp_poe_mpesa_revenues]
+
   before_action :set_tenant
   before_action :update_last_activity
   before_action :set_time_zone
@@ -45,6 +47,10 @@ end
   
 
 
+def allow_pp_poe_mpesa_revenues
+  @pp_poe_mpesa_revenues = PpPoeMpesaRevenue.where(subscriber_id: params[:subscriber_id])
+  render json: @pp_poe_mpesa_revenues
+end
 
 
 

@@ -85,7 +85,7 @@ mount ActionCable.server => '/cable'
 mount Sidekiq::Web => "/sidekiq" 
 
 scope '/api' do
-
+    
     resources :access_point_settings
     resources :partners
 
@@ -159,6 +159,15 @@ resources :company_ids
 end
 
 
+
+get '/api/allow_get_support_ticket', to: "support_tickets#allow_get_support_ticket"
+get '/allow_get_support_ticket', to: "support_tickets#allow_get_support_ticket"
+
+get '/api/allow_get_pp_poe_mpesa_revenues', to: "pp_poe_mpesa_revenues#allow_pp_poe_mpesa_revenues"
+get '/allow_get_pp_poe_mpesa_revenues', to: "pp_poe_mpesa_revenues#allow_pp_poe_mpesa_revenues"
+
+get '/api/allow_get_subscriptions', to: 'subscriptions#allow_get_subscriptions'
+get '/allow_get_subscriptions', to: 'subscriptions#allow_get_subscriptions'
 
 post '/api/change_password', to: 'sessions#change_password'
 get '/api/ppoe_mpesa_revenue_summary', to: 'pp_poe_mpesa_revenues#revenue_summary'
@@ -280,9 +289,14 @@ get '/api/get_qr_code', to: 'qr_codes#make_qr_code'
 get '/get_qr_code', to: 'qr_codes#make_qr_code'
 
 post '/api/customer-logout', to: 'customer_portals#customer_logout'
+post '/customer-logout', to: 'customer_portals#customer_logout'
+
 post '/api/customer-login', to: 'customer_portals#customer_login'
+post '/customer-login', to: 'customer_portals#customer_login'
 
 get '/api/current_customer', to: 'customer_portals#currently_logged_in_customer'
+get '/current_customer', to: 'customer_portals#currently_logged_in_customer'
+
 get '/devices', to: 'acs_testing#index'
   post '/api/send_bulk_sms', to: 'send_bulk_sms#send_sms'
   post '/api/wireguard/generate_wireguard_app_config', to: 'wireguard#generate_wireguard_app_config'

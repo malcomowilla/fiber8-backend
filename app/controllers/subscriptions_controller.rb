@@ -10,7 +10,7 @@ require 'open3'
 set_current_tenant_through_filter
 before_action :set_current_tenant
 
-load_and_authorize_resource
+load_and_authorize_resource except: [:allow_get_subscriptions]
 before_action :update_last_activity
 before_action :set_time_zone
 
@@ -622,7 +622,11 @@ end
   end
 
 
+def allow_get_subscriptions
+    @subscriptions = Subscription.where(subscriber_id: params[:subscriber_id])
 
+    render json: @subscriptions
+  end
 
 
   def get_ips
