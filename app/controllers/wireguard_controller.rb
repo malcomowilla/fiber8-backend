@@ -545,7 +545,12 @@ router.update(
     server_ip: server_ip,
     network: "#{network_address}/#{subnet_mask}",
     private_key: client_private_key,
-    public_key: client_public_key
+    public_key: client_public_key,
+      # NEW — returned to frontend for display + script injection
+  api_username:     api_username,
+  api_password:     api_password,
+  router_id:        router.id,
+  router_ip:        random_ip.to_s,
   }
 end
 
