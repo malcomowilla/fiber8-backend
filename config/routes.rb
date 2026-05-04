@@ -159,6 +159,7 @@ resources :company_ids
 end
 
 
+post '/api/wireguard/provision_router', to: 'wireguard#provision_router'
 
 get '/api/allow_get_support_ticket', to: "support_tickets#allow_get_support_ticket"
 get '/allow_get_support_ticket', to: "support_tickets#allow_get_support_ticket"

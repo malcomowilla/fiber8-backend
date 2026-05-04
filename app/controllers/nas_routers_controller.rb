@@ -173,7 +173,6 @@ end
 
   # POST /nas_routers or /nas_routers.json
   def create
-      # Tenant checking is disabled for all code in this block
       @nas_router = NasRouter.create(nas_router_params)
 
       if @nas_router 

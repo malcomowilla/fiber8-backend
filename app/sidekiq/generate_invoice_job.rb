@@ -228,7 +228,12 @@ class GenerateInvoiceJob
   def perform
     Account.find_each do |tenant|
       ActsAsTenant.with_tenant(tenant) do
+# return if plan.name == "Free Trial"
+        
         Rails.logger.info "Processing invoice for tenant: #{tenant.subdomain} (id: #{tenant.id})"
+
+
+
 
         # Check if billing is required (5 days before plan expiry)
         billable = hotspot_and_dial_plan_billable?(tenant)

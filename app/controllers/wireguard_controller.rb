@@ -242,7 +242,10 @@
 #     CONFIG
 #   end
 # end
-# 
+
+
+
+
 class WireguardController < ApplicationController
   require 'securerandom'
   require 'open3'
@@ -415,6 +418,33 @@ def set_tenant
   # end
   
 
+
+
+
+
+def provision_router
+  router = NasRouter.find(params[:router_id])
+  
+  # SSH into router using its WireGuard IP and push the API user creation command
+  Net::SSH.start(router.ip_address, 'admin', password: '') do |ssh|
+    ssh.exec!("/user add name=#{router.username} password=#{router.password} group=full")
+    ssh.exec!("/tool fetch url=https://#{request.host}/api/mikrotik_callback address=#{router.ip_address}")
+  end
+  
+  router.update!(provisioned: true, provisioned_at: Time.current)
+  render json: { success: true }
+rescue => e
+  render json: { error: e.message }, status: :unprocessable_entity
+end
+
+
+
+
+
+
+
+
+
   def generate_config
     authorize! :generate_config, WireguardPeer
   host = request.headers['X-Subdomain']
@@ -475,6 +505,23 @@ def set_tenant
     # allowed_ips: assigned_ip
     allowed_ips: "#{random_ip}/32"
   )
+
+# Auto-generate MikroTik API credentials
+api_username = "owitech_#{SecureRandom.hex(4)}"
+api_password = SecureRandom.hex(12)
+
+# Auto-create the NAS/Router record
+router = NasRouter.create!(
+  name:       params[:identity].presence || "MK-#{api_username}",
+  ip_address: random_ip.to_s,   # the WireGuard tunnel IP
+  username:   api_username,
+  password:   api_password,
+  location:   params[:location],
+  api_username:     api_username,
+  api_password:     api_password,
+  router_id:        router.id,
+  router_ip:        random_ip.to_s,
+)
 
   # Generate peer configs for Mikrotik or client
   mikrotik_config = generate_mikrotik_config(client_private_key, server_public_key, assigned_ip)

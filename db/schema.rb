@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_05_03_064126) do
+ActiveRecord::Schema[7.2].define(version: 2026_05_04_074224) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -657,6 +657,10 @@ ActiveRecord::Schema[7.2].define(version: 2026_05_03_064126) do
     t.string "last_status"
     t.datetime "last_status_changed_at"
     t.datetime "last_notification_sent_at"
+    t.string "api_username"
+    t.string "api_password"
+    t.string "router_id"
+    t.string "router_ip"
     t.index ["account_id"], name: "index_nas_routers_on_account_id"
   end
 
