@@ -519,7 +519,10 @@ router = NasRouter.create!(
   location:   params[:location],
   api_username:     api_username,
   api_password:     api_password,
-  router_id:        router.id,
+ 
+)
+router.update(
+   router_id:        router.id,
   router_ip:        random_ip.to_s,
 )
 
