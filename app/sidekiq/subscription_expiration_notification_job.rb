@@ -118,7 +118,7 @@ end
     uri.query = URI.encode_www_form(params)
 
     response = Net::HTTP.get_response(uri)
-    handle_sms_response(response, original_message, phone_number)
+    handle_sms_response(response, original_message, phone_number, tenant)
   end
 
 
@@ -162,7 +162,7 @@ end
     uri.query = URI.encode_www_form(params)
 
     response = Net::HTTP.get_response(uri)
-    handle_sms_response(response, original_message, phone_number)
+    handle_sms_response(response, original_message, phone_number, tenant)
   end
 
 

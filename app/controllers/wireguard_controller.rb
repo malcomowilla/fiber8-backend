@@ -421,17 +421,17 @@ def set_tenant
 
 
 
-
 def provision_router
   router = NasRouter.find(params[:router_id])
   
   # SSH into router using its WireGuard IP and push the API user creation command
   Net::SSH.start(router.ip_address, 'admin', password: '') do |ssh|
     ssh.exec!("/user add name=#{router.username} password=#{router.password} group=full")
+   
     ssh.exec!("/tool fetch url=https://#{request.host}/api/mikrotik_callback address=#{router.ip_address}")
   end
   
-  router.update!(provisioned: true, provisioned_at: Time.current)
+  # router.update!(provisioned: true, provisioned_at: Time.current)
   render json: { success: true }
 rescue => e
   render json: { error: e.message }, status: :unprocessable_entity
@@ -671,6 +671,7 @@ end
 
       add chain=input action=drop protocol=tcp src-address=!10.2.0.1 dst-port=21,22,23 log=yes log-prefix="drop, ssh,telnet" comment="Drop ssh telnet if not from wireguard server"
 
+      
     
     CONFIG
   end

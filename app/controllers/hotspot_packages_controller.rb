@@ -290,6 +290,9 @@ def create
  update_freeradius_policies(params[:name], 
  params[:shared_users], params[:upload_limit], params[:download_limit],
         params[:weekdays], @hotspot_package.account_id)
+
+
+        
     if @hotspot_package.save
     
            ActivtyLog.create(action: 'create', ip: request.remote_ip,
