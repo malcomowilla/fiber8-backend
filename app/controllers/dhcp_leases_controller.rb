@@ -1,27 +1,14 @@
 # app/controllers/dhcp_leases_controller.rb
 #
-# Fetches live DHCP leases from a MikroTik router and returns them as JSON.
-# The router record is looked up by name within the current tenant.
-#
-# Route (config/routes.rb):
-#   namespace :api do
-#     get 'dhcp_leases', to: 'dhcp_leases#index'
-#   end
-#
 # GET /api/dhcp_leases?router=RouterName
+# Fetches live DHCP leases from a NasRouter via SSH (RouterOS /ip dhcp-server lease print terse)
+# Falls back to MikroTik REST API if api_username is present.
 #
-# Response:
-# [
-#   {
-#     "address":      "172.18.8.254",
-#     "mac_address":  "58:2B:CB:95:04:37",
-#     "host_name":    "DESKTOP-9ECACMJ",
-#     "server":       "dhcp3",
-#     "type":         "dynamic",       # or "static"
-#     "status":       "bound"          # MikroTik status field
-#   },
-#   ...
-# ]
+# NasRouter fields used:
+#   ip_address  → router's IP to connect to
+#   username    → SSH / REST API username
+#   password    → SSH / REST API password
+#   api_username, api_password → if present, REST API is used instead of SSH
 
 class DhcpLeasesController < ApplicationController
   set_current_tenant_through_filter
@@ -57,136 +44,156 @@ class DhcpLeasesController < ApplicationController
     leases = fetch_leases(router)
     render json: leases
   rescue => e
-    Rails.logger.error "DhcpLeasesController error: #{e.message}"
+    Rails.logger.error "DhcpLeasesController error: #{e.message}\n#{e.backtrace.first(5).join("\n")}"
     render json: { error: "Failed to fetch leases: #{e.message}" }, status: :internal_server_error
   end
 
   private
 
-  # ── MikroTik REST API ────────────────────────────────────────────────────────
-  # Requires MikroTik RouterOS v7+ with REST API enabled.
-  # Enable on the router: /ip/service set www-ssl disabled=no  (or www for HTTP)
-  #
-  # The router model should expose: host (IP/hostname), api_username, api_password,
-  # api_port (default 443 for HTTPS / 80 for HTTP), use_ssl (boolean).
-  #
-  # If you use the older MikroTik API gem (ros_api / mikrotik gem) instead of
-  # the REST API, swap in that logic inside fetch_via_api below.
-
   def fetch_leases(router)
-    # Try REST API first; fall back to SSH if configured
-    if router.respond_to?(:username) && router.username.present?
+    # Use REST API if api_username is populated, otherwise SSH with username/password
+    if router.api_username.present?
       fetch_via_rest_api(router)
-    elsif router.respond_to?(:ssh_username) && router.ssh_username.present?
+    elsif router.username.present?
       fetch_via_ssh(router)
     else
-      raise "Router '#{router.name}' has no API or SSH credentials configured"
+      raise "Router '#{router.name}' has no credentials (username is blank)"
     end
   end
 
-  # ── Option A: MikroTik REST API (RouterOS v7+) ───────────────────────────────
+  # ── MikroTik REST API (RouterOS v7+) ─────────────────────────────────────────
+  # Uses: router.ip_address, router.api_username, router.api_password
   def fetch_via_rest_api(router)
     require 'net/http'
     require 'uri'
     require 'json'
 
-    scheme   = router.try(:use_ssl) ? 'https' : 'http'
-    port     = router.try(:api_port) || (router.try(:use_ssl) ? 443 : 80)
-    host     = router.host
+    ip       = router.ip_address
     username = router.api_username
-    password = router.api_password
+    password = router.api_password.to_s
+    port     = 80   # change to 443 if HTTPS is enabled on the router
 
-    uri = URI("#{scheme}://#{host}:#{port}/rest/ip/dhcp-server/lease")
+    uri = URI("http://#{ip}:#{port}/rest/ip/dhcp-server/lease")
 
-    http = Net::HTTP.new(uri.host, uri.port)
-    http.use_ssl       = (scheme == 'https')
-    http.verify_mode   = OpenSSL::SSL::VERIFY_NONE   # set VERIFY_PEER in production with cert
-    http.open_timeout  = 8
-    http.read_timeout  = 12
+    http              = Net::HTTP.new(uri.host, uri.port)
+    http.open_timeout = 8
+    http.read_timeout = 12
 
     request = Net::HTTP::Get.new(uri)
     request.basic_auth(username, password)
     request['Content-Type'] = 'application/json'
 
     response = http.request(request)
-    raise "MikroTik API returned #{response.code}" unless response.is_a?(Net::HTTPSuccess)
+    raise "MikroTik REST API returned HTTP #{response.code}: #{response.body.truncate(200)}" \
+      unless response.is_a?(Net::HTTPSuccess)
 
-    raw_leases = JSON.parse(response.body)
-    normalize_rest_leases(raw_leases)
+    normalize_rest_leases(JSON.parse(response.body))
   end
 
-  # Map REST API fields → our standard shape
-  # REST API returns keys like: ".id", "address", "mac-address", "host-name",
-  #   "server", "status", "dynamic", "expires-after", "active-address", etc.
   def normalize_rest_leases(raw)
     raw.map do |l|
       {
-        address:     l['address']      || l['active-address'] || '',
-        mac_address: (l['mac-address'] || '').upcase,
-        host_name:   l['host-name']    || l['comment'] || '',
-        server:      l['server']       || '',
-        type:        l['dynamic'] == 'true' ? 'dynamic' : 'static',
-        status:      l['status']       || 'bound',
+        address:       l['address']      || l['active-address'] || '',
+        mac_address:   (l['mac-address'] || '').upcase,
+        host_name:     l['host-name']    || l['comment']        || '',
+        server:        l['server']       || '',
+        type:          l['dynamic'] == 'true' ? 'dynamic' : 'static',
+        status:        l['status']       || 'bound',
         expires_after: l['expires-after'] || '',
       }
     end.reject { |l| l[:mac_address].blank? }
   end
 
-  # ── Option B: SSH fallback ────────────────────────────────────────────────────
-  # Requires the 'net-ssh' gem:  gem 'net-ssh'
-  # Router model needs: host, ssh_username, ssh_password (or ssh_key_path)
+  # ── SSH ───────────────────────────────────────────────────────────────────────
+  # Uses: router.ip_address, router.username, router.password
+  # Requires gem 'net-ssh' in Gemfile
   def fetch_via_ssh(router)
     require 'net/ssh'
 
-    output = ''
+    ip       = router.ip_address
+    username = router.username
+    password = router.password.to_s
+    output   = ''
 
-    ssh_opts = {
-      auth_methods:    ['password', 'keyboard-interactive'],
-      password:        router.ssh_password,
+    Rails.logger.info "DhcpLeasesController: SSH to #{ip} as #{username}"
+
+    Net::SSH.start(ip, username,
+      password:        password,
+      auth_methods:    %w[password keyboard-interactive],
       non_interactive: true,
-      timeout:         10,
-      # If using key auth instead:
-      # keys:          [router.ssh_key_path],
-      # auth_methods:  ['publickey'],
-    }
-
-    Net::SSH.start(router.host, router.ssh_username, ssh_opts) do |ssh|
-      # Print lease table with terse flag for machine-readable output
+      timeout:         12,
+      verify_host_key: :never   # MikroTik uses a self-signed host key
+    ) do |ssh|
       output = ssh.exec!('/ip dhcp-server lease print terse')
     end
 
+    Rails.logger.debug "DhcpLeasesController SSH raw output:\n#{output}"
     parse_ssh_leases(output)
   end
 
-  # Parse MikroTik "print terse" output:
-  # 0 D address=172.18.8.254 mac-address=58:2B:CB:95:04:37 host-name=DESKTOP server=dhcp3 ...
+  # Parses both MikroTik output formats:
+  #
+  # terse format (key=value pairs):
+  #   0 D address=172.18.8.254 mac-address=58:2B:CB:95:04:37 host-name=DESKTOP-9ECACMJ server=dhcp3
+  #   1   address=10.2.0.5 mac-address=AA:BB:CC:DD:EE:FF host-name=SmartTV server=dhcp1
+  #
+  # columnar format (if terse not supported):
+  #   Flags: D - DYNAMIC
+  #   #   ADDRESS       MAC-ADDRESS        HOST-NAME    SERVER
+  #   0   172.18.8.254  58:2B:CB:95:04:37  DESKTOP      dhcp3
   def parse_ssh_leases(raw_output)
-    leases = []
+    leases     = []
+    in_columns = false
 
     raw_output.to_s.each_line do |line|
-      line = line.strip
-      next if line.blank? || line.start_with?('Flags:') || line.start_with?('Columns:') || line.start_with?('#')
+      line = line.rstrip
+      next if line.blank?
+      next if line.match?(/^\s*Flags:/i)
 
-      # Detect dynamic flag (D at start of flags column)
-      is_dynamic = line.match?(/^\d+\s+D\b/i)
+      # terse format — line contains key=value pairs
+      if line.include?('=')
+        is_dynamic = line.match?(/^\s*\d+\s+D\b/i)
 
-      fields = {}
-      # Extract key=value pairs (values may be quoted or unquoted)
-      line.scan(/(\S+)=("(?:[^"]*)"|[\S]+)/) do |key, val|
-        fields[key] = val.delete('"')
+        fields = {}
+        line.scan(/([a-z][\w\-]*)=("(?:[^"]*)"|[^\s]+)/i) do |key, val|
+          fields[key.downcase] = val.delete('"')
+        end
+
+        next if fields['mac-address'].blank?
+
+        leases << {
+          address:       fields['address']       || fields['active-address'] || '',
+          mac_address:   fields['mac-address'].upcase,
+          host_name:     fields['host-name']     || fields['comment']        || '',
+          server:        fields['server']        || '',
+          type:          is_dynamic ? 'dynamic' : 'static',
+          status:        fields['status']        || 'bound',
+          expires_after: fields['expires-after'] || '',
+        }
+
+      # columnar format — header row
+      elsif line.match?(/^\s*#\s+ADDRESS/i)
+        in_columns = true
+
+      # columnar format — data rows
+      elsif in_columns && line.match?(/^\s*\d+/)
+        is_dynamic = line.match?(/^\s*\d+\s+D\b/i)
+        cells      = line.strip.split(/\s{2,}/)
+        cells.shift  # remove the row index cell ("0", "1 D", etc.)
+
+        mac = (cells[1] || '').strip.upcase
+        next if mac.blank?
+
+        leases << {
+          address:       (cells[0] || '').strip,
+          mac_address:   mac,
+          host_name:     (cells[2] || '').strip,
+          server:        (cells[3] || '').strip,
+          type:          is_dynamic ? 'dynamic' : 'static',
+          status:        'bound',
+          expires_after: '',
+        }
       end
-
-      next if fields['mac-address'].blank?
-
-      leases << {
-        address:     fields['address']      || fields['active-address'] || '',
-        mac_address: (fields['mac-address'] || '').upcase,
-        host_name:   fields['host-name']    || fields['comment']       || '',
-        server:      fields['server']       || '',
-        type:        is_dynamic ? 'dynamic' : 'static',
-        status:      fields['status']       || 'bound',
-        expires_after: fields['expires-after'] || '',
-      }
     end
 
     leases
