@@ -1,21 +1,23 @@
+# app/controllers/ip_bindings_controller.rb
+#
+# Manages hotspot IP bindings (MAC bypass) — syncs with MikroTik via SSH.
+#
+# On create → adds   /ip hotspot ip-binding type=bypassed to MikroTik
+# On update → finds old entry by MAC and replaces it
+# On destroy → removes the binding from MikroTik then deletes the DB record
+
 class IpBindingsController < ApplicationController
-  before_action :set_ip_binding, only: %i[ show edit update destroy ]
-
-
+  before_action :set_ip_binding, only: %i[show edit update destroy]
 
   set_current_tenant_through_filter
   before_action :set_tenant
+  before_action :update_last_activity
+  before_action :set_time_zone
 
-    before_action :update_last_activity
-    before_action :set_time_zone
+  # ── tenant / housekeeping ────────────────────────────────────────────────────
 
-
-
-
-
-
-def set_tenant
-    host = request.headers['X-Subdomain']
+  def set_tenant
+    host     = request.headers['X-Subdomain']
     @account = Account.find_by!(subdomain: host)
     ActsAsTenant.current_tenant = @account
     EmailConfiguration.configure(@account, ENV['SYSTEM_ADMIN_EMAIL'])
@@ -23,114 +25,216 @@ def set_tenant
     render json: { error: 'Invalid tenant' }, status: :not_found
   end
 
-
-
-
-
-
-    def set_time_zone
-  Rails.logger.info "Setting time zone"
-  Time.zone = GeneralSetting.first&.timezone || Rails.application.config.time_zone
-    Rails.logger.info "Setting time zone #{Time.zone}"
-
-end
-
-
-  def update_last_activity
-if current_user
-      current_user.update!(last_activity_active:Time.current)
-    end
-    
+  def set_time_zone
+    Time.zone = GeneralSetting.first&.timezone || Rails.application.config.time_zone
   end
 
+  def update_last_activity
+    current_user&.update!(last_activity_active: Time.current)
+  end
 
+  # ── CRUD ─────────────────────────────────────────────────────────────────────
 
-
-  # GET /ip_bindings or /ip_bindings.json
+  # GET /api/ip_bindings
   def index
     @ip_bindings = IpBinding.all
     render json: @ip_bindings
   end
 
-  # GET /ip_bindings/1 or /ip_bindings/1.json
+  # GET /api/ip_bindings/:id
   def show
+    render json: @ip_binding
   end
 
-  # GET /ip_bindings/new
-  def new
-    @ip_binding = IpBinding.new
-  end
-
-  # GET /ip_bindings/1/edit
-  def edit
-  end
-
-  # POST /ip_bindings or /ip_bindings.json
+  # POST /api/ip_bindings
   def create
     @ip_binding = IpBinding.new(
-router: params[:router],
-name: params[:name],
-package: params[:package],
-mac: params[:mac],
-ip: params[:ip],
-expiry: params[:expiry],
- device_type: [:device_type],
- router_id: params[:router_id]
-
-
-
-
-
-
-
+      router:      params[:router],
+      name:        params[:name],
+      package:     params[:package],
+      mac:         params[:mac],
+      ip:          params[:ip],
+      expiry:      params[:expiry],
+      device_type: params[:device_type],   # ← fixed: was [:device_type]
+      router_id:   params[:router_id],
     )
 
-      if @ip_binding.save
-       render json: @ip_binding 
+    if @ip_binding.save
+      # Push to MikroTik — failure is non-fatal so the DB record is kept
+      mikrotik_result = mikrotik_add_binding(@ip_binding)
+      if mikrotik_result[:error]
+        Rails.logger.warn "MikroTik add failed for #{@ip_binding.mac}: #{mikrotik_result[:error]}"
+        render json: @ip_binding.as_json.merge(mikrotik_warning: mikrotik_result[:error]), status: :created
       else
-       render json: @ip_binding.errors, status: :unprocessable_entity 
+        render json: @ip_binding, status: :created
       end
+    else
+      render json: @ip_binding.errors, status: :unprocessable_entity
+    end
   end
 
-  # PATCH/PUT /ip_bindings/1 or /ip_bindings/1.json
+  # PUT/PATCH /api/ip_bindings/:id
   def update
-                @ip_binding = set_ip_binding
-      if @ip_binding.update(
-        router: params[:router],
-name: params[:name],
-package: params[:package],
-mac: params[:mac],
-ip: params[:ip],
-expiry: params[:expiry],
- device_type: [:device_type],
- router_id: params[:router_id]
-      )
-               render json: @ip_binding 
+    old_mac = @ip_binding.mac   # remember before overwrite
 
+    if @ip_binding.update(
+      router:      params[:router],
+      name:        params[:name],
+      package:     params[:package],
+      mac:         params[:mac],
+      ip:          params[:ip],
+      expiry:      params[:expiry],
+      device_type: params[:device_type],   # ← fixed
+      router_id:   params[:router_id],
+    )
+      # Remove old binding (by old MAC) then add new one
+      mikrotik_result = mikrotik_update_binding(@ip_binding, old_mac)
+      if mikrotik_result[:error]
+        Rails.logger.warn "MikroTik update failed for #{@ip_binding.mac}: #{mikrotik_result[:error]}"
+        render json: @ip_binding.as_json.merge(mikrotik_warning: mikrotik_result[:error])
       else
-         render json: @ip_binding.errors, status: :unprocessable_entity 
+        render json: @ip_binding
       end
-    
+    else
+      render json: @ip_binding.errors, status: :unprocessable_entity
+    end
   end
 
-  # DELETE /ip_bindings/1 or /ip_bindings/1.json
+  # DELETE /api/ip_bindings/:id
   def destroy
-     @ip_binding = IpBinding.find(params[:id])
-    @ip_binding.destroy!
+    # Remove from MikroTik first, then delete DB record regardless of MikroTik outcome
+    mikrotik_result = mikrotik_remove_binding(@ip_binding)
+    if mikrotik_result[:error]
+      Rails.logger.warn "MikroTik remove failed for #{@ip_binding.mac}: #{mikrotik_result[:error]}"
+    end
 
-       head :no_content 
-   
+    @ip_binding.destroy!
+    head :no_content
   end
 
   private
-    # Use callbacks to share common setup or constraints between actions.
-    def set_ip_binding
-      @ip_binding = IpBinding.find(params[:id])
+
+  def set_ip_binding
+    @ip_binding = IpBinding.find(params[:id])
+  end
+
+  def ip_binding_params
+    params.require(:ip_binding).permit(:router, :name, :package, :mac, :ip,
+                                       :expiry, :device_type, :account_id, :router_id)
+  end
+
+  # ── MikroTik SSH helpers ─────────────────────────────────────────────────────
+
+  # Looks up the NasRouter record for this binding.
+  # Tries router_id first, then falls back to matching by name.
+  def find_nas_router(binding)
+    if binding.router_id.present?
+      NasRouter.find_by(id: binding.router_id)
+    else
+      NasRouter.find_by(name: binding.router)
+    end
+  end
+
+  # Opens an SSH session to the router and yields the channel.
+  # Returns { error: "message" } if anything goes wrong before the block.
+  def with_mikrotik_ssh(router)
+    require 'net/ssh'
+
+    ip       = router.ip_address
+    username = router.username
+    password = router.password.to_s
+
+    result = {}
+
+    Net::SSH.start(ip, username,
+      password:        password,
+      auth_methods:    %w[password keyboard-interactive],
+      non_interactive: true,
+      timeout:         15,
+      verify_host_key: :never,
+    ) do |ssh|
+      result = yield(ssh)
     end
 
-    # Only allow a list of trusted parameters through.
-    def ip_binding_params
-      params.require(:ip_binding).permit(:router, :name, :package, :mac, :ip, :expiry,
-       :device_type, :account_id, :router_id)
+    result
+  rescue Net::SSH::AuthenticationFailed => e
+    { error: "SSH auth failed for #{router.ip_address}: #{e.message}" }
+  rescue Errno::ECONNREFUSED, Errno::EHOSTUNREACH, Errno::ETIMEDOUT, Net::SSH::ConnectionTimeout => e
+    { error: "SSH connection to #{router.ip_address} failed: #{e.message}" }
+  rescue => e
+    { error: "SSH error: #{e.message}" }
+  end
+
+  # Runs a single command and returns its output string.
+  def ssh_exec(ssh, command)
+    Rails.logger.info "MikroTik SSH >> #{command}"
+    output = ssh.exec!(command).to_s.strip
+    Rails.logger.info "MikroTik SSH << #{output}" unless output.blank?
+    output
+  end
+
+  # Finds the MikroTik internal .id for a hotspot ip-binding by MAC address.
+  # Returns the .id string (e.g. "*1A") or nil if not found.
+  def mikrotik_find_binding_id(ssh, mac)
+    # Normalize MAC to MikroTik uppercase colon format
+    normalized = mac.upcase.gsub('-', ':')
+    output = ssh_exec(ssh, "/ip hotspot ip-binding print terse where mac-address=\"#{normalized}\"")
+
+    # terse line looks like:  0 mac-address=AA:BB:CC:DD:EE:FF ...
+    # We need the .id — fetch it via a value-only print
+    id_output = ssh_exec(ssh, "/ip hotspot ip-binding get [find mac-address=\"#{normalized}\"] .id")
+    id_output.blank? ? nil : id_output
+  end
+
+  # Builds the MikroTik add command for a binding record.
+  def build_add_command(binding)
+    mac        = binding.mac.upcase.gsub('-', ':')
+    cmd        = "/ip hotspot ip-binding add mac-address=\"#{mac}\" type=bypassed"
+    cmd       += " address=\"#{binding.ip}\""      if binding.ip.present?
+    cmd       += " comment=\"#{binding.name}\""    if binding.name.present?
+    cmd       += " server=all"    # apply to all hotspot servers; narrow down if needed
+    cmd
+  end
+
+  # ── public MikroTik operations ───────────────────────────────────────────────
+
+  def mikrotik_add_binding(binding)
+    router = find_nas_router(binding)
+    return { error: "Router not found for binding #{binding.id}" } unless router
+
+    with_mikrotik_ssh(router) do |ssh|
+      output = ssh_exec(ssh, build_add_command(binding))
+      # MikroTik returns empty string on success; any "failure:" prefix = error
+      output.downcase.start_with?('failure') ? { error: output } : {}
     end
+  end
+
+  def mikrotik_update_binding(binding, old_mac)
+    router = find_nas_router(binding)
+    return { error: "Router not found for binding #{binding.id}" } unless router
+
+    with_mikrotik_ssh(router) do |ssh|
+      # 1. Remove old entry (by old MAC) — ignore error if it doesn't exist
+      old_normalized = old_mac.upcase.gsub('-', ':')
+      remove_cmd     = "/ip hotspot ip-binding remove [find mac-address=\"#{old_normalized}\"]"
+      ssh_exec(ssh, remove_cmd)
+
+      # 2. Add new entry
+      output = ssh_exec(ssh, build_add_command(binding))
+      output.downcase.start_with?('failure') ? { error: output } : {}
+    end
+  end
+
+  def mikrotik_remove_binding(binding)
+    router = find_nas_router(binding)
+    return { error: "Router not found for binding #{binding.id}" } unless router
+
+    with_mikrotik_ssh(router) do |ssh|
+      mac        = binding.mac.upcase.gsub('-', ':')
+      remove_cmd = "/ip hotspot ip-binding remove [find mac-address=\"#{mac}\"]"
+      output     = ssh_exec(ssh, remove_cmd)
+      # Returns empty on success; "no such item" is also acceptable (already gone)
+      output.downcase.include?('failure') ? { error: output } : {}
+    end
+  end
 end
