@@ -189,10 +189,10 @@ class IpBindingsController < ApplicationController
   # Builds the MikroTik add command for a binding record.
   def build_add_command(binding)
     mac        = binding.mac.upcase.gsub('-', ':')
-    cmd        = "/ip hotspot ip-binding add mac-address=\"#{mac}\" type=bypassed server=hotspot1"
+    cmd        = "/ip hotspot ip-binding add mac-address=\"#{mac}\" type=bypassed"
     cmd       += " address=\"#{binding.ip}\""      if binding.ip.present?
     cmd       += " comment=\"#{binding.name}\""    if binding.name.present?
-    cmd       += " server=all"    # apply to all hotspot servers; narrow down if needed
+    cmd       += " server=hotspot1"    # apply to all hotspot servers; narrow down if needed
     cmd
   end
 
