@@ -47,31 +47,46 @@ class IpBindingsController < ApplicationController
   end
 
   # POST /api/ip_bindings
+  
   def create
-    @ip_binding = IpBinding.new(
-      router:      params[:router],
-      name:        params[:name],
-      package:     params[:package],
-      mac:         params[:mac],
-      ip:          params[:ip],
-      expiry:      params[:expiry],
-      device_type: params[:device_type],   # ← fixed: was [:device_type]
-      router_id:   params[:router_id],
-    )
+  @ip_binding = IpBinding.new(
+    router:      params[:router],
+    name:        params[:name],
+    package:     params[:package],
+    mac:         params[:mac],
+    ip:          params[:ip],
+    expiry:      params[:expiry],
+    device_type: params[:device_type],
+    router_id:   params[:router_id],
+  )
 
-    if @ip_binding.save
-      # Push to MikroTik — failure is non-fatal so the DB record is kept
-      mikrotik_result = mikrotik_add_binding(@ip_binding)
-      if mikrotik_result[:error]
-        Rails.logger.warn "MikroTik add failed for #{@ip_binding.mac}: #{mikrotik_result[:error]}"
-        render json: @ip_binding.as_json.merge(mikrotik_warning: mikrotik_result[:error]), status: :created
-      else
-        render json: @ip_binding, status: :created
+  if @ip_binding.save
+    mikrotik_result = mikrotik_add_binding(@ip_binding)
+
+    # ── NEW: create queue if a package is chosen ──────────────────────────
+    if @ip_binding.package.present?
+      queue_result = mikrotik_add_queue_for_binding(@ip_binding)
+      if queue_result[:error]
+        Rails.logger.warn "MikroTik queue create failed for #{@ip_binding.mac}: #{queue_result[:error]}"
       end
-    else
-      render json: @ip_binding.errors, status: :unprocessable_entity
     end
+    # ─────────────────────────────────────────────────────────────────────
+
+    if mikrotik_result[:error]
+      Rails.logger.info "MikroTik add failed for #{@ip_binding.mac}: #{mikrotik_result[:error]}"
+      render json: @ip_binding.as_json.merge(mikrotik_warning: mikrotik_result[:error]), status: :created
+    else
+      render json: @ip_binding, status: :created
+    end
+  else
+    render json: @ip_binding.errors, status: :unprocessable_entity
   end
+end
+
+
+
+
+
 
   # PUT/PATCH /api/ip_bindings/:id
   def update
@@ -101,16 +116,24 @@ class IpBindingsController < ApplicationController
   end
 
   # DELETE /api/ip_bindings/:id
-  def destroy
-    # Remove from MikroTik first, then delete DB record regardless of MikroTik outcome
-    mikrotik_result = mikrotik_remove_binding(@ip_binding)
-    if mikrotik_result[:error]
-      Rails.logger.warn "MikroTik remove failed for #{@ip_binding.mac}: #{mikrotik_result[:error]}"
-    end
-
-    @ip_binding.destroy!
-    head :no_content
+ def destroy
+  mikrotik_result = mikrotik_remove_binding(@ip_binding)
+  if mikrotik_result[:error]
+    Rails.logger.warn "MikroTik remove failed for #{@ip_binding.mac}: #{mikrotik_result[:error]}"
   end
+
+  # ── NEW: remove queue when binding is destroyed ───────────────────────
+  if @ip_binding.package.present?
+    queue_result = mikrotik_remove_queue_for_binding(@ip_binding)
+    if queue_result[:error]
+      Rails.logger.warn "MikroTik queue remove failed for #{@ip_binding.mac}: #{queue_result[:error]}"
+    end
+  end
+  # ─────────────────────────────────────────────────────────────────────
+
+  @ip_binding.destroy!
+  head :no_content
+end
 
   private
 
@@ -123,6 +146,105 @@ class IpBindingsController < ApplicationController
                                        :expiry, :device_type, :account_id, :router_id)
   end
 
+
+
+
+    def mikrotik_add_queue_for_binding(binding)
+    router = find_nas_router(binding)
+    return { error: "Router not found for binding #{binding.id}" } unless router
+
+    package = Package.find_by(name: binding.package, account_id: @account.id)
+    return { error: "Package '#{binding.package}' not found" } unless package
+
+    target_ip = binding.ip.presence
+    return { error: "No IP address on binding #{binding.id}, cannot create queue" } unless target_ip
+
+    queue_name = binding_queue_name(binding)
+
+    payload = {
+      name:               queue_name,
+      target:             target_ip,
+      "max-limit":        "#{package.upload_limit}M/#{package.download_limit}M",
+      "burst-threshold":  "#{package.burst_threshold_upload}M/#{package.burst_threshold_download}M",
+      "burst-limit":      "#{package.burst_upload_speed}M/#{package.burst_download_speed}M",
+      "burst-time":       "#{package.burst_time}/#{package.burst_time}",
+      comment:            "ipbinding_#{binding.id}_#{binding.name}"
+    }
+
+    uri = URI("http://#{router.ip_address}/rest/queue/simple/add")
+    req = Net::HTTP::Post.new(uri, 'Content-Type' => 'application/json')
+    req.basic_auth(router.username, router.password.to_s)
+    req.body = payload.to_json
+
+    res = Net::HTTP.start(uri.hostname, uri.port, open_timeout: 10, read_timeout: 10) do |http|
+      http.request(req)
+    end
+
+    if res.is_a?(Net::HTTPSuccess)
+      Rails.logger.info "[IpBindingsController] Queue '#{queue_name}' created for binding #{binding.id}"
+      {}
+    else
+      { error: "MikroTik rejected queue creation: #{res.body}" }
+    end
+  rescue => e
+    { error: e.message }
+  end
+
+  def mikrotik_remove_queue_for_binding(binding)
+    router = find_nas_router(binding)
+    return { error: "Router not found for binding #{binding.id}" } unless router
+
+    queue_name = binding_queue_name(binding)
+
+    # 1. Find the queue's internal .id
+    uri = URI("http://#{router.ip_address}/rest/queue/simple/find?name=#{URI.encode_www_form_component(queue_name)}")
+    req = Net::HTTP::Get.new(uri)
+    req.basic_auth(router.username, router.password.to_s)
+
+    res = Net::HTTP.start(uri.hostname, uri.port, open_timeout: 10, read_timeout: 10) do |http|
+      http.request(req)
+    end
+
+    unless res.is_a?(Net::HTTPSuccess)
+      return { error: "Could not search for queue '#{queue_name}': #{res.body}" }
+    end
+
+    ids = JSON.parse(res.body)
+    if ids.empty?
+      Rails.logger.info "[IpBindingsController] Queue '#{queue_name}' not found on router, skipping removal."
+      return {}
+    end
+
+    queue_id = ids.first  # MikroTik returns [".id"] strings in find results
+
+    # 2. Remove it
+    uri2 = URI("http://#{router.ip_address}/rest/queue/simple/remove")
+    req2 = Net::HTTP::Post.new(uri2, 'Content-Type' => 'application/json')
+    req2.basic_auth(router.username, router.password.to_s)
+    req2.body = { '.id' => queue_id }.to_json
+
+    res2 = Net::HTTP.start(uri2.hostname, uri2.port, open_timeout: 10, read_timeout: 10) do |http|
+      http.request(req2)
+    end
+
+    if res2.is_a?(Net::HTTPSuccess)
+      Rails.logger.info "[IpBindingsController] Queue '#{queue_name}' removed for binding #{binding.id}"
+      {}
+    else
+      { error: "Failed to remove queue '#{queue_name}': #{res2.body}" }
+    end
+  rescue => e
+    { error: e.message }
+  end
+
+
+
+  def binding_queue_name(binding)
+    "binding_#{binding.mac.upcase.gsub(':', '')}"
+  end
+
+
+  
   # ── MikroTik SSH helpers ─────────────────────────────────────────────────────
 
   # Looks up the NasRouter record for this binding.

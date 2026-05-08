@@ -287,9 +287,9 @@ def create
   @hotspot_package = HotspotPackage.new(hotspot_package_params)
   # use_radius = ActsAsTenant.current_tenant.&router_setting&.use_radius
 
-#  update_freeradius_policies(params[:name], 
-#  params[:shared_users], params[:upload_limit], params[:download_limit],
-#         params[:weekdays], @hotspot_package.account_id)
+ update_freeradius_policies(params[:name], 
+ params[:shared_users], params[:upload_limit], params[:download_limit],
+        params[:weekdays], @hotspot_package.account_id)
 
 
         
@@ -440,14 +440,14 @@ def update_freeradius_policies(package_name, shared_users,
     )
 
 
-    RadGroupReply.find_or_initialize_by(
-      groupname: group_name,
-      radiusattribute: 'Idle-Timeout',
+    # RadGroupReply.find_or_initialize_by(
+    #   groupname: group_name,
+    #   radiusattribute: 'Idle-Timeout',
 
-    ).update!(
-      op: ':=',
-      value: "3600"
-    )
+    # ).update!(
+    #   op: ':=',
+    #   value: "3600"
+    # )
     # Simultaneous use
     # RadGroupCheck.find_or_initialize_by(
     #   groupname: group_name,

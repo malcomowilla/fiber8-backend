@@ -1,0 +1,5 @@
+class RemoveExpiryFromIpBinding < ActiveRecord::Migration[7.2]
+  def change
+    remove_column :ip_bindings, :expiry, :string
+  end
+end

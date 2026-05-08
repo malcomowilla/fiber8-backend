@@ -1,6 +1,6 @@
 class IpBindingSerializer < ActiveModel::Serializer
   attributes :id, :router, :name, :package, :mac, :ip, :expiry, :device_type,
-   :account_id, :router_id, :created_at
+   :account_id, :router_id, :created_at, :expiry
 
 
 

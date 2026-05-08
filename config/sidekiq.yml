@@ -33,6 +33,12 @@ development:
       class: PayPartnersJob
       cron: "*/2 * * * *"
 
+
+
+      expire_ip_bindings_job:
+      class: ExpireIpBindingsJob
+      cron: "*/5 * * * *"
+
     pay_isps_job:
       class: PayIspsJob
       cron: "*/2 * * * *"
