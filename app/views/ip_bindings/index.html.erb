@@ -1,0 +1,16 @@
+<p style="color: green"><%= notice %></p>
+
+<% content_for :title, "Ip bindings" %>
+
+<h1>Ip bindings</h1>
+
+<div id="ip_bindings">
+  <% @ip_bindings.each do |ip_binding| %>
+    <%= render ip_binding %>
+    <p>
+      <%= link_to "Show this ip binding", ip_binding %>
+    </p>
+  <% end %>
+</div>
+
+<%= link_to "New ip binding", new_ip_binding_path %>

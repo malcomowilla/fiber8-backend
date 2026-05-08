@@ -1,0 +1,23 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  router: MyString
+  name: MyString
+  package: MyString
+  mac: MyString
+  ip: MyString
+  expiry: MyString
+  device_type: MyString
+  account_id: 1
+  router_id: 1
+
+two:
+  router: MyString
+  name: MyString
+  package: MyString
+  mac: MyString
+  ip: MyString
+  expiry: MyString
+  device_type: MyString
+  account_id: 1
+  router_id: 1

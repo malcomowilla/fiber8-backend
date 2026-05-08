@@ -1,0 +1,12 @@
+<% content_for :title, "Editing ip binding" %>
+
+<h1>Editing ip binding</h1>
+
+<%= render "form", ip_binding: @ip_binding %>
+
+<br>
+
+<div>
+  <%= link_to "Show this ip binding", @ip_binding %> |
+  <%= link_to "Back to ip bindings", ip_bindings_path %>
+</div>

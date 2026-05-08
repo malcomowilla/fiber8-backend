@@ -1,0 +1,62 @@
+<%= form_with(model: ip_binding) do |form| %>
+  <% if ip_binding.errors.any? %>
+    <div style="color: red">
+      <h2><%= pluralize(ip_binding.errors.count, "error") %> prohibited this ip_binding from being saved:</h2>
+
+      <ul>
+        <% ip_binding.errors.each do |error| %>
+          <li><%= error.full_message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div>
+    <%= form.label :router, style: "display: block" %>
+    <%= form.text_field :router %>
+  </div>
+
+  <div>
+    <%= form.label :name, style: "display: block" %>
+    <%= form.text_field :name %>
+  </div>
+
+  <div>
+    <%= form.label :package, style: "display: block" %>
+    <%= form.text_field :package %>
+  </div>
+
+  <div>
+    <%= form.label :mac, style: "display: block" %>
+    <%= form.text_field :mac %>
+  </div>
+
+  <div>
+    <%= form.label :ip, style: "display: block" %>
+    <%= form.text_field :ip %>
+  </div>
+
+  <div>
+    <%= form.label :expiry, style: "display: block" %>
+    <%= form.text_field :expiry %>
+  </div>
+
+  <div>
+    <%= form.label :device_type, style: "display: block" %>
+    <%= form.text_field :device_type %>
+  </div>
+
+  <div>
+    <%= form.label :account_id, style: "display: block" %>
+    <%= form.number_field :account_id %>
+  </div>
+
+  <div>
+    <%= form.label :router_id, style: "display: block" %>
+    <%= form.number_field :router_id %>
+  </div>
+
+  <div>
+    <%= form.submit %>
+  </div>
+<% end %>

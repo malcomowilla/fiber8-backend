@@ -100,26 +100,18 @@ end
 #     end
 
 
+def set_tenant
+    host = request.headers['X-Subdomain']
+    @account = Account.find_by!(subdomain: host)
+    ActsAsTenant.current_tenant = @account
+    EmailConfiguration.configure(@account, ENV['SYSTEM_ADMIN_EMAIL'])
+  rescue ActiveRecord::RecordNotFound
+    render json: { error: 'Invalid tenant' }, status: :not_found
+  end
 
 
 
 
-    def set_tenant
-      host = request.headers['X-Subdomain']
-      @account = Account.find_by(subdomain: host)
-      # @current_account= ActsAsTenant.current_tenant 
-         ActsAsTenant.current_tenant = @account
-         @current_account= ActsAsTenant.current_tenant
-      # EmailConfiguration.configure(@current_account)
-      EmailConfiguration.configure(@current_account, ENV['SYSTEM_ADMIN_EMAIL'])
-
-    Rails.logger.info "Setting tenant for app#{ActsAsTenant.current_tenant}"
-    
-      # set_current_tenant(@account)
-    rescue ActiveRecord::RecordNotFound
-      render json: { error: 'Invalid tenant' }, status: :not_found
-    
-    end
     
       def update
         nas_router = find_nas_router

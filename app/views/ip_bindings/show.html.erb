@@ -1,0 +1,10 @@
+<p style="color: green"><%= notice %></p>
+
+<%= render @ip_binding %>
+
+<div>
+  <%= link_to "Edit this ip binding", edit_ip_binding_path(@ip_binding) %> |
+  <%= link_to "Back to ip bindings", ip_bindings_path %>
+
+  <%= button_to "Destroy this ip binding", @ip_binding, method: :delete %>
+</div>

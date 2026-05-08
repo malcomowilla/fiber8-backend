@@ -2,6 +2,7 @@ require 'sidekiq/web'
 
 
 Rails.application.routes.draw do
+  resources :ip_bindings
   resources :partners
   resources :access_point_settings
   resources :access_points
@@ -85,7 +86,8 @@ mount ActionCable.server => '/cable'
 mount Sidekiq::Web => "/sidekiq" 
 
 scope '/api' do
-    
+      resources :ip_bindings
+
     resources :access_point_settings
     resources :partners
 
@@ -157,6 +159,9 @@ resources :company_ids
   # resources :hotspot_plans
 
 end
+
+  get 'dhcp_leases', to: 'dhcp_leases#index'
+    get '/api/dhcp_leases', to: 'dhcp_leases#index'
 
 
 post '/api/wireguard/provision_router', to: 'wireguard#provision_router'
