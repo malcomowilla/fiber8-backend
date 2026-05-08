@@ -75,7 +75,7 @@ class DhcpLeasesController < ApplicationController
 
   def fetch_leases(router)
     # Try REST API first; fall back to SSH if configured
-    if router.respond_to?(:api_username) && router.api_username.present?
+    if router.respond_to?(:username) && router.username.present?
       fetch_via_rest_api(router)
     elsif router.respond_to?(:ssh_username) && router.ssh_username.present?
       fetch_via_ssh(router)
