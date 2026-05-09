@@ -153,7 +153,7 @@ end
     router = find_nas_router(binding)
     return { error: "Router not found for binding #{binding.id}" } unless router
 
-    package = Package.find_by(name: binding.package)
+    package = HotspotPackage.find_by(name: binding.package)
     return { error: "Package '#{binding.package}' not found" } unless package
 
     target_ip = binding.ip.presence
