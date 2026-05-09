@@ -190,53 +190,26 @@ end
     { error: e.message }
   end
 
+
+
   def mikrotik_remove_queue_for_binding(binding)
-    router = find_nas_router(binding)
-    return { error: "Router not found for binding #{binding.id}" } unless router
+  router = find_nas_router(binding)
+  return { error: "Router not found for binding #{binding.id}" } unless router
 
-    queue_name = binding_queue_name(binding)
+  queue_name = binding_queue_name(binding)
 
-    # 1. Find the queue's internal .id
-    uri = URI("http://#{router.ip_address}/rest/queue/simple/find?name=#{URI.encode_www_form_component(queue_name)}")
-    req = Net::HTTP::Get.new(uri)
-    req.basic_auth(router.username, router.password.to_s)
+  with_mikrotik_ssh(router) do |ssh|
+    output = ssh_exec(ssh, "/queue simple remove [find name=\"#{queue_name}\"]")
 
-    res = Net::HTTP.start(uri.hostname, uri.port, open_timeout: 10, read_timeout: 10) do |http|
-      http.request(req)
-    end
-
-    unless res.is_a?(Net::HTTPSuccess)
-      return { error: "Could not search for queue '#{queue_name}': #{res.body}" }
-    end
-
-    ids = JSON.parse(res.body)
-    if ids.empty?
-      Rails.logger.info "[IpBindingsController] Queue '#{queue_name}' not found on router, skipping removal."
-      return {}
-    end
-
-    queue_id = ids.first  # MikroTik returns [".id"] strings in find results
-
-    # 2. Remove it
-    uri2 = URI("http://#{router.ip_address}/rest/queue/simple/remove")
-    req2 = Net::HTTP::Post.new(uri2, 'Content-Type' => 'application/json')
-    req2.basic_auth(router.username, router.password.to_s)
-    req2.body = { '.id' => queue_id }.to_json
-
-    res2 = Net::HTTP.start(uri2.hostname, uri2.port, open_timeout: 10, read_timeout: 10) do |http|
-      http.request(req2)
-    end
-
-    if res2.is_a?(Net::HTTPSuccess)
-      Rails.logger.info "[IpBindingsController] Queue '#{queue_name}' removed for binding #{binding.id}"
-      {}
+    if output.downcase.include?('failure') || output.downcase.include?('no such item')
+      Rails.logger.info "[IpBindingsController] Queue '#{queue_name}' not found on router, skipping."
     else
-      { error: "Failed to remove queue '#{queue_name}': #{res2.body}" }
+      Rails.logger.info "[IpBindingsController] Queue '#{queue_name}' removed for binding #{binding.id}"
     end
-  rescue => e
-    { error: e.message }
-  end
 
+    {}
+  end
+end
 
 
   def binding_queue_name(binding)
