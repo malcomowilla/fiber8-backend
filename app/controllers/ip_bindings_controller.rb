@@ -164,7 +164,7 @@ end
     payload = {
       name:               queue_name,
       target:             target_ip,
-      # "max-limit":        "#{package.upload_limit}M/#{package.download_limit}M",
+      "max-limit":        "#{package.upload_limit}M/#{package.download_limit}M",
       # "burst-threshold":  "#{package.burst_threshold_upload}M/#{package.burst_threshold_download}M",
       # "burst-limit":      "#{package.burst_upload_speed}M/#{package.burst_download_speed}M",
       # "burst-time":       "#{package.burst_time}/#{package.burst_time}",
