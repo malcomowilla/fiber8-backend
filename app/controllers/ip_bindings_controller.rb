@@ -67,7 +67,7 @@ class IpBindingsController < ApplicationController
     if @ip_binding.package.present?
       queue_result = mikrotik_add_queue_for_binding(@ip_binding)
       if queue_result[:error]
-        Rails.logger.warn "MikroTik queue create failed for #{@ip_binding.mac}: #{queue_result[:error]}"
+        Rails.logger.info "MikroTik queue create failed for #{@ip_binding.mac}: #{queue_result[:error]}"
       end
     end
     # ─────────────────────────────────────────────────────────────────────
@@ -153,7 +153,7 @@ end
     router = find_nas_router(binding)
     return { error: "Router not found for binding #{binding.id}" } unless router
 
-    package = Package.find_by(name: binding.package, account_id: @account.id)
+    package = Package.find_by(name: binding.package)
     return { error: "Package '#{binding.package}' not found" } unless package
 
     target_ip = binding.ip.presence
