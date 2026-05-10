@@ -79,11 +79,27 @@ class StkStatusService
      body = response.body
       Rails.logger.info("StkQuery status Request Response: #{body}")
       JSON.parse(response.body)
-    rescue RestClient::ExceptionWithResponse => e
-    Rails.logger.error("Error initiating stk query: #{e.response}")
-    { error: 'Failed to initiate stk query' }
+   rescue RestClient::ExceptionWithResponse => e
+  body = JSON.parse(e.response.body) rescue {}
+
+  Rails.logger.error("Error initiating stk query: #{body}")
+
+  if body["errorCode"] == "500.001.1001"
+    {
+      "ResultCode" => "4999",
+      "ResultDesc" => "Transaction still processing"
+    }
+  else
+    {
+      "ResultCode" => "9999",
+      "ResultDesc" => body["errorMessage"] || "Unable to query transaction"
+    }
+  end
     
     end
+
+
+
 
 
 
