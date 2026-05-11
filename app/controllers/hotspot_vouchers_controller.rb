@@ -1228,6 +1228,7 @@ radiusattribute:
 
 radcheck.update!(op: ':=', value: hotspot_voucher)
 
+
 rad_user_group = RadUserGroup.find_or_initialize_by(username: hotspot_voucher,
  groupname: hotspot_package, priority: 1, account_id: account_id)
 rad_user_group.update!(username: hotspot_voucher, groupname: hotspot_package, priority: 1)

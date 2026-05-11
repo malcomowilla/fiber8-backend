@@ -4,14 +4,13 @@ class HotspotCustomizationsController < ApplicationController
   set_current_tenant_through_filter
   before_action :set_tenant
   before_action :update_last_activity
-    before_action :set_time_zone
+  before_action :set_time_zone
 
 
 
 
     def set_time_zone
   Time.zone = GeneralSetting.first&.timezone || Rails.application.config.time_zone
-
     end
 
 
@@ -70,15 +69,19 @@ if current_user
       enable_compensation: params[:enable_compensation],
       compensation_minutes: params[:compensation_minutes],
       compensation_hours: params[:compensation_hours],
+
+     
       )
       @hotspot_customization.update(
-        customize_template_and_package_per_location: params[:customize_template_and_package_per_location],
-        enable_autologin: params[:enable_autologin],
-           enable_compensation: params[:enable_compensation],
+      customize_template_and_package_per_location: params[:customize_template_and_package_per_location],
+      enable_autologin: params[:enable_autologin],
+      enable_compensation: params[:enable_compensation],
       compensation_minutes: params[:compensation_minutes],
       compensation_hours: params[:compensation_hours],
+
         
         )
+        freeradius_policies(params[:free_trial_upload_limit],  params[:free_trial_download_limit])
 
       if @hotspot_customization.save
          render json: @hotspot_customization, status: :created
@@ -103,14 +106,17 @@ if current_user
     end
   end
 
+
+
+
+
+
+
+
   # DELETE /hotspot_customizations/1 or /hotspot_customizations/1.json
   def destroy
     @hotspot_customization.destroy!
-
-    respond_to do |format|
-      format.html { redirect_to hotspot_customizations_path, status: :see_other, notice: "Hotspot customization was successfully destroyed." }
-      format.json { head :no_content }
-    end
+       head :no_content 
   end
 
   private
@@ -119,11 +125,35 @@ if current_user
       @hotspot_customization = HotspotCustomization.find_by(id: params[:id])
     end
 
+
+
+def freeradius_policies(free_trial_upload_limit, free_trial_download_limit)
+  group_name = "free_trial_#{ActsAsTenant.current_tenant.id}"
+    ActiveRecord::Base.transaction do
+
+  RadGroupReply.find_or_initialize_by(
+  groupname: group_name,
+  radiusattribute: 'Mikrotik-Rate-Limit'
+).update!(
+  op: ':=',
+  value: "#{free_trial_upload_limit}M/#{free_trial_download_limit}M"
+)
+
+end
+  
+end
+
+
+
+
     # Only allow a list of trusted parameters through.
     def hotspot_customization_params
       params.require(:hotspot_customization).permit(:customize_template_and_package_per_location,
-      :enable_autologin,
-       :account_id)
+      :enable_autologin, 
+       
+       :account_id
+       
+       )
     end
 end
 

@@ -160,6 +160,9 @@ resources :company_ids
 
 end
 
+post '/api/grant_free_trial', to: 'hotspot_sessions#grant_free_trial'
+post '/grant_free_trial', to: 'hotspot_sessions#grant_free_trial'
+
   get 'dhcp_leases', to: 'dhcp_leases#index'
     get '/api/dhcp_leases', to: 'dhcp_leases#index'
 
@@ -211,6 +214,8 @@ post '/api/disburse_funds', to: 'disburse_payment#disburse_funds'
 post '/api/find_template_for_ip', to: 'ip_pools#find_template_for_ip'
 get '/api/allow_get_ip_pools', to: 'ip_pools#allow_get_ip_pools'
 get '/api/allow_get_hotspot_customization', to: 'hotspot_customizations#allow_get_hotspot_customization'
+get '/allow_get_hotspot_customization', to: 'hotspot_customizations#allow_get_hotspot_customization'
+
 patch '/api/hotspot_locations/:id', to: 'template_locations#update'
 patch '/api/update_onu_location/:id', to: 'onus#update_location'
   get '/api/unpaid_invoices_amount', to: 'invoices#unpaid_invoices_amount'

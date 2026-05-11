@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_05_08_155306) do
+ActiveRecord::Schema[7.2].define(version: 2026_05_11_084048) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -402,6 +402,10 @@ ActiveRecord::Schema[7.2].define(version: 2026_05_08_155306) do
     t.boolean "enable_compensation"
     t.string "compensation_minutes"
     t.string "compensation_hours"
+    t.boolean "enable_free_trial", default: false
+    t.integer "free_trial_duration_minutes", default: 5
+    t.integer "free_trial_download_limit", default: 2
+    t.integer "free_trial_upload_limit", default: 1
   end
 
   create_table "hotspot_mpesa_revenues", force: :cascade do |t|
@@ -463,6 +467,16 @@ ActiveRecord::Schema[7.2].define(version: 2026_05_08_155306) do
     t.string "shared_users", default: "1"
     t.string "location"
     t.string "package_speed"
+    t.boolean "burst_enabled", default: false
+    t.string "burst_limit_download"
+    t.string "burst_limit_upload"
+    t.string "burst_threshold_download"
+    t.string "burst_threshold_upload"
+    t.integer "burst_time"
+    t.boolean "enable_free_trial"
+    t.string "free_trial_download_limit"
+    t.string "free_trial_upload_limit"
+    t.string "free_trial_duration_minutes"
     t.index ["name"], name: "index_hotspot_packages_on_name"
   end
 

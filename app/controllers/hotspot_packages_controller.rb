@@ -287,12 +287,25 @@ def create
   @hotspot_package = HotspotPackage.new(hotspot_package_params)
   # use_radius = ActsAsTenant.current_tenant.&router_setting&.use_radius
 
+
+
+        if @hotspot_package.enable_free_trial
+          
+        free_radius_policies_free_trial(params[:name], params[:free_trial_upload_limit],
+  params[:free_trial_download_limit],
+  params[:weekdays], @hotspot_package.account_id, params[:free_trial_duration_minutes])
+
+        else
+
  update_freeradius_policies(params[:name], 
  params[:shared_users], params[:upload_limit], params[:download_limit],
         params[:weekdays], @hotspot_package.account_id)
 
+        end
 
-        
+
+
+
     if @hotspot_package.save
     
            ActivtyLog.create(action: 'create', ip: request.remote_ip,
@@ -313,9 +326,28 @@ def update
   @hotspot_package = set_hotspot_package
 
   if @hotspot_package
-    update_freeradius_policies(params[:name], params[:shared_users],
-     params[:upload_limit], params[:download_limit],
+   
+
+
+
+        if @hotspot_package.enable_free_trial
+          
+        free_radius_policies_free_trial(params[:name], params[:free_trial_upload_limit],
+  params[:free_trial_download_limit],
+  params[:weekdays], @hotspot_package.account_id, params[:free_trial_duration_minutes])
+
+        else
+
+ update_freeradius_policies(params[:name], 
+ params[:shared_users], params[:upload_limit], params[:download_limit],
         params[:weekdays], @hotspot_package.account_id)
+
+        end
+
+
+
+
+
     ActivtyLog.create(action: 'update', ip: request.remote_ip,
  description: "Updated hotspot package #{@hotspot_package.name}",
           user_agent: request.user_agent, user: current_user.username || current_user.email,
@@ -344,12 +376,16 @@ ActivtyLog.create(action: 'delete', ip: request.remote_ip,
           user_agent: request.user_agent, user: current_user.username || current_user.email,
            date: Time.current)
   group_name = "hotspot_#{@hotspot_package.account_id}_#{@hotspot_package.name.parameterize(separator: '_')}"
+    group_name_free_trial = "freetrial_#{account_id}_#{package_name.parameterize(separator: '_')}"
+
 
 
   ActiveRecord::Base.transaction do
     # ✅ Delete related FreeRADIUS records
     RadGroupReply.where(groupname: group_name).destroy_all
+    RadGroupReply.where(groupname: group_name_free_trial).destroy_all
     RadGroupCheck.where(groupname: group_name).destroy_all
+    RadGroupCheck.where(groupname:  group_name_free_trial).destroy_all
     # RadGroupCheck.where(groupname: group_name).destroy_all
     # ✅ Delete the HotspotPackage
     @hotspot_package.destroy!
@@ -425,46 +461,41 @@ end
 
 
 
-def update_freeradius_policies(package_name, shared_users, 
-  upload_limit, download_limit, weekdays, account_id)
-  group_name = "hotspot_#{account_id}_#{package_name.parameterize(separator: '_')}"
+  def free_radius_policies_free_trial(package_name,upload_limit,
+  download_limit,
+  weekdays, account_id, free_trial_duration_minutes)
 
-  ActiveRecord::Base.transaction do
-    # Speed limits
+  rate_limit_value =  "#{upload_limit}M/#{download_limit}M"
+  group_name = "freetrial_#{account_id}_#{package_name.parameterize(separator: '_')}"
+
+   ActiveRecord::Base.transaction do
     RadGroupReply.find_or_initialize_by(
       groupname: group_name,
       radiusattribute: 'Mikrotik-Rate-Limit'
     ).update!(
       op: ':=',
-      value: "#{upload_limit}M/#{download_limit}M"
+      value: rate_limit_value
     )
 
+RadGroupReply.find_or_initialize_by(
+  groupname: group_name,
+  radiusattribute: 'Session-Timeout'
+).update!(
+  op: ':=',
+  value: (free_trial_duration_minutes.to_i * 60).to_s
+)
 
-    # RadGroupReply.find_or_initialize_by(
-    #   groupname: group_name,
-    #   radiusattribute: 'Idle-Timeout',
 
-    # ).update!(
-    #   op: ':=',
-    #   value: "3600"
-    # )
-    # Simultaneous use
-    # RadGroupCheck.find_or_initialize_by(
-    #   groupname: group_name,
-    #   radiusattribute: 'Simultaneous-Use'
-    # ).update!(
-    #   op: ':=',
-    #   value: shared_users
-    # )
 
-    # Login-Time rule
+
+
+
     rad_days = RadGroupCheck.find_or_initialize_by(
       groupname: group_name,
       radiusattribute: 'Login-Time'
     )
 
     if weekdays.present?
-      # Build valid FR format: "Mo0000-2359,Tu0000-2359"
       login_time_value = weekdays.map { |day|
         code = DAY_MAP[day]
         "#{code}0000-2359"
@@ -475,7 +506,73 @@ def update_freeradius_policies(package_name, shared_users,
         value: login_time_value
       )
     else
-      # Allow all days OR disable restriction
+      rad_days.update!(
+        op: ':=',
+        value: 'Al0000-2359'
+      )
+    end
+end
+
+    
+  end
+
+
+
+
+
+
+
+
+
+
+  def update_freeradius_policies(
+  package_name,
+  shared_users,
+  upload_limit,
+  download_limit,
+  weekdays,
+  account_id
+)
+
+  group_name = "hotspot_#{account_id}_#{package_name.parameterize(separator: '_')}"
+
+  burst_enabled = params[:burst_enabled]
+
+  rate_limit_value =  
+    if burst_enabled
+      "#{upload_limit}M/#{download_limit}M " \
+      "#{params[:upload_burst_limit]}M/#{params[:download_burst_limit]}M " \
+      "#{params[:burst_threshold_upload]}M/#{params[:burst_threshold_download]}M " \
+      "#{params[:burst_time]}/#{params[:burst_time]}"
+    else
+      "#{upload_limit}M/#{download_limit}M"
+    end
+
+  ActiveRecord::Base.transaction do
+    RadGroupReply.find_or_initialize_by(
+      groupname: group_name,
+      radiusattribute: 'Mikrotik-Rate-Limit'
+    ).update!(
+      op: ':=',
+      value: rate_limit_value
+    )
+
+    rad_days = RadGroupCheck.find_or_initialize_by(
+      groupname: group_name,
+      radiusattribute: 'Login-Time'
+    )
+
+    if weekdays.present?
+      login_time_value = weekdays.map { |day|
+        code = DAY_MAP[day]
+        "#{code}0000-2359"
+      }.join(",")
+
+      rad_days.update!(
+        op: ':=',
+        value: login_time_value
+      )
+    else
       rad_days.update!(
         op: ':=',
         value: 'Al0000-2359'
@@ -483,6 +580,51 @@ def update_freeradius_policies(package_name, shared_users,
     end
   end
 end
+
+
+
+
+# def update_freeradius_policies(package_name, shared_users, 
+#   upload_limit, download_limit, weekdays, account_id)
+#   group_name = "hotspot_#{account_id}_#{package_name.parameterize(separator: '_')}"
+
+#   ActiveRecord::Base.transaction do
+#     # Speed limits
+#     RadGroupReply.find_or_initialize_by(
+#       groupname: group_name,
+#       radiusattribute: 'Mikrotik-Rate-Limit'
+#     ).update!(
+#       op: ':=',
+#       value: "#{upload_limit}M/#{download_limit}M"
+#     )
+
+
+#     # Login-Time rule
+#     rad_days = RadGroupCheck.find_or_initialize_by(
+#       groupname: group_name,
+#       radiusattribute: 'Login-Time'
+#     )
+
+#     if weekdays.present?
+#       # Build valid FR format: "Mo0000-2359,Tu0000-2359"
+#       login_time_value = weekdays.map { |day|
+#         code = DAY_MAP[day]
+#         "#{code}0000-2359"
+#       }.join(",")
+
+#       rad_days.update!(
+#         op: ':=',
+#         value: login_time_value
+#       )
+#     else
+#       # Allow all days OR disable restriction
+#       rad_days.update!(
+#         op: ':=',
+#         value: 'Al0000-2359'
+#       )
+#     end
+#   end
+# end
 
 
 
@@ -504,14 +646,28 @@ end
         :valid_from,
         :shared_users,
         :valid_until,
-          # Correct array syntax
         :tx_rate_limit,
         :rx_rate_limit,
         :validity_period_units,
         :download_burst_limit,
         :upload_burst_limit,
-        :validity ,
+        :validity,
+
+         :enable_free_trial,         
+      :free_trial_duration_minutes, 
+      :free_trial_download_limit,  
+      :free_trial_upload_limit,  
+
+        :burst_enabled,
+    :burst_limit_download,
+    :burst_limit_upload,
+    :burst_threshold_download,
+    :burst_threshold_upload,
+    :burst_time,
         weekdays: [],
+
+
+        
       )
     end
     
