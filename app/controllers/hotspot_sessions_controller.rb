@@ -43,16 +43,16 @@ free_trial_duration_minutes = HotspotPackage.find_by(name: params[:package]).fre
   free_trial_radius(mac, package, @account.id, free_trial_duration_minutes)
 
 
-existing = RadCheck.find_by(
-  username: mac.upcase,
-  account_id: @account.id
-)
+# existing = RadCheck.find_by(
+#   username: mac.upcase,
+#   account_id: @account.id
+# )
 
-if existing
-  return render json: {
-    error: "Free trial already used on this device"
-  }, status: :unprocessable_entity
-end
+# if existing
+#   return render json: {
+#     error: "Free trial already used on this device"
+#   }, status: :unprocessable_entity
+# end
 
 
 
