@@ -272,17 +272,19 @@ def create
     
   # end
   
-
   
   if params[:name].blank?
     render json: { error: "package name is required" }, status: :unprocessable_entity
     return
   end
   
+  if !@hotspot_package.enable_free_trial
   
   if params[:price].blank?
     render json: { error: "price is required" }, status: :unprocessable_entity
     return
+  end
+
   end
   @hotspot_package = HotspotPackage.new(hotspot_package_params)
   # use_radius = ActsAsTenant.current_tenant.&router_setting&.use_radius
