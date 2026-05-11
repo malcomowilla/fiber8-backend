@@ -378,7 +378,7 @@ ActivtyLog.create(action: 'delete', ip: request.remote_ip,
           user_agent: request.user_agent, user: current_user.username || current_user.email,
            date: Time.current)
   group_name = "hotspot_#{@hotspot_package.account_id}_#{@hotspot_package.name.parameterize(separator: '_')}"
-    group_name_free_trial = "freetrial_#{hotspot_package.account_id}_#{package_name.parameterize(separator: '_')}"
+    group_name_free_trial = "freetrial_#{@hotspot_package.account_id}_#{package_name.parameterize(separator: '_')}"
 
 
 
