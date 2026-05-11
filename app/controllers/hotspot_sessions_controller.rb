@@ -42,16 +42,16 @@ nas_routers = NasRouter.where(account_id: @account.id)
   free_trial_radius(mac, package, @account.id)
 
 
-existing = RadCheck.find_by(
-  username: mac.upcase,
-  account_id: @account.id
-)
+# existing = RadCheck.find_by(
+#   username: mac.upcase,
+#   account_id: @account.id
+# )
 
-if existing
-  return render json: {
-    error: "Free trial already used on this device"
-  }, status: :unprocessable_entity
-end
+# if existing
+#   return render json: {
+#     error: "Free trial already used on this device"
+#   }, status: :unprocessable_entity
+# end
 
 
 
