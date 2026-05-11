@@ -39,19 +39,20 @@ def grant_free_trial
   host = request.headers['X-Subdomain']
     @account = Account.find_by(subdomain: host)
 nas_routers = NasRouter.where(account_id: @account.id)
-  free_trial_radius(mac, package, @account.id)
+free_trial_duration_minutes = HotspotPackage.find_by(name: params[:package]).free_trial_duration_minutes 
+  free_trial_radius(mac, package, @account.id, free_trial_duration_minutes)
 
 
-# existing = RadCheck.find_by(
-#   username: mac.upcase,
-#   account_id: @account.id
-# )
+existing = RadCheck.find_by(
+  username: mac.upcase,
+  account_id: @account.id
+)
 
-# if existing
-#   return render json: {
-#     error: "Free trial already used on this device"
-#   }, status: :unprocessable_entity
-# end
+if existing
+  return render json: {
+    error: "Free trial already used on this device"
+  }, status: :unprocessable_entity
+end
 
 
 
@@ -128,13 +129,17 @@ end
 
 
 
-def free_trial_radius(mac, package, account_id)
+def free_trial_radius(mac, package, account_id, free_trial_duration_minutes)
 
  group_name = "freetrial_#{account_id}_#{package.parameterize(separator: '_')}"
 
-rad_user_group = RadUserGroup.find_or_initialize_by(username: mac,
+rad_user_group = RadUserGroup.find_or_initialize_by(username: mac.upcase,
  groupname: group_name, account_id: account_id)
-rad_user_group.update!(username: group_name, groupname: group_name)
+
+
+
+rad_user_group.update!(username: mac.upcase, groupname: group_name)
+
 
 
 
