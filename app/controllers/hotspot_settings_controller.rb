@@ -187,27 +187,14 @@ base_domain = full_domain.to_s.split('.').last(3).join('.') if full_domain.prese
 
 
   login_html = <<~HTML
-    <html>
-      <head>
-        <title>Redirecting...</title>
-      </head>
-      <body>
-        <noscript>
-          <center><b>JavaScript required</b></center>
-        </noscript>
-
-        <script>
-          var mac = "$(mac)";
-          var ip = "$(ip)";
-          var username = "$(username)";
-
-           var redirectUrl = `https://#{subdomain}.#{platform_domain}/hotspot-page?mac=${mac}&ip=${ip}&username=${username}`;
-
-
-          window.location.href = redirectUrl;
-        </script>
-      </body>
-    </html>
+   <html>
+<head>
+<meta http-equiv="refresh" content="0; url=https://#{subdomain}.#{platform_domain}/hotspot-page?mac=$(mac)&ip=$(ip)&username=$(username)">
+</head>
+<body>
+Redirecting...
+</body>
+</html>
   HTML
 
   temp_file = Tempfile.new(["login", ".html"])

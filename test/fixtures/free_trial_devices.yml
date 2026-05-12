@@ -1,0 +1,13 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  mac_address: MyString
+  account_id: 1
+  package: MyString
+  used_at: 2026-05-11 17:37:10
+
+two:
+  mac_address: MyString
+  account_id: 1
+  package: MyString
+  used_at: 2026-05-11 17:37:10

@@ -45,20 +45,11 @@ free_trial_duration_minutes = HotspotPackage.find_by(name: params[:package]).fre
 
 
 
- group_name = "freetrial_#{@account.id}_#{package.parameterize(separator: '_')}"
+#  group_name = "freetrial_#{@account.id}_#{package.parameterize(separator: '_')}"
 
 
- existing = RadUserGroup.where(
-  username: mac.upcase,
-  groupname: group_name,
-  account_id: @account.id
-
-).exists?
-
-existing = RadCheck.find_by(
-  username: mac.upcase,
-  account_id: @account.id
-)
+ existing = FreeTrialDevice.find_by(mac_address: mac.upcase,
+  account_id: @account.id)
 
 if existing
   return render json: {
@@ -67,7 +58,11 @@ if existing
 end
 
 
-
+FreeTrialDevice.create!(
+  mac_address: mac.upcase,
+  package: package,
+  used_at: Time.current
+)
 
 nas_routers = NasRouter.where(account_id: @account.id)
 
@@ -124,12 +119,6 @@ nas_routers = NasRouter.where(account_id: @account.id)
 
 
 end
-
-
-
-
-
-
 
 
 

@@ -6,7 +6,7 @@ class DeleteSessionJob
 
 
   def perform
-    Rails.logger.info "[DeleteSessionJob] START"
+    Rails.logger.info "[Deletemacjob] START"
 
     Account.find_each do |tenant|
       ActsAsTenant.with_tenant(tenant) do
@@ -20,9 +20,9 @@ sync_sessions(tenant)
     end
 
 
-    Rails.logger.info "[DeleteSessionJob] FINISH"
+    Rails.logger.info "[Deletemacjob] FINISH"
   rescue => e
-    Rails.logger.info "[DeleteSessionJob] ERROR: #{e.message}"
+    Rails.logger.info "[Deletemacjob] ERROR: #{e.message}"
     Rails.logger.info e.backtrace.join("\n")
     raise e
   end
@@ -30,30 +30,32 @@ sync_sessions(tenant)
   private
 
   def sync_sessions(tenant)
-    Rails.logger.info "[DeleteSessionJob] Sync sessions started"
+    Rails.logger.info "[Deletemacjob] Sync sessions started"
 
-    online_ips = RadAcct.where(acctstoptime: nil, framedprotocol: '', account_id: tenant.id).where('acctupdatetime > ?', 2.minutes.ago).pluck(:framedipaddress).uniq.map(&:to_s)
+    # online_ips = RadAcct.where(acctstoptime: nil, framedprotocol: '', account_id: tenant.id).where('acctupdatetime > ?', 2.minutes.ago).pluck(:framedipaddress).uniq.map(&:to_s)
       
-    offline_ips = RadAcct.where.not(acctstoptime: nil, framedprotocol: '').where.not('acctupdatetime > ?', 2.minutes.ago).where(account_id: tenant.id).pluck(:framedipaddress).uniq.map(&:to_s)
+    # offline_ips = RadAcct.where.not(acctstoptime: nil, framedprotocol: '').where.not('acctupdatetime > ?', 2.minutes.ago).where(account_id: tenant.id).pluck(:framedipaddress).uniq.map(&:to_s)
+      trial_devices = FreeTrialDevice.where(
+        account_id: tenant.id
+      )
       
-      
 
-    Rails.logger.info "[DeleteSessionJob] Online IPs: #{online_ips.inspect}"
+    Rails.logger.info "[Deletemacjob] Online IPs: #{online_ips.inspect}"
+      RadCheck.where(
+      username: mac,
+      account_id: tenant.id
+    ).destroy_all
 
-    updated_online = TemporarySession
-      .where(ip:  online_ips)
-      .where(account_id: tenant.id)
-      # .where(connected: true)
-      .update_all(connected: true, updated_at: Time.current)
+    RadUserGroup.where(
+      username: trial_devices.mac_address,
+      account_id: tenant.id
+    ).where(
+      "groupname LIKE ?",
+      "freetrial_%"
+    ).destroy_all
 
-    Rails.logger.info "DeleteSessionJob Marked ONLINE: #{updated_online}"
 
-    updated_offline = TemporarySession
-      .where(ip: offline_ips)
-       .where(account_id: tenant.id)
-      #  .where(connected: false)
-      .update_all(connected: false, updated_at: Time.current)
 
-    Rails.logger.info "[DeleteSessionJob] Marked OFFLINE: #{updated_offline}"
+    Rails.logger.info "[Deletemacjob] Marked OFFLINE: #{updated_offline}"
   end
 end
