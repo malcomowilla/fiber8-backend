@@ -189,7 +189,7 @@ base_domain = full_domain.to_s.split('.').last(3).join('.') if full_domain.prese
   login_html = <<~HTML
    <html>
 <head>
-<meta http-equiv="refresh" content="0; url=https://#{subdomain}.#{platform_domain}/hotspot-page?mac=$(mac)&ip=$(ip)&username=$(username)">
+<meta http-equiv="refresh" content="0; url=https://twintech.owitech.co.ke/redirect.html?mac=$(mac)&ip=$(ip)&username=$(username)">
 </head>
 <body>
 Redirecting...
