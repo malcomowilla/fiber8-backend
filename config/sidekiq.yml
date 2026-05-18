@@ -114,10 +114,6 @@ development:
       class: SubscriptionExpirationJob
       cron: "*/3 * * * *"
 
-    system_metrics_job:
-      class: SystemMetricsJob
-      cron: "*/2 * * * *"
-
   
 
     inactivity_check_job:

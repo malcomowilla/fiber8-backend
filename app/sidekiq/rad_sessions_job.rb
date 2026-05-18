@@ -62,7 +62,6 @@ class RadSessionsJob
   }
 
 
-
   bandwidth_data = {
      total_bandwidth: format_bytes(total_bytes),
     total_download: format_bytes(total_download),
@@ -71,8 +70,9 @@ class RadSessionsJob
 
 
 
-  active_sessions = RadAcct.where(acctstoptime: nil, framedprotocol: '').where('acctupdatetime > ?', 3.minutes.ago) 
+  active_sessions = RadAcct.where(acctstoptime: nil, framedprotocol: '').where('acctupdatetime > ?', 2.minutes.ago) 
   active_sessions_upload_download = RadAcct.where(acctstoptime: nil, framedprotocol: '').where('acctupdatetime > ?', 3.minutes.ago) 
+
 
   total_bytes = 0
   total_bytes_upload_download = 0
