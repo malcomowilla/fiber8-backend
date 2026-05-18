@@ -733,7 +733,7 @@ if @user.locked_account == true && @user&.locked_at > 5.minutes.ago
 render json: @user,   status: :accepted
 
       else
-        render json: { error: 'Invalid email or password' }, status: :unauthorized
+        render json: { error: 'Invalid username, email or password' }, status: :unauthorized
       end
       end
     
