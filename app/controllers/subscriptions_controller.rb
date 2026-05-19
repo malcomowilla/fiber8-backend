@@ -757,10 +757,10 @@ package_amount = Package.find_by(name: params[:subscription][:package_name]).pri
 
 
   
-    package_amount_and_installation_fee = package_amount + @subscription.installation_fee.to_i
+    package_amount_and_installation_fee = package_amount + @subscription&.installation_fee.to_i
 
 
-  if ActsAsTenant.current_tenant.subscriber_setting.invoice_created_or_paid == true
+  if ActsAsTenant.current_tenant&.subscriber_setting&.invoice_created_or_paid == true
     if @subscription.include_installation_fee
       
 invoice = SubscriberInvoice.create(
@@ -794,11 +794,12 @@ invoice = SubscriberInvoice.create(
       
     end
      
-
-company_name_invoice = ActsAsTenant.current_tenant.company_setting.company_name || 'Aitechs'
-phone_number_customer = Subscriber.find_by(id:@subscription.subscriber_id).phone_number
-mpesa_paybill = HotspotMpesaSetting.find_by(account_type: "Paybill").short_code
-subscriber_account_number = Subscriber.find_by(id:@subscription.subscriber_id).ref_no
+     host = request.headers['X-Subdomain']
+  @account = Account.find_by(subdomain: host)
+company_name_invoice = ActsAsTenant.current_tenant&.company_setting&.company_name || 'Aitechs'
+phone_number_customer = Subscriber.find_by(id:@subscription.subscriber_id)&.phone_number
+mpesa_paybill = HotspotMpesaSetting.find_by(tenant_id:  @account.id)&.short_code || ENV["B2C_SHORTCODE"]
+subscriber_account_number = Subscriber.find_by(id:@subscription.subscriber_id)&.ref_no
 
       SendInvoiceJob.perform_now(
         company_name_invoice,
