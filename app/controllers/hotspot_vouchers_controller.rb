@@ -1489,7 +1489,7 @@ def login_with_hotspot_voucher
 
 
 
-     enable_compensation = ActsAsTenant.current_tenant.hotspot_customization.enable_compensation
+     enable_compensation = ActsAsTenant.current_tenant&.hotspot_customization&.enable_compensation
 if @hotspot_voucher.expiration.nil?
   if enable_compensation
  create_voucher_radcheck_compensation(@hotspot_voucher.voucher,
