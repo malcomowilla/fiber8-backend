@@ -182,17 +182,17 @@ base_domain = full_domain.to_s.split('.').last(3).join('.') if full_domain.prese
   if base_domain == "owitech.co.ke"
     platform_domain = "owitech.co.ke"
   else
-    platform_domain = "aitechs.co.ke"   # fallback
+    platform_domain = "aitechs.co.ke"   
   end
 
 
   login_html = <<~HTML
    <html>
 <head>
-<meta http-equiv="refresh" content="0; url=https://twintech.owitech.co.ke/redirect.html?mac=$(mac)&ip=$(ip)&username=$(username)">
+<meta http-equiv="refresh" content="0; url=https://#{subdomain}.#{platform_domain}/redirect.html?mac=$(mac)&ip=$(ip)&username=$(username)">
 </head>
 <body>
-Redirecting...
+Loading......
 </body>
 </html>
   HTML
