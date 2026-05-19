@@ -40,7 +40,7 @@ sync_sessions(tenant)
       )
       
 
-    Rails.logger.info "[Deletemacjob] Online IPs: #{online_ips.inspect}"
+    # Rails.logger.info "[Deletemacjob] Online IPs: #{online_ips.inspect}"
       RadCheck.where(
       username: mac,
       account_id: tenant.id
@@ -56,6 +56,6 @@ sync_sessions(tenant)
 
 
 
-    Rails.logger.info "[Deletemacjob] Marked OFFLINE: #{updated_offline}"
+    # Rails.logger.info "[Deletemacjob] Marked OFFLINE: #{updated_offline}"
   end
 end
