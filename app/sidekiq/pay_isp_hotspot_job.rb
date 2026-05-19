@@ -36,7 +36,7 @@ class PayIspHotspotJob
       hotspot_mpesa_revenues = HotspotMpesaRevenue
        .where(account_id: tenant.id , paid_out: false)
       .where("created_at <= ?", 4.minutes.ago)
-    return if revenues.empty?
+    return if hotspot_mpesa_revenues.empty?
 
     
 
