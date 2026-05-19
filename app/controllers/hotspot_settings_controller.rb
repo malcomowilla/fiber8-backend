@@ -189,11 +189,11 @@ base_domain = full_domain.to_s.split('.').last(3).join('.') if full_domain.prese
   login_html = <<~HTML
    <html>
 <head>
-<meta http-equiv="refresh" content="0; url=https://#{subdomain}.#{platform_domain}/redirect.html?mac=$(mac)&ip=$(ip)&username=$(username)">
+<script>
+window.location.replace("https://#{subdomain}.#{platform_domain}/hotspot-page?mac=$(mac)&ip=$(ip)&username=$(username)");
+</script>
 </head>
-<body>
-Loading......
-</body>
+<body></body>
 </html>
   HTML
 
