@@ -96,7 +96,7 @@ transaction_cost = (total_amount * 0.01).ceil
     end
 
     # Calculate total hotspot revenue for the month
-    hotspot_total = PpPoeMpesaRevenue
+    hotspot_total = HotspotMpesaRevenue
                       .where(account_id: tenant.id)
                       .where(created_at: 1.month.ago.beginning_of_month..1.month.ago.end_of_month)
                       .sum(:amount)
