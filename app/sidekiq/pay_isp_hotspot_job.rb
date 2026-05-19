@@ -1,4 +1,4 @@
-class PayIspsJob
+class PayIspHotspotJob
   include Sidekiq::Job
   queue_as :default
 
@@ -31,9 +31,7 @@ class PayIspsJob
     mpesa_setting = tenant.hotspot_mpesa_setting
     return unless mpesa_setting&.phone_number.present?
 
-    revenues = PpPoeMpesaRevenue
-      .where(account_id: tenant.id , paid_out: false)
-      .where("created_at <= ?", 4.minutes.ago)
+    
 
       hotspot_mpesa_revenues = HotspotMpesaRevenue
        .where(account_id: tenant.id , paid_out: false)
@@ -42,7 +40,7 @@ class PayIspsJob
 
     
 
-    total_amount = revenues.sum(:amount)
+    total_amount = hotspot_mpesa_revenues.sum(:amount)
     return if total_amount <= 0 || total_amount < 10
 
     # transaction_cost = (total_amount * 0.01).round
@@ -51,7 +49,7 @@ transaction_cost = (total_amount * 0.01).ceil
     # platform_fee = plan&.name == "Free Trial" ? 0 : (total_amount * PLATFORM_FEE_PERCENT).round
 
     # net_amount = total_amount - transaction_cost - platform_fee
-        net_amount = total_amount - transaction_cost
+        net_amount = total_amount 
 
     return if net_amount <= 0
      return if net_amount < 10 
@@ -65,7 +63,7 @@ transaction_cost = (total_amount * 0.01).ceil
     # Send B2C payout
     success = send_b2c(mpesa_setting.phone_number, net_amount.to_i, tenant)
      if success
-    revenues.update_all(paid_out: true, paid_out_at: Time.current, amount_disbursed: net_amount.to_i)
+     hotspot_mpesa_revenues.update_all(paid_out: true, paid_out_at: Time.current, amount_disbursed: net_amount.to_i)
     Rails.logger.info "B2C succeeded and revenues marked paid for tenant #{tenant.id}"
   else
     Rails.logger.info "B2C failed for tenant #{tenant.id} – revenues NOT marked paid, will retry later"
