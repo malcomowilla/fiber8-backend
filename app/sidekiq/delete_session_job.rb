@@ -19,6 +19,7 @@ sync_sessions(tenant)
       end
     end
 
+    
 
     Rails.logger.info "[Deletemacjob] FINISH"
   rescue => e
@@ -38,21 +39,26 @@ sync_sessions(tenant)
       trial_devices = FreeTrialDevice.where(
         account_id: tenant.id
       )
-      
-
-    # Rails.logger.info "[Deletemacjob] Online IPs: #{online_ips.inspect}"
+      trial_devices.map do |device|
+        # Rails.logger.info "[Deletemacjob] Online IPs: #{online_ips.inspect}"
       RadCheck.where(
-      username: mac,
+      username:  device.mac_address,
       account_id: tenant.id
     ).destroy_all
 
-    RadUserGroup.where(
-      username: trial_devices.mac_address,
+  
+
+      RadUserGroup.where(
+      username: device.mac_address,
       account_id: tenant.id
     ).where(
       "groupname LIKE ?",
       "freetrial_%"
     ).destroy_all
+        
+      end
+
+    
 
 
 
