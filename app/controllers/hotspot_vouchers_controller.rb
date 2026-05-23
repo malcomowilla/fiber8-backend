@@ -2265,6 +2265,7 @@ end
  def send_voucher_talksasa(phone_number, voucher_code,
                           shared_users, company_name, current_user)
 
+                          formatted_phone_number = "254#{phone_number.gsub(/\A0/, '')}"
   HotspotVoucher.find_by(voucher: voucher_code)&.update(sms_sent: true)
 
   sms_setting = SmsSetting.find_by(sms_provider: 'Talk Sasa')
@@ -2296,7 +2297,7 @@ end
   request["Accept"] = "application/json"
 
   request.body = {
-    recipient: phone_number,
+    recipient: formatted_phone_number,
     sender_id: sender_id,
     type: "plain",
     message: original_message
