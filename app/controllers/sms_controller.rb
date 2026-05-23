@@ -78,6 +78,9 @@ if selected_provider == "SMS leopard"
 
 elsif selected_provider == "TextSms"
   get_text_sms_balance(selected_provider)
+
+  elsif selected_provider == "Talk Sasa"
+    get_talk_sasa_balance
 else
   render json: { number: '0' }
 end
@@ -87,45 +90,53 @@ end
   end
 
   # POST /sms or /sms.json
-  def create
-    @sm = Sm.new(sm_params)
+  
 
-    respond_to do |format|
-      if @sm.save
-        format.html { redirect_to sm_url(@sm), notice: "Sm was successfully created." }
-        format.json { render :show, status: :created, location: @sm }
-      else
-        format.html { render :new, status: :unprocessable_entity }
-        format.json { render json: @sm.errors, status: :unprocessable_entity }
-      end
-    end
-  end
-
-  # PATCH/PUT /sms/1 or /sms/1.json
-  def update
-    respond_to do |format|
-      if @sm.update(sm_params)
-        format.html { redirect_to sm_url(@sm), notice: "Sm was successfully updated." }
-        format.json { render :show, status: :ok, location: @sm }
-      else
-        format.html { render :edit, status: :unprocessable_entity }
-        format.json { render json: @sm.errors, status: :unprocessable_entity }
-      end
-    end
-  end
+ 
 
   # DELETE /sms/1 or /sms/1.json
-  def destroy
-    @sm.destroy!
-
-    respond_to do |format|
-      format.html { redirect_to sms_url, notice: "Sm was successfully destroyed." }
-      format.json { head :no_content }
-    end
-  end
+ 
 
   private
     # Use callbacks to share common setup or constraints between actions.
+
+
+
+def get_talk_sasa_balance
+  api_token = SmsSetting.find_by(sms_provider: 'Talk Sasa')&.api_key
+
+  uri = URI("https://bulksms.talksasa.com/api/v3/balance")
+
+  http = Net::HTTP.new(uri.host, uri.port)
+  http.use_ssl = true
+
+  request = Net::HTTP::Get.new(uri)
+
+  request['Authorization'] = "Bearer #{api_token}"
+  request['Content-Type'] = 'application/json'
+  request['Accept'] = 'application/json'
+
+  response = http.request(request)
+
+  if response.is_a?(Net::HTTPSuccess)
+    balance_data = JSON.parse(response.body)
+
+    render json: {
+      message: balance_data['data']['remaining_balance']
+    }, status: :ok
+  else
+    render json: {
+      error: "Error Getting Balance: #{response.body}"
+    }, status: :unprocessable_entity
+  end
+end
+
+
+
+
+
+
+
 
 def get_text_sms_balance(selected_provider)
   api_key = SmsSetting.find_by(sms_provider: 'TextSms')&.api_key

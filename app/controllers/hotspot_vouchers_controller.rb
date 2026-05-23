@@ -1041,14 +1041,21 @@ def send_voucher_to_phone_number
    HotspotVoucher.find_by(voucher: params[:voucher]).update(phone: params[:phone])
 
 expiration = HotspotVoucher.find_by(voucher: params[:voucher]).expiration
-             if ActsAsTenant.current_tenant.sms_provider_setting.sms_provider == "SMS leopard"
+             if ActsAsTenant.current_tenant&.sms_provider_setting&.sms_provider == "SMS leopard"
                send_voucher(params[:phone], params[:voucher],
                 params[:shared_users], company_name, current_user
                )
       # expiration.strftime("%B %d, %Y at %I:%M %p"), 
 
-             elsif ActsAsTenant.current_tenant.sms_provider_setting.sms_provider == "TextSms"
+             elsif ActsAsTenant.current_tenant&.sms_provider_setting&.sms_provider == "TextSms"
                send_voucher_text_sms(params[:phone], params[:voucher],
+               params[:shared_users], company_name, current_user
+               )
+
+
+
+               elsif ActsAsTenant.current_tenant&.sms_provider_setting&.sms_provider == "Talk Sasa"
+               send_voucher_talksasa(params[:phone], params[:voucher],
                params[:shared_users], company_name, current_user
                )
              end
@@ -2097,6 +2104,9 @@ end
     end
 
 
+
+
+
       def send_voucher(phone_number, voucher_code,
         shared_users, company_name, current_user
         )
@@ -2169,7 +2179,7 @@ end
             end
 
 
-
+             
 
 
            def send_voucher_text_sms(phone_number, voucher_code,
@@ -2244,6 +2254,86 @@ end
     # render json: { error: "Failed to send message: #{response.body}" }
   end
 end
+
+
+
+
+
+
+
+
+ def send_voucher_talksasa(phone_number, voucher_code,
+                          shared_users, company_name, current_user)
+
+  HotspotVoucher.find_by(voucher: voucher_code)&.update(sms_sent: true)
+
+  sms_setting = SmsSetting.find_by(sms_provider: 'Talk Sasa')
+
+  api_key  = sms_setting&.api_key
+  sender_id = sms_setting&.sender_id
+
+  sms_template = ActsAsTenant.current_tenant.sms_template
+  send_voucher_template = sms_template&.send_voucher_template
+
+  original_message = if send_voucher_template.present?
+    send_voucher_template
+      .gsub('{{voucher_code}}', voucher_code.to_s)
+      .gsub('{{company_name}}', company_name.to_s)
+      .gsub('{{shared_users}}', shared_users.to_s)
+  else
+    "Your voucher code is: #{voucher_code}. Enjoy your browsing (FROM: #{company_name})"
+  end
+
+  uri = URI.parse("https://bulksms.talksasa.com/api/v3/sms/send")
+
+  http = Net::HTTP.new(uri.host, uri.port)
+  http.use_ssl = true
+
+  request = Net::HTTP::Post.new(uri.request_uri)
+
+  request["Authorization"] = "Bearer #{api_key}"
+  request["Content-Type"] = "application/json"
+  request["Accept"] = "application/json"
+
+  request.body = {
+    recipient: phone_number,
+    sender_id: sender_id,
+    type: "plain",
+    message: original_message
+  }.to_json
+
+  response = http.request(request)
+
+  Rails.logger.info "TalkSasa Response: #{response.body}"
+
+  if response.is_a?(Net::HTTPSuccess)
+    sms_data = JSON.parse(response.body)
+
+    first_response = sms_data['responses']&.first
+
+    sms_recipient = first_response&.dig('mobile')
+    sms_status    = first_response&.dig('response-description')
+
+    Rails.logger.info "Recipient: #{sms_recipient}, Status: #{sms_status}"
+
+    SystemAdminSm.create!(
+      user: sms_recipient,
+      message: original_message,
+      status: sms_status,
+      date: Time.now.strftime("%B %d, %Y at %I:%M %p"),
+      system_user: current_user.username,
+      sms_provider: 'Talk Sasa'
+    )
+
+    Rails.logger.info "Sent message successfully with talk sasa"
+  else
+    Rails.logger.info "Failed to send SMS: #{response.code} - #{response.body}"
+  end
+end
+
+
+
+
 
 
 

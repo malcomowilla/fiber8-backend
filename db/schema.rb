@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_05_11_084048) do
+ActiveRecord::Schema[7.2].define(version: 2026_05_11_143710) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -364,6 +364,15 @@ ActiveRecord::Schema[7.2].define(version: 2026_05_11_084048) do
     t.integer "account_id"
     t.string "device_type"
     t.string "name_of_customer"
+  end
+
+  create_table "free_trial_devices", force: :cascade do |t|
+    t.string "mac_address"
+    t.integer "account_id"
+    t.string "package"
+    t.datetime "used_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
   end
 
   create_table "general_settings", force: :cascade do |t|
