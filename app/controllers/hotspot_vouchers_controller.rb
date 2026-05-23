@@ -2315,7 +2315,7 @@ end
     sms_recipient = first_response&.dig('mobile')
     sms_status    = first_response&.dig('response-description')
 
-    Rails.logger.info "Recipient: #{sms_recipient}, Status: #{sms_status}"
+    Rails.logger.info "sms data =>: #{sms_data}, Status: #{sms_status}"
 
     SystemAdminSm.create!(
       user: sms_recipient,
