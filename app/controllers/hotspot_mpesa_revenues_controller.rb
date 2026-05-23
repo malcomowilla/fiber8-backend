@@ -15,10 +15,22 @@ end
 
 
 
+  def pending_hotspot_balance
+    pending = HotspotMpesaRevenue
+      .where(paid_out: false)
+      .sum(:amount)
+      render json: pending
+  end
 
 
 
 
+  def already_paid_balance
+    already_paid = HotspotMpesaRevenue
+      .where(paid_out: true)
+      .sum(:amount)
+      render json: already_paid
+  end
 
 
 
@@ -62,7 +74,6 @@ if current_user
                   .includes(:hotspot_voucher) 
                   .order(created_at: :desc)
    
-
 # @hotspot_mpesa_revenues = HotspotMpesaRevenue.all
 # HotspotMpesaRevenue.order(created_at: :desc).to_a
     render json: @hotspot_mpesa_revenues

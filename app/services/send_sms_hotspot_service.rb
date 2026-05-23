@@ -55,10 +55,88 @@ def self.send_sms_for_tenant(voucher, tenant)
       send_voucher_sms_leopard(voucher, tenant)
     when "TextSms"
       send_voucher_text_sms(voucher, tenant)
+    when "Talk Sasa"
+      send_voucher_talksasa(voucher, tenant)
+
     else
       # Rails.logger.info "Tenant #{ActsAsTenant.current_tenant.id} has unknown SMS provider: #{sms_setting.sms_provider}. Skipping SMS for voucher #{voucher.voucher}."
     end
   end
+
+
+
+
+ def self.send_voucher_talksasa(voucher, tenant)
+
+                          formatted_phone_number = "254#{voucher.phone.gsub(/\A0/, '')}"
+
+  sms_setting = SmsSetting.find_by(sms_provider: 'Talk Sasa')
+
+  api_key  = sms_setting&.api_key
+  sender_id = sms_setting&.sender_id
+
+
+  original_message =  "Your voucher code is: #{voucher}. Enjoy your browsing"
+
+  uri = URI.parse("https://bulksms.talksasa.com/api/v3/sms/send")
+
+  http = Net::HTTP.new(uri.host, uri.port)
+  http.use_ssl = true
+
+  request = Net::HTTP::Post.new(uri.request_uri)
+
+  request["Authorization"] = "Bearer #{api_key}"
+  request["Content-Type"] = "application/json"
+  request["Accept"] = "application/json"
+
+  request.body = {
+    recipient: formatted_phone_number,
+    sender_id: sender_id,
+    type: "plain",
+    message: original_message
+  }.to_json
+
+  response = http.request(request)
+
+  Rails.logger.info "TalkSasa Response: #{response.body}"
+
+  if response.is_a?(Net::HTTPSuccess)
+    sms_data = JSON.parse(response.body)
+
+    first_response = sms_data['responses']&.first
+
+    sms_recipient = first_response&.dig('mobile')
+   sms_status  = sms_data['status']
+
+    Rails.logger.info "sms data =>: #{sms_data}, Status: #{sms_status}"
+
+    SystemAdminSm.create!(
+      user: voucher.phone,
+      message: original_message,
+      status: sms_status,
+      date: Time.now.strftime("%B %d, %Y at %I:%M %p"),
+      system_user: 'system',
+          account_id: tenant.id,
+          sms_provider: 'Talk Sasa'
+    )
+
+    Rails.logger.info "Sent message successfully with talk sasa"
+  else
+    Rails.logger.info "Failed to send SMS with talk sasa : #{response.code} - #{response.body}"
+  end
+end
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

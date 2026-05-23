@@ -160,6 +160,21 @@ resources :company_ids
 
 end
 
+get '/api/already_paid_pppoebalance', to: 'pp_poe_mpesa_revenues#already_paid_balance'
+get '/api/pending_pppoe_balance', to: 'pp_poe_mpesa_revenues#pending_pppoe_balance'
+get '/api/pending_hotspot_balance', to: 'hotspot_mpesa_revenues#pending_hotspot_balance'
+get '/api/already_paid_hotspotbalance', to: 'hotspot_mpesa_revenues#already_paid_balance'
+post '/api/adminwithdraw'
+
+
+
+get '/already_paid_pppoebalance', to: 'pp_poe_mpesa_revenues#already_paid_balance'
+get '/pending_pppoe_balance', to: 'pp_poe_mpesa_revenues#pending_pppoe_balance'
+get '/pending_hotspot_balance', to: 'hotspot_mpesa_revenues#pending_hotspot_balance'
+get '/already_paid_hotspotbalance', to: 'hotspot_mpesa_revenues#already_paid_balance'
+
+
+
 post '/api/grant_free_trial', to: 'hotspot_sessions#grant_free_trial'
 post '/grant_free_trial', to: 'hotspot_sessions#grant_free_trial'
 

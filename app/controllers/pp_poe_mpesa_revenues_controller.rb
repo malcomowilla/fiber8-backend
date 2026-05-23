@@ -47,6 +47,28 @@ end
   
 
 
+  def pending_pppoe_balance
+    pending = PpPoeMpesaRevenue
+      .where(paid_out: false)
+      .sum(:amount)
+      render json: pending
+  end
+
+
+
+
+
+
+  def already_paid_balance
+    already_paid = PpPoeMpesaRevenue
+      .where(paid_out: true)
+      .sum(:amount)
+      render json: already_paid
+  end
+
+
+
+
 def allow_pp_poe_mpesa_revenues
   @pp_poe_mpesa_revenues = PpPoeMpesaRevenue.where(subscriber_id: params[:subscriber_id])
   render json: @pp_poe_mpesa_revenues

@@ -8,7 +8,7 @@ class SendSmsHotspotJob < ApplicationJob
    
         # next unless voucher 
 
-sms_sent_at_voucher = HotspotVoucher.find_by(voucher: voucher.voucher).sms_sent_at_voucher
+sms_sent_at_voucher = HotspotVoucher.find_by(voucher: voucher.voucher)&.sms_sent_at_voucher
 
 
 if sms_sent_at_voucher.nil?

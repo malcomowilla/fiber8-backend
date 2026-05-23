@@ -2313,12 +2313,12 @@ end
     first_response = sms_data['responses']&.first
 
     sms_recipient = first_response&.dig('mobile')
-    sms_status    = first_response&.dig('response-description')
+    sms_status    = sms_data['status']
 
     Rails.logger.info "sms data =>: #{sms_data}, Status: #{sms_status}"
 
     SystemAdminSm.create!(
-      user: sms_recipient,
+      user: phone_number,
       message: original_message,
       status: sms_status,
       date: Time.now.strftime("%B %d, %Y at %I:%M %p"),

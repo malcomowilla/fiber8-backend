@@ -105,6 +105,8 @@ def send_notification_sms_reachable(phone_number, tenant, router_name, ip_addres
       send_notification_text_sms_reachable(phone_number, tenant, router_name, ip_address)
     when 'SMS leopard'
       send_notification_sms_leopard_reachable(phone_number, tenant, router_name, ip_address)
+      when 'Talk Sasa'
+      send_notification_talksasa_reachable(phone_number, tenant, router_name,  ip_address)
     else
       Rails.logger.info "No valid SMS provider configured"
     end
@@ -123,10 +125,78 @@ def send_notification_sms_reachable(phone_number, tenant, router_name, ip_addres
       send_notification_text_sms_unreachable(phone_number, tenant, router_name, ip_address)
     when 'SMS leopard'
       send_notification_sms_leopard_unreachable(phone_number, tenant, router_name,  ip_address)
+    when 'Talk Sasa'
+      send_notification_talksasa_unreachable(phone_number, tenant, router_name,  ip_address)
+      
     else
       Rails.logger.info "No valid SMS provider configured"
     end
   end
+
+
+
+
+
+
+  def send_notification_talksasa_unreachable(phone_number,tenant,
+  router_name, ip_address)
+
+                          formatted_phone_number = "254#{phone_number.gsub(/\A0/, '')}"
+
+  sms_setting = SmsSetting.find_by(sms_provider: 'Talk Sasa')
+
+  api_key  = sms_setting&.api_key
+  sender_id = sms_setting&.sender_id
+
+
+original_message =  "Hello, your router=> #{ip_address}, router name=>#{router_name} is unreachable"    
+
+  uri = URI.parse("https://bulksms.talksasa.com/api/v3/sms/send")
+
+  http = Net::HTTP.new(uri.host, uri.port)
+  http.use_ssl = true
+
+  request = Net::HTTP::Post.new(uri.request_uri)
+
+  request["Authorization"] = "Bearer #{api_key}"
+  request["Content-Type"] = "application/json"
+  request["Accept"] = "application/json"
+
+  request.body = {
+    recipient: formatted_phone_number,
+    sender_id: sender_id,
+    type: "plain",
+    message: original_message
+  }.to_json
+
+  response = http.request(request)
+
+  Rails.logger.info "TalkSasa Response: #{response.body}"
+
+  if response.is_a?(Net::HTTPSuccess)
+    sms_data = JSON.parse(response.body)
+
+
+   sms_status  = sms_data['status']
+
+
+    SystemAdminSm.create!(
+      user: phone_number,
+      message: original_message,
+      status: sms_status,
+      date: Time.now.strftime("%B %d, %Y at %I:%M %p"),
+      system_user: 'system',
+        account_id: tenant.id,
+          sms_provider: 'Talk Sasa'
+    )
+
+    Rails.logger.info "Sent message successfully with talk sasa"
+  else
+    Rails.logger.info "Failed to send SMS with talk sasa : #{response.code} - #{response.body}"
+  end
+end
+
+
 
 
 
@@ -268,6 +338,73 @@ end
     response = Net::HTTP.get_response(uri)
     handle_sms_response_sms_leopard(response, original_message, phone_number, tenant)
   end
+
+
+
+
+
+
+
+
+  def send_notification_talksasa_reachable(phone_number,tenant, 
+    router_name, ip_address)
+
+                          formatted_phone_number = "254#{phone_number.gsub(/\A0/, '')}"
+
+  sms_setting = SmsSetting.find_by(sms_provider: 'Talk Sasa')
+
+  api_key  = sms_setting&.api_key
+  sender_id = sms_setting&.sender_id
+
+    original_message =  "Hello, your router #{ip_address}, router name #{router_name} is reachable"
+
+
+  uri = URI.parse("https://bulksms.talksasa.com/api/v3/sms/send")
+
+  http = Net::HTTP.new(uri.host, uri.port)
+  http.use_ssl = true
+
+  request = Net::HTTP::Post.new(uri.request_uri)
+
+  request["Authorization"] = "Bearer #{api_key}"
+  request["Content-Type"] = "application/json"
+  request["Accept"] = "application/json"
+
+  request.body = {
+    recipient: formatted_phone_number,
+    sender_id: sender_id,
+    type: "plain",
+    message: original_message
+  }.to_json
+
+  response = http.request(request)
+
+  Rails.logger.info "TalkSasa Response: #{response.body}"
+
+  if response.is_a?(Net::HTTPSuccess)
+    sms_data = JSON.parse(response.body)
+
+
+   sms_status  = sms_data['status']
+
+
+    SystemAdminSm.create!(
+      user: phone_number,
+      message: original_message,
+      status: sms_status,
+      date: Time.now.strftime("%B %d, %Y at %I:%M %p"),
+      system_user: 'system',
+        account_id: tenant.id,
+          sms_provider: 'Talk Sasa'
+    )
+
+    Rails.logger.info "Sent message successfully with talk sasa"
+  else
+    Rails.logger.info "Failed to send SMS with talk sasa : #{response.code} - #{response.body}"
+  end
+end
+
+
 
 
 

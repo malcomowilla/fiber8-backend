@@ -136,17 +136,19 @@ transaction_cost = (total_amount * 0.01).ceil
   # 🔁 B2C PAYMENT
   # --------------------------
   def send_b2c(phone_number, amount, tenant)
-    token = fetch_access_token
+    token = fetch_access_token(tenant)
+        mpesa_setting = tenant.hotspot_mpesa_setting
+
     return unless token
 
 
     payload = {
        OriginatorConversationID: "600997_Test_32et3241ed8yu",
-      InitiatorName: ENV['API_INITIATOR_USERNAME'],
-      SecurityCredential: ENV['B2C_API_INITIATOR_PASSWORD'],
+       InitiatorName: mpesa_setting.api_initiator_username || ENV['API_INITIATOR_USERNAME'],
+      SecurityCredential: mpesa_setting.api_initiator_password || ENV['B2C_API_INITIATOR_PASSWORD'],
       CommandID: "BusinessPayment",
       Amount: amount,
-      PartyA: ENV['B2C_SHORTCODE'],
+      PartyA: mpesa_setting.short_code || ENV['B2C_SHORTCODE'],
       PartyB: format_phone(phone_number),
       Remarks: "ok",
       QueueTimeOutURL: "https://#{tenant.subdomain}.#{ENV['HOST']}/disburse_funds_results_timeout",
@@ -180,9 +182,12 @@ transaction_cost = (total_amount * 0.01).ceil
   # --------------------------
   # 🔐 ACCESS TOKEN
   # --------------------------
-  def fetch_access_token
-    consumer_key = ENV['CONSUMER_KEY']
-    consumer_secret = ENV['CONSUMER_SECRET']
+  def fetch_access_token(tenant)
+    mpesa_setting = tenant.hotspot_mpesa_setting
+
+  
+    consumer_key =   mpesa_setting.consumer_key || ENV['CONSUMER_KEY']
+    consumer_secret = mpesa_setting .consumer_secret || ENV['CONSUMER_SECRET']
 
     response = RestClient.get(
       "https://api.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials",
@@ -191,7 +196,7 @@ transaction_cost = (total_amount * 0.01).ceil
 
     JSON.parse(response.body)["access_token"]
   rescue RestClient::ExceptionWithResponse => e
-    Rails.logger.error "Token error: #{e.response}"
+    Rails.logger.info "Token error: #{e.response}"
     nil
   end
 
