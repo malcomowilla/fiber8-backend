@@ -124,7 +124,89 @@ def set_tenant
     end
     
     
+
+
+
+
+
+    def verify_withdrawal_otp
+  return render json: { error: "Unauthorized" }, status: :unauthorized unless current_admin_wallet
+
+  otp = params[:otp]
+
+  if current_admin_wallet.withdrawal_otp.blank?
+    return render json: {
+      success: false,
+      error: "No OTP found"
+    }, status: :unauthorized
+  end
+  
+
+  # OTP expires after 5 minutes
+  if current_admin_wallet.withdrawal_otp_sent_at < 2.minutes.ago
+    return render json: {
+      success: false,
+      error: "OTP expired"
+    }, status: :unauthorized
+  end
+
+  if current_admin_wallet.withdrawal_otp == otp
+    # Clear OTP after successful verification
+    current_admin_wallet.update!(
+      withdrawal_otp: nil,
+      withdrawal_otp_sent_at: nil
+    )
+
+    render json: {
+      success: true
+    }
+  else
+    render json: {
+      success: false,
+      error: "Invalid OTP"
+    }, status: :unauthorized
+  end
+end
+
     
+
+
+
+def send_withdrawal_otp
+  host = request.headers['X-Subdomain']
+    @account = Account.find_or_create_by(subdomain: host)
+  return render json: { error: "Unauthorized" }, status: :unauthorized unless current_admin_wallet
+
+  otp = rand(100000..999999).to_s
+
+  current_admin_wallet.update!(
+    withdrawal_otp: otp,
+    withdrawal_otp_sent_at: Time.current
+  )
+
+  send_otp_sms(params[:phone_number], current_admin_wallet.withdrawal_otp,  @account)
+
+  # SEND SMS HERE
+  # Example:
+  # SmsService.send(
+  #   to: params[:phone_number],
+  #   message: "Your withdrawal OTP is #{otp}"
+  # )
+
+
+  render json: {
+    success: true,
+    message: "OTP sent successfully"
+  }
+end
+
+
+
+
+
+
+
+
 
 
     def verify_webauthn
@@ -509,7 +591,8 @@ end
 
   def verify_backup_code
     entered_code = params[:code]
-    user = params[:email]
+    # user = params[:email]
+    user = User.find_by(email: params[:email])
     if user.otp_backup_codes.include?(entered_code)
       user.otp_backup_codes.delete(entered_code)
       user.save!
@@ -521,6 +604,9 @@ end
       render json: { success: false, error: "Invalid backup code" }, status: :unauthorized
     end
   end
+
+
+
 
   def setup_google_authenticator
       otp_secret = ROTP::Base32.random_base32
@@ -597,9 +683,7 @@ end
         # current_user.update(status: 'inactive') if current_user
         # cookies.delete(:jwt_user)
         # head :no_content
-        Rails.logger.info("Current user in destroy: #{current_user.inspect}")
 
-        Rails.logger.info("Current ip in destroy: #{request.remote_ip}")
   if current_user
     current_user.update(status: 'inactive')
     ActivtyLog.create(action: 'logout', ip: request.remote_ip,
@@ -669,6 +753,89 @@ end
 
 
 
+def admin_wallet_signout
+  
+
+
+
+  cookies.delete(:jwt_wallet_admin)
+  # head :no_content
+  render json: { message: 'Logged out for admin wallet' }, status: :ok
+end
+
+
+
+
+
+def currently_logged_in_admin_wallet
+    if current_admin_wallet
+        render json: current_admin_wallet, status: :accepted
+        return
+    else
+        render json: { error: "Not authorized" }, status: :unauthorized
+    end
+end
+
+
+
+
+
+def verify_wallet_pin
+    if User.find_by(wallet_pin: params[:pin])
+        render json: {user: current_admin_wallet.wallet_pin, success: true}, status: :accepted
+        return
+    else
+        render json: { error: "pin not found " }, status: :unauthorized
+    end
+end
+
+
+
+
+def update_wallet_pin
+    return render json: { error: "Unauthorized" }, status: :unauthorized unless current_admin_wallet
+
+    if current_admin_wallet
+      current_admin_wallet.update(wallet_pin: params[:pin])
+        render json: {user: current_admin_wallet.wallet_pin, success: true}, status: :accepted
+        return
+    else
+        render json: { error: "Not authorized" }, status: :unauthorized
+    end
+end
+
+
+
+def admin_wallet_signin
+     user = User.find_by(email: params[:email]) || User.find_by(username: params[:email])
+        if user.nil?
+          render json: { error: 'Invalid Credentials for wallet admin' }, status: :not_found and return
+        end
+
+        unless user.wallet_admin == true
+  return render json: {
+    error: "Not authorized for wallet portal"
+  }, status: :forbidden
+end
+
+
+          if user&.authenticate(params[:password])
+          # set_current_tenant(@user.account)
+          # session[:user_id] = @user.id
+          # reset_login_attempts 
+          token = generate_token(user_id: user.id)
+
+          cookies.encrypted.signed[:jwt_wallet_admin] = { value: token, httponly: true, secure: true,
+         sameSite: 'strict'}
+render json: user,  status: :accepted
+
+           else
+        render json: { error: 'Invalid username, email or password' }, status: :unauthorized
+      
+         end
+end
+
+
 
 
 
@@ -683,8 +850,7 @@ end
 
 
 if @user.locked_account == true && @user&.locked_at > 5.minutes.ago
-  render json: { error: 'Account locked' }, status: :locked # 423 Locked
-      
+  render json: { error: 'Account locked' }, status: :locked 
 
       else
 
@@ -747,12 +913,196 @@ render json: @user,   status: :accepted
 
     def reset_login_attempts
       key = "failed_logins:#{request.remote_ip}"
-      Rails.cache.delete(key)  # ✅ Reset count on successful login
+      Rails.cache.delete(key)  
     end
 
 
 
 
+
+
+
+
+
+
+
+def send_otp_sms(phone_number, otp,tenant)
+
+    provider = tenant&.sms_provider_setting.present? && tenant.sms_provider_setting&.sms_provider
+    
+
+    case provider
+    when 'TextSms'
+      send_otp_text_sms( 
+   phone_number, otp,tenant)
+
+
+    when 'SMS leopard'
+      send_otp_sms_leopard(phone_number, otp,tenant)
+
+    when 'Talk Sasa'
+      send_otp_talksasa(phone_number, otp,tenant)
+    else
+      Rails.logger.info "No valid SMS provider configured"
+    end
+  end
+
+
+
+
+
+
+
+
+
+
+
+  def send_otp_talksasa(phone_number, otp,tenant)
+
+                          formatted_phone_number = "254#{phone_number.gsub(/\A0/, '')}"
+
+  sms_setting = SmsSetting.find_by(sms_provider: 'Talk Sasa')
+
+  api_key  = sms_setting&.api_key
+  sender_id = sms_setting&.sender_id
+
+
+    original_message = "Your withdrawal OTP is #{otp}"
+    
+
+  uri = URI.parse("https://bulksms.talksasa.com/api/v3/sms/send")
+
+  http = Net::HTTP.new(uri.host, uri.port)
+  http.use_ssl = true
+
+  request = Net::HTTP::Post.new(uri.request_uri)
+
+  request["Authorization"] = "Bearer #{api_key}"
+  request["Content-Type"] = "application/json"
+  request["Accept"] = "application/json"
+
+  request.body = {
+    recipient: formatted_phone_number,
+    sender_id: sender_id,
+    type: "plain",
+    message: original_message
+  }.to_json
+
+  response = http.request(request)
+
+  Rails.logger.info "TalkSasa Response: #{response.body}"
+
+  if response.is_a?(Net::HTTPSuccess)
+    sms_data = JSON.parse(response.body)
+
+
+   sms_status  = sms_data['status']
+
+
+    SystemAdminSm.create!(
+      user: phone_number,
+      message: original_message,
+      status: sms_status,
+      date: Time.now.strftime("%B %d, %Y at %I:%M %p"),
+      system_user: 'system',
+        account_id: tenant.id,
+          sms_provider: 'Talk Sasa'
+    )
+
+    Rails.logger.info "Sent message successfully with talk sasa"
+  else
+    Rails.logger.info "Failed to send SMS with talk sasa : #{response.code} - #{response.body}"
+  end
+end
+
+
+
+
+
+
+
+   def send_otp_sms_leopard(phone_number, otp,tenant)
+
+ settings = tenant&.sms_setting.present?  
+
+
+
+if settings
+api_secret_api_key = tenant&.sms_setting
+  
+  if api_secret_api_key.sms_provider == 'SMS leopard'
+    
+  api_key = api_secret_api_key&.api_key
+  api_secret = api_secret_api_key&.api_secret
+  end
+  
+    
+end 
+
+
+    sms_template = ActsAsTenant.current_tenant.sms_template
+    send_voucher_template = sms_template&.send_voucher_template
+    original_message = "Your withdrawal OTP is #{otp}"
+
+    sender_id = "SMS_TEST"
+    uri = URI("https://api.smsleopard.com/v1/sms/send")
+    params = {
+      username: api_key,
+      password: api_secret,
+      message: original_message,
+      destination: phone_number,
+      source: sender_id
+    }
+    uri.query = URI.encode_www_form(params)
+
+    response = Net::HTTP.get_response(uri)
+    handle_sms_response_sms_leopard(response, original_message,
+     phone_number, tenant)
+  end
+
+
+
+
+
+
+  def send_otp_text_sms(phone_number, otp,tenant)
+    # api_key = SmsSetting.find_by(sms_provider: 'TextSms')&.api_key
+    # partnerID = SmsSetting.find_by(sms_provider: 'TextSms')&.partnerID
+# TextSms
+    settings = tenant&.sms_setting.present?  
+ 
+if settings
+partner_id_api_key = tenant&.sms_setting
+  
+  if partner_id_api_key.sms_provider == 'TextSms'
+    
+  api_key = partner_id_api_key&.api_key
+  partnerID = partner_id_api_key&.partnerID
+  shortcode = partner_id_api_key&.sender_id
+  end
+  
+    
+end 
+
+    # partnerID = tenant&.sms_setting.present? && tenant.sms_setting.find_by(sms_provider: 'TextSms')&.partnerID
+    sms_template = ActsAsTenant.current_tenant.sms_template
+    send_voucher_template = sms_template&.send_voucher_template
+       original_message = "Your withdrawal OTP is #{otp}"
+
+    uri = URI("https://sms.textsms.co.ke/api/services/sendsms")
+    params = {
+      apikey: api_key,
+      message: original_message,
+      mobile: phone_number,
+      partnerID: partnerID,
+      shortcode: shortcode,
+
+    }
+    uri.query = URI.encode_www_form(params)
+
+    response = Net::HTTP.get_response(uri)
+    handle_sms_response(response, original_message, phone_number, tenant)
+  end
 
 
 
@@ -787,25 +1137,6 @@ render json: @user,   status: :accepted
 
 
 
-      def current_user
-        @current_user ||= begin
-          token = cookies.encrypted.signed[:jwt_user]
-          if token  
-            begin
-              decoded_token = JWT.decode(token,  ENV['JWT_SECRET'], true, algorithm: 'HS256')
-            user_id = decoded_token[0]['user_id']
-            @current_user = User.find_by(id: user_id)
-              return @current_user if @current_user
-            rescue JWT::DecodeError, JWT::ExpiredSignature => e
-              cookies.delete(:jwt_user)
-              Rails.logger.error "JWT Decode Error super admin: #{e}"
-              render json: { error: 'Unauthorized' }, status: :unauthorized
-            end
-          end
-          nil
-        end
-             
-    end
 
 
 
@@ -817,8 +1148,10 @@ render json: @user,   status: :accepted
         # def user_params
         #     params.permit( :password, :email)
         # end
+       
+
+
         def user_login_params
-            # params { user: {username: 'Chandler Bing', password: 'hi' } }
             params.require(:user).permit(:email, :password)
             end
 
@@ -828,6 +1161,9 @@ render json: @user,   status: :accepted
                 render json: { message: 'Please log in' }, status: :unauthorized unless session.include? :user_id
                 end
                 
+
+
+
 
 end
 

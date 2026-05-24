@@ -172,9 +172,7 @@ end
     
       
 
-
     def current_system_admin
-      # byebug
       @current_sys_admin ||= begin
         token = cookies.encrypted.signed[:jwt_system_admin]
         if token  
@@ -200,6 +198,26 @@ end
 
 
 
+
+    def current_admin_wallet
+        @current_user ||= begin
+          token = cookies.encrypted.signed[:jwt_wallet_admin]
+          if token  
+            begin
+              decoded_token = JWT.decode(token,  ENV['JWT_SECRET'], true, algorithm: 'HS256')
+            user_id = decoded_token[0]['user_id']
+            @current_user = User.find_by(id: user_id)
+              return @current_user if @current_user
+            rescue JWT::DecodeError, JWT::ExpiredSignature => e
+              cookies.delete(:jwt_user)
+              Rails.logger.error "JWT Decode Error super admin wallet: #{e}"
+              render json: { error: 'Unauthorized' }, status: :unauthorized
+            end
+          end
+          nil
+        end
+             
+    end
 
 
 

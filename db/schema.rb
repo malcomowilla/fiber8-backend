@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_05_11_143710) do
+ActiveRecord::Schema[7.2].define(version: 2026_05_24_083912) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -1371,7 +1371,21 @@ ActiveRecord::Schema[7.2].define(version: 2026_05_11_143710) do
     t.boolean "can_read_equipment"
     t.boolean "can_manage_equipment"
     t.boolean "first_login", default: true
+    t.string "wallet_pin"
+    t.string "withdrawal_otp"
+    t.datetime "withdrawal_otp_sent_at"
+    t.boolean "wallet_admin", default: false
     t.index ["email"], name: "index_users_on_email"
+  end
+
+  create_table "wallet_audits", force: :cascade do |t|
+    t.string "admin"
+    t.string "amount"
+    t.string "ip_address"
+    t.string "action"
+    t.integer "account_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
   end
 
   create_table "wireguard_peers", force: :cascade do |t|

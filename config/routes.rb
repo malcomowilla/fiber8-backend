@@ -160,11 +160,34 @@ resources :company_ids
 
 end
 
+
+
+
+post "/api/admin/verify_withdrawal_otp", to: 'sessions#verify_withdrawal_otp'
+post "/admin/verify_withdrawal_otp", to: 'sessions#verify_withdrawal_otp'
+
+post '/api/admin/send_withdrawal_otp', to: 'sessions#send_withdrawal_otp'
+post '/admin/send_withdrawal_otp', to: 'sessions#send_withdrawal_otp'
+
+post '/api/admin_wallet_signin', to: 'sessions#admin_wallet_signin'
+post '/admin_wallet_signin', to: 'sessions#admin_wallet_signin'
+delete '/api/admin_wallet_signout', to: 'sessions#admin_wallet_signout'
+delete '/admin_wallet_signout', to: 'sessions#admin_wallet_signout'
+get '/api/currently_logged_in_admin_wallet', to: 'sessions#currently_logged_in_admin_wallet'
+get '/currently_logged_in_admin_wallet', to: 'sessions#currently_logged_in_admin_wallet'
+post '/api/admin/set_wallet_pin', to: 'sessions#update_wallet_pin'
+post '/admin/set_wallet_pin', to: 'sessions#update_wallet_pin'
+post '/api/admin/verify_wallet_pin', to: 'sessions#verify_wallet_pin'
+post '/admin/verify_wallet_pin', to: 'sessions#verify_wallet_pin'
+
+
+
 get '/api/already_paid_pppoebalance', to: 'pp_poe_mpesa_revenues#already_paid_balance'
 get '/api/pending_pppoe_balance', to: 'pp_poe_mpesa_revenues#pending_pppoe_balance'
 get '/api/pending_hotspot_balance', to: 'hotspot_mpesa_revenues#pending_hotspot_balance'
 get '/api/already_paid_hotspotbalance', to: 'hotspot_mpesa_revenues#already_paid_balance'
-post '/api/adminwithdraw'
+post '/api/admin/withdraw', to: 'withdraw_wallet#withdraw_from_wallet'
+post '/admin/withdraw', to: 'withdraw_wallet#withdraw_from_wallet'
 
 
 

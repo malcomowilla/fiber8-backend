@@ -17,6 +17,7 @@ class UserSerializer < ActiveModel::Serializer
 :can_manage_equipment, :can_read_equipment,
 :date_registered, :last_login_at,
 :first_login,
+:wallet_admin,
 
 :status,
   :can_manage_user_setting,

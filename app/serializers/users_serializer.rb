@@ -12,7 +12,7 @@ attributes :can_manage_subscriber,:can_read_read_subscriber,:can_manage_ticket_s
 :can_manage_invoice, :can_read_invoice, :can_manage_equipment, :can_read_equipment,
 :first_login,
 
-
+:wallet_admin,
 :date_registered,
 :can_manage_hotspot_voucher, :can_read_hotspot_voucher,
 :can_manage_hotspot_settings, :can_read_hotspot_settings,

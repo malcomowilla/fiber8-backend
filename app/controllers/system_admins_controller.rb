@@ -432,6 +432,7 @@ end
     phone_number: params[:phone_number],
     password: params[:password],
     password_confirmation: params[:password]
+    
   )
 end
 @my_admin.update!(password: params[:password],  password_confirmation: params[:password])
@@ -467,21 +468,39 @@ end
 
   def update_client
     admin = User.find_by(id: params[:id])
+    account_id = Account.find_or_create_by(subdomain: params[:company_name])
+
+      ActsAsTenant.with_tenant(account_id) do
+
     
     unless admin
       return render json: { error: "Admin not found!" }, status: :unprocessable_entity
     end
-  
-    admin.update(
-      username: params[:username],
+    admin.update!(username: params[:username],
       email: params[:email],
       phone_number: params[:phone_number],
-      password: params[:password],
-      password_confirmation: params[:password]
+      wallet_admin: params[:wallet_admin])
+  
+  admin.update!(
       
-    )
+  params[:password].present? ? {
+    password: params[:password],
+    password_confirmation: params[:password]
+  } : {},
+  
+)
+    # admin.update(
+    #   username: params[:username],
+    #   email: params[:email],
+    #   phone_number: params[:phone_number],
+      
+    #   # password: params[:password],
+    #   # password_confirmation: params[:password]
+      
+    # )
 
 render json: admin, status: :ok
+end
 
   end
   

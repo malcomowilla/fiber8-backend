@@ -26,6 +26,129 @@ def set_tenant
 
 
 
+def withdraw_from_wallet
+  host = request.headers['X-Subdomain']
+
+  @account = Account.find_by(subdomain: host)
+
+  
+      wallet_type = params[:wallettype]
+
+
+
+
+   if wallet_type == 'hotspot'
+requested_amount = params[:amount].to_f
+  if requested_amount <= 0
+    return render json: { error: "Invalid amount" }, status: :unprocessable_entity
+  end
+
+
+  unpaid_revenues = HotspotMpesaRevenue
+                      .where(paid_out: false)
+                      .order(:created_at)
+
+  available_balance = unpaid_revenues.sum(:amount)
+
+  if available_balance < requested_amount
+    return render json: {
+      error: "Insufficient wallet balance for hotspot revenue"
+    }, status: :unprocessable_entity
+  end
+
+  selected_revenues = []
+  running_total = 0
+
+  unpaid_revenues.each do |revenue|
+    break if running_total >= requested_amount
+
+    selected_revenues << revenue
+    running_total += revenue.amount.to_f
+  end
+
+  success = send_b2c(
+    params[:phonenumber],
+    requested_amount,
+    @account
+  )
+
+  if success
+    selected_revenues.each do |revenue|
+      revenue.update!(
+        paid_out: true,
+        paid_out_at: Time.current,
+        amount_disbursed: revenue.amount
+      )
+    end
+
+    render json: {
+      success: true,
+      withdrawn: requested_amount
+    }
+  else
+    render json: {
+      error: "B2C failed for hotspot revenue"
+    }, status: :unprocessable_entity
+  end
+
+else
+
+  requested_amount = params[:amount].to_f
+  if requested_amount <= 0
+    return render json: { error: "Invalid amount" }, status: :unprocessable_entity
+  end
+
+  unpaid_revenues = PpPoeMpesaRevenue
+                      .where(paid_out: false)
+                      .order(:created_at)
+
+  available_balance_ppoe = unpaid_revenues.sum(:amount)
+
+  if available_balance_ppoe < requested_amount
+    return render json: {
+      error: "Insufficient wallet balance for pppoe revenue"
+    }, status: :unprocessable_entity
+  end
+
+  selected_revenues = []
+  running_total = 0
+
+  unpaid_revenues.each do |revenue|
+    break if running_total >= requested_amount
+
+    selected_revenues << revenue
+    running_total += revenue.amount.to_f
+  end
+
+  success = send_b2c(
+    params[:phonenumber],
+    requested_amount,
+    @account
+  )
+
+  if success
+    selected_revenues.each do |revenue|
+      revenue.update!(
+        paid_out: true,
+        paid_out_at: Time.current,
+        amount_disbursed: revenue.amount
+      )
+    end
+
+    render json: {
+      success: true,
+      withdrawn: requested_amount
+    }
+  else
+    render json: {
+      error: "B2C failed for pppoe revenue"
+    }, status: :unprocessable_entity
+  end
+  end
+end
+
+
+
 
   private
 
@@ -37,8 +160,8 @@ def set_tenant
 
 
     payload = {
-       OriginatorConversationID: "600997_Test_32et3241ed8yu",
-       InitiatorName: mpesa_setting.api_initiator_username || ENV['API_INITIATOR_USERNAME'],
+      OriginatorConversationID: "600997_Test_32et3241ed8yu",
+      InitiatorName: mpesa_setting.api_initiator_username || ENV['API_INITIATOR_USERNAME'],
       SecurityCredential: mpesa_setting.api_initiator_password || ENV['B2C_API_INITIATOR_PASSWORD'],
       CommandID: "BusinessPayment",
       Amount: amount,
@@ -72,10 +195,6 @@ def set_tenant
 
 
 
-  
-  # --------------------------
-  # 🔐 ACCESS TOKEN
-  # --------------------------
   def fetch_access_token(tenant)
     mpesa_setting = tenant.hotspot_mpesa_setting
 
