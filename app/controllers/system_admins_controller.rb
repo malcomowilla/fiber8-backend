@@ -466,43 +466,37 @@ end
 
 
 
-  def update_client
-    admin = User.find_by(id: params[:id])
-    account_id = Account.find_or_create_by(subdomain: params[:company])
+ def update_client
+  admin = User.find_by(id: params[:id])
 
-      ActsAsTenant.with_tenant(account_id) do
+  unless admin
+    return render json: { error: "Admin not found!" }, status: :unprocessable_entity
+  end
 
-    
-    unless admin
-      return render json: { error: "Admin not found!" }, status: :unprocessable_entity
-    end
-    admin.update!(username: params[:username],
+  account = Account.find_by(subdomain: params[:company_name])
+
+  unless account
+    return render json: { error: "Account not found!" }, status: :unprocessable_entity
+  end
+
+  ActsAsTenant.with_tenant(account) do
+    update_data = {
+      username: params[:username],
       email: params[:email],
       phone_number: params[:phone_number],
-      wallet_admin: params[:wallet_admin])
-  
-  admin.update!(
-      
-  params[:password].present? ? {
-    password: params[:password],
-    password_confirmation: params[:password]
-  } : {},
-  
-)
-    # admin.update(
-    #   username: params[:username],
-    #   email: params[:email],
-    #   phone_number: params[:phone_number],
-      
-    #   # password: params[:password],
-    #   # password_confirmation: params[:password]
-      
-    # )
+      wallet_admin: params[:wallet_admin]
+    }
 
-render json: admin, status: :ok
-end
+    if params[:password].present?
+      update_data[:password] = params[:password]
+      update_data[:password_confirmation] = params[:password]
+    end
 
+    admin.update!(update_data)
+
+    render json: admin.reload, status: :ok
   end
+end
   
 
 
