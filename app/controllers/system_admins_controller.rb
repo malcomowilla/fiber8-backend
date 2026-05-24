@@ -468,7 +468,7 @@ end
 
   def update_client
     admin = User.find_by(id: params[:id])
-    account_id = Account.find_or_create_by(subdomain: params[:company_name])
+    account_id = Account.find_or_create_by(subdomain: params[:company])
 
       ActsAsTenant.with_tenant(account_id) do
 
