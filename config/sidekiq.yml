@@ -41,9 +41,6 @@ development:
 
 
 
-    pay_isp_hotspot_job:
-      class: PayIspHotspotJob
-      cron: "*/2 * * * *"
 
     pay_isps_job:
       class: PayIspsJob
