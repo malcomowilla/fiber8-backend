@@ -467,7 +467,10 @@ end
   download_limit,
   weekdays, account_id, free_trial_duration_minutes)
 
+
   rate_limit_value =  "#{upload_limit}M/#{download_limit}M"
+   
+
   group_name = "freetrial_#{account_id}_#{package_name.parameterize(separator: '_')}"
 
    ActiveRecord::Base.transaction do
@@ -544,7 +547,7 @@ end
   rate_limit_value =  
     if burst_enabled
       "#{upload_limit}M/#{download_limit}M " \
-      "#{params[:upload_burst_limit]}M/#{params[:download_burst_limit]}M " \
+      "#{params[:burst_limit_upload]}M/#{params[:burst_limit_download]}M " \
       "#{params[:burst_threshold_upload]}M/#{params[:burst_threshold_download]}M " \
       "#{params[:burst_time]}/#{params[:burst_time]}"
     else

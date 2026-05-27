@@ -119,7 +119,7 @@ class SubscriptionExpiryReminderJob
   sender_id = sms_setting&.sender_id
 
 
-    original_message = "Your service will be disconnected at #{company_name} for account #{account_number}. You can now make your #{company_name} payment via MPESA Paybill #{paybill_number} Account no: #{account_number}. For assistance call Telephone: #{customer_support_phone_number}"
+    original_message = "Your service will be disconnected at #{company_name} for account #{account_number}. You can now make your #{company_name} payment via MPESA Paybill #{paybill_number || "4007893"} Account no: #{account_number}. For assistance call Telephone: #{customer_support_phone_number}"
     
 
   uri = URI.parse("https://bulksms.talksasa.com/api/v3/sms/send")
@@ -195,7 +195,7 @@ end
 
     sms_template = ActsAsTenant.current_tenant.sms_template
     send_voucher_template = sms_template&.send_voucher_template
-    original_message = "Your service will be disconnected at #{company_name} for account #{account_number}. You can now make your #{company_name} payment via MPESA Paybill #{paybill_number} Account no: #{account_number}. For assistance call Telephone: #{customer_support_phone_number}"
+    original_message = "Your service will be disconnected at #{company_name} for account #{account_number}. You can now make your #{company_name} payment via MPESA Paybill #{paybill_number || "4007893"} Account no: #{account_number}. For assistance call Telephone: #{customer_support_phone_number}"
 
     sender_id = "SMS_TEST"
     uri = URI("https://api.smsleopard.com/v1/sms/send")
@@ -242,7 +242,7 @@ end
     sms_template = ActsAsTenant.current_tenant.sms_template
     send_voucher_template = sms_template&.send_voucher_template
     original_message = "Your service will be disconnected at #{company_name} 
-    for account #{account_number}. You can now make your #{company_name} payment via MPESA Paybill #{paybill_number} Account no: #{account_number}. For assistance call Telephone: #{customer_support_phone_number}"
+    for account #{account_number}. You can now make your #{company_name} payment via MPESA Paybill #{paybill_number || "4007893"} Account no: #{account_number}. For assistance call Telephone: #{customer_support_phone_number}"
 
     uri = URI("https://sms.textsms.co.ke/api/services/sendsms")
     params = {
