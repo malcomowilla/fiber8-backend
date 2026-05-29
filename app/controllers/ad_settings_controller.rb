@@ -1,5 +1,6 @@
 class AdSettingsController < ApplicationController
   # before_action :set_ad_setting, only: %i[ show edit update destroy ]
+require 'cloudinary'
 
   set_current_tenant_through_filter
   before_action :set_tenant
@@ -106,6 +107,13 @@ def get_ad_settings_by_id
     setting = AdSetting.find_or_initialize_by(ad_title: params[:ad_title],
     )
 
+    uploaded_file = Cloudinary::Uploader.upload(params[:media_file].tempfile.path)
+  cloudinary_url = uploaded_file['secure_url']
+  
+
+
+
+
     setting.assign_attributes(
       ad_title:    params[:ad_title],
       ad_link:     params[:ad_link],
@@ -117,17 +125,18 @@ def get_ad_settings_by_id
       media_type:  params[:media_type],
       reward_type: params[:reward_type],
       free_minutes: params[:free_minutes],
-      selected_package: params[:selected_package]
+      selected_package: params[:selected_package],
+          media_url: cloudinary_url   # store the Cloudinary URL directly
+
     )
 
-    # Attach file if provided
-    if params[:media_file].present?
-      setting.media_file.purge if setting.media_file.attached?
-      setting.media_file.attach(params[:media_file])
-    end
-
-    if setting.save
-      render json: { success: true, media_url: setting.media_file.attached? ? url_for(setting.media_file) : nil }
+    # # Attach file if provided
+    # if params[:media_file].present?
+    #   setting.media_file.purge if setting.media_file.attached?
+    #   setting.media_file.attach(params[:media_file])
+    # end
+ if setting.save
+    render json: { success: true, media_url: cloudinary_url }
     else
       render json: { error: setting.errors.full_messages }, status: 422
     end
