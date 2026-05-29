@@ -107,10 +107,16 @@ def get_ad_settings_by_id
     setting = AdSetting.find_or_initialize_by(ad_title: params[:ad_title],
     )
 
-    uploaded_file = Cloudinary::Uploader.upload(params[:media_url].tempfile.path)
-  cloudinary_url = uploaded_file['secure_url']
-  
+      cloudinary_url = nil
 
+  if params[:media_file].present?
+    uploaded = Cloudinary::Uploader.upload(
+      params[:media_file].tempfile.path
+    )
+    cloudinary_url = uploaded["secure_url"]
+  elsif params[:media_url].present?
+    cloudinary_url = params[:media_url]
+  end
 
 
 
