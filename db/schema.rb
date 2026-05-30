@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_05_29_203856) do
+ActiveRecord::Schema[7.2].define(version: 2026_05_30_125635) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -111,6 +111,10 @@ ActiveRecord::Schema[7.2].define(version: 2026_05_29_203856) do
     t.integer "free_minutes", default: 30
     t.string "selected_package"
     t.string "media_url"
+    t.string "link_type"
+    t.string "design_background"
+    t.text "design_config"
+    t.integer "tenant_id"
   end
 
   create_table "admin_settings", force: :cascade do |t|

@@ -33,7 +33,10 @@ require 'cloudinary'
     media_type: ad&.media_type,
     reward_type: ad&.reward_type,
     free_minutes: ad&.free_minutes,
-    selected_package: ad&.selected_package
+    selected_package: ad&.selected_package,
+     design_config:     ad.design_config,      
+      design_background: ad.design_background,  
+      link_type:         ad.link_type,          
   
   }
 end
@@ -96,7 +99,10 @@ def get_ad_settings_by_id
        media_type: @ad_settings.media_type,
        reward_type: @ad_settings.reward_type,
        free_minutes: @ad_settings.free_minutes,
-       selected_package: @ad_settings.selected_package
+       selected_package: @ad_settings.selected_package,
+        design_config:     @ad_settings.design_config,      
+      design_background: @ad_settings.design_background,  
+      link_type:         @ad_settings.link_type,  
     }
   end
 
@@ -104,7 +110,11 @@ def get_ad_settings_by_id
 
   # POST /ad_settings or /ad_settings.json
   def create
-    setting = AdSetting.find_or_initialize_by(ad_title: params[:ad_title],
+     host = request.headers['X-Subdomain']
+    @account = Account.find_by(subdomain: host)
+    setting = AdSetting.find_or_initialize_by(
+      
+    ad_title: params[:ad_title],
     )
 
       cloudinary_url = nil
@@ -120,6 +130,7 @@ def get_ad_settings_by_id
 
 
 
+
     setting.assign_attributes(
       ad_title:    params[:ad_title],
       ad_link:     params[:ad_link],
@@ -132,7 +143,10 @@ def get_ad_settings_by_id
       reward_type: params[:reward_type],
       free_minutes: params[:free_minutes],
       selected_package: params[:selected_package],
-          media_url: cloudinary_url   # store the Cloudinary URL directly
+      media_url: cloudinary_url,
+      design_config: params[:design_config],      
+      design_background: params[:design_background],  
+      link_type:         params[:link_type],    
 
     )
 
