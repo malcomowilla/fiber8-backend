@@ -221,7 +221,7 @@ class GenerateInvoiceJob
   queue_as :invoices
   sidekiq_options lock: :until_executed, lock_timeout: 0
 
-  PPPoE_PRICE_PER_CLIENT = 25
+  PPPoE_PRICE_PER_CLIENT = 20
   HOTSPOT_PERCENTAGE = 0.04
   SUBSCRIPTION_FEE = 500
 
@@ -259,8 +259,8 @@ class GenerateInvoiceJob
     return false unless plan.present?
     return false unless plan.expiry.present?
 
-    # Trigger invoice 5 days before expiry
-    plan.expiry - 5.days <= Time.current
+    # Trigger invoice 3 days before expiry
+    plan.expiry - 3.days <= Time.current
   end
 
   def generate_usage_invoice(tenant)
@@ -279,8 +279,9 @@ class GenerateInvoiceJob
     description_items = []
     if hotspot_charge > 0
       description_items << {
-        description: "Hotspot Revenue Share",
-        details: "4% of total hotspot revenue",
+        description: "500 ksh hotspot fee",
+        # details: "4% of total hotspot revenue",
+        details: "Fixed hotspot platform fee (charged only when hotspot is active)",
         quantity: hotspot_total,
         unit: "KES",
         rate: "4%",
@@ -325,12 +326,18 @@ class GenerateInvoiceJob
   def calculate_hotspot_charge(tenant)
       start_date = tenant.last_billed_at || Time.current.beginning_of_month
 
-    hotspot_total = HotspotMpesaRevenue
-                      .where(account_id: tenant.id)
-                      .where(created_at: start_date..Time.current)
-                      .sum(:amount)
+    # hotspot_total = HotspotMpesaRevenue
+    #                   .where(account_id: tenant.id)
+    #                   .where(created_at: start_date..Time.current)
+    #                   .sum(:amount)
                       
-    hotspot_charge = (hotspot_total * HOTSPOT_PERCENTAGE).round
+    # hotspot_charge = (hotspot_total * HOTSPOT_PERCENTAGE).round
+    hotspot_total = HotspotMpesaRevenue
+                  .where(account_id: tenant.id)
+                  .where(created_at: tenant.last_billed_at || Time.current.beginning_of_month..Time.current)
+                  .sum(:amount)
+
+hotspot_charge = hotspot_total > 0 ? 500 : 0
     [hotspot_total, hotspot_charge]
   end
 
