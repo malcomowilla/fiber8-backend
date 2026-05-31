@@ -312,18 +312,24 @@ class GenerateInvoiceJob
       last_invoiced_at: Time.current
     )
 
+    tenant.update!(last_billed_at: Time.current)
+
     # Send SMS notification to super admin
     admin = tenant.users.where(role: "super_administrator").first
     if admin&.phone_number.present?
       send_invoice_sms(admin.phone_number, invoice.due_date, invoice.invoice_number, admin.username, invoice.plan_name, tenant)
     end
   end
+    # where(created_at: Time.current.beginning_of_month..Time.current)
 
   def calculate_hotspot_charge(tenant)
+      start_date = tenant.last_billed_at || Time.current.beginning_of_month
+
     hotspot_total = HotspotMpesaRevenue
                       .where(account_id: tenant.id)
-                      .where(created_at: Time.current.beginning_of_month..Time.current)
+                      .where(created_at: start_date..Time.current)
                       .sum(:amount)
+                      
     hotspot_charge = (hotspot_total * HOTSPOT_PERCENTAGE).round
     [hotspot_total, hotspot_charge]
   end

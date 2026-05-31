@@ -168,15 +168,27 @@ def get_ad_settings_by_id
 
   # PATCH/PUT /ad_settings/1 or /ad_settings/1.json
   def update
-    respond_to do |format|
-      if @ad_setting.update(ad_setting_params)
-        format.html { redirect_to @ad_setting, notice: "Ad setting was successfully updated." }
-        format.json { render :show, status: :ok, location: @ad_setting }
+     @ad_setting = AdSetting.find_by_id(params[:id])
+      if @ad_setting.update( ad_title:    params[:ad_title],
+      ad_link:     params[:ad_link],
+      position:    params[:position],
+      ad_duration: params[:ad_duration],
+      skip_after:  params[:skip_after],
+      can_skip:    params[:can_skip],
+      ad_enabled:  params[:ad_enabled],
+      media_type:  params[:media_type],
+      reward_type: params[:reward_type],
+      free_minutes: params[:free_minutes],
+      selected_package: params[:selected_package],
+      media_url: cloudinary_url,
+      design_config: params[:design_config],      
+      design_background: params[:design_background],  
+      link_type:         params[:link_type], )
+        render json: @ad_setting
       else
-        format.html { render :edit, status: :unprocessable_entity }
-        format.json { render json: @ad_setting.errors, status: :unprocessable_entity }
+        render json: @ad_setting.errors, status: :unprocessable_entity 
       end
-    end
+  
   end
 
   # DELETE /ad_settings/1 or /ad_settings/1.json
