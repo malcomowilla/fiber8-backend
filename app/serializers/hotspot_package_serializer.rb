@@ -25,11 +25,12 @@ class HotspotPackageSerializer < ActiveModel::Serializer
     object.download_limit == '' ? "Unlimited #{object.name}": object.name
   end
 
-def shared_users
-  return unless object.shared_users.present?
 
-  "#{object.shared_users.to_i}-Device"
-end
+# def shared_users
+#   return unless object.shared_users.present?
+
+#   "#{object.shared_users.to_i}-Device"
+# end
   
   def valid_from
     object.valid_from.strftime('%I:%M %p') if object.valid_from.present?
