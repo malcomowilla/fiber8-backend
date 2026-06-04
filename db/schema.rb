@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_05_31_065646) do
+ActiveRecord::Schema[7.2].define(version: 2026_06_04_051727) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -116,6 +116,8 @@ ActiveRecord::Schema[7.2].define(version: 2026_05_31_065646) do
     t.string "design_background"
     t.text "design_config"
     t.integer "tenant_id"
+    t.string "design_canvas_w"
+    t.string "design_canvas_h"
   end
 
   create_table "admin_settings", force: :cascade do |t|
