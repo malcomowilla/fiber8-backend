@@ -2209,7 +2209,6 @@ end
 Rails.logger.info "PARTNER ID: #{partnerID.inspect}"
 Rails.logger.info "SHORTCODE: #{shortcode.inspect}"
 Rails.logger.info "PHONE: #{phone_number.inspect}"
-Rails.logger.info "MESSAGE: #{original_message.inspect}"
 
   # original_message = if sms_template
   #   MessageTemplate.interpolate(send_voucher_template, { voucher_code: voucher_code })
@@ -2232,6 +2231,9 @@ Rails.logger.info "MESSAGE: #{original_message.inspect}"
     partnerID: partnerID,
     shortcode: shortcode
   }
+
+Rails.logger.info "MESSAGE: #{original_message}"
+
   uri.query = URI.encode_www_form(params)
 
   response = Net::HTTP.get_response(uri)
