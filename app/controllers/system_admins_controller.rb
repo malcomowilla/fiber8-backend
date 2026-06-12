@@ -754,10 +754,8 @@ render json: { error: 'System Admin not found' }, status: :unauthorized
     def send_otp(phone_number, otp, name)
 
 
-# SMS_LEOPARD_API_KEY= c3I6A1BuUvESuTkdSa2l
-# SMS_LEOPARD_API_SECRET=aSYTHMEmRF3XQUUSPANeYGEeGlZYTYGYFj4TXWqV
-      api_key = 'c3I6A1BuUvESuTkdSa2l'
-      api_secret = 'aSYTHMEmRF3XQUUSPANeYGEeGlZYTYGYFj4TXWqV'
+      # api_key = 
+      # api_secret = 
       original_message =   "Hello, #{name} use this one time
        password #{otp} to continue"
       sender_id = "SMS_TEST" # Ensure this is a valid sender ID
@@ -805,8 +803,8 @@ render json: { error: 'System Admin not found' }, status: :unauthorized
 
 
     def send_password(phone_number, password, email)
-      api_key = 'c3I6A1BuUvESuTkdSa2l'
-      api_secret = 'aSYTHMEmRF3XQUUSPANeYGEeGlZYTYGYFj4TXWqV'
+      # api_key = 
+      # api_secret = 
 
       
       original_message = "Hello use this credentials to login to your account password:#{password} email:#{email}"

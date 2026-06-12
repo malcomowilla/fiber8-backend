@@ -21,8 +21,17 @@ rate_limit to: 20, within: 5.minutes, only: :create, with: -> {
   user.update(locked_account: true, locked_at: Time.current) if user.present?
   host = request.headers['X-Subdomain']
 
+
+  full_domain = request.headers["X-Domain"] 
+  base_domain = full_domain.to_s.split('.').last(3).join('.') if full_domain.present?
+  if base_domain == "owitech.co.ke"
+    platform_domain = "owitech.co.ke"
+  else
+    platform_domain = "aitechs.co.ke"   
+  end
+
   # Return JSON response
-  render json: { redirect: "https://#{host}.owitech.co.ke/account-locked" }, status: :too_many_requests 
+  render json: { redirect: "https://#{host}.#{platform_domain}/account-locked" }, status: :too_many_requests 
 }
 
 
@@ -82,14 +91,24 @@ def set_tenant
 
 
     def authenticate_webauthn
-      # "id": ""AdVZRNnFYkuE-z2ExPy7YNCjTEbBPiGqJHJ0DSMW8d_3H63vtT5dcjFWa_QUp5bNTimc5J3_SSXIeFVuUeAbxTo",
-      # "5TR0TJqgdKRNuqsDhDQV6L7ccHct5B_xGUJ1HJWp0G4" =>  chalenge,
+    
       admin = User.find_by(username: params[:user_name]) || User.find_by(email: params[:email])
 
+
+
+      
+  full_domain = request.headers["X-Domain"] 
+  base_domain = full_domain.to_s.split('.').last(3).join('.') if full_domain.present?
+  if base_domain == "owitech.co.ke"
+    platform_domain = "owitech.co.ke"
+  else
+    platform_domain = "aitechs.co.ke"   
+  end
+
       relying_party = WebAuthn::RelyingParty.new(
-        origin: "https://#{request.headers['X-Subdomain']}.aitechs.co.ke",
-        name: "#{request.headers['X-Subdomain']}.aitechs.co.ke",
-        id: "#{request.headers['X-Subdomain']}.aitechs.co.ke"
+        origin: "https://#{request.headers['X-Subdomain']}.#{platform_domain}",
+        name: "#{request.headers['X-Subdomain']}.#{platform_domain}",
+        id: "#{request.headers['X-Subdomain']}.#{platform_domain}"
       )
     
       # relying_party = WebAuthn::RelyingParty.new(
@@ -236,12 +255,21 @@ end
         #   name: "#{request.headers['X-Subdomain']}",
         #   id: "localhost"
         # )
+        # 
+          
+  full_domain = request.headers["X-Domain"] 
+  base_domain = full_domain.to_s.split('.').last(3).join('.') if full_domain.present?
+  if base_domain == "owitech.co.ke"
+    platform_domain = "owitech.co.ke"
+  else
+    platform_domain = "aitechs.co.ke"   
+  end
         
         
         relying_party = WebAuthn::RelyingParty.new(
-          origin: "https://#{request.headers['X-Subdomain']}.aitechs.co.ke",
-          name: "#{request.headers['X-Subdomain']}.aitechs.co.ke",
-          id: "#{request.headers['X-Subdomain']}.aitechs.co.ke"
+          origin: "https://#{request.headers['X-Subdomain']}.#{platform_domain}",
+          name: "#{request.headers['X-Subdomain']}.#{platform_domain}",
+          id: "#{request.headers['X-Subdomain']}.#{platform_domain}"
         )
   
         # Validate incoming credential
@@ -451,11 +479,19 @@ end
         #   name: "#{request.headers['X-Subdomain']}",
         #   id: 'localhost'
         # )
+        
+  full_domain = request.headers["X-Domain"] 
+  base_domain = full_domain.to_s.split('.').last(3).join('.') if full_domain.present?
+  if base_domain == "owitech.co.ke"
+    platform_domain = "owitech.co.ke"
+  else
+    platform_domain = "aitechs.co.ke"   
+  end
 
         relying_party = WebAuthn::RelyingParty.new(
-          origin: "https://#{request.headers['X-Subdomain']}.aitechs.co.ke",
-          name: "#{request.headers['X-Subdomain']}.aitechs.co.ke",
-          id: "#{request.headers['X-Subdomain']}.aitechs.co.ke"
+          origin: "https://#{request.headers['X-Subdomain']}.#{platform_domain}",
+          name: "#{request.headers['X-Subdomain']}.#{platform_domain}",
+          id: "#{request.headers['X-Subdomain']}.#{platform_domain}"
         )
 
 
@@ -511,12 +547,20 @@ end
       #   id: "localhost"
       # )
       
+         
+  full_domain = request.headers["X-Domain"] 
+  base_domain = full_domain.to_s.split('.').last(3).join('.') if full_domain.present?
+  if base_domain == "owitech.co.ke"
+    platform_domain = "owitech.co.ke"
+  else
+    platform_domain = "aitechs.co.ke"   
+  end
       
       
       relying_party = WebAuthn::RelyingParty.new(
-        origin: "https://#{request.headers['X-Subdomain']}.aitechs.co.ke",
-        name: "#{request.headers['X-Subdomain']}.aitechs.co.ke",
-        id: "#{request.headers['X-Subdomain']}.aitechs.co.ke"
+        origin: "https://#{request.headers['X-Subdomain']}.#{platform_domain}",
+        name: "#{request.headers['X-Subdomain']}.#{platform_domain}",
+        id: "#{request.headers['X-Subdomain']}.#{platform_domain}"
       )
   
       challenge = params[:credential][:challenge]
