@@ -273,6 +273,8 @@ get '/this_month_revenue', to: 'hotspot_mpesa_revenues#this_month_revenue'
 
 get '/api/todays_revenue', to: 'hotspot_mpesa_revenues#todays_revenue'
 get '/todays_revenue', to: 'hotspot_mpesa_revenues#todays_revenue'
+get "/api/yesterdays_revenue", to: "hotspot_mpesa_revenues#yesterdays_revenue"
+get "/yesterdays_revenue", to: "hotspot_mpesa_revenues#yesterdays_revenue"
 
 
 

@@ -238,12 +238,20 @@ def todays_revenue
   # end_time = Time.current
   #  host = request.headers['X-Subdomain']
   #   @account = Account.find_by(subdomain: host)
-    todays_revenue = HotspotMpesaRevenue.today.sum(:amount)
+    today_revenue = HotspotMpesaRevenue.today.sum(:amount)
   
    
-  render json: todays_revenue
+  render json: today_revenue
 end
  
+
+
+
+def yesterdays_revenue
+yesterday_revenue = HotspotMpesaRevenue.yesterday.sum(:amount)
+ render json: yesterday_revenue
+
+end
 
 
 def this_month_revenue

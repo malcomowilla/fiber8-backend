@@ -18,6 +18,11 @@ class HotspotMpesaRevenue < ApplicationRecord
   scope :today, -> {
     where(created_at: Time.current.beginning_of_day..Time.current)
   }
+
+
+  scope :yesterday, -> {
+  where(created_at: 1.day.ago.beginning_of_day..1.day.ago.end_of_day)
+}
   
   scope :this_week, -> {
     where(created_at: Time.current.beginning_of_week..Time.current)
