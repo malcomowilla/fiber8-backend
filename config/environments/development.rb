@@ -22,18 +22,18 @@ Rails.application.configure do
 
 
 
-  def self.current_cloudflare_url
-    @current_cloudflare_url ||= begin
+  # def self.current_cloudflare_url
+  #   @current_cloudflare_url ||= begin
      
-        # For development/staging - parse from cloudflared logs
-        logs = `journalctl -u cloudflared -n 100 --no-pager --reverse`
-        match = logs.match(/https:\/\/([a-z0-9-]+\.trycloudflare\.com)/)
-        match ? match[1] : 'default.trycloudflare.com'
+  #       # For development/staging - parse from cloudflared logs
+  #       logs = `journalctl -u cloudflared -n 100 --no-pager --reverse`
+  #       match = logs.match(/https:\/\/([a-z0-9-]+\.trycloudflare\.com)/)
+  #       match ? match[1] : 'default.trycloudflare.com'
       
-    end
-  end
+  #   end
+  # end
 
-  Rails.application.routes.default_url_options[:host] = current_cloudflare_url
+  # Rails.application.routes.default_url_options[:host] = current_cloudflare_url
 
 
   # Rails.application.routes.default_url_options[:host] = 'solving-choice-dutch-utah.trycloudflare.com'
@@ -82,7 +82,7 @@ Rails.application.configure do
     #  config.cache_store = :memory_store, { 
     #   size: 64.megabytes 
     # }
-    config.cache_store = :redis_cache_store, { url: ENV.fetch('REDIS_URL', 'redis://localhost:6379/1') }
+    config.cache_store = :redis_cache_store, { url: ENV.fetch('REDIS_URL', 'redis://redis:6379/1') }
 
     config.public_file_server.headers = {
       "Cache-Control" => "public, max-age=#{2.days.to_i}"

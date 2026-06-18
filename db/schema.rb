@@ -419,10 +419,6 @@ ActiveRecord::Schema[7.2].define(version: 2026_06_04_051727) do
     t.boolean "enable_compensation"
     t.string "compensation_minutes"
     t.string "compensation_hours"
-    t.boolean "enable_free_trial", default: false
-    t.integer "free_trial_duration_minutes", default: 5
-    t.integer "free_trial_download_limit", default: 2
-    t.integer "free_trial_upload_limit", default: 1
   end
 
   create_table "hotspot_mpesa_revenues", force: :cascade do |t|

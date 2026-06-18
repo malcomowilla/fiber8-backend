@@ -67,65 +67,35 @@
 # -------------------------------
 # Build stage
 # -------------------------------
-FROM ruby:3.2.1 AS build
 
-# Add Linux packages required for Ruby and Rails
-RUN apt-get update -qq && \
-    apt-get install --no-install-recommends -y \
-      build-essential \
-      git \
-      pkg-config \
-      libpq-dev \
-      libssl-dev \            
-      libvips \
-      postgresql-client \
-      curl \
-      nodejs \
-      yarn \
+# Dockerfile - Rails application with all dependencies
+
+FROM ruby:3.2.1-slim 
+
+# Install system packages required for Rails and PostgreSQL
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    libpq-dev \
+    nodejs \
+    npm \
+    git \
+    curl \
+    && npm install -g yarn \
+    && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
-# Install bundler early to speed up future builds
-RUN gem install bundler
-
-# Copy gem files and install gems
+# Install Ruby gems first for better layer caching
 COPY Gemfile Gemfile.lock ./
-RUN bundle install 
+RUN bundle install --jobs 4 --retry 3
 
-# Copy the rest of the app
+# Copy the application source code
 COPY . .
 
-# Precompile assets and bootsnap cache
-ENV RAILS_ENV=production
-RUN SECRET_KEY_BASE_DUMMY=1 ./bin/rails assets:precompile
-RUN bundle exec bootsnap precompile 
+# Precompile assets for production
+RUN SECRET_KEY_BASE=dummy bundle exec rails assets:precompile 2>/dev/null || true
 
-# -------------------------------
-# Runtime stage
-# -------------------------------
-FROM ruby:3.2.1-slim
-
-# Install runtime dependencies
-RUN apt-get update -qq && \
-    apt-get install --no-install-recommends -y \
-      libpq5 \
-      libvips \
-      postgresql-client \
-      curl \
-    && rm -rf /var/lib/apt/lists/*
-
-WORKDIR /app
-
-# Copy app from build stage
-COPY --from=build /app /app
-
-# Make sure the app can write to tmp and log
-RUN mkdir -p tmp/pids tmp/cache tmp/sockets log && \
-    chown -R nobody:nogroup .
-
-USER nobody
-
-ENV RAILS_ENV=production
 EXPOSE 3000
-CMD ["./bin/rails", "server"]
+
+CMD ["bundle", "exec", "rails", "server", "-b", "127.0.0.1"]

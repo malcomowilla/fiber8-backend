@@ -45,7 +45,6 @@
 
 
 
-
 default: &default
   adapter: postgresql
   encoding: unicode
@@ -55,8 +54,9 @@ default: &default
   pool: 10
 development:
   <<: *default
-  database: fiber8backend_development
-  port: 5432
+ 
+  database: <%= ENV['DB_NAME'] %>
+  port: <%= ENV['DB_PORT'] %>
   host: localhost
   pool: 10
  
@@ -96,8 +96,8 @@ development:
 test:
   <<: *default
   # database: fiber8backend_test
-  database: fiber8backend_development_test
-  port: 5432
+  database: <%= ENV['DB_NAME'] %>
+  port: <%= ENV['DB_PORT'] %>
   host: localhost
  
   username: <%= ENV['DATABASE_USERNAME'] %>

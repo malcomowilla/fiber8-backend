@@ -60,7 +60,7 @@ development:
 
     rad_sessions_job:
       class: RadSessionsJob
-      every: ["12s"]
+      every: ["5s"]
       queue: radacct
 
     generate_clients_conf_job:
