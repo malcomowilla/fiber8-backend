@@ -1100,6 +1100,187 @@ Rails.logger.info 'router not found'
     
   end
 
+
+
+
+
+
+
+
+
+
+# CHURN CRITERIA
+# ──────────────
+# A subscriber is counted as CHURNED in a given month when ANY of:
+#   1. status == 'offline'  AND  last_seen_at (or updated_at) < 30 days ago
+#      → they have been unreachable for over a month
+#   2. valid_until is NOT NULL  AND  valid_until < today  AND  no payment
+#      received in the last 7 days (grace window)
+#   3. The record was soft-deleted / hard-deleted during the month
+#      (requires a `deleted_at` column or an audit log — adjust as needed)
+#
+# FORMULA
+# ───────
+# Churn Rate (%) = (churned_this_month / subscribers_at_start_of_month) × 100
+#
+# BENCHMARKS
+# ──────────
+# < 3%   → Healthy for a regional ISP
+# 3–7%   → Warning — investigate top cause
+# > 7%   → Critical — immediate retention action needed
+ 
+
+def subscriber_churn_stats
+  months = (params[:months] || 6).to_i.clamp(1, 24)
+  
+  now              = Time.current
+  start_of_month   = now.beginning_of_month
+  end_of_month     = now.end_of_month
+  
+  # ── Calculate for THIS MONTH ──────────────────────────────────────────────
+  # All active subscribers at the start of this month
+  total_start = Subscriber.where('created_at < ?', start_of_month).count
+  
+  # CHURNED = No revenue in last 30 days AND subscription expired
+  # (This is more accurate than checking status field)
+  
+  # 1) Subscribers with NO payments in the last 30 days
+  no_payment_30_days = Subscriber.where(
+    id: Subscriber.where.not(
+      id: PpPoeMpesaRevenue.where('created_at >= ?', 30.days.ago).select(:subscriber_id)
+    )
+  ).count
+  
+  # 2) Among those with no payment, how many have expired subscriptions?
+  #    (An active subscriber with no payment is not churned yet — grace period)
+  churned_no_payment = Subscriber.where(
+    id: Subscriber.where.not(
+      id: PpPoeMpesaRevenue.where('created_at >= ?', 30.days.ago).select(:subscriber_id)
+    )
+  ).joins(:subscriptions)
+   .where('subscriptions.expiration_date < ?', now)
+   .select('subscribers.id')
+   .distinct
+   .count
+  
+  # 3) Deleted/inactive this month
+  manually_deleted = begin
+    Subscriber.only_deleted
+              .where(deleted_at: start_of_month..end_of_month)
+              .count
+  rescue
+    0
+  end
+  
+  churned_this_month = churned_no_payment + manually_deleted
+  
+  # New subscribers this month
+  new_this_month = Subscriber.where(created_at: start_of_month..end_of_month).count
+  
+  # Retained = was here at start AND not churned
+  retained = [total_start - churned_this_month, 0].max
+  
+  churn_rate = total_start > 0 ? (churned_this_month.to_f / total_start * 100).round(2) : 0.0
+  
+  # ── Monthly history ────────────────────────────────────────────────────────
+  monthly_history = months.times.map do |i|
+    period_start = i.months.ago.beginning_of_month
+    period_end   = i.months.ago.end_of_month
+    label        = period_start.strftime('%b %y')
+    
+    total_at_start = Subscriber.where('created_at < ?', period_start).count
+    
+    # No payments during this month
+    c_no_payment = Subscriber.where(
+      id: Subscriber.where.not(
+        id: PpPoeMpesaRevenue.where(created_at: period_start..period_end).select(:subscriber_id)
+      )
+    ).count
+    
+    # Among those, with expired subs
+    c_churned = Subscriber.where(
+      id: Subscriber.where.not(
+        id: PpPoeMpesaRevenue.where(created_at: period_start..period_end).select(:subscriber_id)
+      )
+    ).joins(:subscriptions)
+     .where('subscriptions.expiration_date < ?', period_end)
+     .select('subscribers.id')
+     .distinct
+     .count
+    
+    # Deleted
+    c_deleted = begin
+      Subscriber.only_deleted.where(deleted_at: period_start..period_end).count
+    rescue; 0; end
+    
+    churned = c_churned + c_deleted
+    rate    = total_at_start > 0 ? (churned.to_f / total_at_start * 100).round(2) : 0.0
+    new_s   = Subscriber.where(created_at: period_start..period_end).count
+    
+    { 
+      month: label, 
+      churned: churned, 
+      total: total_at_start, 
+      rate: rate, 
+      new_subs: new_s,
+      no_payment: c_no_payment,
+      with_expired_sub: c_churned
+    }
+  end.reverse
+  
+  render json: {
+    churn_rate_this_month:      churn_rate,
+    churned_this_month:         churned_this_month,
+    total_start_of_month:       total_start,
+    new_this_month:             new_this_month,
+    retained:                   retained,
+    no_payment_30_days:         no_payment_30_days,
+    with_expired_subscription:  churned_no_payment,
+    manually_deleted:           manually_deleted,
+    monthly_history:            monthly_history,
+    churn_definition: {
+      reason_1: "No payment received in last 30 days",
+      reason_2: "AND subscription expiration_date is in the past",
+      reason_3: "OR subscriber was manually deleted"
+    }
+  }
+end
+ 
+ 
+# ── BONUS: Get detailed churn details for analysis ────────────────────────
+def churn_details
+  # Show who churned and why
+  days_back = params[:days] || 30
+  
+  # Customers who haven't paid and have expired subs
+  churned = Subscriber.where(
+    id: Subscriber.where.not(
+      id: PpPoeMpesaRevenue.where("created_at >= ?", days_back.to_i.days.ago).select(:subscriber_id)
+    )
+  ).joins(:subscriptions)
+   .where('subscriptions.expiration_date < ?', Time.current)
+   .select('subscribers.id, subscribers.name, subscribers.phone_number, subscriptions.expiration_date, subscriptions.package_name')
+   .map do |sub|
+     {
+       id: sub.id,
+       name: sub.name,
+       phone: sub.phone_number,
+       expired_since: (Time.current - sub.subscriptions.first.expiration_date).to_i / 86400,  # days
+       last_package: sub.subscriptions.last&.package_name,
+       last_payment: PpPoeMpesaRevenue.where(subscriber_id: sub.id).order(created_at: :desc).first&.created_at
+     }
+   end
+  
+  render json: {
+    total_churned: churned.count,
+    churned_subscribers: churned,
+    analysis_period_days: days_back
+  }
+end
+ 
+
+ 
+
   private
 
 

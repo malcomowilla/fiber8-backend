@@ -32,6 +32,117 @@ class HotspotSessionsController < ApplicationController
 
 
 
+  # Add these actions to your HotspotSessionsController
+# Also add to your routes:
+#
+#   get  'hotspot_sessions/free_trial_devices', to: 'hotspot_sessions#free_trial_devices'
+#   delete 'hotspot_sessions/free_trial_devices/:id', to: 'hotspot_sessions#destroy_free_trial_device'
+#
+# The existing logout_user action already handles MAC-based logout,
+# but we add a mac param path so the React component can call it directly.
+
+# GET /hotspot_sessions/free_trial_devices
+def free_trial_devices
+  devices = FreeTrialDevice.where(account_id: @account.id)
+                           .order(used_at: :desc)
+
+  render json: devices.map { |d|
+    {
+      id:          d.id,
+      mac_address: d.mac_address,
+      package:     d.package,
+      used_at:     d.used_at
+    }
+  }
+end
+
+# DELETE /hotspot_sessions/free_trial_devices/:id
+def destroy_free_trial_device
+  device = FreeTrialDevice.find_by!(id: params[:id], account_id: @account.id)
+  device.destroy!
+
+  # Also remove the RADIUS entries so the MAC cannot re-auth on the old group
+  RadUserGroup.where(username: device.mac_address).destroy_all
+  RadCheck.where(username: device.mac_address, account_id: @account.id).destroy_all
+
+  render json: { message: 'Device record deleted' }, status: :ok
+
+rescue ActiveRecord::RecordNotFound
+  render json: { error: 'Device not found' }, status: :not_found
+end
+
+
+
+def logout_user
+  host    = request.headers['X-Subdomain']
+  @account = Account.find_by!(subdomain: host)
+
+  # Support both voucher-based and MAC-based logout
+  mac     = params[:mac]
+  voucher = params[:voucher]
+
+  if mac.present?
+    username    = mac.upcase
+    nas_routers = NasRouter.where(account_id: @account.id)
+  elsif voucher.present?
+    hotspot_voucher = HotspotVoucher.find_by(voucher: voucher)
+    return render json: { error: 'Voucher not found' }, status: :not_found unless hotspot_voucher
+    username    = hotspot_voucher.voucher
+    nas_routers = NasRouter.where(account_id: hotspot_voucher.account_id)
+  else
+    return render json: { error: 'mac or voucher param required' }, status: :unprocessable_entity
+  end
+
+  nas_routers.each do |nas|
+    begin
+      active_users = RestClient::Request.execute(
+        method:   :get,
+        url:      "http://#{nas.ip_address}/rest/ip/hotspot/active",
+        user:     nas.username,
+        password: nas.password
+      )
+
+      users  = JSON.parse(active_users.body)
+      active = users.find { |u| u['user'] == username }
+      next unless active
+
+      RestClient::Request.execute(
+        method:   :post,
+        url:      "http://#{nas.ip_address}/rest/ip/hotspot/active/remove",
+        user:     nas.username,
+        password: nas.password,
+        payload:  { '.id': active['.id'] }.to_json,
+        headers:  { content_type: :json }
+      )
+
+      if hotspot_voucher
+        HotspotVoucherChannel.broadcast_to(@account, {
+          type:      'voucher_online',
+          is_online: false,
+          voucher:   hotspot_voucher,
+          id:        hotspot_voucher.id
+        })
+      end
+
+      return render json: { message: 'Successfully logged out user' }, status: :ok
+
+    rescue RestClient::Unauthorized
+      Rails.logger.info "REST auth failed for router #{nas.ip_address}"
+      next
+    rescue RestClient::ExceptionWithResponse => e
+      Rails.logger.info "MikroTik REST error on #{nas.ip_address}: #{e.response}"
+      next
+    rescue StandardError => e
+      Rails.logger.info "REST error logging out device #{nas.ip_address}: #{e.message}"
+      next
+    end
+  end
+
+  render json: { error: 'User not found on any router' }, status: :not_found
+end
+
+
+
 def grant_free_trial
   mac = params[:mac]
   ip  = params[:ip]

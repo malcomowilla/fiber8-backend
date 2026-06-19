@@ -160,9 +160,10 @@ resources :company_ids
 
 end
 
-
-
-
+delete "/api/hotspot_sessions/free_trial_devices",to: "hotspot_sessions#destroy_free_trial_device"
+delete "/api/hotspot_sessions/logout_user", to: "hotspot_sessions#logout_user"
+get '/api/churn_details', to: 'subscribers#churn_details'  # ?days=30
+get  'subscriber_churn_stats', to: 'subscribers#subscriber_churn_stats'
 post "/api/admin/verify_withdrawal_otp", to: 'sessions#verify_withdrawal_otp'
 post "/admin/verify_withdrawal_otp", to: 'sessions#verify_withdrawal_otp'
 
