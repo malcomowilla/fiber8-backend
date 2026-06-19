@@ -59,7 +59,7 @@ def get_total_bandwidth_and_online_users
     # framedprotocol: 'PPP',
     acctstoptime: nil,
 
-  )
+  ).where('acctupdatetime > ?', 3.minutes.ago) 
 
 
 
@@ -67,7 +67,7 @@ def get_total_bandwidth_and_online_users
     framedprotocol: 'PPP',
     acctstoptime: nil,
 
-  )
+  ).where('acctupdatetime > ?', 3.minutes.ago) 
 
 
   active_user_count = active_sessions_count.count
