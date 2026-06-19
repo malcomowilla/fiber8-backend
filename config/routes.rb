@@ -159,7 +159,7 @@ resources :company_ids
   # resources :hotspot_plans
 
 end
-
+get "/api/hotspot_sessions/free_trial_devices", to: "hotspot_sessions#free_trial_devices"
 delete "/api/hotspot_sessions/free_trial_devices",to: "hotspot_sessions#destroy_free_trial_device"
 delete "/api/hotspot_sessions/logout_user", to: "hotspot_sessions#logout_user"
 get '/api/churn_details', to: 'subscribers#churn_details'  
