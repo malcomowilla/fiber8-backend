@@ -5,6 +5,8 @@ require_relative '../app/middleware/set_tenant_ppoe'
 require_relative '../app/middleware/check_inactivity'
 require_relative '../app/middleware/set_tenant_hotspot'
 require_relative '../app/middleware/block_loophole'
+require_relative '../app/middleware/maintenance'
+
 # require_relative '../app/models/rad_acct_observer'
 
 # require "rails/observers/active_record/observer"
@@ -47,6 +49,7 @@ end
 config.middleware.use SetTenantPpoe
 config.middleware.use SetTenantHotspot
 config.middleware.use CheckInactivity
+ config.middleware.use Maintenance
 config.middleware.use Rack::Attack
 # config/application.rb
 config.middleware.use BlockLoophole

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_06_04_051727) do
+ActiveRecord::Schema[7.2].define(version: 2026_06_20_064901) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -419,6 +419,10 @@ ActiveRecord::Schema[7.2].define(version: 2026_06_04_051727) do
     t.boolean "enable_compensation"
     t.string "compensation_minutes"
     t.string "compensation_hours"
+    t.boolean "enable_free_trial", default: false
+    t.integer "free_trial_duration_minutes", default: 5
+    t.integer "free_trial_download_limit", default: 2
+    t.integer "free_trial_upload_limit", default: 1
   end
 
   create_table "hotspot_mpesa_revenues", force: :cascade do |t|
@@ -672,6 +676,16 @@ ActiveRecord::Schema[7.2].define(version: 2026_06_04_051727) do
     t.integer "account_id"
     t.boolean "phone_notification"
     t.integer "expiry_warning_days"
+  end
+
+  create_table "maintenance_settings", force: :cascade do |t|
+    t.boolean "enabled"
+    t.datetime "until_time"
+    t.text "message"
+    t.bigint "account_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id"], name: "index_maintenance_settings_on_account_id"
   end
 
   create_table "nas", force: :cascade do |t|
@@ -1413,4 +1427,5 @@ ActiveRecord::Schema[7.2].define(version: 2026_06_04_051727) do
 
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "maintenance_settings", "accounts"
 end

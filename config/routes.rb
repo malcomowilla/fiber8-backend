@@ -161,6 +161,15 @@ resources :company_ids
 end
 
 
+
+
+  get '/api/maintenance_status', to: 'maintenance#status'
+  post '/api/maintenance_mode',   to: 'maintenance#toggle'
+
+
+
+  get '/maintenance_status', to: 'maintenance#status'
+  post '/maintenance_mode',   to: 'maintenance#toggle'
 get "/api/hotspot_sessions/free_trial_devices", to: "hotspot_sessions#free_trial_devices"
 delete "/api/hotspot_sessions/free_trial_devices/:id",to: "hotspot_sessions#destroy_free_trial_device"
 post "/api/hotspot_sessions/logout_user", to: "hotspot_sessions#logout_user"
