@@ -2,15 +2,15 @@ class MaintenanceController < ApplicationController
  
   set_current_tenant_through_filter
 
-  before_action :set_tenant
+  # before_action :set_tenant
 
-  def set_tenant
-    host     = request.headers['X-Subdomain']
-    @account = Account.find_by!(subdomain: host)
-    ActsAsTenant.current_tenant = @account
-  rescue ActiveRecord::RecordNotFound
-    render json: { error: 'Invalid tenant' }, status: :not_found
-  end
+  # def set_tenant
+  #   host     = request.headers['X-Subdomain']
+  #   @account = Account.find_by!(subdomain: host)
+  #   ActsAsTenant.current_tenant = @account
+  # rescue ActiveRecord::RecordNotFound
+  #   render json: { error: 'Invalid tenant' }, status: :not_found
+  # end
 
   # GET /api/maintenance_status
   # Returns current maintenance state — safe to call without auth
