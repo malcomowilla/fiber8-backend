@@ -38,6 +38,9 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+
+      extra_hosts:
+      - "host.docker.internal:host-gateway"
     # Override for development: use rails server with binding for Docker
     command: bash -c "rm -f tmp/pids/server.pid && bundle exec rails server -b 0.0.0.0 -p 3000"
     volumes:
@@ -50,7 +53,7 @@ services:
     environment:
       RAILS_ENV: development
       # DATABASE_URL: postgres://${DATABASE_USERNAME}:${DATABASE_PASSWORD}@db:${DB_PORT}/${DB_NAME}
-      DATABASE_HOST: 172.17.0.1 
+      DATABASE_HOST: host.docker.internal
       DATABASE_PORT: ${DB_PORT}
       DATABASE_NAME: ${DB_NAME}
       DATABASE_USERNAME: ${DATABASE_USERNAME}
@@ -71,13 +74,23 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+
+
+      extra_hosts:
+      -  "host.docker.internal:host-gateway"
+
     command: bundle exec sidekiq -C config/sidekiq.yml
     volumes:
       - .:/app
       - bundle_cache:/usr/local/bundle
     environment:
       RAILS_ENV: development
-      DATABASE_URL: postgres://${DATABASE_USERNAME}:${DATABASE_PASSWORD}@db:${DB_PORT}/${DB_NAME}
+      # DATABASE_URL: postgres://${DATABASE_USERNAME}:${DATABASE_PASSWORD}@db:${DB_PORT}/${DB_NAME}
+      DATABASE_HOST: host.docker.internal
+      DATABASE_PORT: ${DB_PORT}
+      DATABASE_NAME: ${DB_NAME}
+      DATABASE_USERNAME: ${DATABASE_USERNAME}
+      DATABASE_PASSWORD: ${DATABASE_PASSWORD}
       REDIS_URL: redis://redis:6379/0
       SIDEKIQ_REDIS_URL: redis://redis:6379/1
       SECRET_KEY_BASE: development-secret-key
