@@ -55,8 +55,8 @@ services:
       SECRET_KEY_BASE: development-secret-key
       RAILS_LOG_TO_STDOUT: "true"
     depends_on:
-      db:
-        condition: service_healthy
+      # db:
+      #   condition: service_healthy
       redis:
         condition: service_healthy
     networks:
@@ -78,8 +78,8 @@ services:
       SECRET_KEY_BASE: development-secret-key
       RAILS_LOG_TO_STDOUT: "true"
     depends_on:
-      db:
-        condition: service_healthy
+      # db:
+      #   condition: service_healthy
       redis:
         condition: service_healthy
     networks:
