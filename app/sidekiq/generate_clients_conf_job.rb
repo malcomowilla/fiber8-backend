@@ -11,7 +11,7 @@ class GenerateClientsConfJob
     # File.open('/etc/freeradius/3.0/clients.conf', 'w') do |f|
 
     
-    File.open('/etc/freeradius/3.0/clients.conf', 'w') do |f|
+    File.open('/freeradius/clients.conf', 'w') do |f|
       Na.find_each do |nas|
         next if nas.nasname.blank? || nas.secret.blank?
 

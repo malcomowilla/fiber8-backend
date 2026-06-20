@@ -71,14 +71,9 @@ services:
 
 
 
-freeradius:
-    volumes:
-      - freeradius_config:/etc/freeradius/3.0
-
-volumes:
-  freeradius_config:
 
 
+      
 
   sidekiq:
     build:
@@ -109,10 +104,25 @@ volumes:
     networks:
       - appnet
 
+
+
+
+  freeradius:
+    image: freeradius/freeradius-server:latest
+    volumes:
+      - freeradius_config:/etc/freeradius/3.0
+    ports:
+      - "1812:1812/udp"
+      - "1813:1813/udp"
+    networks:
+      - appnet
+
+
 volumes:
   pgdata:
   redisdata:
   bundle_cache:
+  freeradius_config:
 
 networks:
   appnet:
