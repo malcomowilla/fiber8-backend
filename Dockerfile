@@ -98,4 +98,4 @@ RUN SECRET_KEY_BASE=dummy bundle exec rails assets:precompile 2>/dev/null || tru
 
 EXPOSE 3000
 
-CMD ["bundle", "exec", "rails", "server", "-b", "127.0.0.1"]
+CMD ["bundle", "exec", "rails", "server", "-b", "0.0.0.0", "-p", "3000"]
