@@ -57,9 +57,9 @@ development:
  
   database: <%= ENV['DB_NAME'] %>
   port: <%= ENV['DB_PORT'] %>
-  host: localhost
+  host: <%= ENV['DATABASE_HOST'] %>
   pool: 10
- 
+
   username: <%= ENV['DATABASE_USERNAME'] %>
   password: <%= ENV['DATABASE_PASSWORD'] %>
   
