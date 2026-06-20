@@ -77,16 +77,16 @@ SystemAdmin.create(system_admin_phone_number: ENV['SYSTEM_ADMIN_PHONE_NUMBER'],
 # end
 
 
- Na.first_or_initialize(shortname: 'superadmin', 
+#  Na.first_or_initialize(shortname: 'superadmin', 
 
 
 
-    secret:'dg&24rand(0)'
+#     secret:'dg&24rand(0)'
     
     
-    )
+#     )
 
-puts "radius settings have been loaded successfully! 🎯"
+# puts "radius settings have been loaded successfully! 🎯"
 
 templates = [
     {name: 'sleekspot', template_type: 'Sleekspot Template'},
