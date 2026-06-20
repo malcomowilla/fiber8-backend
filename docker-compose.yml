@@ -67,6 +67,19 @@ services:
     networks:
       - appnet
 
+
+
+
+
+freeradius:
+    volumes:
+      - freeradius_config:/etc/freeradius/3.0
+
+volumes:
+  freeradius_config:
+
+
+
   sidekiq:
     build:
       context: .
