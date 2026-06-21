@@ -553,6 +553,56 @@ def check_payment_status
         )
 
 
+
+ if session&.payment_type == 'device_binding'
+    hotspot_package = HotspotPackage.find_by(
+      name:       session.hotspot_package,
+      account_id: session.account_id
+    )
+
+    # 1. Create IP binding record
+    binding = IpBinding.create!(
+      name:        session.device_name,
+      mac:         session.device_mac,
+      package:     session.hotspot_package,
+      device_type: session.device_type,
+      account_id:  session.account_id,
+      router_id:   NasRouter.where(account_id: session.account_id).first&.id
+    )
+
+    # 2. Record the payment (reuse HotspotMpesaRevenue or a dedicated model)
+    HotspotMpesaRevenue.create!(
+      amount:         data["TransAmount"],
+      voucher:        "DEVICE-#{binding.id}",
+      reference:      data["TransID"],
+      payment_method: "Mpesa",
+      time_paid:      data["TransTime"],
+      account_id:     session.account_id,
+      name:           data["FirstName"],
+      phone_number:   session.phone_number
+    )
+
+    # 3. Push binding to MikroTik via existing controller logic
+    #    (call the same private helpers IpBindingsController uses)
+    nas_routers = NasRouter.where(account_id: session.account_id)
+    nas_routers.each do |nas|
+      begin
+        mikrotik_add_binding_direct(binding, nas)
+        # If package has speed limits, add queue too
+        mikrotik_add_queue_direct(binding, hotspot_package, nas) if hotspot_package
+      rescue => e
+        Rails.logger.warn "MikroTik binding failed for #{binding.mac}: #{e.message}"
+      end
+    end
+
+    session.update!(connected: true, status: 'used', paid: true)
+    head :ok
+    return
+  end
+
+
+
+
         # voucher = HotspotVoucher.find_by(voucher: voucher_code)
 hotspot_package = HotspotPackage.find_by(name: session.hotspot_package,
 account_id: session.account_id
@@ -936,8 +986,7 @@ plan = ActsAsTenant.current_tenant&.hotspot_and_dial_plan
   expired_pppoe = plan&.expiry.present? && plan.expiry <= Time.current
 
   if expired_pppoe
-    return render json: { error: 'License has expired'}, status: 422 
-    
+    return render json: { error: 'License has expired'}, status: 422  
   end
 
   phone_number = params[:phone_number]
@@ -2052,6 +2101,41 @@ end
 
 
 private
+
+
+
+def mikrotik_add_binding_direct(binding, nas)
+  require 'net/ssh'
+  mac = binding.mac.upcase.gsub('-', ':')
+  cmd = "/ip hotspot ip-binding add mac-address=\"#{mac}\" type=bypassed server=hotspot1"
+  cmd += " comment=\"#{binding.name}\"" if binding.name.present?
+
+  Net::SSH.start(nas.ip_address, nas.username,
+    password: nas.password.to_s, verify_host_key: :never,
+    non_interactive: true, timeout: 15
+  ) { |ssh| ssh.exec!(cmd) }
+end
+
+def mikrotik_add_queue_direct(binding, package, nas)
+  return unless binding.ip.present? && package.upload_limit.present?
+  require 'net/ssh'
+
+  queue_name = "binding_#{binding.mac.upcase.gsub(':', '')}"
+  cmd = "/queue simple add name=\"#{queue_name}\" target=\"#{binding.ip}\" " \
+        "max-limit=\"#{package.upload_limit}M/#{package.download_limit}M\" " \
+        "comment=\"device_binding_#{binding.id}\""
+
+  Net::SSH.start(nas.ip_address, nas.username,
+    password: nas.password.to_s, verify_host_key: :never,
+    non_interactive: true, timeout: 15
+  ) { |ssh| ssh.exec!(cmd) }
+end
+
+
+
+
+
+
 
       def compensation_duration(tenant)
   customization = tenant.hotspot_customization

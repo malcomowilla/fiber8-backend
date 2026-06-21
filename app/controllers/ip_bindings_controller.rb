@@ -56,7 +56,7 @@ class IpBindingsController < ApplicationController
     mac:         params[:mac],
     ip:          params[:ip],
     expiry:      params[:expiry],
-    device_type: params[:device_type],
+    device_type: params[:device_type] || params[:intended_device_type] ,
     router_id:   params[:router_id],
   )
 
@@ -134,6 +134,69 @@ end
   @ip_binding.destroy!
   head :no_content
 end
+
+
+
+
+
+
+
+def make_device_package_payment
+  phone_number  = params[:phone_number]
+  amount        = params[:amount]
+  package_name  = params[:package]
+  device_name   = params[:device_name]
+  device_mac    = params[:device_mac]
+  device_type   = params[:device_type]
+  client_ip     = params[:ip]
+  client_mac    = params[:mac]
+
+  # Generate a session token to track this payment
+  session_token = SecureRandom.hex(8)
+  voucher_code  = SecureRandom.hex(4).upcase
+
+  # Store pending device binding session
+  session = TemporarySession.create!(
+    session:         session_token,
+    hotspot_package: package_name,
+    phone_number:    phone_number,
+    voucher_code:    voucher_code,
+    mac:             client_mac,
+    ip:              client_ip,
+    device_name:     device_name,
+    device_mac:      device_mac,
+    device_type:     device_type,
+    payment_type:    'device_binding'  
+  )
+
+  shortcode       = ActsAsTenant.current_tenant&.hotspot_mpesa_setting&.short_code || ENV['B2C_SHORTCODE']
+  passkey         = ActsAsTenant.current_tenant&.hotspot_mpesa_setting&.passkey    || ENV['PASSKEY']
+  consumer_key    = ActsAsTenant.current_tenant&.hotspot_mpesa_setting&.consumer_key    || ENV['CONSUMER_KEY']
+  consumer_secret = ActsAsTenant.current_tenant&.hotspot_mpesa_setting&.consumer_secret || ENV['CONSUMER_SECRET']
+
+  result = MpesaBindingService.initiate_stk_push(
+    phone_number, amount, shortcode, passkey,
+    consumer_key, consumer_secret,
+    request.subdomain, voucher_code, session_token
+  )
+
+  if result[:success]
+    checkout_request_id = result[:response]['CheckoutRequestID']
+    session.update!(checkout_request_id: checkout_request_id)
+    render json: { checkout_request_id: checkout_request_id }, status: :ok
+  else
+    session.destroy
+    render json: { message: result[:error] || 'Payment initiation failed' }, status: :unprocessable_entity
+  end
+end
+
+
+
+
+
+
+
+
 
   private
 

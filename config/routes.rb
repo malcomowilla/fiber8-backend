@@ -165,6 +165,8 @@ end
 
   get '/api/maintenance_status', to: 'maintenance#status'
   post '/api/maintenance_mode',   to: 'maintenance#toggle'
+post '/api/make_device_package_payment', to: 'ip_bindings#make_device_package_payment'
+post '/make_device_package_payment', to: 'ip_bindings#make_device_package_payment'
 
 
 

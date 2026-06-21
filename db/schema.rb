@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_06_20_064901) do
+ActiveRecord::Schema[7.2].define(version: 2026_06_21_091001) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -494,6 +494,8 @@ ActiveRecord::Schema[7.2].define(version: 2026_06_20_064901) do
     t.string "free_trial_download_limit"
     t.string "free_trial_upload_limit"
     t.string "free_trial_duration_minutes"
+    t.string "intended_device_type"
+    t.string "device_icon"
     t.index ["name"], name: "index_hotspot_packages_on_name"
   end
 
@@ -1264,6 +1266,10 @@ ActiveRecord::Schema[7.2].define(version: 2026_06_20_064901) do
     t.string "checkout_request_id"
     t.integer "hotspot_voucher_id"
     t.string "status"
+    t.string "device_name"
+    t.string "device_mac"
+    t.string "device_type"
+    t.string "payment_type"
     t.index ["connected"], name: "index_temporary_sessions_on_connected"
     t.index ["hotspot_package"], name: "index_temporary_sessions_on_hotspot_package"
     t.index ["ip"], name: "index_temporary_sessions_on_ip"

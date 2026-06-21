@@ -45,6 +45,7 @@ services:
       - .:/app
       # Use a named volume for bundle cache to speed up rebuilds
       - bundle_cache:/usr/local/bundle
+      - freeradius_shared:/freeradius 
     ports:
       - "3000:3000"
     environment:
@@ -83,6 +84,7 @@ services:
     volumes:
       - .:/app
       - bundle_cache:/usr/local/bundle
+      
     environment:
       RAILS_ENV: development
       # DATABASE_URL: postgres://${DATABASE_USERNAME}:${DATABASE_PASSWORD}@db:${DB_PORT}/${DB_NAME}
@@ -122,7 +124,7 @@ volumes:
   pgdata:
   redisdata:
   bundle_cache:
-  freeradius_config:
+  freeradius_shared:
 
 networks:
   appnet:

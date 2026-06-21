@@ -11,9 +11,10 @@ class HotspotPackageSerializer < ActiveModel::Serializer
     :enable_free_trial,
     :free_trial_duration_minutes,
     :free_trial_download_limit,
-    :free_trial_upload_limit
+    :free_trial_upload_limit,
 
-
+    :intended_device_type,
+      :device_icon      
 
 
 

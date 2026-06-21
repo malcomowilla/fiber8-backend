@@ -1,5 +1,5 @@
 class Na < ApplicationRecord
-  self.inheritance_column = nil  # Disables STI
+  self.inheritance_column = nil  
   acts_as_tenant(:account)
 
 #   after_commit :regenerate_clients_conf
