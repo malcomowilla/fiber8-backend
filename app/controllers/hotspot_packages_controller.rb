@@ -291,19 +291,19 @@ def create
 
 
 
-#         if @hotspot_package.enable_free_trial
+        if @hotspot_package.enable_free_trial
           
-#         free_radius_policies_free_trial(params[:name], params[:free_trial_upload_limit],
-#   params[:free_trial_download_limit],
-#   params[:weekdays], @hotspot_package.account_id, params[:free_trial_duration_minutes])
+        free_radius_policies_free_trial(params[:name], params[:free_trial_upload_limit],
+  params[:free_trial_download_limit],
+  params[:weekdays], @hotspot_package.account_id, params[:free_trial_duration_minutes])
 
-#         else
+        else
 
-#  update_freeradius_policies(params[:name], 
-#  params[:shared_users], params[:upload_limit], params[:download_limit],
-#         params[:weekdays], @hotspot_package.account_id)
+ update_freeradius_policies(params[:name], 
+ params[:shared_users], params[:upload_limit], params[:download_limit],
+        params[:weekdays], @hotspot_package.account_id)
 
-#         end
+        end
 
 
 

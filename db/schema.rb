@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_06_21_091001) do
+ActiveRecord::Schema[7.2].define(version: 2026_06_27_095426) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -853,6 +853,9 @@ ActiveRecord::Schema[7.2].define(version: 2026_06_21_091001) do
     t.string "burst_download_speed"
     t.string "aggregation"
     t.string "subscription"
+    t.boolean "fup_enabled", default: false
+    t.string "fup_data_unit"
+    t.string "fup_data_limit"
   end
 
   create_table "partners", force: :cascade do |t|
