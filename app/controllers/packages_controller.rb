@@ -600,26 +600,56 @@ if current_user
 
 
 
-          def update_package
+       def update_package
+  package = Package.find_by(id: params[:id])
 
- package = Package.find_by(id: params[:id])
-                          if package
-                            package.update(package_params)
-                            update_freeradius_policies(package, package.account_id)
-                            ActivtyLog.create(action: 'update', ip: request.remote_ip,
- description: "Updated package #{package.name}",
-          user_agent: request.user_agent, user: current_user.username || current_user.email,
-           date: Time.current)
-                            render json: package
+  unless package
+    return render json: { error: 'Package not found' }, status: :not_found
+  end
 
-                          else
-                            render json: { error: 'package not found' }, status: :not_found
-                            
-                          end
+  Rails.logger.info "========== UPDATE PACKAGE =========="
+  Rails.logger.info "Raw params: #{params.to_unsafe_h.inspect}"
+  Rails.logger.info "Permitted params: #{package_params.to_h.inspect}"
 
-          end
+  Rails.logger.info "Before update:"
+  Rails.logger.info package.attributes.slice(
+    "fup_enabled",
+    "fup_data_unit",
+    "fup_data_limit"
+  ).inspect
 
+  if package.update(package_params)
+    Rails.logger.info "Update succeeded."
 
+    Rails.logger.info "After update:"
+    Rails.logger.info package.reload.attributes.slice(
+      "fup_enabled",
+      "fup_data_unit",
+      "fup_data_limit"
+    ).inspect
+
+    update_freeradius_policies(package, package.account_id)
+
+    ActivtyLog.create(
+      action: 'update',
+      ip: request.remote_ip,
+      description: "Updated package #{package.name}",
+      user_agent: request.user_agent,
+      user: current_user.username || current_user.email,
+      date: Time.current
+    )
+
+    render json: package
+  else
+    Rails.logger.error "Update failed!"
+    Rails.logger.error package.errors.full_messages.inspect
+
+    render json: {
+      errors: package.errors.full_messages,
+      params: package_params.to_h
+    }, status: :unprocessable_entity
+  end
+end
 
 
     
