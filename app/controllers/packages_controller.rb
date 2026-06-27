@@ -1157,6 +1157,7 @@ end
         :upload_burst_limit,
         :package,
         :fup_enabled,
+        :fup_data_unit, :fup_data_limit,
         :download_burst_limit,  :validity_period_units, :router_name,
         :ip_pool, :daily_charge, :burst_threshold_download, :burst_threshold_upload, :burst_time,
         :burst_upload_speed, :burst_download_speed, :aggregation
