@@ -1,9 +1,9 @@
 default:
-  :concurrency: 2
+  :concurrency: 5
   :queues:
-    - [invoices, 3]
+    - [invoices, 4]
     - [client_conf, 3]
-    - [default, 2]
+    - [default, 3]
     - [radacct, 2]
 
 development:
@@ -60,8 +60,9 @@ development:
 
     rad_sessions_job:
       class: RadSessionsJob
-      every: ["20s"]
-      queue: radacct
+      cron: "*/1 * * * *"
+      # every: ["20s"]
+      # queue: radacct
 
     generate_clients_conf_job:
       class: GenerateClientsConfJob
@@ -111,7 +112,7 @@ development:
 
     router_ping_job:
       class: RouterPingJob
-      cron: "*5 * * * *"
+      cron: "*/5 * * * *"
 
     subscription_expiration_job:
       class: SubscriptionExpirationJob
