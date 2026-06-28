@@ -84,6 +84,11 @@ class StkStatusService
 
   Rails.logger.error("Error initiating stk query: #{body}")
 
+
+
+
+
+
   if body["errorCode"] == "500.001.1001"
     {
       "ResultCode" => "4999",

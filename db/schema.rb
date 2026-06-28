@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_06_28_114744) do
+ActiveRecord::Schema[7.2].define(version: 2026_06_28_150349) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -441,6 +441,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_06_28_114744) do
     t.boolean "paid_out", default: false
     t.datetime "paid_out_at"
     t.integer "amount_disbursed"
+    t.string "status"
     t.index ["created_at"], name: "index_hotspot_mpesa_revenues_on_created_at"
   end
 
@@ -900,6 +901,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_06_28_114744) do
     t.datetime "paid_out_at"
     t.boolean "paid_out", default: false
     t.integer "amount_disbursed"
+    t.string "status"
   end
 
   create_table "pp_poe_plans", force: :cascade do |t|
@@ -1095,6 +1097,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_06_28_114744) do
     t.string "password_digest"
     t.string "node"
     t.string "status"
+    t.string "nas_router"
     t.index ["ref_no"], name: "index_subscribers_on_ref_no"
   end
 

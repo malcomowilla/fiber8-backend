@@ -941,26 +941,84 @@ end
 
 
 
+# def stk_push_status
+#     shortcode = ActsAsTenant.current_tenant&.hotspot_mpesa_setting.short_code || ENV['B2C_SHORTCODE']
+#   passkey = ActsAsTenant.current_tenant&.hotspot_mpesa_setting.passkey || ENV['PASSKEY']
+#   consumer_key = ActsAsTenant.current_tenant&.hotspot_mpesa_setting.consumer_key || ENV['CONSUMER_KEY']
+#   consumer_secret = ActsAsTenant.current_tenant&.hotspot_mpesa_setting.consumer_secret || ENV['CONSUMER_SECRET']
+#  checkout_request_id = params[:checkout_request_id]
+# Rails.logger.info "checkout_request_id: #{checkout_request_id}"
+#   stk_push_query = StkStatusService.initiate_stk_query(
+#     shortcode,  passkey,
+#     consumer_key, consumer_secret,checkout_request_id
+#   )
+
+
+#   if stk_push_query[:success]
+#     stk_push_query_response = stk_push_query[:response]
+#     render json: { success: true, response: stk_push_query_response }
+#   else
+#     render json: { error: 'Failed to fetch stk push status'}
+#   end
+
+
+# end
+
+
+
+
+
+
+
+
 def stk_push_status
-    shortcode = ActsAsTenant.current_tenant&.hotspot_mpesa_setting.short_code || ENV['B2C_SHORTCODE']
+  shortcode = ActsAsTenant.current_tenant&.hotspot_mpesa_setting.short_code || ENV['B2C_SHORTCODE']
   passkey = ActsAsTenant.current_tenant&.hotspot_mpesa_setting.passkey || ENV['PASSKEY']
   consumer_key = ActsAsTenant.current_tenant&.hotspot_mpesa_setting.consumer_key || ENV['CONSUMER_KEY']
   consumer_secret = ActsAsTenant.current_tenant&.hotspot_mpesa_setting.consumer_secret || ENV['CONSUMER_SECRET']
- checkout_request_id = params[:checkout_request_id]
-Rails.logger.info "checkout_request_id: #{checkout_request_id}"
+
+  checkout_request_id = params[:checkout_request_id]
+
+  Rails.logger.info "checkout_request_id: #{checkout_request_id}"
+
   stk_push_query = StkStatusService.initiate_stk_query(
-    shortcode,  passkey,
-    consumer_key, consumer_secret,checkout_request_id
+    shortcode,
+    passkey,
+    consumer_key,
+    consumer_secret,
+    checkout_request_id
   )
 
-  if stk_push_query[:success]
-    stk_push_query_response = stk_push_query[:response]
-    render json: { success: true, response: stk_push_query_response }
-  else
-    render json: { error: 'Failed to fetch stk push status'}
+  unless stk_push_query[:success]
+    return render json: { error: "Failed to fetch stk push status" }
   end
 
+  stk_push_query_response = stk_push_query[:response]
 
+  revenue = HotspotMpesaRevenue.find_by(
+    checkout_request_id: checkout_request_id
+  )
+
+  if revenue.present?
+    case stk_push_query_response["ResultCode"].to_s
+    when "0"
+      revenue.update(status: "Completed")
+
+    when "1037"
+      revenue.update(status: "Pending")
+
+      when "4999"
+      revenue.update(status: "Pending")
+
+    else
+      revenue.update(status: "Cancelled")
+    end
+  end
+
+  render json: {
+    success: true,
+    response: stk_push_query_response
+  }
 end
 
 
@@ -1015,12 +1073,17 @@ phone_number: phone_number,
 mac: params[:mac],
 
 )
-session.update(status: 'pending')
-# session.session   = session_id
-# session.paid      = false
-# session.connected = false
+
+
+
+session.update_column(:status, 'pending')
+
 
 session.save!
+
+
+
+
 
       hotspot_payment = MpesaService.initiate_stk_push(phone_number, 
       amount,
@@ -1050,6 +1113,18 @@ session.save!
 # voucher_record.account_id)
 
 # calculate_expiration(params[:package], voucher_record)
+
+
+HotspotMpesaRevenue.create!(
+  voucher: voucher_code,
+  amount: amount,
+  payment_method: "Mpesa",
+  phone_number: phone_number,
+  status: "Pending",
+  checkout_request_id: checkout_request_id
+)
+
+
 
         render json: {
           message: 'Please check your phone to complete the payment',

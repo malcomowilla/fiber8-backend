@@ -6,7 +6,7 @@ class SubscriberSerializer < ActiveModel::Serializer
    :second_phone_number, :router_name,
    :house_number, :building_name, :latitude, :longitude, :expiration,
     :registration_date,
-   :location, :node, :status, :created_at, :updated_at
+   :location, :node, :status, :created_at, :updated_at, :nas_router
 
 
    def package_name

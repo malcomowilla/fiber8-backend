@@ -7,22 +7,40 @@ class SendSmsHotspotJob < ApplicationJob
 
    
         # next unless voucher 
+        # 
+        #
+      revenue = HotspotMpesaRevenue.find_by(voucher: voucher_code)
+
+if revenue
+  revenue.update!(
+    amount: data["TransAmount"],
+    reference: data["TransID"],
+    payment_method: "Mpesa",
+    time_paid: data["TransTime"],
+    name: data["FirstName"],
+
+    status: "Completed"
+  )
+
+end
 
 sms_sent_at_voucher = HotspotVoucher.find_by(voucher: voucher.voucher)&.sms_sent_at_voucher
 
 
 if sms_sent_at_voucher.nil?
 send_sms_for_tenant(voucher, ActsAsTenant.current_tenant)
-     
-HotspotMpesaRevenue.find_or_create_by(
-      amount: data["TransAmount"],
-      voucher: voucher_code,
-      reference: data["TransID"],
-      payment_method: "Mpesa",
-      time_paid: data["TransTime"],
-      account_id: voucher.account_id,
-      name: data['FirstName']
-    )
+    revenue = HotspotMpesaRevenue.find_by(voucher: voucher_code)
+ 
+# HotspotMpesaRevenue.find_or_create_by(
+#       amount: data["TransAmount"],
+#       voucher: voucher_code,
+#       reference: data["TransID"],
+#       payment_method: "Mpesa",
+#       time_paid: data["TransTime"],
+#       account_id: voucher.account_id,
+#       name: data['FirstName'],
+#       status: "Completed"
+#     )
 end
 
 
