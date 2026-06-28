@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_06_28_150349) do
+ActiveRecord::Schema[7.2].define(version: 2026_06_28_192302) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -442,6 +442,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_06_28_150349) do
     t.datetime "paid_out_at"
     t.integer "amount_disbursed"
     t.string "status"
+    t.string "checkout_request_id"
     t.index ["created_at"], name: "index_hotspot_mpesa_revenues_on_created_at"
   end
 
