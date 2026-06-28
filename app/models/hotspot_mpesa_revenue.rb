@@ -33,10 +33,24 @@ class HotspotMpesaRevenue < ApplicationRecord
   }
 
 
+  # scope :for_month, ->(year, month) {
+  #   select { |r| Time.strptime(r.time_paid, "%Y%m%d%H%M%S").year == year &&
+  #                 Time.strptime(r.time_paid, "%Y%m%d%H%M%S").month == month }
+  # }
+
+
+
   scope :for_month, ->(year, month) {
-    select { |r| Time.strptime(r.time_paid, "%Y%m%d%H%M%S").year == year &&
-                  Time.strptime(r.time_paid, "%Y%m%d%H%M%S").month == month }
-  }
+  select do |r|
+    next false if r.time_paid.blank?
+
+    paid_at = Time.strptime(r.time_paid, "%Y%m%d%H%M%S")
+
+    paid_at.year == year &&
+      paid_at.month == month
+  end
+}
+
 
 
   scope :this_year, -> {
