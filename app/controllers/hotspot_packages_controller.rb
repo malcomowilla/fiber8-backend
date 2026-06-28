@@ -653,6 +653,7 @@ end
         :shared_users,
         :valid_until,
         :tx_rate_limit,
+        :nas_router,
         :rx_rate_limit,
         :validity_period_units,
         :download_burst_limit,

@@ -16,7 +16,7 @@ class RadSessionsJob
     # Assume offline unless proven online
     subscriber_online = false
 
-    subscriber.subscriptions.find_each do |subscription|
+    subscriber.subscriptions.each do |subscription|
       next unless subscription.ip_address.present?
 
       if RadAcct.where(
@@ -81,7 +81,7 @@ class RadSessionsJob
 
 
 
-  active_sessions_upload_download.find_each do |session|
+  active_sessions_upload_download.map do |session|
   download_bytes = session.acctinputoctets || 0
   upload_bytes = session.acctoutputoctets || 0
   total_bytes_download += download_bytes
@@ -92,7 +92,7 @@ end
 
 
 
-  active_user_data = active_sessions.find_each do |session|
+  active_user_data = active_sessions.map do |session|
     download_bytes = session.acctinputoctets || 0
     upload_bytes = session.acctoutputoctets || 0
     session_total = download_bytes + upload_bytes

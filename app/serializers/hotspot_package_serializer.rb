@@ -12,7 +12,7 @@ class HotspotPackageSerializer < ActiveModel::Serializer
     :free_trial_duration_minutes,
     :free_trial_download_limit,
     :free_trial_upload_limit,
-
+    :nas_router,
     :intended_device_type,
       :device_icon      
 

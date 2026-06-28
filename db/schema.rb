@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_06_27_123129) do
+ActiveRecord::Schema[7.2].define(version: 2026_06_28_114744) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -496,6 +496,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_06_27_123129) do
     t.string "free_trial_duration_minutes"
     t.string "intended_device_type"
     t.string "device_icon"
+    t.string "nas_router"
     t.index ["name"], name: "index_hotspot_packages_on_name"
   end
 
