@@ -1071,12 +1071,12 @@ hotspot_package: params[:package],
 voucher_code: voucher_code,
 phone_number: phone_number,
 mac: params[:mac],
+status: 'pending'
 
 )
 
 
 
-session.update_column(:status, 'pending')
 
 
 session.save!
