@@ -7,11 +7,18 @@ class HotspotMpesaRevenueSerializer < ActiveModel::Serializer
 
 
   # Return the time_paid in the format "%B %d, %Y at %I:%M %p"
+# def time_paid
+# Time.zone.strptime(object.time_paid, "%Y%m%d%H%M%S").strftime("%B %d, %Y at %I:%M %p")
+
+# end
+
+
 def time_paid
-Time.zone.strptime(object.time_paid, "%Y%m%d%H%M%S").strftime("%B %d, %Y at %I:%M %p")
+  return nil if object.time_paid.blank?
 
+  Time.strptime(object.time_paid, "%Y%m%d%H%M%S")
+      .strftime("%d %b %Y %I:%M %p")
 end
-
 
 def paid_out_at
     object.paid_out_at.strftime("%B %d, %Y at %I:%M %p") if object.paid_out_at.present?
