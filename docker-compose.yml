@@ -1,24 +1,145 @@
-# docker-compose.yml - Full Rails development stack
+# # docker-compose.yml - Full Rails development stack
+
+# services:
+#   db:
+#     image: postgres:16
+#     volumes:
+#       - pgdata:/var/lib/postgresql/data
+#     environment:
+#       POSTGRES_DB: ${DB_NAME}
+#       POSTGRES_USER: ${DATABASE_USERNAME}
+#       POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
+#     ports:
+#       - "${DB_PORT}:${DB_PORT}"
+#     healthcheck:
+#       test: ["CMD-SHELL", "pg_isready -U ${DATABASE_USERNAME}"]
+#       interval: 10s
+#       timeout: 5s
+#       retries: 5
+#     networks:
+#       - appnet
+
+#   redis:
+#     image: redis:7-alpine
+#     command: redis-server --maxmemory 256mb --maxmemory-policy allkeys-lru
+#     ports:
+#       - "6379:6379"
+#     volumes:
+#       - redisdata:/data
+#     healthcheck:
+#       test: ["CMD", "redis-cli", "ping"]
+#       interval: 10s
+#       timeout: 5s
+#       retries: 5
+#     networks:
+#       - appnet
+
+#   web:
+#     build:
+#       context: .
+#       dockerfile: Dockerfile
+#     # Override for development: use rails server with binding for Docker
+#     command: bash -c "rm -f tmp/pids/server.pid && bundle exec rails server -b 0.0.0.0 -p 3000"
+#     volumes:
+#       # Mount source for live code reloading
+#       - .:/app
+#       # Use a named volume for bundle cache to speed up rebuilds
+#       - bundle_cache:/usr/local/bundle
+#       - freeradius_shared:/freeradius 
+#     ports:
+#       - "3000:3000"
+#     environment:
+#       RAILS_ENV: development
+#       # DATABASE_URL: postgres://${DATABASE_USERNAME}:${DATABASE_PASSWORD}@db:${DB_PORT}/${DB_NAME}
+#       DATABASE_HOST: host.docker.internal
+#       DATABASE_PORT: ${DB_PORT}
+#       DATABASE_NAME: ${DB_NAME}
+#       DATABASE_USERNAME: ${DATABASE_USERNAME}
+#       DATABASE_PASSWORD: ${DATABASE_PASSWORD}
+#       REDIS_URL: redis://redis:6379/0
+#       SIDEKIQ_REDIS_URL: redis://redis:6379/1
+#       SECRET_KEY_BASE: development-secret-key
+#       RAILS_LOG_TO_STDOUT: "true"
+#     depends_on:
+#       db:
+#         condition: service_healthy
+#       redis:
+#         condition: service_healthy
+#     networks:
+#       - appnet
+
+
+
+
+
+
+
+      
+
+#   sidekiq:
+#     build:
+#       context: .
+#       dockerfile: Dockerfile
+#     command: bundle exec sidekiq -C config/sidekiq.yml
+#     volumes:
+#       - .:/app
+#       - bundle_cache:/usr/local/bundle
+      
+#     environment:
+#       RAILS_ENV: development
+#       # DATABASE_URL: postgres://${DATABASE_USERNAME}:${DATABASE_PASSWORD}@db:${DB_PORT}/${DB_NAME}
+#       DATABASE_HOST: host.docker.internal
+#       DATABASE_PORT: ${DB_PORT}
+#       DATABASE_NAME: ${DB_NAME}
+#       DATABASE_USERNAME: ${DATABASE_USERNAME}
+#       DATABASE_PASSWORD: ${DATABASE_PASSWORD}
+
+#       REDIS_URL: redis://redis:6379/0
+#       SIDEKIQ_REDIS_URL: redis://redis:6379/1
+#       SECRET_KEY_BASE: development-secret-key
+#       RAILS_LOG_TO_STDOUT: "true"
+#     depends_on:
+#       db:
+#         condition: service_healthy
+#       redis:
+#         condition: service_healthy
+#     networks:
+#       - appnet
+
+
+
+
+#   # freeradius:
+#   #   image: freeradius/freeradius-server:latest
+#   #   volumes:
+#   #     - freeradius_config:/etc/freeradius/3.0
+#   #   ports:
+#   #     - "1812:1812/udp"
+#   #     - "1813:1813/udp"
+#   #   networks:
+#   #     - appnet
+
+
+# volumes:
+#   pgdata:
+#   redisdata:
+#   bundle_cache:
+#   freeradius_shared:
+
+# networks:
+#   appnet:
+#     driver: bridge
+
+
+
+
+
+
+
+
+
 
 services:
-  db:
-    image: postgres:16
-    volumes:
-      - pgdata:/var/lib/postgresql/data
-    environment:
-      POSTGRES_DB: ${DB_NAME}
-      POSTGRES_USER: ${DATABASE_USERNAME}
-      POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
-    ports:
-      - "${DB_PORT}:${DB_PORT}"
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DATABASE_USERNAME}"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    networks:
-      - appnet
-
   redis:
     image: redis:7-alpine
     command: redis-server --maxmemory 256mb --maxmemory-policy allkeys-lru
@@ -38,19 +159,15 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    # Override for development: use rails server with binding for Docker
     command: bash -c "rm -f tmp/pids/server.pid && bundle exec rails server -b 0.0.0.0 -p 3000"
     volumes:
-      # Mount source for live code reloading
       - .:/app
-      # Use a named volume for bundle cache to speed up rebuilds
       - bundle_cache:/usr/local/bundle
       - freeradius_shared:/freeradius 
     ports:
       - "3000:3000"
     environment:
       RAILS_ENV: development
-      # DATABASE_URL: postgres://${DATABASE_USERNAME}:${DATABASE_PASSWORD}@db:${DB_PORT}/${DB_NAME}
       DATABASE_HOST: host.docker.internal
       DATABASE_PORT: ${DB_PORT}
       DATABASE_NAME: ${DB_NAME}
@@ -60,21 +177,13 @@ services:
       SIDEKIQ_REDIS_URL: redis://redis:6379/1
       SECRET_KEY_BASE: development-secret-key
       RAILS_LOG_TO_STDOUT: "true"
+    extra_hosts:
+      - "host.docker.internal:host-gateway" # 👈 Required for Linux users
     depends_on:
-      db:
-        condition: service_healthy
       redis:
         condition: service_healthy
     networks:
       - appnet
-
-
-
-
-
-
-
-      
 
   sidekiq:
     build:
@@ -84,47 +193,25 @@ services:
     volumes:
       - .:/app
       - bundle_cache:/usr/local/bundle
-      
     environment:
       RAILS_ENV: development
-      # DATABASE_URL: postgres://${DATABASE_USERNAME}:${DATABASE_PASSWORD}@db:${DB_PORT}/${DB_NAME}
       DATABASE_HOST: host.docker.internal
       DATABASE_PORT: ${DB_PORT}
       DATABASE_NAME: ${DB_NAME}
       DATABASE_USERNAME: ${DATABASE_USERNAME}
       DATABASE_PASSWORD: ${DATABASE_PASSWORD}
-
       REDIS_URL: redis://redis:6379/0
       SIDEKIQ_REDIS_URL: redis://redis:6379/1
       SECRET_KEY_BASE: development-secret-key
       RAILS_LOG_TO_STDOUT: "true"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     depends_on:
-      db:
-        condition: service_healthy
       redis:
         condition: service_healthy
     networks:
       - appnet
 
-
-
-
-  # freeradius:
-  #   image: freeradius/freeradius-server:latest
-  #   volumes:
-  #     - freeradius_config:/etc/freeradius/3.0
-  #   ports:
-  #     - "1812:1812/udp"
-  #     - "1813:1813/udp"
-  #   networks:
-  #     - appnet
-
-
-volumes:
-  pgdata:
-  redisdata:
-  bundle_cache:
-  freeradius_shared:
 
 networks:
   appnet:
