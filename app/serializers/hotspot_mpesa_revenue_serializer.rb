@@ -27,8 +27,14 @@ end
 
 
 def phone_number
-    object.hotspot_voucher&.phone || "N/A" || object.phone_number
+    return object.hotspot_voucher.phone if object.hotspot_voucher.present?
+  return object.phone_number if object.phone_number.present?
+
+  "N/A"
+
 end
+
+
 
 end
 

@@ -18,7 +18,6 @@ if revenue
     payment_method: "Mpesa",
     time_paid: data["TransTime"],
     name: data["FirstName"],
-
     status: "Completed"
   )
 
