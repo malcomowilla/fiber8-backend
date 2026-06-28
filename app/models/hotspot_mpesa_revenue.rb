@@ -2,7 +2,7 @@ class HotspotMpesaRevenue < ApplicationRecord
 
 
   acts_as_tenant(:account)
- belongs_to :hotspot_voucher
+ belongs_to :hotspot_voucher, optional: true
  after_commit :clear_cache
 
 
