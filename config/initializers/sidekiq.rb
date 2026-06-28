@@ -92,7 +92,7 @@ require 'sidekiq-scheduler'
 require "sidekiq-unique-jobs"
 
 Sidekiq.configure_server do |config|
-  config.redis = { url: 'redis://localhost:6379/0' }
+  config.redis = { url: 'redis://redis:6379/0' }
 
   # ✅ This automatically loads config/sidekiq.yml schedules
   # 
