@@ -55,7 +55,7 @@ default: &default
 development:
   <<: *default
  
-  database: fiberbackend_development
+  database: <%= ENV['DB_NAME'] %>
   port: <%= ENV['DB_PORT'] %>
   host: <%= ENV['DATABASE_HOST'] %>
   pool: 10
