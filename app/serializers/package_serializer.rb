@@ -6,8 +6,8 @@ class PackageSerializer < ActiveModel::Serializer
     :validity, :speed, :validity,
     :valid, :ip_pool, :wifi_package, :burst_upload_speed, :burst_download_speed,
     :burst_threshold_upload, :burst_threshold_download, :burst_time, 
-    :aggregation, :subscription, :daily_charge, :fup_enabled, :fup_data_unit, :fup_data_limit
-
+    :aggregation, :subscription, :daily_charge, :fup_enabled, :fup_data_unit, :fup_data_limit,
+:nas_router
     
    def speed
     "#{self.object.upload_limit}M/#{self.object.download_limit}M"

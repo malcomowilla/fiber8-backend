@@ -20,12 +20,12 @@ development:
   :schedule:
     generate_invoice_job:
       class: GenerateInvoiceJob
-      cron: "*/2 * * * *"
+      cron: "*/6 * * * *"
 
 
     rehydrate_wireguard_job:
       class: RehydrateWireguardJob
-      cron: "*/2 * * * *"
+      cron: "*/4 * * * *"
 
 
 
@@ -60,25 +60,25 @@ development:
 
     rad_sessions_job:
       class: RadSessionsJob
-      every: ["5s"]
+      every: ["20s"]
       queue: radacct
 
     generate_clients_conf_job:
       class: GenerateClientsConfJob
-      cron: "*/2 * * * *"
+      cron: "*/5 * * * *"
 
     access_point_ping_job:
       class: AccessPointPingJob
-      cron: "*/2 * * * *"
+      cron: "*/5 * * * *"
 
     access_point_notifications_job:
       class: AccessPointNotificationsJob
-      cron: "*/2 * * * *"
+      cron: "*/5 * * * *"
       
   
     populate_radius_job:
       class: PopulateRadiusJob
-      cron: "*/2 * * * *"
+      cron: "*/4 * * * *"
 
     delete_session_job:
       class: DeleteSessionJob
@@ -90,11 +90,11 @@ development:
 
     router_notification_job:
       class: RouterNotificationJob
-      cron: "*/2 * * * *"
+      cron: "*/5 * * * *"
 
     hotspot_compensation_job:
       class: HotspotCompensationJob
-      cron: "*/2 * * * *"
+      cron: "*/5 * * * *"
 
    
     lock_account_job:
@@ -111,7 +111,7 @@ development:
 
     router_ping_job:
       class: RouterPingJob
-      cron: "*/3 * * * *"
+      cron: "*5 * * * *"
 
     subscription_expiration_job:
       class: SubscriptionExpirationJob
@@ -121,7 +121,7 @@ development:
 
     inactivity_check_job:
       class: InactivityCheckJob
-      cron: "*/3 * * * *"
+      cron: "*/5 * * * *"
 
 production:
   :queues:

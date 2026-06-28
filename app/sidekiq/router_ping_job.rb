@@ -54,7 +54,7 @@ class RouterPingJob
 
 
    hotspot_subscriptions = HotspotVoucher.where.not(voucher: [nil, ''])
-               hotspot_subscriptions.each do |subscription|
+               hotspot_subscriptions.find_each do |subscription|
         # Process RadAcct records with nil account_id
         nil_radacct_count = RadAcct.unscoped.where(
         
@@ -84,7 +84,7 @@ class RouterPingJob
 
         # Check router status
         nas_routers = NasRouter.where(account_id: tenant.id)
-        nas_routers.each do |nas_router|
+        nas_routers.find_each do |nas_router|
   ip_address = nas_router.ip_address
   Rails.logger.info "Checking router at #{ip_address} for tenant #{tenant.id}"
 

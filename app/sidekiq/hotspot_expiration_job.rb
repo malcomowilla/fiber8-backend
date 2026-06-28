@@ -24,7 +24,7 @@ expired_vouchers = HotspotVoucher.where('expiration < ?', Time.current).where(ac
      
         expired_vouchers.find_each do |voucher|
 
-          voucher.update!(status: 'expired')
+          voucher.update_column(:status, 'expired')
          
           # Only send SMS if it hasn't been sent before
           if voucher.used_voucher && voucher.sms_sent_at.nil?   
@@ -33,7 +33,6 @@ expired_vouchers = HotspotVoucher.where('expiration < ?', Time.current).where(ac
           end
 #  logout_hotspot_user(voucher, tenant)
         end
-
 
 
 

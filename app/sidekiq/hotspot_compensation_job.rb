@@ -167,8 +167,8 @@ Rails.logger.info "Hotspot Package Not Found" unless hotspot_package
 
 
   if expiration_time.present?
-      hotspot_voucher.update(
-    expiration: final_expiration.strftime("%B %d, %Y at %I:%M %p")
+      hotspot_voucher.update_column(
+    :expiration, final_expiration.strftime("%B %d, %Y at %I:%M %p")
   )
   end
 

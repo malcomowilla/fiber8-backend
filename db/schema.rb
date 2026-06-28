@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_06_27_095426) do
+ActiveRecord::Schema[7.2].define(version: 2026_06_27_123129) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -856,6 +856,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_06_27_095426) do
     t.boolean "fup_enabled", default: false
     t.string "fup_data_unit"
     t.string "fup_data_limit"
+    t.string "nas_router"
   end
 
   create_table "partners", force: :cascade do |t|
