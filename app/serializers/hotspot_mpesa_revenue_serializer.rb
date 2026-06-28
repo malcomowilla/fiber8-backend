@@ -27,7 +27,7 @@ end
 
 
 def phone_number
-    object.hotspot_voucher&.phone || "N/A"
+    object.hotspot_voucher&.phone || "N/A" || object.phone_number
 end
 
 end
