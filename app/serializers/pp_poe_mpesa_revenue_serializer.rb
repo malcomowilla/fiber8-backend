@@ -4,15 +4,20 @@ class PpPoeMpesaRevenueSerializer < ActiveModel::Serializer
    :customer_name,  :paid_out, :paid_out_at, 
   :amount_disbursed, :status
 
+# def time_paid
+#  object.time_paid.strftime("%B %d, %Y at %I:%M %p")
+# end
+
+
+
+# end
+
+
 def time_paid
- object.time_paid.strftime("%B %d, %Y at %I:%M %p")
+  return nil if object.time_paid.blank?
+
+  Time.strptime(object.time_paid, "%Y%m%d%H%M%S")
+      .strftime("%B %d, %Y at %I:%M %p")
 end
 
-
-
 end
-
-
-
-
-
