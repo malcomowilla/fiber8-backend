@@ -105,13 +105,13 @@ Sidekiq.configure_server do |config|
 
   config.server_middleware do |chain|
     chain.add SidekiqUniqueJobs::Middleware::Server
-     require "sidekiq/memory_killer"
+    #  require "sidekiq/memory_killer"
 
-    Sidekiq::MemoryKiller.new(
-      max_rss: 400,
-      grace_time: 30,
-      shutdown_wait: 15
-    )
+    # Sidekiq::MemoryKiller.new(
+    #   max_rss: 400,
+    #   grace_time: 30,
+    #   shutdown_wait: 15
+    # )
   end
 
   SidekiqUniqueJobs::Server.configure(config)
