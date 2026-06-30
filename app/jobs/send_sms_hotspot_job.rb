@@ -1,7 +1,7 @@
 class SendSmsHotspotJob < ApplicationJob
   queue_as :default
 
-  def perform(voucher_code, data)
+  def perform(voucher_code, data, checkout_request_id)
       voucher = HotspotVoucher.find_by(voucher: voucher_code)
       ActsAsTenant.with_tenant(voucher.account) do
 
@@ -9,7 +9,7 @@ class SendSmsHotspotJob < ApplicationJob
         # next unless voucher 
         # 
         #
-      revenue = HotspotMpesaRevenue.find_by(voucher: voucher_code)
+      revenue = HotspotMpesaRevenue.find_by(checkout_request_id: checkout_request_id)
 
 if revenue
   revenue.update!(

@@ -626,7 +626,8 @@ account_id: session.account_id,
 
 voucher_expiration = HotspotSetting.find_by(account_id: session.account_id)&.voucher_expiration
 # company_name = CompanySetting.find_by(account_id: session.account_id).company_name
-SendSmsHotspotService.send_sms(voucher.voucher, data)
+SendSmsHotspotService.send_sms(voucher.voucher, data,session.checkout_request_id,
+)
 
 if voucher_expiration == 'Expiry After Creation'
  calculate_expiration_login_with_voucher(hotspot_package, voucher, session.account_id)
@@ -1063,24 +1064,6 @@ plan = ActsAsTenant.current_tenant&.hotspot_and_dial_plan
 
 session_id = rand(100000..999999).to_s
 
-session = TemporarySession.find_or_initialize_by(ip: params[:ip],
-session: session_id,
-paid: false, 
-connected: false,
-hotspot_package: params[:package],
-voucher_code: voucher_code,
-phone_number: phone_number,
-mac: params[:mac],
-status: 'pending'
-
-)
-
-
-
-
-
-session.save!
-
 
 
 
@@ -1093,7 +1076,31 @@ session.save!
   
  stk_response = hotspot_payment[:response]
  checkout_request_id = stk_response['CheckoutRequestID']
- merchant_request_id = stk_response['MerchantRequestID']
+#  merchant_request_id = stk_response['MerchantRequestID']
+
+
+
+
+session = TemporarySession.find_or_initialize_by(ip: params[:ip],
+session: session_id,
+paid: false, 
+connected: false,
+hotspot_package: params[:package],
+voucher_code: voucher_code,
+phone_number: phone_number,
+mac: params[:mac],
+status: 'pending',
+checkout_request_id: checkout_request_id
+
+)
+
+
+
+
+
+session.save!
+
+
 
       if hotspot_payment[:success]
 # voucher_record = HotspotVoucher.create!(
