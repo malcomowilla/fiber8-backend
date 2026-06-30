@@ -1002,8 +1002,8 @@ def stk_push_status
 
   if revenue.present?
     case stk_push_query_response["ResultCode"].to_s
-    when "0"
-      revenue.update(status: "Completed")
+    # when "0"
+    #   revenue.update(status: "Completed")
 
     when "1037"
       revenue.update(status: "Pending")
