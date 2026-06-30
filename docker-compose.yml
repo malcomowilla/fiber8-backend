@@ -193,6 +193,7 @@ services:
     volumes:
       - .:/app
       - bundle_cache:/usr/local/bundle
+      - /etc/freeradius/3.0:/etc/freeradius/3.0
     environment:
       RAILS_ENV: development
       DATABASE_HOST: host.docker.internal
