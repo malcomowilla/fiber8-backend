@@ -17,7 +17,7 @@ end
 
   def pending_hotspot_balance
     pending = HotspotMpesaRevenue
-      .where(paid_out: false)
+      .where(paid_out: false, status: "Completed")
       .sum(:amount)
       render json: pending
   end
@@ -27,7 +27,7 @@ end
 
   def already_paid_balance
     already_paid = HotspotMpesaRevenue
-      .where(paid_out: true)
+      .where(paid_out: true, status: "Completed")
       .sum(:amount)
       render json: already_paid
   end
@@ -92,6 +92,7 @@ def peak_hour
     )
     .group("hour")
     .order("vouchers_sold DESC")
+    .where(status: "Completed")
     .limit(1)
     .first
 
@@ -129,6 +130,7 @@ end
     )
     .group("day")
     .order("total_revenue DESC")
+    .where(status: "Completed")
     .limit(1)
     .first
 
@@ -157,6 +159,7 @@ end_time   = start_time.end_of_month
 
 total_revenue = HotspotMpesaRevenue
                   .where(created_at: start_time..end_time)
+                  .where(status: "Completed")
                   .sum(:amount)
 
 render json: { revenue: total_revenue }
@@ -173,6 +176,7 @@ def most_popular_package
     )
     .group("hotspot_vouchers.package")
     .order("vouchers_sold DESC")
+    .where(status: 'Completed')
     .limit(1)
     .first
 
@@ -208,6 +212,7 @@ def top_customers
       )
       .group("hotspot_vouchers.phone, hotspot_mpesa_revenues.name")
       .order("total_purchases DESC")
+      .where(status: "Completed")
 
     # render json: top_customers.map { |c|
     #   {
@@ -290,7 +295,7 @@ def daily_revenue
       date = params[:date] ? Date.parse(params[:date]) : Date.current
       
       revenue = HotspotMpesaRevenue.daily_revenue(date)
-      transactions = HotspotMpesaRevenue.where(created_at: date.beginning_of_day..date.end_of_day)
+      transactions = HotspotMpesaRevenue.where(created_at: date.beginning_of_day..date.end_of_day, status: "Completed")
       
       render json: {
         success: true,
@@ -317,7 +322,7 @@ start_time = [
   Time.zone.now.beginning_of_month
 ].max
 
-render json: HotspotMpesaRevenue.where(created_at: start_time..Time.zone.now).sum(:amount)
+render json: HotspotMpesaRevenue.where(created_at: start_time..Time.zone.now, status: "Completed").sum(:amount)
 
 
 

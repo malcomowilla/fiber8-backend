@@ -20,7 +20,6 @@ if revenue
     name: data["FirstName"],
     status: "Completed"
   )
-
 end
 
 sms_sent_at_voucher = HotspotVoucher.find_by(voucher: voucher.voucher)&.sms_sent_at_voucher
