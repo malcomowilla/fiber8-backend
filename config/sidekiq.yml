@@ -1,18 +1,18 @@
 default:
-  :concurrency: 5
+  :concurrency: 3
   :queues:
-    - [invoices, 4]
-    - [client_conf, 3]
-    - [default, 3]
-    - [radacct, 2]
+    - [invoices, 2]
+    - [client_conf, 2]
+    - [default, 1]
+    - [radacct, 1]
 
 development:
   :concurrency: 2
   :queues:
-    - [invoices, 3]
-    - [client_conf, 3]
-    - [default, 2]
-    - [radacct, 2]
+    - [invoices, 2]
+    - [client_conf, 1]
+    - [default, 1]
+    - [radacct, 1]
 
 :scheduler:
   :enabled: true

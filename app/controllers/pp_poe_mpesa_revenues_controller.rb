@@ -1,7 +1,7 @@
 class PpPoeMpesaRevenuesController < ApplicationController
 
-  set_current_tenant_through_filter
   load_and_authorize_resource except: [:allow_pp_poe_mpesa_revenues]
+  set_current_tenant_through_filter
 
   before_action :set_tenant
   before_action :update_last_activity

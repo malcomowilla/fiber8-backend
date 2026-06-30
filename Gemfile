@@ -215,6 +215,7 @@ gem 'jwt'
 gem 'webauthn'
 
   
+gem "sidekiq-worker-killer"
 
 # Use hiredis to get better performance than the "redis" gem
 gem 'hiredis'
