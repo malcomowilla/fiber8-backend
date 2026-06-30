@@ -9,15 +9,11 @@ class PpPoeMpesaRevenueSerializer < ActiveModel::Serializer
 # end
 
 
-
-# end
-
-
 def time_paid
   return nil if object.time_paid.blank?
 
   Time.strptime(object.time_paid, "%Y%m%d%H%M%S")
-      .strftime("%B %d, %Y at %I:%M %p")
+      .strftime("%d %b %Y %I:%M %p")
 end
 
 end

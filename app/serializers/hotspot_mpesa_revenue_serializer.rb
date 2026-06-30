@@ -20,6 +20,8 @@ def time_paid
       .strftime("%d %b %Y %I:%M %p")
 end
 
+
+
 def paid_out_at
     object.paid_out_at.strftime("%B %d, %Y at %I:%M %p") if object.paid_out_at.present?
 
