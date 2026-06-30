@@ -626,7 +626,7 @@ account_id: session.account_id,
 
 voucher_expiration = HotspotSetting.find_by(account_id: session.account_id)&.voucher_expiration
 # company_name = CompanySetting.find_by(account_id: session.account_id).company_name
-SendSmsHotspotService.send_sms(voucher.voucher, data,session.checkout_request_id,
+SendSmsHotspotService.send_sms(voucher.voucher, data, session.checkout_request_id,
 )
 
 if voucher_expiration == 'Expiry After Creation'
