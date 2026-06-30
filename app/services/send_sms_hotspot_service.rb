@@ -3,7 +3,7 @@
 class SendSmsHotspotService
   
 
-def self.send_sms(voucher_code, data)
+def self.send_sms(voucher_code, data, checkout_request_id)
    voucher = HotspotVoucher.find_by(voucher: voucher_code)
 
    
@@ -11,17 +11,32 @@ def self.send_sms(voucher_code, data)
 return unless voucher
 
 
-HotspotMpesaRevenue.create(
-      amount: data["TransAmount"],
-      voucher: voucher_code,
-      reference: data["TransID"],
-      payment_method: "Mpesa",
-      time_paid: data["TransTime"],
-      account_id: voucher.account_id,
-      name: data['FirstName'],
-      hotspot_voucher_id: voucher.id
+# HotspotMpesaRevenue.create(
+#       amount: data["TransAmount"],
+#       voucher: voucher_code,
+#       reference: data["TransID"],
+#       payment_method: "Mpesa",
+#       time_paid: data["TransTime"],
+#       account_id: voucher.account_id,
+#       name: data['FirstName'],
+#       hotspot_voucher_id: voucher.id,
 
-    )
+#     )
+ revenue = HotspotMpesaRevenue.find_by(checkout_request_id: checkout_request_id)
+
+if revenue
+  revenue.update!(
+    amount: data["TransAmount"],
+    reference: data["TransID"],
+    voucher: voucher_code,
+    payment_method: "Mpesa",
+    time_paid: data["TransTime"],
+    name: data["FirstName"],
+    account_id: voucher.account_id,
+    status: "Completed",
+    hotspot_voucher_id: voucher.id
+  )
+end
 
 sms_sent_at_voucher = HotspotVoucher.find_by(voucher: voucher_code).sms_sent_at_voucher
 
