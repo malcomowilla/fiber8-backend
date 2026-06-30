@@ -216,7 +216,7 @@ gem 'webauthn'
 
   
 gem "sidekiq-worker-killer"
-
+gem "get_process_mem"
 # Use hiredis to get better performance than the "redis" gem
 gem 'hiredis'
 
