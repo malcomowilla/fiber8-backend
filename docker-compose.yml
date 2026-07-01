@@ -192,6 +192,8 @@ services:
     command: bundle exec sidekiq -C config/sidekiq.yml
     mem_limit: 512m
     mem_reservation: 256m
+    restart: unless-stopped
+
     volumes:
       - .:/app
       - bundle_cache:/usr/local/bundle
