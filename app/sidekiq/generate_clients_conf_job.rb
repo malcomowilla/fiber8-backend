@@ -58,8 +58,9 @@ class GenerateClientsConfJob
       end
     end
 
-    # 👇 ADD THIS HOOK LINE AFTER THE FILE IS CLOSED
-    # This creates a zero-byte file that your host can watch to run a automated reload command
+        File.chmod(0640, CLIENTS_CONF)
+
+
     FileUtils.touch('/etc/freeradius/3.0/.reload_trigger') rescue nil
   end
 end

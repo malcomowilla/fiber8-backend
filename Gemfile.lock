@@ -526,6 +526,7 @@ DEPENDENCIES
   ed25519 (~> 1.2)
   fcm
   figaro
+  get_process_mem
   hiredis
   hiredis-client (~> 0.18)
   http
