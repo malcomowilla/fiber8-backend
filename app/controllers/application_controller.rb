@@ -37,10 +37,9 @@ end
 #     head :forbidden
 #   end
 # end
-
 def set_time_zone
-  Time.zone = GeneralSetting.first&.timezone || Rails.application.config.time_zone
-  Rails.logger.info "Setting time zone #{Time.zone}"
+  Time.zone = GeneralSetting.first&.timezone.presence ||
+              "Africa/Nairobi"
 end
 
     # rescue_from CanCan::AccessDenied do |exception|
