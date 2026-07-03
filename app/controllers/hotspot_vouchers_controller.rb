@@ -261,11 +261,31 @@ voucher.save!
 # voucher_expiration = HotspotSetting.find_by(account_id: active_session.account_id).voucher_expiration
 
 
-    #  Rails.logger.info "Hotspot Mpesa Revenue => #{hotspot_mpesa_revenue}"
+voucher_expiration = HotspotSetting.find_by(account_id: active_session.account_id)&.voucher_expiration
 
-     create_voucher_radcheck(active_session.voucher_code,
+if voucher_expiration == 'Real-time expiration'
+#  calculate_expiration_login_with_voucher(hotspot_package, voucher, session.account_id)
+
+  calculate_expiration(active_session.hotspot_package, voucher,
+ active_session.account_id)
+create_voucher_radcheck(active_session.voucher_code,
       active_session.hotspot_package, 
 active_session.account_id)
+
+else
+
+  calculate_expiration(active_session.hotspot_package, voucher,
+ active_session.account_id)
+
+ 
+  create_voucher_radcheck_accumulated_sessions(active_session.voucher_code,
+      active_session.hotspot_package, 
+active_session.account_id)
+end
+
+#      create_voucher_radcheck(active_session.voucher_code,
+#       active_session.hotspot_package, 
+# active_session.account_id)
 
 
 
@@ -293,8 +313,6 @@ nas_routers.each do |nas|
     )
 
 
-  calculate_expiration(active_session.hotspot_package, voucher,
- active_session.account_id)
 
        
     if response.code == 200
@@ -624,22 +642,25 @@ account_id: session.account_id,
 
 
 
-voucher_expiration = HotspotSetting.find_by(account_id: session.account_id)&.voucher_expiration
 # company_name = CompanySetting.find_by(account_id: session.account_id).company_name
 SendSmsHotspotService.send_sms(voucher.voucher, data, session.checkout_request_id,
 )
 
-if voucher_expiration == 'Expiry After Creation'
+voucher_expiration = HotspotSetting.find_by(account_id: session.account_id)&.voucher_expiration
+
+if voucher_expiration == 'Real-time expiration'
  calculate_expiration_login_with_voucher(hotspot_package, voucher, session.account_id)
 
 create_voucher_radcheck(voucher_code, session.hotspot_package, 
 session.account_id)
+
+else
+   calculate_expiration_login_with_voucher(hotspot_package, voucher, session.account_id)
+
+  create_voucher_radcheck_accumulated_sessions(voucher_code, session.hotspot_package, 
+session.account_id)
 end
 
-
-
-create_voucher_radcheck(voucher_code, session.hotspot_package, 
-session.account_id)
 
 nas_routers = NasRouter.where(account_id: session.account_id)
 nas_routers.each do |nas|
@@ -669,17 +690,17 @@ voucher.update(status:"used", last_logged_in: Time.now,
        used_voucher: true, login_by:'Voucher Code')
 
      
-if voucher_expiration == 'Expiry After Login'
+# if voucher_expiration == 'Expiry After Login'
 
 
-create_voucher_radcheck(voucher_code, session.hotspot_package, 
-session.account_id)
-calculate_expiration_login_with_voucher(hotspot_package, 
+# create_voucher_radcheck(voucher_code, session.hotspot_package, 
+# session.account_id)
+# calculate_expiration_login_with_voucher(hotspot_package, 
 
-voucher, session.account_id)
+# voucher, session.account_id)
 
 
-end
+# end
  
 
       # SendSmsHotspotJob.perform_now(voucher.voucher, data)
@@ -1291,17 +1312,17 @@ def create
       # calculate_expiration(params[:package], @hotspot_voucher,
       #  @hotspot_voucher.account_id)
       
-       ActsAsTenant.current_tenant&.hotspot_setting&.voucher_expiration == 'Expiry After Creation' ?
+       ActsAsTenant.current_tenant&.hotspot_setting&.voucher_expiration == 'Real-time expiration' ?
        calculate_expiration(params[:package], @hotspot_voucher,
        @hotspot_voucher.account_id) : nil
 
 
-      # Save within transaction - will rollback if any fail
       if @hotspot_voucher.save!
 
-         ActsAsTenant.current_tenant&.hotspot_setting&.voucher_expiration == 'Expiry After Creation' ?
+         ActsAsTenant.current_tenant&.hotspot_setting&.voucher_expiration == 'Real-time expiration' ?
        create_voucher_radcheck(voucher_code, params[:package], 
-        @hotspot_voucher.account_id) : nil
+        @hotspot_voucher.account_id) : create_voucher_radcheck_accumulated_sessions(voucher_code, params[:package], 
+        @hotspot_voucher.account_id)
        
         
         # Add to created list
@@ -1392,6 +1413,61 @@ end
 
 
 
+def create_voucher_radcheck_accumulated_sessions(hotspot_voucher, package, account_id)
+
+hotspot_package = "hotspot_#{account_id}_#{package.parameterize(separator: '_')}"
+
+
+
+
+radcheck = RadCheck.find_or_initialize_by(username: hotspot_voucher,
+account_id: account_id,
+radiusattribute: 
+'Cleartext-Password')  
+
+radcheck.update!(op: ':=', value: hotspot_voucher)
+
+
+rad_user_group = RadUserGroup.find_or_initialize_by(username: hotspot_voucher,
+ groupname: hotspot_package, priority: 1, account_id: account_id)
+rad_user_group.update!(username: hotspot_voucher, groupname: hotspot_package, priority: 1)
+
+
+validity_period_units = HotspotPackage.find_by(name: package, account_id: account_id).validity_period_units
+validity = HotspotPackage.find_by(name: package, account_id: account_id).validity
+
+
+
+seconds =
+  case validity_period_units
+  when "minutes"
+    validity.minutes.to_i
+  when "hours"
+    validity.hours.to_i
+  when "days"
+    validity.days.to_i
+  end
+
+if seconds
+  rad_check = RadCheck.find_or_initialize_by(username: hotspot_voucher,
+   account_id: account_id,
+   radiusattribute: 'Expiration')
+  rad_check.update!(op: ':=', value: expiration_time)
+
+
+  radcheck = RadCheck.find_or_initialize_by(
+  username: hotspot_voucher,
+  account_id: account_id,
+  radiusattribute: "Max-All-Session")
+   rad_check.update!(
+  op: ":=",
+  value: seconds
+ )
+end
+end
+
+
+
   def create_voucher_radcheck_compensation(hotspot_voucher, package, 
     account_id)
 
@@ -1417,8 +1493,8 @@ radiusattribute: '',
 account_id: account_id,
  op: ':=', value: '5000')
  
-rad_reply.update!(username: hotspot_voucher, 
-radiusattribute: 'Idle-Timeout', op: ':=', value: '5000')
+# rad_reply.update!(username: hotspot_voucher, 
+# radiusattribute: 'Idle-Timeout', op: ':=', value: '5000')
 
 validity_period_units = HotspotPackage.find_by(name: package, account_id: account_id).validity_period_units
 validity = HotspotPackage.find_by(name: package, account_id: account_id).validity

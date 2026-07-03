@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_06_28_192302) do
+ActiveRecord::Schema[7.2].define(version: 2026_07_03_053307) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -532,6 +532,8 @@ ActiveRecord::Schema[7.2].define(version: 2026_06_28_192302) do
     t.string "voucher_type", default: "Mixed"
     t.string "voucher_expiration"
     t.boolean "has_api_key"
+    t.string "code_length"
+    t.string "voucher_prefix"
     t.index ["account_id"], name: "index_hotspot_settings_on_account_id"
   end
 
@@ -930,6 +932,32 @@ ActiveRecord::Schema[7.2].define(version: 2026_06_28_192302) do
     t.datetime "updated_at", null: false
     t.integer "account_id"
     t.integer "user_id"
+  end
+
+  create_table "promotional_plans", force: :cascade do |t|
+    t.bigint "hotspot_package_id", null: false
+    t.string "name", null: false
+    t.string "badge_text"
+    t.text "description"
+    t.datetime "start_date", null: false
+    t.datetime "end_date", null: false
+    t.string "recurrence_type", default: "one_time", null: false
+    t.time "daily_start_time"
+    t.time "daily_end_time"
+    t.integer "account_id"
+    t.string "discount_type", default: "percentage", null: false
+    t.decimal "discount_value", precision: 10, scale: 2, null: false
+    t.integer "max_redemptions"
+    t.integer "current_redemptions", default: 0, null: false
+    t.integer "display_priority", default: 0, null: false
+    t.boolean "show_countdown_timer", default: true, null: false
+    t.boolean "show_stock_indicator", default: true, null: false
+    t.boolean "active", default: true, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id", "active"], name: "index_promotional_plans_on_account_id_and_active"
+    t.index ["hotspot_package_id"], name: "index_promotional_plans_on_hotspot_package_id"
+    t.index ["start_date", "end_date"], name: "index_promotional_plans_on_start_date_and_end_date"
   end
 
   create_table "router_settings", force: :cascade do |t|
@@ -1443,4 +1471,5 @@ ActiveRecord::Schema[7.2].define(version: 2026_06_28_192302) do
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "maintenance_settings", "accounts"
+  add_foreign_key "promotional_plans", "hotspot_packages"
 end

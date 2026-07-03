@@ -244,6 +244,8 @@ end
       email: @hotspot_settings&.email,
       voucher_type: @hotspot_settings&.voucher_type,
       voucher_expiration: @hotspot_settings&.voucher_expiration,
+      code_length: @hotspot_settings&.code_length,
+      voucher_prefix: @hotspot_settings&.voucher_prefix,
       hotspot_banner: @hotspot_settings&.hotspot_banner&.attached? ? 
       # rails_blob_url(@hotspot_settings.hotspot_banner, host: '8209-102-221-35-92.ngrok-free.app', protocol: 'https', port: nil) : nil
       # }, 
@@ -264,6 +266,9 @@ def get_hotspot_setting
     hotspot_info: @hotspot_settings&.hotspot_info,
     email: @hotspot_settings&.email,
     voucher_type: @hotspot_settings&.voucher_type,
+    voucher_expiration: @hotspot_settings&.voucher_expiration,
+    code_length: @hotspot_settings&.code_length,
+    voucher_prefix: @hotspot_settings&.voucher_prefix,
     hotspot_banner: @hotspot_settings&.hotspot_banner&.attached? ? 
     # rails_blob_url(@hotspot_settings.hotspot_banner, host: '8209-102-221-35-92.ngrok-free.app', protocol: 'https', port: nil) : nil
     # }, 
@@ -299,6 +304,8 @@ voucher_type: params[:voucher_type],
     email: params[:email],
     voucher_type: params[:voucher_type],
     voucher_expiration: params[:voucher_expiration],
+    code_length: normalized_code_length(params[:code_length]),
+    voucher_prefix: normalized_prefix(params[:voucher_prefix]),
       )
         render json: {
 
@@ -308,6 +315,8 @@ voucher_type: params[:voucher_type],
         email: @hotspot_setting.email,
         voucher_type: @hotspot_setting.voucher_type,
         voucher_expiration: @hotspot_setting.voucher_expiration,
+        code_length: @hotspot_setting.code_length,
+        voucher_prefix: @hotspot_setting.voucher_prefix,
         hotspot_banner: @hotspot_setting.hotspot_banner.attached? ? 
         # rails_blob_url(@hotspot_setting.hotspot_banner, host: 'speeches-air-una-dolls.trycloudflare.com', protocol: 'https', port: nil) : nil
         # }, 
@@ -344,6 +353,23 @@ voucher_type: params[:voucher_type],
       @hotspot_setting = HotspotSetting.find(params[:id])
     end
 
+    # Clamp code length to the allowed 6-16 range, default to 6 if blank/invalid.
+    MIN_CODE_LENGTH = 6
+    MAX_CODE_LENGTH = 16
+
+    def normalized_code_length(value)
+      length = value.to_i
+      return MIN_CODE_LENGTH if length <= 0
+      length.clamp(MIN_CODE_LENGTH, MAX_CODE_LENGTH)
+    end
+
+    # Cap prefix at 4 characters, strip whitespace.
+    MAX_PREFIX_LENGTH = 4
+
+    def normalized_prefix(value)
+      value.to_s.strip[0, MAX_PREFIX_LENGTH]
+    end
+
 
 def generate_hotspot_script(mac, version)
     <<~RSC
@@ -377,8 +403,6 @@ set allow-remote-requests=yes
     def hotspot_setting_params
       params.permit(:phone_number, :hotspot_name, 
       :hotspot_info, :hotspot_banner, :account_id, :email,
-       :voucher_type, :voucher_expiration)
+       :voucher_type, :voucher_expiration, :code_length, :voucher_prefix)
     end
 end
-
-

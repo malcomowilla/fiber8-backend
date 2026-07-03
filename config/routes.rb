@@ -160,8 +160,9 @@ resources :company_ids
 
 end
 
-
-
+resources :promotional_plans, only: [:index, :show, :create, :update, :destroy]
+get '/api/hotspot_active_promotions', to: 'promotional_plans#allow_get_active_promotions'
+get '/hotspot_active_promotions', to: 'promotional_plans#allow_get_active_promotions'
 
   get '/api/maintenance_status', to: 'maintenance#status'
   post '/api/maintenance_mode',   to: 'maintenance#toggle'

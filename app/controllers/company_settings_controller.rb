@@ -104,7 +104,7 @@ end
 
   # POST /company_settings or /company_settings.json
   def create
-    tunnel_host = fetch_loophole_tunnel_hostname
+    # tunnel_host = fetch_loophole_tunnel_hostname
 
     
   @company_setting = CompanySetting.first_or_initialize(company_setting_params)
