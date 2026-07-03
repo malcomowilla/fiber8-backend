@@ -31,6 +31,9 @@ expired_vouchers = HotspotVoucher.where('expiration < ?', Time.current).where(ac
              send_expiration_sms(voucher, tenant) # Unified function to send SMS based on provider
              voucher.update!(sms_sent_at: Time.current) # Track when the SMS was sent
           end
+
+               logout_hotspot_user(voucher, tenant)
+
         end
 
 
@@ -69,7 +72,6 @@ hotspot_subscriptions.find_each do |subscription|
       
     )
 
-     logout_hotspot_user(subscription, tenant)
 
   else
     # Allow login by removing the reject entry if it exists
