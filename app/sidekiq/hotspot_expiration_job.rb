@@ -81,7 +81,7 @@ hotspot_subscriptions.find_each do |subscription|
     ).destroy_all
   end
 end
-
+ 
 
 
 
