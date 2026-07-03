@@ -36,15 +36,49 @@
 
 
 
-# app/jobs/generate_clients_conf_job.rb
+# # app/jobs/generate_clients_conf_job.rb
+# class GenerateClientsConfJob
+#   include Sidekiq::Job
+#   queue_as :client_conf
+
+#   def perform
+#     Rails.logger.info "Generating clients.conf"
+    
+#     File.open('/etc/freeradius/3.0/clients.conf', 'w') do |f|
+#       Na.find_each do |nas|
+#         next if nas.nasname.blank? || nas.secret.blank?
+
+#         f.puts <<~CLIENT
+#           client #{nas.shortname.presence || "client_#{nas.id}"} {
+#             ipaddr     = #{nas.nasname}
+#             secret     = #{nas.secret}
+#             require_message_authenticator = no
+#           }
+#         CLIENT
+#       end
+#     end
+
+#         File.chmod(0640, CLIENTS_CONF)
+
+
+#     FileUtils.touch('/etc/freeradius/3.0/.reload_trigger') rescue nil
+#   end
+# end
+
+
+
+
 class GenerateClientsConfJob
   include Sidekiq::Job
+
+  CLIENTS_CONF = "/etc/freeradius/3.0/clients.conf".freeze
+
   queue_as :client_conf
 
   def perform
     Rails.logger.info "Generating clients.conf"
-    
-    File.open('/etc/freeradius/3.0/clients.conf', 'w') do |f|
+
+    File.open(CLIENTS_CONF, "w") do |f|
       Na.find_each do |nas|
         next if nas.nasname.blank? || nas.secret.blank?
 
@@ -58,17 +92,11 @@ class GenerateClientsConfJob
       end
     end
 
-        File.chmod(0640, CLIENTS_CONF)
+    File.chmod(0640, CLIENTS_CONF)
 
-
-    FileUtils.touch('/etc/freeradius/3.0/.reload_trigger') rescue nil
+    FileUtils.touch("/etc/freeradius/3.0/.reload_trigger") rescue nil
   end
 end
-
-
-
-
-
 
 
 

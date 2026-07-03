@@ -107,7 +107,6 @@ end
       upload: format_bytes(upload_bytes),
       start_time: session.acctstarttime.strftime("%B %d, %Y at %I:%M %p"),
       nas_port: session.nasportid,
-      # router:
     }
   end
 
