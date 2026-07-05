@@ -24,7 +24,7 @@ expired_vouchers = HotspotVoucher.where('expiration < ?', Time.current).where(ac
      
         expired_vouchers.find_each do |voucher|
 
-          voucher.update_column(:status, 'expired')
+          voucher.update_column(:status, 'expired') 
          
           # Only send SMS if it hasn't been sent before
           if voucher.used_voucher && voucher.sms_sent_at.nil?   
@@ -38,7 +38,7 @@ expired_vouchers = HotspotVoucher.where('expiration < ?', Time.current).where(ac
 
 
 
-
+ 
 
 
 
@@ -102,8 +102,7 @@ def calculate_expiration_voucher(package, voucher_created, account_id)
    hotspot_package = HotspotPackage.find_by(name: package, 
   account_id: account_id)
 
-  return render json: { error: 'Package not found' }, status: :not_found unless hotspot_package
-  
+return unless hotspot_package  
   # Calculate expiration
   expiration_time = if hotspot_package.validity.present? && hotspot_package.validity_period_units.present?
     case hotspot_package.validity_period_units.downcase

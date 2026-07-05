@@ -80,6 +80,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     npm \
     git \
     curl \
+    iproute2 \
+    iputils-ping \
     && npm install -g yarn \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
