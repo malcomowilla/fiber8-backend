@@ -22,8 +22,11 @@ require 'cloudinary'
    render json: @ad_settings.map do |ad|
   {
     ad_title: ad.ad_title,
-    # ad_link: ad&.media_file&.attached? ? ad&.media_file.url : nil,
-      ad_link: ad&.media_file&.attached? ? ad&.media_file&.url : nil,
+    # media_url is where the actual Cloudinary URL lives (see create/update).
+    # media_file (ActiveStorage) is never attached anywhere in this controller,
+    # so media_file.attached? was always false and ad_link was always nil.
+    ad_link: ad&.ad_link,
+    media_url: ad&.media_url,
 
     position: ad&.position,
     ad_duration: ad&.ad_duration,
@@ -90,7 +93,11 @@ def get_ad_settings_by_id
       #  ad_link: @ad_settings&.media_file&.attached? ? rails_blob_url(@ad_settings&.media_file,
       #  host: tunnel_host, protocol: 'https', port: nil,
       # ) : nil,
-      ad_link: @ad_settings&.media_file&.attached? ? @ad_settings&.media_file&.url : nil,
+      # ad_link is the tap-through link. media_url is the actual uploaded
+      # image/video (Cloudinary URL). These are two different fields and both
+      # need to be sent back, or the frontend has nothing to preview/render.
+      ad_link: @ad_settings&.ad_link,
+      media_url: @ad_settings&.media_url,
        position: @ad_settings.position,
        ad_duration: @ad_settings.ad_duration,
        skip_after: @ad_settings.skip_after,
