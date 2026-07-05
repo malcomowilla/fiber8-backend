@@ -1413,6 +1413,15 @@ end
 
 
 
+
+
+
+
+
+
+
+
+
 def create_voucher_radcheck_accumulated_sessions(hotspot_voucher, package, account_id)
 
 hotspot_package = "hotspot_#{account_id}_#{package.parameterize(separator: '_')}"

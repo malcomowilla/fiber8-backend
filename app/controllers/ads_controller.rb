@@ -42,132 +42,36 @@ def set_tenant
   end
 
 
-  def number_of_ads
-    @number_of_ads = Ad.count
-     render json: @number_of_ads
-  end
-
-
+ def number_of_ads
+  render json: AdSetting.where(account_id: @account.id).count
+end
 
 def total_ad_clicks
-
-  @count = AnalyticsEvent.where(event_type: 'click').count
-   render json: @count
-  
+  ad_id = params[:ad_id]
+  scope = AnalyticsEvent.where(event_type: 'click', account_id: @account.id)
+  scope = scope.where(ad_setting_id: ad_id) if ad_id.present?
+  render json: scope.count
 end
-
-
 
 def total_ad_impressions
-
-  @count = AnalyticsEvent.where(event_type: 'Ad View').count
-   render json: @count
+  ad_id = params[:ad_id]
+  scope = AnalyticsEvent.where(event_type: 'Ad View', account_id: @account.id)
+  scope = scope.where(ad_setting_id: ad_id) if ad_id.present?
+  render json: scope.count
 end
 
-
-  def track_ad_event
-
- data = {
+def track_ad_event
+  data = {
     event_type: params[:event_type],
     button_name: params[:button_name],
+    ad_setting_id: params[:ad_id],
     timestamp: Time.current.to_s,
     account_id: ActsAsTenant.current_tenant.id,
   }.to_json
 
-  $redis.rpush("analytics_events", data) 
+  $redis.rpush("analytics_events", data)
   render json: { message: 'Event Tracked' }, status: :ok
-    
-  end
-
-
-
-
-
-
-  # GET /ads or /ads.json
-  def index
-    @ads = Ad.all
-    render json: @ads 
-  end
-
-  # GET /ads/1 or /ads/1.json
-  def show
-  end
-
-  # GET /ads/new
-  def new
-    @ad = Ad.new
-  end
-
-  # GET /ads/1/edit
-  def edit
-  end
-
-  # POST /ads or /ads.json
-  def create
-    @ad = Ad.first_or_initialize(
-title: params[:title],
-description: params[:description],
-business_name: params[:business_name],
-business_type: params[:business_type],
-offer_text: params[:offer_text],
-discount: params[:discount],
-cat_text: params[:cat_text],
-background_color: params[:background_color],
-text_color: params[:text_color],
-image: params[:image],
-imagePreview: params[:imagePreview],
-target_url: params[:target_url],
-image_preview: params[:image_preview],
-website: params[:contact][:website],
-phone: params[:contact][:phone],
-email: params[:contact][:email],
-)
-
-    @ad.update(
-  title: params[:title],
-description: params[:description],
-business_name: params[:business_name],
-business_type: params[:business_type],
-offer_text: params[:offer_text],
-discount: params[:discount],
-cat_text: params[:cat_text],
-background_color: params[:background_color],
-text_color: params[:text_color],
-image: params[:image],
-imagePreview: params[:imagePreview],
-target_url: params[:target_url],
-image_preview: params[:image_preview],
-website: params[:contact][:website],
-phone: params[:contact][:phone],
-email: params[:contact][:email],
-    )
-
-      if @ad.save
-       render json: @ad, status: :created
-      else
-         render json: @ad.errors, status: :unprocessable_entity 
-      end
-    
-  end
-
-  # PATCH/PUT /ads/1 or /ads/1.json
-  def update
-      if @ad.update(ad_params)
-        render json: @ad, status: :ok
-      else
-        render json: @ad.errors, status: :unprocessable_entity 
-      
-    end
-  end
-
-  # DELETE /ads/1 or /ads/1.json
-  def destroy
-    @ad.destroy!
-
-       head :no_content 
-    
-  end
+end
 
   private
     # Use callbacks to share common setup or constraints between actions.
@@ -176,11 +80,5 @@ email: params[:contact][:email],
     end
 
     # Only allow a list of trusted parameters through.
-    def ad_params
-      params.require(:ad).permit(:title, :description, :business_name, 
-      :business_type, 
-      :offer_text, :discount, :cat_text, :background_color, :text_color,
-       :image,
-       :imagePreview, :target_url, :is_active,  :image_preview)
-    end
+   
 end

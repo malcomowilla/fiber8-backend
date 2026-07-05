@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_07_03_053307) do
+ActiveRecord::Schema[7.2].define(version: 2026_07_05_120414) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -118,6 +118,9 @@ ActiveRecord::Schema[7.2].define(version: 2026_07_03_053307) do
     t.integer "tenant_id"
     t.string "design_canvas_w"
     t.string "design_canvas_h"
+    t.string "ad_format", default: "image"
+    t.integer "impressions_count", default: 0, null: false
+    t.integer "clicks_count", default: 0, null: false
   end
 
   create_table "admin_settings", force: :cascade do |t|
@@ -182,6 +185,8 @@ ActiveRecord::Schema[7.2].define(version: 2026_07_03_053307) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.string "button_name"
+    t.bigint "ad_setting_id"
+    t.index ["ad_setting_id"], name: "index_analytics_events_on_ad_setting_id"
   end
 
   create_table "calendar_events", force: :cascade do |t|
