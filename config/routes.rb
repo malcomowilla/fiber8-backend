@@ -307,6 +307,8 @@ get '/api/total_ad_clicks', to: 'ads#total_ad_clicks'
 get '/total_ad_impressions', to: 'ads#total_ad_impressions'
 get '/api/total_ad_impressions', to: 'ads#total_ad_impressions'
 post '/api/track_ad_event', to: 'ads#track_ad_event'
+post '/track_ad_event', to: 'ads#track_ad_event'
+
 get '/api/number_of_ads', to: 'ads#number_of_ads'
 get '/number_of_ads', to: 'ads#number_of_ads'
 

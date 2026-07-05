@@ -129,9 +129,15 @@ def get_ad_settings_by_id
       cloudinary_url = nil
 
   if params[:media_file].present?
-    uploaded = Cloudinary::Uploader.upload(
-      params[:media_file].tempfile.path
-    )
+    # uploaded = Cloudinary::Uploader.upload(
+    #   params[:media_file].tempfile.path
+    # )
+  resource_type = params[:media_type] == "video" ? "video" : "image"
+
+uploaded = Cloudinary::Uploader.upload(
+  params[:media_file].tempfile.path,
+  resource_type: resource_type
+)
     cloudinary_url = uploaded["secure_url"]
   elsif params[:media_url].present?
     cloudinary_url = params[:media_url]
@@ -182,7 +188,13 @@ def get_ad_settings_by_id
 
   cloudinary_url = @ad_setting.media_url
   if params[:media_file].present?
-    uploaded = Cloudinary::Uploader.upload(params[:media_file].tempfile.path)
+    # uploaded = Cloudinary::Uploader.upload(params[:media_file].tempfile.path)
+    resource_type = params[:media_type] == "video" ? "video" : "image"
+
+uploaded = Cloudinary::Uploader.upload(
+  params[:media_file].tempfile.path,
+  resource_type: resource_type
+)
     cloudinary_url = uploaded["secure_url"]
   elsif params[:media_url].present?
     cloudinary_url = params[:media_url]
