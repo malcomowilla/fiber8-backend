@@ -161,6 +161,8 @@ services:
       dockerfile: Dockerfile
     command: bash -c "rm -f tmp/pids/server.pid && bundle exec rails server -b 0.0.0.0 -p 3000"
     network_mode: host
+    cap_add:
+    - NET_ADMIN
     mem_limit: 780m
     mem_reservation: 128m
     restart: unless-stopped
@@ -168,8 +170,8 @@ services:
       - .:/app
       - bundle_cache:/usr/local/bundle
       - freeradius_shared:/freeradius 
-    ports:
-      - "3000:3000"
+    # ports:
+    #   - "3000:3000"
     environment:
       RAILS_ENV: development
       DATABASE_HOST: host.docker.internal
@@ -177,8 +179,8 @@ services:
       DATABASE_NAME: ${DB_NAME}
       DATABASE_USERNAME: ${DATABASE_USERNAME}
       DATABASE_PASSWORD: ${DATABASE_PASSWORD}
-      REDIS_URL: redis://redis:6379/0
-      SIDEKIQ_REDIS_URL: redis://redis:6379/1
+      REDIS_URL: redis://localhost:6379/0
+      SIDEKIQ_REDIS_URL: redis://localhost:6379/1
       SECRET_KEY_BASE: development-secret-key
       RAILS_LOG_TO_STDOUT: "true"
     extra_hosts:
@@ -186,8 +188,8 @@ services:
     depends_on:
       redis:
         condition: service_healthy
-    networks:
-      - appnet
+    # networks:
+    #   - appnet
 
    
 
@@ -196,6 +198,9 @@ services:
       context: .
       dockerfile: Dockerfile
     command: bundle exec sidekiq -C config/sidekiq.yml
+    network_mode: host
+    cap_add:
+    - NET_ADMIN
     mem_limit: 512m
     mem_reservation: 256m
     restart: unless-stopped
@@ -211,8 +216,8 @@ services:
       DATABASE_NAME: ${DB_NAME}
       DATABASE_USERNAME: ${DATABASE_USERNAME}
       DATABASE_PASSWORD: ${DATABASE_PASSWORD}
-      REDIS_URL: redis://redis:6379/0
-      SIDEKIQ_REDIS_URL: redis://redis:6379/1
+      REDIS_URL: redis://localhost:6379/0
+      SIDEKIQ_REDIS_URL: redis://localhost:6379/1
       SECRET_KEY_BASE: development-secret-key
       RAILS_LOG_TO_STDOUT: "true"
     extra_hosts:
@@ -220,8 +225,8 @@ services:
     depends_on:
       redis:
         condition: service_healthy
-    networks:
-      - appnet
+    # networks:
+    #   - appnet
 
 volumes:
   redisdata:
