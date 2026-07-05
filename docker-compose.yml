@@ -160,6 +160,9 @@ services:
       context: .
       dockerfile: Dockerfile
     command: bash -c "rm -f tmp/pids/server.pid && bundle exec rails server -b 0.0.0.0 -p 3000"
+    network_mode: host
+    cap_add:
+      - NET_ADMIN
     mem_limit: 780m
     mem_reservation: 128m
     restart: unless-stopped
@@ -188,9 +191,7 @@ services:
     networks:
       - appnet
 
-    network_mode: host
-    cap_add:
-      - NET_ADMIN
+   
 
   sidekiq:
     build:
