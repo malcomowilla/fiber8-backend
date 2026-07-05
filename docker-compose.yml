@@ -184,7 +184,7 @@ services:
       SECRET_KEY_BASE: development-secret-key
       RAILS_LOG_TO_STDOUT: "true"
     extra_hosts:
-      - "host.docker.internal:host-gateway" 
+      - "host.docker.internal:host-gateway" # 👈 Required for Linux users
     depends_on:
       redis:
         condition: service_healthy

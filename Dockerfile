@@ -80,6 +80,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     npm \
     git \
     curl \
+    wireguard-tools \
     iproute2 \
     iputils-ping \
     && npm install -g yarn \
