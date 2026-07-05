@@ -188,9 +188,7 @@ services:
     depends_on:
       redis:
         condition: service_healthy
-    # networks:
-    #   - appnet
-
+    
    
 
   sidekiq:
@@ -211,7 +209,7 @@ services:
       - /etc/freeradius/3.0:/etc/freeradius/3.0
     environment:
       RAILS_ENV: development
-      DATABASE_HOST: host.docker.internal
+      DATABASE_HOST: localhost
       DATABASE_PORT: ${DB_PORT}
       DATABASE_NAME: ${DB_NAME}
       DATABASE_USERNAME: ${DATABASE_USERNAME}
