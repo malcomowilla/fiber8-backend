@@ -148,7 +148,7 @@ def set_tenant
       
       # Delete the NAS router record first
       nas_router.destroy
-      
+      RouterStatus.where(account_id: nas_router.account_id).delete_all
       # Then remove the WireGuard peer configuration
       # if wg_ip.present?
       #   remove_wireguard_peer(wg_ip)
