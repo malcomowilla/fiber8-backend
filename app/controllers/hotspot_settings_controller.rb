@@ -161,71 +161,72 @@ if current_user
 
   
 
-
-
 def upload_hotspot_file
   require "tempfile"
+  require "net/ftp"
 
- router_ip = params[:router_ip]
-  username  = params[:router_username]
-  password  = params[:router_password]
-  subdomain = request.headers["X-Subdomain"]
-  full_domain = request.headers["X-Domain"]  # e.g., "twintech.owitech.co.ke"
+  router_ip  = params[:router_ip]
+  username   = params[:router_username]
+  password   = params[:router_password]
+  subdomain  = request.headers["X-Subdomain"]
+  full_domain = request.headers["X-Domain"]
 
   raise "Missing router details" if router_ip.blank? || username.blank? || password.blank?
 
-  # Extract the base domain from X-Domain
-  # e.g., "twintech.owitech.co.ke" => "owitech.co.ke"
-  # base_domain = full_domain.to_s.split('.').last(2).join('.') if full_domain.present?
-base_domain = full_domain.to_s.split('.').last(3).join('.') if full_domain.present?
-  # Determine which platform to use
-  if base_domain == "owitech.co.ke"
-    platform_domain = "owitech.co.ke"
-  else
-    platform_domain = "aitechs.co.ke"   
-  end
+  base_domain = full_domain.to_s.split(".").last(3).join(".") if full_domain.present?
 
+  platform_domain =
+    if base_domain == "owitech.co.ke"
+      "owitech.co.ke"
+    else
+      "aitechs.co.ke"
+    end
 
   login_html = <<~HTML
-   <html>
-<head>
-<script>
-window.location.replace("https://#{subdomain}.#{platform_domain}/hotspot-page?mac=$(mac)&ip=$(ip)&username=$(username)");
-</script>
-</head>
-<body></body>
-</html>
+    <html>
+      <head>
+        <script>
+          window.location.replace("https://#{subdomain}.#{platform_domain}/hotspot-page?mac=$(mac)&ip=$(ip)&username=$(username)");
+        </script>
+      </head>
+      <body></body>
+    </html>
   HTML
 
   temp_file = Tempfile.new(["login", ".html"])
   temp_file.write(login_html)
   temp_file.close
 
-  ftp_script = <<~FTP
-    open #{router_ip}
-    user #{username} #{password}
-    binary
-    put #{temp_file.path} hotspot/login.html
-    bye
-  FTP
+  ftp = Net::FTP.new
+  ftp.passive = true
+  ftp.connect(router_ip, 21)
+  ftp.login(username, password)
 
-  ftp_file = Tempfile.new("ftp")
-  ftp_file.write(ftp_script)
-  ftp_file.close
-
-  output = `ftp -inv < #{ftp_file.path} 2>&1`
-
-  temp_file.unlink
-  ftp_file.unlink
-
-  if output =~ /(530|550|not connected|failed|denied)/i
-    render json: { status: "error", output: output }, status: :unprocessable_entity
-  else
-    render json: { status: "ok", message: "login.html uploaded", output: output }
+  begin
+    ftp.chdir("hotspot")
+  rescue Net::FTPPermError
+    ftp.mkdir("hotspot")
+    ftp.chdir("hotspot")
   end
+
+  ftp.putbinaryfile(temp_file.path, "login.html")
+
+  ftp.close
+  temp_file.unlink
+
+  render json: {
+    status: "ok",
+    message: "login.html uploaded successfully"
+  }
+
 rescue => e
-  render json: { status: "error", message: e.message }, status: :internal_server_error
+  temp_file.unlink if temp_file
+  render json: {
+    status: "error",
+    message: e.message
+  }, status: :unprocessable_entity
 end
+
 
   def index
     # @hotspot_settings = HotspotSetting.all
@@ -390,10 +391,18 @@ end
 
 
 def publish_hotspot_page
+  require "tempfile"
+  require "net/ftp"
+
   @account = ActsAsTenant.current_tenant
+
   router = NasRouter.find_by(id: params[:router_id])
   return render json: { status: "error", message: "Router not found" }, status: :not_found unless router
-  return render json: { status: "error", message: "Router missing FTP credentials" }, status: :unprocessable_entity if router.username.blank?
+
+  return render json: {
+    status: "error",
+    message: "Router missing FTP credentials"
+  }, status: :unprocessable_entity if router.username.blank?
 
   html = HotspotPageBuilder.new(@account).compile
 
@@ -401,30 +410,36 @@ def publish_hotspot_page
   temp_file.write(html)
   temp_file.close
 
-  ftp_script = <<~FTP
-    open #{router.ip_address}
-    user #{router.username} #{router.password}
-    binary
-    put #{temp_file.path} hotspot/login.html
-    bye
-  FTP
+  ftp = Net::FTP.new
+  ftp.passive = true
+  ftp.connect(router.ip_address, 21)
+  ftp.login(router.username, router.password)
 
-  ftp_file = Tempfile.new("ftp")
-  ftp_file.write(ftp_script)
-  ftp_file.close
-
-  output = `ftp -inv < #{ftp_file.path} 2>&1`
-  temp_file.unlink
-  ftp_file.unlink
-
-  if output =~ /(530|550|not connected|failed|denied)/i
-    render json: { status: "error", output: output }, status: :unprocessable_entity
-  else
-    @account.hotspot_setting.update(page_design_published_at: Time.current)
-    render json: { status: "ok", message: "Published to #{router.name}", output: output }
+  begin
+    ftp.chdir("hotspot")
+  rescue Net::FTPPermError
+    ftp.mkdir("hotspot")
+    ftp.chdir("hotspot")
   end
+
+  ftp.putbinaryfile(temp_file.path, "login.html")
+
+  ftp.close
+  temp_file.unlink
+
+  @account.hotspot_setting.update(page_design_published_at: Time.current)
+
+  render json: {
+    status: "ok",
+    message: "Published to #{router.name}"
+  }
+
 rescue => e
-  render json: { status: "error", message: e.message }, status: :internal_server_error
+  temp_file.unlink if temp_file
+  render json: {
+    status: "error",
+    message: e.message
+  }, status: :unprocessable_entity
 end
 
 

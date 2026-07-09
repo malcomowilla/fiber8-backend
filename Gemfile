@@ -242,7 +242,7 @@ gem 'sys-filesystem'
 gem "ipaddress", "~> 0.8.3"
 gem 'rails-observers'
 
-
+gem "net-ftp"
 gem 'sanitize'
 gem "sidekiq-unique-jobs"
 gem "figaro"
