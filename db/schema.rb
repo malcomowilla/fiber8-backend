@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_07_05_120414) do
+ActiveRecord::Schema[7.2].define(version: 2026_07_09_202841) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -539,7 +539,10 @@ ActiveRecord::Schema[7.2].define(version: 2026_07_05_120414) do
     t.boolean "has_api_key"
     t.string "code_length"
     t.string "voucher_prefix"
+    t.jsonb "page_design", default: {}, null: false
+    t.datetime "page_design_published_at"
     t.index ["account_id"], name: "index_hotspot_settings_on_account_id"
+    t.index ["page_design"], name: "index_hotspot_settings_on_page_design", using: :gin
   end
 
   create_table "hotspot_subscriptions", force: :cascade do |t|

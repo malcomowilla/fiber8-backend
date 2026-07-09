@@ -163,6 +163,14 @@ end
 resources :promotional_plans, only: [:index, :show, :create, :update, :destroy]
 
 
+
+post 'preview_page_design',   to: 'hotspot_settings#preview_page_design'
+get  'get_page_design',       to: 'hotspot_settings#get_page_design'
+post 'save_page_design',      to: 'hotspot_settings#save_page_design'
+
+post "hotspot_page_design", to: "hotspot_settings#save_page_design"
+get  "hotspot_page_design", to: "hotspot_settings#get_page_design"
+post "publish_hotspot_page", to: "hotspot_settings#publish_hotspot_page"
 get '/api/pppoe_revenue_today', to: 'pp_poe_mpesa_revenues#todays_revenue'
 get '/pppoe_revenue_today', to: 'pp_poe_mpesa_revenues#todays_revenue'
 get '/api/expiring_soon', to: 'subscribers#expiring_soon'

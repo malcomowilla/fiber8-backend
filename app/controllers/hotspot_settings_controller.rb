@@ -347,11 +347,130 @@ voucher_type: params[:voucher_type],
   # DELETE /hotspot_settings/1 or /hotspot_settings/1.json
   
 
+
+
+
+
+
+
+# HotspotSettingsController
+
+def save_page_design
+  @account = ActsAsTenant.current_tenant
+  @hotspot_setting = @account.hotspot_setting || @account.build_hotspot_setting
+
+  design = sanitize_page_design(parse_page_design_param(params[:page_design]))
+
+  if params[:design_logo].present?
+    @hotspot_setting.design_logo.attach(params[:design_logo])
+    design["header"] ||= {}
+    design["header"]["logo_url"] = url_for(@hotspot_setting.design_logo)
+  end
+
+  if @hotspot_setting.update(page_design: design)
+    render json: { status: "ok", page_design: @hotspot_setting.page_design }
+  else
+    render json: @hotspot_setting.errors, status: :unprocessable_entity
+  end
+end
+
+def preview_page_design
+  @account = ActsAsTenant.current_tenant
+  design = sanitize_page_design(parse_page_design_param(params[:page_design]))
+  html = HotspotPageBuilder.new(@account, design_override: design).compile(preview: true)
+  render plain: html, content_type: "text/html"
+end
+
+def get_page_design
+  @account = ActsAsTenant.current_tenant
+  render json: { page_design: @account.hotspot_setting&.page_design || {} }
+end
+
+# Renders compiled HTML WITHOUT publishing, so the designer's iframe can preview it live
+
+
+def publish_hotspot_page
+  @account = ActsAsTenant.current_tenant
+  router = NasRouter.find_by(id: params[:router_id])
+  return render json: { status: "error", message: "Router not found" }, status: :not_found unless router
+  return render json: { status: "error", message: "Router missing FTP credentials" }, status: :unprocessable_entity if router.username.blank?
+
+  html = HotspotPageBuilder.new(@account).compile
+
+  temp_file = Tempfile.new(["login", ".html"])
+  temp_file.write(html)
+  temp_file.close
+
+  ftp_script = <<~FTP
+    open #{router.ip_address}
+    user #{router.username} #{router.password}
+    binary
+    put #{temp_file.path} hotspot/login.html
+    bye
+  FTP
+
+  ftp_file = Tempfile.new("ftp")
+  ftp_file.write(ftp_script)
+  ftp_file.close
+
+  output = `ftp -inv < #{ftp_file.path} 2>&1`
+  temp_file.unlink
+  ftp_file.unlink
+
+  if output =~ /(530|550|not connected|failed|denied)/i
+    render json: { status: "error", output: output }, status: :unprocessable_entity
+  else
+    @account.hotspot_setting.update(page_design_published_at: Time.current)
+    render json: { status: "ok", message: "Published to #{router.name}", output: output }
+  end
+rescue => e
+  render json: { status: "error", message: e.message }, status: :internal_server_error
+end
+
+
+
+
   private
+
+
+
     # Use callbacks to share common setup or constraints between actions.
     def set_hotspot_setting
       @hotspot_setting = HotspotSetting.find(params[:id])
     end
+
+
+
+
+
+
+    def parse_page_design_param(raw)
+  return {} if raw.blank?
+
+  parsed = raw.is_a?(String) ? JSON.parse(raw) : raw.to_unsafe_h
+  parsed
+rescue JSON::ParserError
+  render json: { status: "error", message: "Invalid page_design payload" }, status: :unprocessable_entity and return {}
+end
+
+
+# Whitelist top-level keys but allow free-form nesting underneath — this is a JSON
+# design blob, not a form; the deep `permit` approach doesn't scale here.
+# ALLOWED_DESIGN_KEYS = %w[theme typography layout header footer features ads].freeze
+ALLOWED_DESIGN_KEYS = %w[color_scheme theme typography layout header footer features].freeze
+
+def sanitize_page_design(hash)
+  hash.slice(*ALLOWED_DESIGN_KEYS)
+end
+
+def page_design_params
+  params.require(:page_design).permit(
+    hero: [:title, :subtitle, :logo_url],
+    colors: [:primary, :background, :text],
+    features: [:show_packages, :show_voucher, :show_mpesa_code],
+    footer: [:phone, :email]
+  )
+end
 
     # Clamp code length to the allowed 6-16 range, default to 6 if blank/invalid.
     MIN_CODE_LENGTH = 6
