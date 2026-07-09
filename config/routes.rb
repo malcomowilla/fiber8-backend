@@ -168,6 +168,24 @@ post 'preview_page_design',   to: 'hotspot_settings#preview_page_design'
 get  'get_page_design',       to: 'hotspot_settings#get_page_design'
 post 'save_page_design',      to: 'hotspot_settings#save_page_design'
 
+
+
+
+post '/api/preview_page_design',   to: 'hotspot_settings#preview_page_design'
+get  '/api/get_page_design',       to: 'hotspot_settings#get_page_design'
+post '/api/save_page_design',      to: 'hotspot_settings#save_page_design'
+
+
+
+
+
+post "/api/hotspot_page_design", to: "hotspot_settings#save_page_design"
+get  "/api/hotspot_page_design", to: "hotspot_settings#get_page_design"
+post "/api/publish_hotspot_page", to: "hotspot_settings#publish_hotspot_page"
+
+
+
+
 post "hotspot_page_design", to: "hotspot_settings#save_page_design"
 get  "hotspot_page_design", to: "hotspot_settings#get_page_design"
 post "publish_hotspot_page", to: "hotspot_settings#publish_hotspot_page"
