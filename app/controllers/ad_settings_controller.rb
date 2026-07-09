@@ -241,6 +241,7 @@ end
     end
 
 
+# def fetch_loophole_tunnel_hostname
 #   log_output = `journalctl -u loophole -n 200 --no-pager`.strip
 #     # output = File.read("/var/log/loophole.log")
 

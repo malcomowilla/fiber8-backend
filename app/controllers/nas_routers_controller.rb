@@ -79,9 +79,6 @@ router_status = RouterStatus.where(tenant_id: @tenant.id)
       # Handle case where cache is empty
       render json: { error: "No router status found for tenant #{@tenant.id}" }, status: :not_found
     end
-
-
-
 end
 
 

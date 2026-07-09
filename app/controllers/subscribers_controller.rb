@@ -188,8 +188,6 @@ end
 
 
 
-
-
 def registration_stats
   today_count = Subscriber.where(registration_date: Time.current.beginning_of_day..Time.current.end_of_day).count
   this_week_count = Subscriber.where(registration_date: Time.current.beginning_of_week..Time.current.end_of_week).count
@@ -1056,8 +1054,82 @@ def churn_details
     analysis_period_days: days_back
   }
 end
- 
 
+
+# ══════════════════════════════════════════════════════════════════════════
+# CUSTOMER INSIGHTS (Analytics dashboard)
+# ══════════════════════════════════════════════════════════════════════════
+
+# ── Expiring soon (next N days, default 10) ─────────────────────────────────
+# GET /api/expiring_soon?days=10
+def expiring_soon
+  days       = (params[:days] || 10).to_i.clamp(1, 90)
+  now        = Time.current
+  window_end = now + days.days
+
+  count = Subscription.where(expiration_date: now..window_end)
+                       .distinct
+                       .count(:subscriber_id)
+
+  render json: { count: count, days: days }
+end
+
+# ── Recently expired (last N days, default 20) ──────────────────────────────
+# GET /api/recently_expired?days=20
+def recently_expired
+  days         = (params[:days] || 20).to_i.clamp(1, 90)
+  now          = Time.current
+  window_start = now - days.days
+
+  count = Subscription.where(expiration_date: window_start..now)
+                       .distinct
+                       .count(:subscriber_id)
+
+  render json: { count: count, days: days }
+end
+
+# ── New customers this month, with the most recent joiners + amount paid ────
+# GET /api/new_customers_this_month
+def new_customers_this_month
+  start_of_month = Time.current.beginning_of_month
+  end_of_month   = Time.current.end_of_month
+
+  scope        = Subscriber.where(created_at: start_of_month..end_of_month)
+  total_joined = scope.count
+
+  recent = scope.order(created_at: :desc).limit(5).map do |subscriber|
+    last_payment = PpPoeMpesaRevenue.where(subscriber_id: subscriber.id)
+                                     .order(created_at: :desc)
+                                     .first
+
+    {
+      name:   subscriber.name,
+      amount: last_payment&.amount || 0
+    }
+  end
+
+  render json: {
+    month:        start_of_month.strftime('%B %Y'),
+    total_joined: total_joined,
+    recent:       recent
+  }
+end
+
+# ── System statistics: total customers / total routers / routers online ────
+# GET /api/system_statistics
+def system_statistics
+  tenant = ActsAsTenant.current_tenant
+
+  total_customers = Subscriber.count
+  total_routers   = NasRouter.count
+  online_routers  = RouterStatus.where(tenant_id: tenant&.id, reachable: true).count
+
+  render json: {
+    total_customers: total_customers,
+    total_routers:   total_routers,
+    online_routers:  online_routers
+  }
+end
  
 
   private
@@ -1323,4 +1395,3 @@ company_name = ActsAsTenant.current_tenant&.company_setting&.company_name
 
 
 end
-

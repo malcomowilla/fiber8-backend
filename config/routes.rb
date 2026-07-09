@@ -161,6 +161,25 @@ resources :company_ids
 end
 
 resources :promotional_plans, only: [:index, :show, :create, :update, :destroy]
+
+
+get '/api/pppoe_revenue_today', to: 'pp_poe_mpesa_revenues#todays_revenue'
+get '/pppoe_revenue_today', to: 'pp_poe_mpesa_revenues#todays_revenue'
+get '/api/expiring_soon', to: 'subscribers#expiring_soon'
+
+get 'expiring_soon', to: 'subscribers#expiring_soon'
+get 'recently_expired', to: 'subscribers#recently_expired'
+get '/api/recently_expired', to: 'subscribers#recently_expired'
+
+get 'new_customers_this_month', to: 'subscribers#new_customers_this_month'
+get '/api/new_customers_this_month', to: 'subscribers#new_customers_this_month'
+
+get 'system_statistics', to: 'subscribers#system_statistics'
+get '/api/system_statistics', to: 'subscribers#system_statistics'
+
+
+
+
 get '/api/hotspot_active_promotions', to: 'promotional_plans#allow_get_active_promotions'
 get '/hotspot_active_promotions', to: 'promotional_plans#allow_get_active_promotions'
 
