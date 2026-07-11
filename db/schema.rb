@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_07_09_202841) do
+ActiveRecord::Schema[7.2].define(version: 2026_07_11_095703) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -48,6 +48,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_07_09_202841) do
     t.string "domain"
     t.datetime "last_invoiced_at"
     t.datetime "last_billed_at"
+    t.string "platform_domain", default: "aitechs.co.ke", null: false
     t.index ["subdomain"], name: "index_accounts_on_subdomain", unique: true
   end
 

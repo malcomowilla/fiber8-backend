@@ -1,10 +1,11 @@
 # app/services/hotspot_page_builder.rb
 class HotspotPageBuilder
-  def initialize(account, design_override: nil)
+  def initialize(account, design_override: nil, platform_domain: nil)
     @account = account
     @settings = account.hotspot_setting
     @design = design_override || @settings&.page_design || {}
     @subdomain = account.subdomain
+    @platform_domain = platform_domain || PlatformDomainResolvable::DEFAULT_PLATFORM_DOMAIN
   end
 
   def compile(preview: false)
@@ -44,6 +45,12 @@ class HotspotPageBuilder
     url.present? ? %(<link rel="stylesheet" href="#{url}">) : ""
   end
 
+  def api_base_url
+    short_subdomain = @account.subdomain.to_s.split(".").first
+    base = short_subdomain.present? ? "#{short_subdomain}.#{@platform_domain}" : @platform_domain
+    "https://#{base}"
+  end
+
   def config_json
     {
       subdomain: @subdomain,
@@ -52,112 +59,130 @@ class HotspotPageBuilder
       hotspot_phone: @settings&.phone_number,
       hotspot_email: @settings&.email,
       features: features,
+      header: header,
+      footer: footer_cfg,
       # When true (only ever set from preview_page_design), the compiled page
-      # still renders ads/packages so the designer's iframe shows what a
-      # customer will actually see, but suppresses tracking + reward side
-      # effects so previewing never pollutes real ad analytics or grants
-      # real free browsing.
+      # still renders ads/packages/promos so the designer's iframe shows what
+      # a customer will actually see, but suppresses tracking + reward side
+      # effects so previewing never pollutes real ad analytics. It ALSO
+      # unlocks sample/mock fallback content (see loadPackages/loadAds/
+      # loadPromotions below) whenever the real API returns nothing yet —
+      # this NEVER happens on the published page, only in the designer.
       preview: !!@preview,
     }.to_json
   end
 
-  # Your API's real domain — router fetches this over the internet, not locally.
-  def api_base_url
-    base = @account.subdomain.present? ? "#{@account.subdomain}.aitechs.co.ke" : "aitechs.co.ke"
-    "https://#{base}"
-  end
-
-
   def compiled_css
     <<~CSS
       :root {
-      --primary:         #{theme["primary"]         || "#38bdf8"};
-      --secondary:       #{theme["secondary"]       || "#a78bfa"};
-      --accent:          #{theme["accent"]          || "#34d399"};
-      --btn-primary:     #{theme["button_primary"]  || theme["primary"] || "#38bdf8"};
-      --btn-secondary:   #{theme["button_secondary"]|| theme["secondary"] || "#a78bfa"};
-      --background:      #{theme["background"]      || "#020617"};
-      --surface:         #{theme["surface"]         || "#0f172a"};
-      --text:            #{theme["text"]             || "#e2e8f0"};
-      --muted:           #{theme["muted"]            || "#64748b"};
-      --radius:          #{layout["corner_radius"]   || 24}px;
-      --font:            '#{typography["font_family"] || "Plus Jakarta Sans"}', sans-serif;
-      --font-size:       #{typography["base_size"]   || 14}px;
-    }
+        --primary:         #{theme["primary"]         || "#38bdf8"};
+        --secondary:       #{theme["secondary"]       || "#a78bfa"};
+        --accent:          #{theme["accent"]          || "#34d399"};
+        --btn-primary:     #{theme["button_primary"]  || theme["primary"] || "#38bdf8"};
+        --btn-secondary:   #{theme["button_secondary"]|| theme["secondary"] || "#a78bfa"};
+        --background:      #{theme["background"]      || "#020617"};
+        --surface:         #{theme["surface"]         || "#0f172a"};
+        --text:            #{theme["text"]             || "#e2e8f0"};
+        --muted:           #{theme["muted"]            || "#64748b"};
+        --radius:          #{layout["corner_radius"]   || 24}px;
+        --font:            '#{typography["font_family"] || "Plus Jakarta Sans"}', sans-serif;
+        --font-size:       #{typography["base_size"]   || 14}px;
+      }
       * { box-sizing: border-box; margin: 0; padding: 0; font-family: var(--font); }
-      body { background: var(--background); color: var(--text); font-size: var(--font-size); min-height: 100vh; }
+      body {
+        background: radial-gradient(circle at 20% -10%, color-mix(in srgb, var(--primary) 12%, transparent), transparent 60%),
+                    radial-gradient(circle at 90% 110%, color-mix(in srgb, var(--secondary) 10%, transparent), transparent 60%),
+                    var(--background);
+        color: var(--text); font-size: var(--font-size); min-height: 100vh;
+      }
       .card {
         max-width: #{layout["card_width"] || 420}px;
         margin: 48px auto;
-        background: rgba(15,23,42,.72);
+        background: color-mix(in srgb, var(--surface) 75%, transparent);
         backdrop-filter: blur(20px);
-        border: 1px solid rgba(148,163,184,.1);
+        border: 1px solid color-mix(in srgb, var(--text) 10%, transparent);
         border-radius: var(--radius);
         overflow: hidden;
+        box-shadow: 0 30px 60px -20px rgba(0,0,0,.5);
       }
-      .header { text-align: center; padding: 32px 24px 20px; border-bottom: 1px solid rgba(148,163,184,.08); }
+      .header { text-align: center; padding: 32px 24px 20px; border-bottom: 1px solid color-mix(in srgb, var(--text) 8%, transparent); }
+      .header .wifi-badge {
+        width: 56px; height: 56px; margin: 0 auto 12px; border-radius: 18px;
+        display: flex; align-items: center; justify-content: center; font-size: 24px;
+        background: color-mix(in srgb, var(--primary) 12%, transparent);
+        border: 1px solid color-mix(in srgb, var(--primary) 25%, transparent);
+      }
       .header img.logo { max-height: 56px; margin: 0 auto 12px; display: block; }
       .header h1 { font-size: #{typography["heading_size"] || 24}px; font-weight: #{typography["weight_heading"] || 700}; }
       .header p { color: var(--muted); margin-top: 4px; }
       .tabs { display: flex; gap: 6px; padding: 16px; }
-      .tab { flex: 1; text-align: center; padding: 10px; border-radius: 12px; cursor: pointer; color: var(--muted); font-size: 12px; font-weight: 600; }
-      .tab.active { background: rgba(56,189,248,.12); color: var(--primary); }
+      .tab { flex: 1; text-align: center; padding: 10px; border-radius: 12px; cursor: pointer; color: var(--muted); font-size: 12px; font-weight: 600; transition: background .15s, color .15s; }
+      .tab.active { background: color-mix(in srgb, var(--primary) 14%, transparent); color: var(--primary); }
       .panel { padding: 0 20px 24px; }
-      .field { width: 100%; padding: 14px; border-radius: 12px; border: 1px solid rgba(148,163,184,.15); background: rgba(30,41,59,.5); color: var(--text); margin-bottom: 12px; }
+      .field { width: 100%; padding: 14px; border-radius: 12px; border: 1px solid color-mix(in srgb, var(--text) 12%, transparent); background: color-mix(in srgb, var(--surface) 70%, transparent); color: var(--text); margin-bottom: 12px; }
       .btn { width: 100%; padding: 14px; border-radius: 12px; border: none; font-weight: 700; color: #fff; cursor: pointer;
-             background: linear-gradient(135deg, var(--primary), var(--accent)); }
+             background: linear-gradient(135deg, var(--btn-primary), var(--btn-secondary)); transition: transform .1s, opacity .15s; }
+      .btn:hover { opacity: .92; transform: translateY(-1px); }
       .pkg { display: flex; justify-content: space-between; align-items: center; padding: 14px; border-radius: 14px;
-             border: 1px solid rgba(148,163,184,.1); margin-bottom: 10px; cursor: pointer; }
-      .pkg.selected { border-color: var(--primary); background: rgba(56,189,248,.06); }
+             border: 1px solid color-mix(in srgb, var(--text) 10%, transparent); margin-bottom: 10px; cursor: pointer; transition: border-color .15s; }
+      .pkg.selected { border-color: var(--primary); background: color-mix(in srgb, var(--primary) 6%, transparent); }
+      .pkg-skeleton { height: 62px; border-radius: 14px; margin-bottom: 10px; background: color-mix(in srgb, var(--text) 6%, transparent); animation: pulse 1.4s ease-in-out infinite; }
+      @keyframes pulse { 0%,100% { opacity: .5; } 50% { opacity: 1; } }
       .status { padding: 12px; border-radius: 12px; margin-bottom: 12px; font-size: 13px; }
       .status.error { background: rgba(239,68,68,.1); color: #fca5a5; }
       .status.success { background: rgba(52,211,153,.1); color: #6ee7b7; }
       .status.processing { background: rgba(251,191,36,.1); color: #fcd34d; }
       .footer { text-align: center; padding: 16px; color: var(--muted); font-size: 12px; }
+      .promo { position: relative; overflow: hidden; border-radius: 16px; margin-bottom: 10px; padding: 14px;
+               border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+               background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 10%, transparent), color-mix(in srgb, var(--surface) 60%, transparent)); }
+      .promo .badge { display: inline-flex; gap: 4px; align-items:center; padding: 3px 9px; border-radius: 999px; font-size: 10px; font-weight: 800;
+                      background: color-mix(in srgb, var(--accent) 20%, transparent); color: var(--accent); }
+      .promo .price { font-weight: 800; font-size: 18px; }
+      .promo .price-old { text-decoration: line-through; color: var(--muted); font-size: 12px; margin-left: 6px; }
+      .mock-tag { display: inline-block; font-size: 9px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase;
+                  padding: 2px 6px; border-radius: 6px; background: color-mix(in srgb, var(--text) 12%, transparent); color: var(--muted); margin-left: 6px; }
+      .ad-card { border-radius: 16px; overflow: hidden; background: color-mix(in srgb, var(--surface) 90%, transparent);
+                 border: 1px solid color-mix(in srgb, var(--text) 10%, transparent); box-shadow: 0 20px 40px rgba(0,0,0,.35); }
     CSS
   end
 
-
-
-
-def skeleton_html
-  logo = (header["show_logo"] != false && header["logo_url"].present?) ? %(<img class="logo" src="#{header['logo_url']}">) : ""
-  wifi_icon = header["show_wifi_icon"] != false ? %(<div class="wifi-badge">📶</div>) : ""
-  title = header["network_name"].presence || @settings&.hotspot_name || "Free WiFi"
-  preview_badge = @preview ? %(<div style="position:fixed;top:8px;left:50%;transform:translateX(-50%);z-index:10000;background:rgba(2,6,23,.85);color:#38bdf8;font:600 11px/1 sans-serif;padding:5px 12px;border-radius:20px;letter-spacing:.02em;white-space:nowrap;">Preview — ad views aren't counted</div>) : ""
-  <<~HTML
-    #{preview_badge}
-    <div class="card">
-      <div class="header">
-        #{wifi_icon}
-        #{logo}
-        <h1>#{title}</h1>
-        <p>#{header["tagline"] || "Connect to the internet"}</p>
+  def skeleton_html
+    logo = (header["show_logo"] != false && header["logo_url"].present?) ? %(<img class="logo" src="#{header['logo_url']}">) : ""
+    wifi_icon = header["show_wifi_icon"] != false ? %(<div class="wifi-badge">📶</div>) : ""
+    title = header["network_name"].presence || @settings&.hotspot_name || "Free WiFi"
+    preview_badge = @preview ? %(<div style="position:fixed;top:8px;left:50%;transform:translateX(-50%);z-index:10000;background:rgba(2,6,23,.85);color:var(--primary);font:600 11px/1 sans-serif;padding:5px 12px;border-radius:20px;white-space:nowrap;">Preview — ad views aren't counted</div>) : ""
+    <<~HTML
+      #{preview_badge}
+      <div class="card">
+        <div class="header">
+          #{wifi_icon}
+          #{logo}
+          <h1>#{title}</h1>
+          <p>#{header["tagline"] || "Connect to the internet"}</p>
+        </div>
+        <div id="promo-root" class="panel"></div>
+        <div class="tabs" id="tabs"></div>
+        <div class="panel" id="panel"></div>
+        <div class="footer" id="footer"></div>
       </div>
-      <div class="tabs" id="tabs"></div>
-      <div class="panel" id="panel"></div>
-      <div class="footer" id="footer">
-        #{footer_cfg["support_label"] || "Need help?"} #{footer_cfg["support_phone"]}
-      </div>
-    </div>
-    <div id="ad-root"></div>
-  HTML
-end
+      <div id="ad-root"></div>
+    HTML
+  end
 
-
-
-
-  # Vanilla JS port of the packages/voucher/mpesa flow, PLUS the ad overlay
-  # (fetch / render / countdown / skip / reward / tracking). Everything here
-  # talks to the same /api endpoints your React HotspotPage.jsx and
-  # HotspotAdOverlay.jsx already use — this is what actually ships to the
-  # router via publish_hotspot_page, so ad behavior must not diverge from
-  # the live React version, or ads configured in the admin never show up
-  # on the real captive portal.
+  # Vanilla JS port of the packages/voucher/mpesa/promotions/ads flow.
+  # Talks to the same /api endpoints your React HotspotPage.jsx,
+  # HotspotAdOverlay.jsx and HotspotPromotionCard.jsx already use — this is
+  # what actually ships to the router via publish_hotspot_page, so behavior
+  # must not diverge from the live React version.
   #
-  # cfg.preview (only ever true from preview_page_design) renders everything
-  # visually as-is, but suppresses tracking calls and reward-granting side
-  # effects, so designing/previewing never skews real ad analytics.
+  # cfg.preview (only ever true from preview_page_design):
+  #   - suppresses tracking calls and reward-granting side effects
+  #   - shows SAMPLE/MOCK content (clearly tagged "Sample") whenever the
+  #     real API returns an empty list, so the designer can see the layout
+  #     before any packages/ads/promos are configured. This mock content
+  #     NEVER renders on the published page — cfg.preview is always false
+  #     there, so real customers only ever see real data (or nothing).
   def compiled_js
     <<~JS
       (function () {
@@ -171,13 +196,37 @@ end
         const headers = { 'X-Subdomain': cfg.subdomain, 'Content-Type': 'application/json' };
         const api = (path) => cfg.api_base + path;
 
-        let state = { tab: 'packages', packages: [], selected: null, status: null, message: '' };
+        const MOCK_PACKAGES = [
+          { id: 'mock-1', name: 'Quick Browse', valid: '1 Hour', price: 20 },
+          { id: 'mock-2', name: 'Daily Unlimited', valid: '24 Hours', price: 100 },
+          { id: 'mock-3', name: 'Weekly Saver', valid: '7 Days', price: 500 },
+        ];
+        const MOCK_PROMO = {
+          id: 'mock-promo', name: 'Weekend Special', description: '20% off the Daily Unlimited package',
+          badge_text: '20% OFF', promotional_price: 80, original_price: 100,
+          package_name: 'Daily Unlimited', show_countdown_timer: false,
+        };
+        const MOCK_AD = {
+          id: 'mock-ad', media_type: 'image', ad_title: 'Your Ad Here',
+          media_url: 'data:image/svg+xml;utf8,' + encodeURIComponent(
+            '<svg xmlns="http://www.w3.org/2000/svg" width="320" height="140"><rect width="100%" height="100%" fill="#1e293b"/><text x="50%" y="50%" fill="#94a3b8" font-family="sans-serif" font-size="14" text-anchor="middle">Sample ad image</text></svg>'
+          ),
+          position: 'bottom-right', reward_type: 'none', ad_link: null,
+        };
+
+        let state = { tab: 'packages', packages: [], packagesLoaded: false, promos: [], selected: null, status: null, message: '' };
+
+        function renderFooter() {
+          const label = (cfg.footer && cfg.footer.support_label) || 'Need help?';
+          const phone = (cfg.footer && cfg.footer.support_phone) || cfg.hotspot_phone || '';
+          document.getElementById('footer').innerHTML =
+            label + (phone ? ' · ' + phone : '') + (cfg.hotspot_email ? ' · ' + cfg.hotspot_email : '');
+        }
 
         function render() {
           document.getElementById('tabs').innerHTML = tabsHtml();
           document.getElementById('panel').innerHTML = panelHtml();
-          document.getElementById('footer').innerHTML =
-            (cfg.hotspot_phone ? cfg.hotspot_phone : '') + (cfg.hotspot_email ? ' · ' + cfg.hotspot_email : '');
+          renderFooter();
           bindEvents();
         }
 
@@ -196,18 +245,46 @@ end
           return \`<div class="status \${state.status}">\${state.message}</div>\`;
         }
 
+        function promoHtml() {
+          if (!state.promos.length) return '';
+          return state.promos.map(p => \`
+            <div class="promo" data-promo="\${p.id}">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+                <span class="badge">🔥 \${p.badge_text || (p.savings_percent + '% OFF')}</span>
+                \${cfg.preview && String(p.id).startsWith('mock-') ? '<span class="mock-tag">Sample</span>' : ''}
+              </div>
+              <p style="font-weight:700;font-size:13px;">\${p.name}</p>
+              \${p.description ? \`<p style="color:var(--muted);font-size:12px;margin:4px 0 8px;">\${p.description}</p>\` : ''}
+              <div style="display:flex;justify-content:space-between;align-items:flex-end;">
+                <div>
+                  <span class="price">Ksh \${Number(p.promotional_price).toFixed(2)}</span>
+                  <span class="price-old">Ksh \${Number(p.original_price).toFixed(2)}</span>
+                </div>
+                <button class="btn" style="width:auto;padding:8px 14px;font-size:12px;" data-promo-claim="\${p.id}">Claim Offer</button>
+              </div>
+            </div>
+          \`).join('');
+        }
+
         function panelHtml() {
           if (state.tab === 'packages') {
+            if (!state.packagesLoaded) {
+              return statusHtml() + '<div class="pkg-skeleton"></div><div class="pkg-skeleton"></div><div class="pkg-skeleton"></div>';
+            }
+            const isMock = cfg.preview && state.packages.length && String(state.packages[0].id).startsWith('mock-');
             const list = state.packages.map(p => \`
               <div class="pkg \${state.selected?.id === p.id ? 'selected' : ''}" data-pkg="\${p.id}">
-                <div><strong>\${p.name}</strong><br><small>\${p.valid || ''}</small></div>
+                <div><strong>\${p.name}</strong>\${isMock ? '<span class="mock-tag">Sample</span>' : ''}<br><small>\${p.valid || ''}</small></div>
                 <div>Ksh \${p.price}</div>
               </div>\`).join('');
+            const empty = !state.packages.length
+              ? '<p style="color:var(--muted);font-size:12px;padding:8px 0;">No packages configured yet.</p>'
+              : '';
             const payBtn = state.selected
               ? \`<input class="field" id="phone" placeholder="07XX XXX XXX" value="\${state.phone || ''}">
                  <button class="btn" id="pay-btn">Pay Ksh \${state.selected.price} via M-Pesa</button>\`
               : '';
-            return statusHtml() + list + payBtn;
+            return statusHtml() + list + empty + payBtn;
           }
           if (state.tab === 'voucher') {
             return statusHtml() + \`
@@ -247,66 +324,108 @@ end
           if (mpesaBtn) mpesaBtn.onclick = () => {
             connectReceipt(document.getElementById('tx-code').value);
           };
+
+          document.querySelectorAll('[data-promo-claim]').forEach(el =>
+            el.onclick = () => {
+              const promo = state.promos.find(p => String(p.id) === el.dataset.promoClaim);
+              if (!promo) return;
+              if (cfg.preview && String(promo.id).startsWith('mock-')) {
+                // Sample promo — just switch tabs and preview the pricing, no real package to select.
+                state.tab = 'packages';
+                render();
+                return;
+              }
+              const pkg = state.packages.find(p => String(p.id) === String(promo.package_id));
+              state.selected = pkg ? { ...pkg, price: promo.promotional_price } : { id: promo.package_id, name: promo.package_name, price: promo.promotional_price };
+              state.tab = 'packages';
+              render();
+            });
         }
 
         function setStatus(status, message) { state.status = status; state.message = message; render(); }
 
         async function loadPackages() {
-          const res = await fetch(api('/api/allow_get_hotspot_packages'), { headers });
-          state.packages = res.ok ? await res.json() : [];
-          render();
+          try {
+            const res = await fetch(api('/api/allow_get_hotspot_packages'), { headers });
+            const data = res.ok ? await res.json() : [];
+            state.packages = (cfg.preview && (!data || !data.length)) ? MOCK_PACKAGES : (data || []);
+          } catch (e) {
+            console.error('Failed to load packages (check CORS / walled-garden):', e);
+            state.packages = cfg.preview ? MOCK_PACKAGES : [];
+          } finally {
+            state.packagesLoaded = true;
+            render();
+          }
+        }
+
+        async function loadPromotions() {
+          try {
+            const res = await fetch(api('/api/hotspot_active_promotions'), { headers });
+            const data = res.ok ? await res.json() : [];
+            state.promos = (cfg.preview && (!data || !data.length)) ? [MOCK_PROMO] : (data || []);
+          } catch (e) {
+            console.error('Failed to load promotions:', e);
+            state.promos = cfg.preview ? [MOCK_PROMO] : [];
+          }
+          const root = document.getElementById('promo-root');
+          if (root) root.innerHTML = promoHtml();
+          bindEvents();
         }
 
         async function payPackage() {
           setStatus('processing', 'Sending STK push…');
-          const res = await fetch(api('/api/make_payment'), {
-            method: 'POST', headers,
-            body: JSON.stringify({ phone_number: state.phone, amount: state.selected.price, package: state.selected.name, mac, ip })
-          });
-          const data = await res.json();
-          if (res.ok) { localStorage.setItem('checkout_request_id', data.checkout_request_id); pollPaymentStatus(); }
-          else setStatus('error', data.message || 'Payment failed');
+          try {
+            const res = await fetch(api('/api/make_payment'), {
+              method: 'POST', headers,
+              body: JSON.stringify({ phone_number: state.phone, amount: state.selected.price, package: state.selected.name, mac, ip })
+            });
+            const data = await res.json();
+            if (res.ok) { localStorage.setItem('checkout_request_id', data.checkout_request_id); pollPaymentStatus(); }
+            else setStatus('error', data.message || 'Payment failed');
+          } catch (e) {
+            console.error(e); setStatus('error', 'Network error — check your connection');
+          }
         }
 
         function pollPaymentStatus() {
           const iv = setInterval(async () => {
-            const res = await fetch(api('/api/receipt_number_status'), {
-              method: 'POST', headers, body: JSON.stringify({ mac, ip })
-            });
-            const data = await res.json();
-            if (data.connected) { clearInterval(iv); onConnected(); }
+            try {
+              const res = await fetch(api('/api/receipt_number_status'), {
+                method: 'POST', headers, body: JSON.stringify({ mac, ip })
+              });
+              const data = await res.json();
+              if (data.connected) { clearInterval(iv); onConnected(); }
+            } catch (e) { console.error(e); }
           }, 5000);
         }
 
         async function connectVoucher(code) {
           setStatus('processing', 'Connecting…');
-          const res = await fetch(api('/api/login_with_hotspot_voucher'), {
-            method: 'POST', headers, body: JSON.stringify({ voucher: code, mac, ip })
-          });
-          const data = await res.json();
-          if (res.ok) onConnected(); else setStatus('error', data.error || 'Invalid voucher');
+          try {
+            const res = await fetch(api('/api/login_with_hotspot_voucher'), {
+              method: 'POST', headers, body: JSON.stringify({ voucher: code, mac, ip })
+            });
+            const data = await res.json();
+            if (res.ok) onConnected(); else setStatus('error', data.error || 'Invalid voucher');
+          } catch (e) { console.error(e); setStatus('error', 'Network error'); }
         }
 
         async function connectReceipt(code) {
           setStatus('processing', 'Verifying transaction…');
-          const res = await fetch(api('/api/login_with_receipt_number'), {
-            method: 'POST', headers, body: JSON.stringify({ receipt_number: code, mac, ip })
-          });
-          if (res.ok) pollPaymentStatus(); else setStatus('error', 'Transaction not found');
+          try {
+            const res = await fetch(api('/api/login_with_receipt_number'), {
+              method: 'POST', headers, body: JSON.stringify({ receipt_number: code, mac, ip })
+            });
+            if (res.ok) pollPaymentStatus(); else setStatus('error', 'Transaction not found');
+          } catch (e) { console.error(e); setStatus('error', 'Network error'); }
         }
 
         function onConnected() {
-          // Backend has already granted access via SSH/ip-binding (same pattern
-          // as your existing flow) — just send the user on their way.
           setStatus('success', 'Connected! Redirecting…');
           setTimeout(() => { window.location.href = '$(link-orig)'; }, 1500);
         }
 
         // ── Ads ──────────────────────────────────────────────────────────
-        // Ported from HotspotAdOverlay.jsx / HotspotCustomAd.jsx so this
-        // vanilla page matches what admins configure and preview, instead
-        // of silently dropping ads on publish.
-
         const AD_POSITIONS = {
           'top-banner':    'position:fixed;top:0;left:0;right:0;z-index:9999;',
           'bottom-banner': 'position:fixed;bottom:0;left:0;right:0;z-index:9999;',
@@ -329,7 +448,7 @@ end
         }
 
         function trackAdEvent(adId, eventType) {
-          if (!adId || cfg.preview) return; // never count views/clicks while just previewing
+          if (!adId || cfg.preview) return;
           fetch(api('/api/track_ad_event'), {
             method: 'POST', headers,
             body: JSON.stringify({ event_type: eventType, ad_id: adId })
@@ -337,10 +456,7 @@ end
         }
 
         function grantAdReward(ad) {
-          // Reward granting is a video-only, watch-to-unlock mechanic — mirrors
-          // handleAdComplete in HotspotAdOverlay.jsx. Image/custom-design ads
-          // are click-to-visit and never grant a reward on close.
-          if (cfg.preview) return; // never actually grant anything while previewing
+          if (cfg.preview) return;
           if (ad.reward_type === 'free_browse') {
             fetch(api('/api/grant_free_browsing'), {
               method: 'POST', headers,
@@ -391,6 +507,7 @@ end
           const isVideo = ad.media_type === 'video';
           const isImage = ad.media_type === 'image';
           const isCustom = ad.media_type === 'custom_design';
+          const isMock = cfg.preview && String(ad.id) === 'mock-ad';
 
           let media = '';
           if (isImage) {
@@ -407,24 +524,25 @@ end
             footer = \`
               <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 14px;">
                 <div style="display:flex;align-items:center;gap:6px;min-width:0;flex:1;">
-                  <span style="font-weight:700;font-size:11px;padding:2px 6px;border-radius:4px;background:rgba(56,189,248,.15);color:#38bdf8;">Ad</span>
-                  \${ad.ad_title ? \`<span style="font-size:12px;color:#cbd5e1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">\${ad.ad_title}</span>\` : ''}
+                  <span style="font-weight:700;font-size:11px;padding:2px 6px;border-radius:4px;background:color-mix(in srgb, var(--primary) 15%, transparent);color:var(--primary);">Ad</span>
+                  \${isMock ? '<span class="mock-tag">Sample</span>' : ''}
+                  \${ad.ad_title ? \`<span style="font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">\${ad.ad_title}</span>\` : ''}
                 </div>
                 <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
-                  \${ad.ad_link ? \`<button data-ad-visit="\${ad.id}" style="display:flex;align-items:center;gap:4px;font-size:11px;padding:5px 10px;border-radius:8px;font-weight:700;border:none;background:rgba(56,189,248,.15);color:#38bdf8;cursor:pointer;">Visit ↗</button>\` : ''}
-                  \${isVideo && ad.can_skip && s.skipReady ? \`<button data-ad-skip="\${ad.id}" style="display:flex;align-items:center;gap:4px;font-size:11px;padding:5px 10px;border-radius:8px;font-weight:700;border:none;background:rgba(52,211,153,.15);color:#34d399;cursor:pointer;">Skip ⏭</button>\` : ''}
-                  \${isVideo && ad.can_skip && !s.skipReady ? \`<span style="font-size:11px;padding:5px 10px;border-radius:8px;background:rgba(148,163,184,.08);color:#64748b;">Skip in \${skipCountdown}s</span>\` : ''}
-                  \${isImage ? \`<button data-ad-dismiss="\${ad.id}" style="width:26px;height:26px;border-radius:50%;border:none;background:rgba(148,163,184,.15);color:#94a3b8;cursor:pointer;">✕</button>\` : ''}
+                  \${ad.ad_link ? \`<button data-ad-visit="\${ad.id}" style="display:flex;align-items:center;gap:4px;font-size:11px;padding:5px 10px;border-radius:8px;font-weight:700;border:none;background:color-mix(in srgb, var(--primary) 15%, transparent);color:var(--primary);cursor:pointer;">Visit ↗</button>\` : ''}
+                  \${isVideo && ad.can_skip && s.skipReady ? \`<button data-ad-skip="\${ad.id}" style="display:flex;align-items:center;gap:4px;font-size:11px;padding:5px 10px;border-radius:8px;font-weight:700;border:none;background:color-mix(in srgb, var(--accent) 15%, transparent);color:var(--accent);cursor:pointer;">Skip ⏭</button>\` : ''}
+                  \${isVideo && ad.can_skip && !s.skipReady ? \`<span style="font-size:11px;padding:5px 10px;border-radius:8px;background:color-mix(in srgb, var(--text) 8%, transparent);color:var(--muted);">Skip in \${skipCountdown}s</span>\` : ''}
+                  \${isImage ? \`<button data-ad-dismiss="\${ad.id}" style="width:26px;height:26px;border-radius:50%;border:none;background:color-mix(in srgb, var(--text) 12%, transparent);color:var(--muted);cursor:pointer;">✕</button>\` : ''}
                 </div>
               </div>\`;
           }
 
           const banner = isVideo ? \`
-            <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:linear-gradient(90deg,rgba(16,185,129,.15),rgba(99,102,241,.12));border-bottom:1px solid rgba(16,185,129,.2);">
-              <div style="width:26px;height:26px;border-radius:50%;background:rgba(16,185,129,.2);display:flex;align-items:center;justify-content:center;flex-shrink:0;">🎁</div>
+            <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:linear-gradient(90deg,color-mix(in srgb, var(--accent) 15%, transparent),color-mix(in srgb, var(--secondary) 12%, transparent));border-bottom:1px solid color-mix(in srgb, var(--accent) 20%, transparent);">
+              <div style="width:26px;height:26px;border-radius:50%;background:color-mix(in srgb, var(--accent) 20%, transparent);display:flex;align-items:center;justify-content:center;flex-shrink:0;">🎁</div>
               <div style="flex:1;min-width:0;">
-                <p style="margin:0;font-size:12px;font-weight:600;color:#6ee7b7;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Watch this ad to unlock free internet!</p>
-                <p style="margin:2px 0 0;font-size:11px;color:#34d399;">Reward: <strong>\${rewardLabelFor(ad)}</strong></p>
+                <p style="margin:0;font-size:12px;font-weight:600;color:var(--accent);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Watch this ad to unlock free internet!</p>
+                <p style="margin:2px 0 0;font-size:11px;color:var(--accent);">Reward: <strong>\${rewardLabelFor(ad)}</strong></p>
               </div>
               <div style="flex-shrink:0;display:flex;align-items:center;gap:4px;padding:3px 8px;border-radius:20px;background:rgba(0,0,0,.4);">
                 <span style="font-size:11px;font-weight:700;color:#fcd34d;">\${s.secondsLeft}s</span>
@@ -432,11 +550,11 @@ end
             </div>\` : '';
 
           const progress = isVideo
-            ? \`<div style="height:2px;background:rgba(148,163,184,.1);"><div style="height:100%;background:linear-gradient(90deg,#34d399,#6366f1);width:\${((ad.ad_duration || 15) - s.secondsLeft) / (ad.ad_duration || 15) * 100}%;transition:width 1s linear;"></div></div>\`
+            ? \`<div style="height:2px;background:color-mix(in srgb, var(--text) 10%, transparent);"><div style="height:100%;background:linear-gradient(90deg,var(--accent),var(--secondary));width:\${((ad.ad_duration || 15) - s.secondsLeft) / (ad.ad_duration || 15) * 100}%;transition:width 1s linear;"></div></div>\`
             : '';
 
           return \`
-            <div style="border-radius:16px;overflow:hidden;background:rgba(10,16,30,.96);border:1px solid rgba(148,163,184,.12);box-shadow:0 20px 40px rgba(0,0,0,.4);position:relative;">
+            <div class="ad-card" style="position:relative;">
               \${banner}
               \${media}
               \${footer}
@@ -517,16 +635,16 @@ end
         async function loadAds() {
           try {
             const res = await fetch(api('/api/allow_get_ads'), { headers });
-            if (!res.ok) return;
-            const raw = await res.json();
-            const list = Array.isArray(raw) ? raw : [raw];
-            const eligible = list.filter(ad => ad.ad_enabled && (ad.ad_link || ad.media_url || ad.media_type === 'custom_design'));
+            let list = [];
+            if (res.ok) {
+              const raw = await res.json();
+              list = Array.isArray(raw) ? raw : [raw];
+            }
+            let eligible = list.filter(ad => ad.ad_enabled && (ad.ad_link || ad.media_url || ad.media_type === 'custom_design'));
+
+            if (!eligible.length && cfg.preview) eligible = [MOCK_AD];
             if (!eligible.length) return;
 
-            // One ad per position; if several share a slot, rotate which one
-            // wins this page load so each eventually gets shown and tracked —
-            // same behavior as HotspotAdOverlay.jsx. Skipped entirely while
-            // previewing so designing never mutates real rotation state.
             const byPosition = {};
             eligible.forEach(ad => {
               const pos = ad.position || 'bottom-right';
@@ -557,13 +675,17 @@ end
               if (!s.viewTracked) { trackAdEvent(s.ad.id, 'Ad View'); s.viewTracked = true; }
               startAdTimers(s.ad);
             });
-          } catch (_) {}
+          } catch (e) {
+            console.error('Failed to load ads:', e);
+            if (cfg.preview) {
+              adState[MOCK_AD.id] = { ad: MOCK_AD, secondsLeft: 0, skipReady: false, completed: false, viewTracked: true };
+              renderAds();
+            }
+          }
         }
 
-        // Sections > Ads toggle in the page designer now actually controls
-        // whether this runs at all.
         if (cfg.features.show_ads !== false) loadAds();
-
+        loadPromotions();
         loadPackages();
         render();
       })();

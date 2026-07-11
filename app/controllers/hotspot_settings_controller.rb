@@ -358,7 +358,7 @@ voucher_type: params[:voucher_type],
 
 def save_page_design
   @account = ActsAsTenant.current_tenant
-  @hotspot_setting = @account.hotspot_setting || @account.build_hotspot_setting
+  @hotspot_setting = @account.hotspot_setting 
 
   design = sanitize_page_design(parse_page_design_param(params[:page_design]))
 
@@ -375,19 +375,33 @@ def save_page_design
   end
 end
 
-def preview_page_design
-  @account = ActsAsTenant.current_tenant
-  design = sanitize_page_design(parse_page_design_param(params[:page_design]))
-  html = HotspotPageBuilder.new(@account, design_override: design).compile(preview: true)
-  render plain: html, content_type: "text/html"
-end
 
-def get_page_design
-  @account = ActsAsTenant.current_tenant
-  render json: { page_design: @account.hotspot_setting&.page_design || {} }
-end
+
+
+  def preview_page_design
+    @account = ActsAsTenant.current_tenant
+    design = sanitize_page_design(parse_page_design_param(params[:page_design]))
+
+    # FIX: resolve platform_domain from the request that's asking for the
+    # preview (the admin dashboard), same logic as upload_hotspot_file,
+    # so the preview iframe calls the same API host the published page will.
+    platform_domain = PlatformDomainResolvable.resolve(request.headers["X-Domain"])
+
+    html = HotspotPageBuilder.new(@account, design_override: design, platform_domain: platform_domain)
+                              .compile(preview: true)
+    render plain: html, content_type: "text/html"
+  end
+
+
+ def get_page_design
+    @account = ActsAsTenant.current_tenant
+    render json: { page_design: @account.hotspot_setting&.page_design || {} }
+  end
 
 # Renders compiled HTML WITHOUT publishing, so the designer's iframe can preview it live
+
+
+
 
 
 def publish_hotspot_page
@@ -404,7 +418,11 @@ def publish_hotspot_page
     message: "Router missing FTP credentials"
   }, status: :unprocessable_entity if router.username.blank?
 
-  html = HotspotPageBuilder.new(@account).compile
+  # FIX: resolve from the admin dashboard's request domain — same source
+  # of truth as preview, so what gets published matches what was previewed.
+  platform_domain = PlatformDomainResolvable.resolve(request.headers["X-Domain"])
+
+  html = HotspotPageBuilder.new(@account, platform_domain: platform_domain).compile
 
   temp_file = Tempfile.new(["login", ".html"])
   temp_file.write(html)
@@ -441,6 +459,7 @@ rescue => e
     message: e.message
   }, status: :unprocessable_entity
 end
+
 
 
 
