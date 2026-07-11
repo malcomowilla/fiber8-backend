@@ -69,6 +69,8 @@ class HotspotPageBuilder
       # loadPromotions below) whenever the real API returns nothing yet —
       # this NEVER happens on the published page, only in the designer.
       preview: !!@preview,
+        mikrotik_mac: "$(mac)",
+    mikrotik_ip: "$(ip)",
     }.to_json
   end
 
@@ -187,11 +189,18 @@ class HotspotPageBuilder
     <<~JS
       (function () {
         const cfg = window.__HOTSPOT_CONFIG__;
-        const qs = new URLSearchParams(window.location.search);
-        const mac = qs.get('mac') || localStorage.getItem('hotspot_mac');
-        const ip  = qs.get('ip')  || localStorage.getItem('hotspot_ip');
-        if (qs.get('mac')) localStorage.setItem('hotspot_mac', qs.get('mac'));
-        if (qs.get('ip'))  localStorage.setItem('hotspot_ip', qs.get('ip'));
+      const qs = new URLSearchParams(window.location.search);
+
+const rawMac = cfg.mikrotik_mac;
+const rawIp  = cfg.mikrotik_ip;
+const macSubstituted = rawMac && !rawMac.includes('$(');
+const ipSubstituted  = rawIp  && !rawIp.includes('$(');
+
+const mac = macSubstituted ? rawMac : (qs.get('mac') || localStorage.getItem('hotspot_mac'));
+const ip  = ipSubstituted  ? rawIp  : (qs.get('ip')  || localStorage.getItem('hotspot_ip'));
+
+if (mac) localStorage.setItem('hotspot_mac', mac);
+if (ip)  localStorage.setItem('hotspot_ip', ip);
 
         const headers = { 'X-Subdomain': cfg.subdomain, 'Content-Type': 'application/json' };
         const api = (path) => cfg.api_base + path;
