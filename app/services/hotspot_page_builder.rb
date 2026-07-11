@@ -633,6 +633,12 @@ async function payPackage() {
             package: details.package || (state.selected && state.selected.name) || '',
             expiration: details.expiration || '',
           };
+          // Critical for autologin: nothing else in this file ever wrote
+          // hotspot_username to localStorage. Without this, `username` is
+          // null on every future page load and tryAutoLogin() bails out
+          // before it even makes a request. This is what lets the NEXT
+          // visit from this device recognize it and reconnect silently.
+          if (connectedInfo.username) localStorage.setItem('hotspot_username', connectedInfo.username);
           renderConnectedScreen();
           setStatus('success', 'Connected! Redirecting…');
           setTimeout(() => { window.location.href = '$(link-orig)'; }, 4000);
@@ -640,27 +646,31 @@ async function payPackage() {
 
         // ── Autologin / autoreconnect ───────────────────────────────────
         // Mirrors React's voucherAutoLogin(): if the account has
-        // enable_autologin on, and we recognize this device from a prior
+        // enable_autologin on, and this mac/ip is recognized from a prior
         // session, silently re-establish the connection instead of making
-        // the customer buy/enter anything again. No-op in preview and when
-        // we have no stored username to check a session for.
+        // the customer buy/enter anything again. No-op only in preview —
+        // mac/ip are always available (router-substituted), so this always
+        // attempts the check; `username` (if we happen to have one stored)
+        // is passed as an extra hint but is never required.
         async function tryAutoLogin() {
-          # if (cfg.preview) return;
           try {
             const custRes = await fetch(api('/api/allow_get_hotspot_customization'), { headers });
-            if (!custRes.ok) return;
+            if (!custRes.ok) { console.info('[autologin] skipped: could not load customization settings'); return; }
             const custRaw = await custRes.json();
             const cust = Array.isArray(custRaw) ? custRaw[0] : custRaw;
-            if (!cust || !cust.enable_autologin) return;
+            if (!cust || !cust.enable_autologin) { console.info('[autologin] skipped: enable_autologin is off'); return; }
 
             const sessionRes = await fetch(
-              api('/api/check_session?username=' + encodeURIComponent(username) +
+              api('/api/check_session?username=' + encodeURIComponent(username || '') +
                   '&mac=' + encodeURIComponent(mac || '') +
                   '&ip=' + encodeURIComponent(ip || '')),
               { headers }
             );
             const sessionData = await sessionRes.json();
-            if (!sessionRes.ok || !sessionData.session_active) return;
+            if (!sessionRes.ok || !sessionData.session_active) {
+              console.info('[autologin] skipped: no active session for mac', mac);
+              return;
+            }
 
             const loginRes = await fetch(api('/api/login_with_hotspot_voucher'), {
               method: 'POST', headers,
@@ -673,14 +683,17 @@ async function payPackage() {
             });
             const loginData = await loginRes.json();
             if (loginRes.ok) {
+              console.info('[autologin] reconnected as', loginData.username || sessionData.username);
               onConnected({
                 username: loginData.username || sessionData.username,
                 package: loginData.package || sessionData.package,
                 expiration: loginData.expiration || sessionData.expiration,
               });
+            } else {
+              console.info('[autologin] session was active but re-login was rejected:', loginData.error || loginRes.status);
             }
           } catch (e) {
-            console.error('Auto-login check failed:', e);
+            console.error('[autologin] failed:', e);
           }
         }
 
