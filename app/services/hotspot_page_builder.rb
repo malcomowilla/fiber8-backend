@@ -172,7 +172,7 @@ class HotspotPageBuilder
     HTML
   end
 
-  # Vanilla JS port of the packages/voucher/mpesa/promotions/ads flow.
+  # Vanilla JS port of the packages/voucher/mpesa/promotions/ads/autologin flow.
   # Talks to the same /api endpoints your React HotspotPage.jsx,
   # HotspotAdOverlay.jsx and HotspotPromotionCard.jsx already use — this is
   # what actually ships to the router via publish_hotspot_page, so behavior
@@ -185,6 +185,8 @@ class HotspotPageBuilder
   #     before any packages/ads/promos are configured. This mock content
   #     NEVER renders on the published page — cfg.preview is always false
   #     there, so real customers only ever see real data (or nothing).
+  #   - also skips the autologin/session-check flow entirely, since there's
+  #     nothing to reconnect to inside the designer's iframe.
   def compiled_js
     <<~JS
       (function () {
@@ -201,6 +203,12 @@ const ip  = ipSubstituted  ? rawIp  : (qs.get('ip')  || localStorage.getItem('ho
 
 if (mac) localStorage.setItem('hotspot_mac', mac);
 if (ip)  localStorage.setItem('hotspot_ip', ip);
+
+// Username isn't router-substituted like mac/ip — it only ever arrives via
+// a query param (e.g. after a redirect from a previous session) or from
+// whatever we stored locally last time. Mirrors the mac/ip pattern above.
+const username = qs.get('username') || localStorage.getItem('hotspot_username');
+if (username) localStorage.setItem('hotspot_username', username);
 
         const headers = { 'X-Subdomain': cfg.subdomain, 'Content-Type': 'application/json' };
         const api = (path) => cfg.api_base + path;
@@ -225,6 +233,7 @@ if (ip)  localStorage.setItem('hotspot_ip', ip);
 
         let state = { tab: 'packages', packages: [], packagesLoaded: false, promos: [], selected: null, status: null, message: '' };
 let queryModal = { status: null, message: '' };
+let connectedInfo = null;
 let stkQueryInterval = null;
         function renderFooter() {
           const label = (cfg.footer && cfg.footer.support_label) || 'Need help?';
@@ -412,6 +421,49 @@ function renderQueryModal() {
   };
 }
 
+// Full-screen "Connected!" overlay, matching React's <ConnectedScreen/> — shown
+// after voucher / receipt / M-Pesa / autologin success, with a manual
+// "Start Browsing" escape hatch in addition to the automatic redirect below.
+function renderConnectedScreen() {
+  let root = document.getElementById('connected-root');
+  if (!root) {
+    root = document.createElement('div');
+    root.id = 'connected-root';
+    document.body.appendChild(root);
+  }
+  if (!connectedInfo) { root.innerHTML = ''; return; }
+
+  const rows = [
+    ['Username', connectedInfo.username],
+    ['Package', connectedInfo.package],
+    ['Expires', connectedInfo.expiration],
+  ].filter(([, v]) => v);
+
+  root.innerHTML = `
+    <div style="position:fixed;inset:0;z-index:21000;display:flex;align-items:center;justify-content:center;background:rgba(2,6,23,.92);backdrop-filter:blur(20px);">
+      <div style="background:color-mix(in srgb, var(--surface) 90%, transparent);border:1px solid color-mix(in srgb, var(--accent) 25%, transparent);border-radius:24px;max-width:360px;width:90%;padding:32px 28px;text-align:center;box-shadow:0 0 60px rgba(52,211,153,.15);">
+        <div style="width:64px;height:64px;margin:0 auto 20px;border-radius:20px;background:color-mix(in srgb, var(--accent) 15%, transparent);border:1px solid color-mix(in srgb, var(--accent) 30%, transparent);display:flex;align-items:center;justify-content:center;font-size:28px;">✅</div>
+        <h2 style="font-size:22px;font-weight:800;color:var(--text);margin-bottom:4px;">Connected!</h2>
+        <p style="font-size:13px;color:var(--muted);margin-bottom:22px;">You're online — enjoy browsing.</p>
+        ${rows.length ? `
+          <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:22px;text-align:left;">
+            ${rows.map(([l, v]) => `
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border-radius:12px;background:color-mix(in srgb, var(--text) 6%, transparent);">
+                <span style="font-size:11px;color:var(--muted);">${l}</span>
+                <span style="font-size:13px;font-weight:700;color:var(--text);">${v}</span>
+              </div>
+            `).join('')}
+          </div>
+        ` : ''}
+        <button id="connected-start-btn" class="btn">Start Browsing →</button>
+      </div>
+    </div>
+  `;
+
+  const startBtn = document.getElementById('connected-start-btn');
+  if (startBtn) startBtn.onclick = () => { window.location.href = '$(link-orig)'; };
+}
+
 function startQueryStatus() {
   if (stkQueryInterval) clearInterval(stkQueryInterval);
 
@@ -431,9 +483,10 @@ function startQueryStatus() {
       switch (code) {
         case '0':
           clearInterval(stkQueryInterval); stkQueryInterval = null;
-          queryModal = { status: 'success', message: 'Payment successful! You should be connected automatically.' };
+          queryModal = { status: null, message: '' };
           renderQueryModal();
           localStorage.removeItem('checkout_request_id');
+          onConnected({ package: state.selected && state.selected.name });
           break;
         case '4999':
           queryModal = { status: 'processing', message: 'The transaction is still under processing. Please wait…' };
@@ -521,14 +574,24 @@ async function payPackage() {
 }
 
         function pollPaymentStatus() {
+          let elapsed = 0;
           const iv = setInterval(async () => {
+            elapsed += 5000;
             try {
               const res = await fetch(api('/api/receipt_number_status'), {
                 method: 'POST', headers, body: JSON.stringify({ mac, ip })
               });
               const data = await res.json();
-              if (data.connected) { clearInterval(iv); onConnected(); }
+              if (data.connected) {
+                clearInterval(iv);
+                onConnected({ username: data.username, package: data.package, expiration: data.expiration });
+                return;
+              }
             } catch (e) { console.error(e); }
+            if (elapsed >= 120000) {
+              clearInterval(iv);
+              setStatus('error', 'Timed out. Please check your M-Pesa SMS and try the receipt tab.');
+            }
           }, 5000);
         }
 
@@ -539,23 +602,87 @@ async function payPackage() {
               method: 'POST', headers, body: JSON.stringify({ voucher: code, mac, ip })
             });
             const data = await res.json();
-            if (res.ok) onConnected(); else setStatus('error', data.error || 'Invalid voucher');
-          } catch (e) { console.error(e); setStatus('error', 'Network error'); }
+            if (res.ok) {
+              onConnected({ username: data.username, package: data.package, expiration: data.expiration });
+            } else {
+              setStatus('error', data.error || 'Invalid voucher code. Please check and try again.');
+            }
+          } catch (e) { console.error(e); setStatus('error', 'Network error. Check your connection and try again.'); }
         }
 
         async function connectReceipt(code) {
-          setStatus('processing', 'Verifying transaction…');
+          setStatus('processing', 'Verifying your M-Pesa transaction…');
           try {
             const res = await fetch(api('/api/login_with_receipt_number'), {
               method: 'POST', headers, body: JSON.stringify({ receipt_number: code, mac, ip })
             });
-            if (res.ok) pollPaymentStatus(); else setStatus('error', 'Transaction not found');
-          } catch (e) { console.error(e); setStatus('error', 'Network error'); }
+            if (res.ok) {
+              setStatus('processing', 'Transaction found — activating your session…');
+              pollPaymentStatus();
+            } else {
+              const data = await res.json().catch(() => ({}));
+              setStatus('error', data.error || 'Transaction not found. Check the code and try again.');
+            }
+          } catch (e) { console.error(e); setStatus('error', 'Network error. Check your connection and try again.'); }
         }
 
-        function onConnected() {
+        function onConnected(details) {
+          details = details || {};
+          connectedInfo = {
+            username: details.username || username || '',
+            package: details.package || (state.selected && state.selected.name) || '',
+            expiration: details.expiration || '',
+          };
+          renderConnectedScreen();
           setStatus('success', 'Connected! Redirecting…');
-          setTimeout(() => { window.location.href = '$(link-orig)'; }, 1500);
+          setTimeout(() => { window.location.href = '$(link-orig)'; }, 4000);
+        }
+
+        // ── Autologin / autoreconnect ───────────────────────────────────
+        // Mirrors React's voucherAutoLogin(): if the account has
+        // enable_autologin on, and we recognize this device from a prior
+        // session, silently re-establish the connection instead of making
+        // the customer buy/enter anything again. No-op in preview and when
+        // we have no stored username to check a session for.
+        async function tryAutoLogin() {
+          if (cfg.preview) return;
+          if (!username) return;
+          try {
+            const custRes = await fetch(api('/api/allow_get_hotspot_customization'), { headers });
+            if (!custRes.ok) return;
+            const custRaw = await custRes.json();
+            const cust = Array.isArray(custRaw) ? custRaw[0] : custRaw;
+            if (!cust || !cust.enable_autologin) return;
+
+            const sessionRes = await fetch(
+              api('/api/check_session?username=' + encodeURIComponent(username) +
+                  '&mac=' + encodeURIComponent(mac || '') +
+                  '&ip=' + encodeURIComponent(ip || '')),
+              { headers }
+            );
+            const sessionData = await sessionRes.json();
+            if (!sessionRes.ok || !sessionData.session_active) return;
+
+            const loginRes = await fetch(api('/api/login_with_hotspot_voucher'), {
+              method: 'POST', headers,
+              body: JSON.stringify({
+                voucher: sessionData.username,
+                stored_mac: localStorage.getItem('hotspot_mac'),
+                stored_ip: localStorage.getItem('hotspot_ip'),
+                mac, ip: sessionData.ip || ip,
+              }),
+            });
+            const loginData = await loginRes.json();
+            if (loginRes.ok) {
+              onConnected({
+                username: loginData.username || sessionData.username,
+                package: loginData.package || sessionData.package,
+                expiration: loginData.expiration || sessionData.expiration,
+              });
+            }
+          } catch (e) {
+            console.error('Auto-login check failed:', e);
+          }
         }
 
         // ── Ads ──────────────────────────────────────────────────────────
@@ -821,6 +948,7 @@ async function payPackage() {
         loadPromotions();
         loadPackages();
         render();
+        tryAutoLogin();
       })();
     JS
   end
