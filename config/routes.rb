@@ -157,6 +157,7 @@ resources :company_ids
   resources :system_admin_sms
   # resources :pppoe_plans
   # resources :hotspot_plans
+resources :promotional_plans, only: [:index, :show, :create, :update, :destroy]
 
 end
 
