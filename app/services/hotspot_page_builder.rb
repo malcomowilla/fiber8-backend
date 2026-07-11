@@ -645,8 +645,7 @@ async function payPackage() {
         // the customer buy/enter anything again. No-op in preview and when
         // we have no stored username to check a session for.
         async function tryAutoLogin() {
-          if (cfg.preview) return;
-          if (!username) return;
+          # if (cfg.preview) return;
           try {
             const custRes = await fetch(api('/api/allow_get_hotspot_customization'), { headers });
             if (!custRes.ok) return;
