@@ -215,7 +215,8 @@ class HotspotPageBuilder
         };
 
         let state = { tab: 'packages', packages: [], packagesLoaded: false, promos: [], selected: null, status: null, message: '' };
-
+let queryModal = { status: null, message: '' };
+let stkQueryInterval = null;
         function renderFooter() {
           const label = (cfg.footer && cfg.footer.support_label) || 'Need help?';
           const phone = (cfg.footer && cfg.footer.support_phone) || cfg.hotspot_phone || '';
@@ -344,6 +345,121 @@ class HotspotPageBuilder
 
         function setStatus(status, message) { state.status = status; state.message = message; render(); }
 
+
+function renderQueryModal() {
+  let root = document.getElementById('query-modal-root');
+  if (!root) {
+    root = document.createElement('div');
+    root.id = 'query-modal-root';
+    document.body.appendChild(root);
+  }
+  if (!queryModal.status) { root.innerHTML = ''; return; }
+
+  const titles = {
+    processing: 'Payment Processing', success: 'Payment Successful',
+    cancelled: 'Payment Cancelled', no_response: 'No Response',
+    invalid_initiator: 'Invalid Information', error: 'Payment Error',
+  };
+  const icons = {
+    processing: '⏳', success: '✅', cancelled: '❌',
+    no_response: 'ℹ️', invalid_initiator: '⚠️', error: '⚠️',
+  };
+
+  root.innerHTML = `
+    <div style="position:fixed;inset:0;z-index:20000;display:flex;align-items:center;justify-content:center;background:rgba(2,6,23,.75);backdrop-filter:blur(6px);">
+      <div style="background:var(--surface);color:var(--text);border-radius:20px;max-width:380px;width:90%;padding:24px;text-align:center;box-shadow:0 30px 60px rgba(0,0,0,.5);">
+        <div style="font-size:32px;margin-bottom:10px;">${icons[queryModal.status] || 'ℹ️'}</div>
+        <h3 style="font-size:18px;font-weight:700;margin-bottom:10px;">${titles[queryModal.status] || 'Status'}</h3>
+        <p style="font-size:14px;color:var(--muted);margin-bottom:20px;line-height:1.5;">${queryModal.message}</p>
+        ${queryModal.status === 'processing' ? `
+          <div style="margin:0 auto 16px;width:36px;height:36px;border:3px solid color-mix(in srgb, var(--primary) 25%, transparent);border-top-color:var(--primary);border-radius:50%;animation:spin 0.8s linear infinite;"></div>
+          <div style="display:flex;gap:8px;">
+            <button id="qm-stop" class="btn" style="background:color-mix(in srgb, var(--text) 12%, transparent);color:var(--text);">Stop Checking</button>
+            <button id="qm-check" class="btn">Check Now</button>
+          </div>
+        ` : `
+          <button id="qm-close" class="btn">Close</button>
+        `}
+      </div>
+    </div>
+    <style>@keyframes spin { to { transform: rotate(360deg); } }</style>
+  `;
+
+  const stopBtn = document.getElementById('qm-stop');
+  if (stopBtn) stopBtn.onclick = () => {
+    if (stkQueryInterval) { clearInterval(stkQueryInterval); stkQueryInterval = null; }
+    queryModal = { status: null, message: '' };
+    renderQueryModal();
+  };
+  const checkBtn = document.getElementById('qm-check');
+  if (checkBtn) checkBtn.onclick = () => {
+    if (stkQueryInterval) { clearInterval(stkQueryInterval); stkQueryInterval = null; }
+    startQueryStatus();
+  };
+  const closeBtn = document.getElementById('qm-close');
+  if (closeBtn) closeBtn.onclick = () => {
+    queryModal = { status: null, message: '' };
+    renderQueryModal();
+  };
+}
+
+function startQueryStatus() {
+  if (stkQueryInterval) clearInterval(stkQueryInterval);
+
+  stkQueryInterval = setInterval(async () => {
+    const checkout_request_id = localStorage.getItem('checkout_request_id');
+    if (!checkout_request_id) { clearInterval(stkQueryInterval); stkQueryInterval = null; return; }
+
+    try {
+      const res = await fetch(api('/api/query_status'), {
+        method: 'POST', headers,
+        body: JSON.stringify({ checkout_request_id })
+      });
+      const data = await res.json();
+      if (!res.ok) return;
+
+      const code = data.response && data.response.ResultCode;
+      switch (code) {
+        case '0':
+          clearInterval(stkQueryInterval); stkQueryInterval = null;
+          queryModal = { status: 'success', message: 'Payment successful! You should be connected automatically.' };
+          renderQueryModal();
+          localStorage.removeItem('checkout_request_id');
+          break;
+        case '4999':
+          queryModal = { status: 'processing', message: 'The transaction is still under processing. Please wait…' };
+          renderQueryModal();
+          break;
+        case '1037':
+          clearInterval(stkQueryInterval); stkQueryInterval = null;
+          queryModal = { status: 'no_response', message: 'No response received from user. Please complete the M-Pesa prompt.' };
+          renderQueryModal();
+          localStorage.removeItem('checkout_request_id');
+          break;
+        case '1032':
+          clearInterval(stkQueryInterval); stkQueryInterval = null;
+          queryModal = { status: 'cancelled', message: 'Payment was cancelled. Please try again.' };
+          renderQueryModal();
+          localStorage.removeItem('checkout_request_id');
+          break;
+        case '2001':
+          clearInterval(stkQueryInterval); stkQueryInterval = null;
+          queryModal = { status: 'invalid_initiator', message: 'The initiator information is invalid.' };
+          renderQueryModal();
+          localStorage.removeItem('checkout_request_id');
+          break;
+        default:
+          clearInterval(stkQueryInterval); stkQueryInterval = null;
+          queryModal = { status: 'error', message: (data.response && data.response.ResultDesc) || 'Payment failed. Please try again.' };
+          renderQueryModal();
+          localStorage.removeItem('checkout_request_id');
+      }
+    } catch (e) { /* keep polling on transient errors */ }
+  }, 5000);
+}
+
+
+        
         async function loadPackages() {
           try {
             const res = await fetch(api('/api/allow_get_hotspot_packages'), { headers });
@@ -372,21 +488,28 @@ class HotspotPageBuilder
           if (root) root.innerHTML = promoHtml();
           bindEvents();
         }
-
-        async function payPackage() {
-          setStatus('processing', 'Sending STK push…');
-          try {
-            const res = await fetch(api('/api/make_payment'), {
-              method: 'POST', headers,
-              body: JSON.stringify({ phone_number: state.phone, amount: state.selected.price, package: state.selected.name, mac, ip })
-            });
-            const data = await res.json();
-            if (res.ok) { localStorage.setItem('checkout_request_id', data.checkout_request_id); pollPaymentStatus(); }
-            else setStatus('error', data.message || 'Payment failed');
-          } catch (e) {
-            console.error(e); setStatus('error', 'Network error — check your connection');
-          }
-        }
+async function payPackage() {
+  queryModal = { status: 'processing', message: 'STK push sent — enter your M-Pesa PIN on your phone to complete payment.' };
+  renderQueryModal();
+  try {
+    const res = await fetch(api('/api/make_payment'), {
+      method: 'POST', headers,
+      body: JSON.stringify({ phone_number: state.phone, amount: state.selected.price, package: state.selected.name, mac, ip })
+    });
+    const data = await res.json();
+    if (res.ok) {
+      localStorage.setItem('checkout_request_id', data.checkout_request_id);
+      startQueryStatus();
+    } else {
+      queryModal = { status: 'error', message: data.message || 'Payment failed' };
+      renderQueryModal();
+    }
+  } catch (e) {
+    console.error(e);
+    queryModal = { status: 'error', message: 'Network error — check your connection' };
+    renderQueryModal();
+  }
+}
 
         function pollPaymentStatus() {
           const iv = setInterval(async () => {
