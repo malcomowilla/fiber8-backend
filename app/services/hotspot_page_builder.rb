@@ -350,7 +350,8 @@ class HotspotPageBuilder
             const data = res.ok ? await res.json() : [];
             state.packages = (cfg.preview && (!data || !data.length)) ? MOCK_PACKAGES : (data || []);
           } catch (e) {
-            console.error('Failed to load packages (check CORS / walled-garden):', e);
+           console.error('Failed to load packages (check CORS / walled-garden):', e);
+            document.getElementById('panel').innerHTML = '<div class="status error">DEBUG: ' + e.message + '</div>';
             state.packages = cfg.preview ? MOCK_PACKAGES : [];
           } finally {
             state.packagesLoaded = true;

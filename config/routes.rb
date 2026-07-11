@@ -163,6 +163,10 @@ end
 resources :promotional_plans, only: [:index, :show, :create, :update, :destroy]
 
 
+post '/api/preview_page_design',   to: 'hotspot_settings#preview_page_design'
+get  '/api/get_page_design',       to: 'hotspot_settings#get_page_design'
+post '/api/save_page_design',      to: 'hotspot_settings#save_page_design'
+
 
 post 'preview_page_design',   to: 'hotspot_settings#preview_page_design'
 get  'get_page_design',       to: 'hotspot_settings#get_page_design'
@@ -170,10 +174,6 @@ post 'save_page_design',      to: 'hotspot_settings#save_page_design'
 
 
 
-
-post '/api/preview_page_design',   to: 'hotspot_settings#preview_page_design'
-get  '/api/get_page_design',       to: 'hotspot_settings#get_page_design'
-post '/api/save_page_design',      to: 'hotspot_settings#save_page_design'
 
 
 

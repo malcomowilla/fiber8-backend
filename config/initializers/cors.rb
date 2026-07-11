@@ -11,17 +11,3 @@ Rails.application.config.middleware.insert_before 0, Rack::Cors do
     end
   end
 
-
-
-
-# Rails.application.config.middleware.insert_before 0, Rack::Cors do
-#   allow do
-#     origins ->(origin, _env) {
-#       origin.present? && (origin ==  origin.match?(/^https:\/\/.*\.aitechs\.co\.ke$/) || "https://aitechs.co.ke" == origin)
-#     }
-#     resource "*",
-#     expose: ['Content-Disposition'],
-#     headers: :any, methods: [:get, :post, :patch, :put, :delete, :options]
-#   end
-# end
-
