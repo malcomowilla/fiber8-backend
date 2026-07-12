@@ -147,7 +147,19 @@ class HotspotPageBuilder
       .status.error { background: rgba(239,68,68,.1); color: #fca5a5; }
       .status.success { background: rgba(52,211,153,.1); color: #6ee7b7; }
       .status.processing { background: rgba(251,191,36,.1); color: #fcd34d; }
-      .footer { text-align: center; padding: 16px; color: var(--muted); font-size: 12px; }
+      .footer { text-align: center; padding: 16px; color: color-mix(in srgb, var(--muted) 55%, var(--text) 45%); font-size: 12px; }
+      .support-line { text-align: center; font-size: 13px; }
+      .support-line .footer-support { color: var(--text); font-weight: 600; }
+      .support-line .footer-phone { color: var(--primary); font-weight: 700; text-decoration: none; }
+      .support-line .footer-phone:hover { text-decoration: underline; }
+      /* Top placement: a slim strip directly under the header, above tabs/promos */
+      .support-top {
+        padding: 10px 20px;
+        border-bottom: 1px solid color-mix(in srgb, var(--text) 8%, transparent);
+        background: color-mix(in srgb, var(--primary) 5%, transparent);
+      }
+      /* Bottom placement: sits inside the existing footer element */
+      .support-bottom { padding: 0; }
       .promo { position: relative; overflow: hidden; border-radius: 16px; margin-bottom: 10px; padding: 14px;
                border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
                background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 10%, transparent), color-mix(in srgb, var(--surface) 60%, transparent)); }
@@ -204,6 +216,7 @@ class HotspotPageBuilder
           <h1>#{title}</h1>
           <p>#{header["tagline"] || "Connect to the internet"}</p>
         </div>
+        <div id="support-top"></div>
         <div id="promo-root" class="panel"></div>
         <div class="tabs" id="tabs"></div>
         <div class="panel" id="panel"></div>
@@ -285,11 +298,39 @@ let stkQueryInterval = null;
 let promoState = {};          // { [promoId]: secondsRemaining } — ticks down locally between refreshes
 let promoTimerInterval = null;
 
-        function renderFooter() {
+        function supportHtml() {
           const label = (cfg.footer && cfg.footer.support_label) || 'Need help?';
           const phone = (cfg.footer && cfg.footer.support_phone) || cfg.hotspot_phone || '';
-          document.getElementById('footer').innerHTML =
-            label + (phone ? ' · ' + phone : '') + (cfg.hotspot_email ? ' · ' + cfg.hotspot_email : '');
+          const phoneHtml = phone ? ' · <a class="footer-phone" href="tel:' + phone.replace(/\\s+/g, '') + '">' + phone + '</a>' : '';
+          return '<span class="footer-support">' + label + '</span>' + phoneHtml +
+            (cfg.hotspot_email ? ' · ' + cfg.hotspot_email : '');
+        }
+
+        function renderFooter() {
+          // footer.show_support (default true) lets the admin hide the
+          // support contact line entirely. footer.support_position
+          // ('top' | 'bottom', default 'bottom') decides whether it renders
+          // as a strip right under the header, or in the page footer.
+          const showSupport = !(cfg.footer && cfg.footer.show_support === false);
+          const position = (cfg.footer && cfg.footer.support_position) || 'bottom';
+
+          const topEl = document.getElementById('support-top');
+          const footerEl = document.getElementById('footer');
+
+          if (!showSupport) {
+            if (topEl) topEl.innerHTML = '';
+            footerEl.innerHTML = '';
+            return;
+          }
+
+          const html = '<div class="support-line">' + supportHtml() + '</div>';
+          if (position === 'top') {
+            if (topEl) topEl.innerHTML = html;
+            footerEl.innerHTML = '';
+          } else {
+            if (topEl) topEl.innerHTML = '';
+            footerEl.innerHTML = html;
+          }
         }
 
         function render() {
