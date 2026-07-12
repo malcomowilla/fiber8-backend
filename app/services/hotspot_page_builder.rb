@@ -51,6 +51,19 @@ class HotspotPageBuilder
     "https://#{base}"
   end
 
+  # Cloudinary (or any) URLs are already absolute (https://...) and are
+  # returned untouched. Only bare relative paths get the platform domain
+  # prefixed on. NOTE: if a logo still fails to load on the router itself,
+  # the most likely cause is MikroTik's walled garden blocking the asset
+  # host (e.g. res.cloudinary.com) before the client has authenticated —
+  # that has to be whitelisted on the router
+  # (/ip hotspot walled-garden add dst-host=*.cloudinary.com action=allow),
+  # this helper can't fix that part.
+  def absolute_url(path)
+    return nil if path.blank?
+    path.start_with?("http://", "https://") ? path : "#{api_base_url}#{path.start_with?('/') ? '' : '/'}#{path}"
+  end
+
   def config_json
     {
       subdomain: @subdomain,
@@ -142,15 +155,43 @@ class HotspotPageBuilder
                       background: color-mix(in srgb, var(--accent) 20%, transparent); color: var(--accent); }
       .promo .price { font-weight: 800; font-size: 18px; }
       .promo .price-old { text-decoration: line-through; color: var(--muted); font-size: 12px; margin-left: 6px; }
+      .promo-timer { font-family: 'Space Mono', monospace; font-size: 11px; font-weight: 700; color: var(--accent); white-space: nowrap; }
+      .promo-stock { margin-top: 10px; }
+      .promo-stock-label { font-size: 10px; color: var(--muted); margin-bottom: 4px; }
+      .promo-stock-bar { height: 4px; border-radius: 4px; background: color-mix(in srgb, var(--text) 12%, transparent); overflow: hidden; }
+      .promo-stock-fill { height: 100%; border-radius: 4px; transition: width .3s ease; }
       .mock-tag { display: inline-block; font-size: 9px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase;
                   padding: 2px 6px; border-radius: 6px; background: color-mix(in srgb, var(--text) 12%, transparent); color: var(--muted); margin-left: 6px; }
       .ad-card { border-radius: 16px; overflow: hidden; background: color-mix(in srgb, var(--surface) 90%, transparent);
                  border: 1px solid color-mix(in srgb, var(--text) 10%, transparent); box-shadow: 0 20px 40px rgba(0,0,0,.35); }
+
+      /* ── Guided pay-step UI ──────────────────────────────────────── */
+      .tap-hint { font-size: 12px; color: var(--muted); margin-bottom: 10px; }
+      .step-back { display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; color: var(--muted);
+                   margin-bottom: 14px; cursor: pointer; user-select: none; }
+      .step-back:hover { color: var(--text); }
+      .pkg-recap { display: flex; justify-content: space-between; align-items: center; padding: 16px;
+                   border-radius: 16px; background: color-mix(in srgb, var(--primary) 7%, transparent);
+                   border: 1px solid color-mix(in srgb, var(--primary) 22%, transparent); margin-bottom: 16px; }
+      .pkg-recap-name { font-weight: 700; }
+      .pkg-recap-sub { color: var(--muted); font-size: 12px; margin-top: 2px; }
+      .pkg-recap-price { font-weight: 800; font-size: 18px; white-space: nowrap; margin-left: 12px; }
+      .pay-instructions { display: flex; gap: 10px; align-items: flex-start; font-size: 13px; color: var(--text);
+                           background: color-mix(in srgb, var(--primary) 6%, transparent);
+                           border: 1px solid color-mix(in srgb, var(--primary) 15%, transparent);
+                           border-radius: 14px; padding: 12px 14px; margin-bottom: 16px; line-height: 1.5; }
+      .pay-instructions .num {
+        flex-shrink: 0; width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center;
+        justify-content: center; font-size: 11px; font-weight: 800; background: var(--primary); color: #fff;
+      }
+      .field-label { display: block; font-size: 11px; font-weight: 700; color: var(--muted);
+                      text-transform: uppercase; letter-spacing: .04em; margin-bottom: 6px; }
     CSS
   end
 
   def skeleton_html
-    logo = (header["show_logo"] != false && header["logo_url"].present?) ? %(<img class="logo" src="#{header['logo_url']}">) : ""
+    logo_src = absolute_url(header["logo_url"])
+    logo = (header["show_logo"] != false && logo_src.present?) ? %(<img class="logo" src="#{logo_src}" alt="" onerror="this.style.display='none'">) : ""
     wifi_icon = header["show_wifi_icon"] != false ? %(<div class="wifi-badge">📶</div>) : ""
     title = header["network_name"].presence || @settings&.hotspot_name || "Free WiFi"
     preview_badge = @preview ? %(<div style="position:fixed;top:8px;left:50%;transform:translateX(-50%);z-index:10000;background:rgba(2,6,23,.85);color:var(--primary);font:600 11px/1 sans-serif;padding:5px 12px;border-radius:20px;white-space:nowrap;">Preview — ad views aren't counted</div>) : ""
@@ -221,7 +262,9 @@ if (username) localStorage.setItem('hotspot_username', username);
         const MOCK_PROMO = {
           id: 'mock-promo', name: 'Weekend Special', description: '20% off the Daily Unlimited package',
           badge_text: '20% OFF', promotional_price: 80, original_price: 100,
-          package_name: 'Daily Unlimited', show_countdown_timer: false,
+          package_name: 'Daily Unlimited',
+          show_countdown_timer: true, seconds_remaining: 5 * 3600,
+          show_stock_indicator: true, max_redemptions: 50, remaining_stock: 12,
         };
         const MOCK_AD = {
           id: 'mock-ad', media_type: 'image', ad_title: 'Your Ad Here',
@@ -231,10 +274,17 @@ if (username) localStorage.setItem('hotspot_username', username);
           position: 'bottom-right', reward_type: 'none', ad_link: null,
         };
 
-        let state = { tab: 'packages', packages: [], packagesLoaded: false, promos: [], selected: null, status: null, message: '' };
+        // payStep controls the guided packages flow: 'list' shows all
+        // packages; 'pay' shows a focused recap + phone-number step for
+        // the one the customer tapped, so there's no scrolling required
+        // and no ambiguity about what to do next.
+        let state = { tab: 'packages', packages: [], packagesLoaded: false, promos: [], selected: null, payStep: 'list', status: null, message: '' };
 let queryModal = { status: null, message: '' };
 let connectedInfo = null;
 let stkQueryInterval = null;
+let promoState = {};          // { [promoId]: secondsRemaining } — ticks down locally between refreshes
+let promoTimerInterval = null;
+
         function renderFooter() {
           const label = (cfg.footer && cfg.footer.support_label) || 'Need help?';
           const phone = (cfg.footer && cfg.footer.support_phone) || cfg.hotspot_phone || '';
@@ -264,12 +314,32 @@ let stkQueryInterval = null;
           return \`<div class="status \${state.status}">\${state.message}</div>\`;
         }
 
+        function formatCountdown(seconds) {
+          if (seconds == null) return '';
+          if (seconds <= 0) return 'Ending now';
+          const d = Math.floor(seconds / 86400);
+          const h = Math.floor((seconds % 86400) / 3600);
+          const m = Math.floor((seconds % 3600) / 60);
+          const s = Math.floor(seconds % 60);
+          if (d > 0) return d + 'd ' + h + 'h ' + m + 'm';
+          if (h > 0) return h + 'h ' + m + 'm ' + s + 's';
+          return m + 'm ' + s + 's';
+        }
+
         function promoHtml() {
           if (!state.promos.length) return '';
-          return state.promos.map(p => \`
+          return state.promos.map(p => {
+            const stockRatio = (p.max_redemptions && p.remaining_stock != null)
+              ? Math.max(p.remaining_stock / p.max_redemptions, 0)
+              : null;
+            const secondsLeft = promoState[p.id] != null ? promoState[p.id] : p.seconds_remaining;
+            const showTimer = p.show_countdown_timer && secondsLeft != null;
+            const showStock = p.show_stock_indicator && stockRatio != null;
+            return \`
             <div class="promo" data-promo="\${p.id}">
               <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
                 <span class="badge">🔥 \${p.badge_text || (p.savings_percent + '% OFF')}</span>
+                \${showTimer ? '<span class="promo-timer" data-promo-timer="' + p.id + '">' + formatCountdown(secondsLeft) + '</span>' : ''}
                 \${cfg.preview && String(p.id).startsWith('mock-') ? '<span class="mock-tag">Sample</span>' : ''}
               </div>
               <p style="font-weight:700;font-size:13px;">\${p.name}</p>
@@ -281,8 +351,29 @@ let stkQueryInterval = null;
                 </div>
                 <button class="btn" style="width:auto;padding:8px 14px;font-size:12px;" data-promo-claim="\${p.id}">Claim Offer</button>
               </div>
+              \${showStock ? \`
+                <div class="promo-stock">
+                  <div class="promo-stock-label">👥 \${p.remaining_stock} left</div>
+                  <div class="promo-stock-bar"><div class="promo-stock-fill" style="width:\${Math.round(stockRatio * 100)}%;background:\${stockRatio < 0.2 ? '#f87171' : '#fbbf24'}"></div></div>
+                </div>
+              \` : ''}
             </div>
-          \`).join('');
+          \`;
+          }).join('');
+        }
+
+        function startPromoTimers() {
+          if (promoTimerInterval) clearInterval(promoTimerInterval);
+          state.promos.forEach(p => {
+            if (promoState[p.id] == null && p.seconds_remaining != null) promoState[p.id] = p.seconds_remaining;
+          });
+          promoTimerInterval = setInterval(() => {
+            Object.keys(promoState).forEach(id => {
+              if (promoState[id] > 0) promoState[id] -= 1;
+              const el = document.querySelector('[data-promo-timer="' + id + '"]');
+              if (el) el.textContent = formatCountdown(promoState[id]);
+            });
+          }, 1000);
         }
 
         function panelHtml() {
@@ -291,19 +382,40 @@ let stkQueryInterval = null;
               return statusHtml() + '<div class="pkg-skeleton"></div><div class="pkg-skeleton"></div><div class="pkg-skeleton"></div>';
             }
             const isMock = cfg.preview && state.packages.length && String(state.packages[0].id).startsWith('mock-');
+
+            // ── Focused pay step: shown the instant a package is tapped,
+            // so a non-technical customer never has to scroll to find the
+            // phone-number field or guess what to do next. ──────────────
+            if (state.payStep === 'pay' && state.selected) {
+              return statusHtml() + \`
+                <div class="step-back" data-back-to-list>← Back to packages</div>
+                <div class="pkg-recap">
+                  <div>
+                    <div class="pkg-recap-name">\${state.selected.name}</div>
+                    \${state.selected.valid ? '<div class="pkg-recap-sub">' + state.selected.valid + '</div>' : ''}
+                  </div>
+                  <div class="pkg-recap-price">Ksh \${state.selected.price}</div>
+                </div>
+                <div class="pay-instructions">
+                  <span class="num">1</span>
+                  <span>Enter your M-Pesa phone number below, then tap <strong>Pay</strong>. You'll get a prompt on your phone — enter your M-Pesa PIN to finish connecting.</span>
+                </div>
+                <label class="field-label">M-Pesa Phone Number</label>
+                <input class="field" id="phone" inputmode="tel" placeholder="07XX XXX XXX" value="\${state.phone || ''}">
+                <button class="btn" id="pay-btn">Pay Ksh \${state.selected.price} via M-Pesa</button>
+              \`;
+            }
+
             const list = state.packages.map(p => \`
-              <div class="pkg \${state.selected?.id === p.id ? 'selected' : ''}" data-pkg="\${p.id}">
+              <div class="pkg" data-pkg="\${p.id}">
                 <div><strong>\${p.name}</strong>\${isMock ? '<span class="mock-tag">Sample</span>' : ''}<br><small>\${p.valid || ''}</small></div>
                 <div>Ksh \${p.price}</div>
               </div>\`).join('');
             const empty = !state.packages.length
               ? '<p style="color:var(--muted);font-size:12px;padding:8px 0;">No packages configured yet.</p>'
               : '';
-            const payBtn = state.selected
-              ? \`<input class="field" id="phone" placeholder="07XX XXX XXX" value="\${state.phone || ''}">
-                 <button class="btn" id="pay-btn">Pay Ksh \${state.selected.price} via M-Pesa</button>\`
-              : '';
-            return statusHtml() + list + empty + payBtn;
+            const hint = state.packages.length ? '<p class="tap-hint">Tap a package to continue</p>' : '';
+            return statusHtml() + hint + list + empty;
           }
           if (state.tab === 'voucher') {
             return statusHtml() + \`
@@ -320,13 +432,21 @@ let stkQueryInterval = null;
 
         function bindEvents() {
           document.querySelectorAll('[data-tab]').forEach(el =>
-            el.onclick = () => { state.tab = el.dataset.tab; state.status = null; render(); });
+            el.onclick = () => { state.tab = el.dataset.tab; state.status = null; state.payStep = 'list'; state.selected = null; render(); });
 
           document.querySelectorAll('[data-pkg]').forEach(el =>
             el.onclick = () => {
               state.selected = state.packages.find(p => String(p.id) === el.dataset.pkg);
+              state.payStep = 'pay';
               render();
+              requestAnimationFrame(() => {
+                const card = document.querySelector('.card');
+                if (card) card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              });
             });
+
+          document.querySelectorAll('[data-back-to-list]').forEach(el =>
+            el.onclick = () => { state.payStep = 'list'; state.selected = null; state.status = null; render(); });
 
           const payBtn = document.getElementById('pay-btn');
           if (payBtn) payBtn.onclick = () => {
@@ -351,13 +471,19 @@ let stkQueryInterval = null;
               if (cfg.preview && String(promo.id).startsWith('mock-')) {
                 // Sample promo — just switch tabs and preview the pricing, no real package to select.
                 state.tab = 'packages';
+                state.payStep = 'list';
                 render();
                 return;
               }
               const pkg = state.packages.find(p => String(p.id) === String(promo.package_id));
               state.selected = pkg ? { ...pkg, price: promo.promotional_price } : { id: promo.package_id, name: promo.package_name, price: promo.promotional_price };
               state.tab = 'packages';
+              state.payStep = 'pay';
               render();
+              requestAnimationFrame(() => {
+                const card = document.querySelector('.card');
+                if (card) card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              });
             });
         }
 
@@ -549,6 +675,7 @@ function startQueryStatus() {
           const root = document.getElementById('promo-root');
           if (root) root.innerHTML = promoHtml();
           bindEvents();
+          startPromoTimers();
         }
 async function payPackage() {
   queryModal = { status: 'processing', message: 'STK push sent — enter your M-Pesa PIN on your phone to complete payment.' };
@@ -737,7 +864,7 @@ async function payPackage() {
           }
           if (ad.reward_type === 'specific' && ad.selected_package) {
             const pkg = state.packages.find(p => String(p.id) === String(ad.selected_package));
-            if (pkg) { state.selected = pkg; state.tab = 'packages'; render(); }
+            if (pkg) { state.selected = pkg; state.tab = 'packages'; state.payStep = 'pay'; render(); }
           }
         }
 
