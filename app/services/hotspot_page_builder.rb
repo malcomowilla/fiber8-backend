@@ -779,7 +779,7 @@ async function payPackage() {
         // mac/ip are always available (router-substituted), so this always
         // attempts the check; `username` (if we happen to have one stored)
         // is passed as an extra hint but is never required.
-        async function tryAutoLogin() {
+       async function tryAutoLogin() {
           try {
             const custRes = await fetch(api('/api/allow_get_hotspot_customization'), { headers });
             if (!custRes.ok) { console.info('[autologin] skipped: could not load customization settings'); return; }
