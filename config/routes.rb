@@ -155,6 +155,10 @@ resources :company_ids
   # resources :pp_poe_plans
   # resources :hotspot_plans
   resources :system_admin_sms
+
+resources :pops
+resources :network_devices
+resources :network_connections
   # resources :pppoe_plans
   # resources :hotspot_plans
 resources :promotional_plans, only: [:index, :show, :create, :update, :destroy]
@@ -162,6 +166,19 @@ resources :promotional_plans, only: [:index, :show, :create, :update, :destroy]
 end
 
 resources :promotional_plans, only: [:index, :show, :create, :update, :destroy]
+
+
+resources :pops
+resources :network_devices
+resources :network_connections
+
+get  '/network_map', to: 'network_map#index'
+post '/network_map/sync', to: 'network_map#sync'
+
+
+get  '/api/network_map', to: 'network_map#index'
+post '/api/network_map/sync', to: 'network_map#sync'
+
 
 
 post '/api/preview_page_design',   to: 'hotspot_settings#preview_page_design'

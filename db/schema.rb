@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_07_11_095703) do
+ActiveRecord::Schema[7.2].define(version: 2026_07_12_102424) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -744,6 +744,23 @@ ActiveRecord::Schema[7.2].define(version: 2026_07_11_095703) do
     t.integer "unreachable_duration_minutes"
   end
 
+  create_table "network_connections", force: :cascade do |t|
+    t.string "source_kind"
+    t.bigint "source_id"
+    t.string "target_kind"
+    t.bigint "target_id"
+    t.string "category"
+    t.string "cable_type"
+    t.string "label"
+    t.integer "bandwidth_mbps"
+    t.integer "distance_m"
+    t.string "status"
+    t.json "path"
+    t.integer "account_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
+
   create_table "nodes", force: :cascade do |t|
     t.string "name"
     t.string "latitude"
@@ -896,6 +913,19 @@ ActiveRecord::Schema[7.2].define(version: 2026_07_11_095703) do
     t.integer "account_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+  end
+
+  create_table "pops", force: :cascade do |t|
+    t.string "name"
+    t.decimal "lat", precision: 10, scale: 6
+    t.decimal "lng", precision: 10, scale: 6
+    t.string "address"
+    t.string "status"
+    t.integer "account_id"
+    t.text "description"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.string "router"
   end
 
   create_table "pp_poe_mpesa_revenues", force: :cascade do |t|
