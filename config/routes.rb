@@ -178,6 +178,15 @@ resources :network_connections
 post 'hotspot_packages/:id/sync_to_mikrotik', to: 'hotspot_packages#sync_to_mikrotik'
 post 'hotspot_vouchers/:id/sync_to_mikrotik', to: 'hotspot_vouchers#sync_to_mikrotik'
 post 'hotspot_vouchers/bulk_sync_to_mikrotik', to: 'hotspot_vouchers#bulk_sync_to_mikrotik'
+
+
+
+post '/api/hotspot_packages/:id/sync_to_mikrotik', to: 'hotspot_packages#sync_to_mikrotik'
+post '/api/hotspot_vouchers/:id/sync_to_mikrotik', to: 'hotspot_vouchers#sync_to_mikrotik'
+post '/api/hotspot_vouchers/bulk_sync_to_mikrotik', to: 'hotspot_vouchers#bulk_sync_to_mikrotik'
+
+
+
 get  '/network_map', to: 'network_map#index'
 post '/network_map/sync', to: 'network_map#sync'
 

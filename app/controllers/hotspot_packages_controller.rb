@@ -300,7 +300,7 @@ def create
   if @hotspot_package.save
     unless use_radius
       if ActiveModel::Type::Boolean.new.cast(params[:sync_to_mikrotik])
-        sync_package_natively(@hotspot_package)
+        sync_package_natively(@hotspot_package, params[:router_name])
       end
     end
 
@@ -348,7 +348,7 @@ def update
   if @hotspot_package.update(hotspot_package_params)
     unless use_radius
       if ActiveModel::Type::Boolean.new.cast(params[:sync_to_mikrotik])
-        sync_package_natively(@hotspot_package)
+        sync_package_natively(@hotspot_package, params[:router_name])
       end
     end
 
@@ -422,7 +422,10 @@ def sync_to_mikrotik
   @hotspot_package = HotspotPackage.find_by(id: params[:id])
   return render json: { error: 'Package not found' }, status: :not_found unless @hotspot_package
 
-  sync_package_natively(@hotspot_package)
+  # IMPORTANT: pass the router the user picked in the UI (params[:router_name]).
+  # Previously this was ignored and sync_package_natively fell back to
+  # pkg.nas_router only, which is why "Sync to MikroTik" kept failing.
+  sync_package_natively(@hotspot_package, params[:router_name])
   render json: @hotspot_package
 rescue => e
   Rails.logger.error "HotspotPackage sync_to_mikrotik failed: #{e.class} #{e.message}"
@@ -433,7 +436,7 @@ def bulk_sync_to_mikrotik
   ids = params[:ids] || []
   packages = HotspotPackage.where(id: ids)
   results = packages.map do |pkg|
-    sync_package_natively(pkg)
+    sync_package_natively(pkg, params[:router_name])
     { id: pkg.id, sync_status: pkg.sync_status, sync_error: pkg.sync_error }
   end
   render json: results
@@ -649,8 +652,11 @@ end
 
 
 
-def sync_package_natively(pkg)
-  nas = NasRouter.find_by(name: pkg.nas_router)
+def sync_package_natively(pkg, router_name = nil)
+  # Prefer the router explicitly passed in (from the UI's selected router),
+  # fall back to whatever is saved on the package itself.
+  router_name = router_name.presence || pkg.nas_router
+  nas = NasRouter.find_by(name: router_name)
   return pkg.update(sync_status: 'failed', sync_error: 'No router assigned') unless nas
 
   begin
@@ -670,7 +676,7 @@ def sync_package_natively(pkg)
       headers: { content_type: :json }
     )
 
-    pkg.update(sync_status: 'synced', synced_at: Time.current, sync_error: nil)
+    pkg.update(sync_status: 'synced', synced_at: Time.current, sync_error: nil, nas_router: router_name)
   rescue => e
     pkg.update(sync_status: 'failed', sync_error: e.message)
   end
@@ -737,6 +743,3 @@ end
     end
     
 end
-
-
-
