@@ -425,7 +425,7 @@ def sync_to_mikrotik
   # IMPORTANT: pass the router the user picked in the UI (params[:router_name]).
   # Previously this was ignored and sync_package_natively fell back to
   # pkg.nas_router only, which is why "Sync to MikroTik" kept failing.
-  sync_package_natively(@hotspot_package, params[:router_name])
+  sync_package_natively(@hotspot_package)
   render json: @hotspot_package
 rescue => e
   Rails.logger.error "HotspotPackage sync_to_mikrotik failed: #{e.class} #{e.message}"
@@ -438,7 +438,7 @@ def bulk_sync_to_mikrotik
   ids = params[:ids] || []
   packages = HotspotPackage.where(id: ids)
   results = packages.map do |pkg|
-    sync_package_natively(pkg, params[:router_name])
+    sync_package_natively(pkg)
     { id: pkg.id, sync_status: pkg.sync_status, sync_error: pkg.sync_error }
   end
   render json: results
@@ -654,7 +654,7 @@ end
 
 
 
-def sync_package_natively(pkg, router_name = nil)
+def sync_package_natively(pkg)
   # Prefer the router explicitly passed in (from the UI's selected router),
   # fall back to whatever is saved on the package itself.
   router_name = pkg.nas_router
