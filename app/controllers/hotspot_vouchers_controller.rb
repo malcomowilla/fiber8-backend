@@ -1582,7 +1582,7 @@ end
 
     render json: { message: "Hotspot voucher deleted successfully" }, status: :ok
   else
-    mikrotik_result = delete_voucher_natively(@hotspot_voucher, params[:router_name])
+    mikrotik_result = delete_voucher_natively(@hotspot_voucher)
 
     ActiveRecord::Base.transaction do
       @hotspot_voucher.destroy!
@@ -1596,7 +1596,7 @@ end
     if mikrotik_result[:success]
       render json: { message: "Hotspot voucher deleted successfully" }, status: :ok
     else
-      Rails.logger.warn "Voucher #{@hotspot_voucher.voucher} deleted locally but MikroTik cleanup failed: #{mikrotik_result[:error]}"
+      Rails.logger.info "Voucher #{@hotspot_voucher.voucher} deleted locally but MikroTik cleanup failed: #{mikrotik_result[:error]}"
       render json: {
         message: "Hotspot voucher deleted successfully, but could not remove it from the router",
         mikrotik_error: mikrotik_result[:error]
