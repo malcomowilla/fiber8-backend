@@ -432,6 +432,8 @@ rescue => e
   render json: { error: "Sync failed: #{e.message}" }, status: :unprocessable_entity
 end
 
+
+
 def bulk_sync_to_mikrotik
   ids = params[:ids] || []
   packages = HotspotPackage.where(id: ids)

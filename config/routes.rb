@@ -179,7 +179,8 @@ post 'hotspot_packages/:id/sync_to_mikrotik', to: 'hotspot_packages#sync_to_mikr
 post 'hotspot_vouchers/:id/sync_to_mikrotik', to: 'hotspot_vouchers#sync_to_mikrotik'
 post 'hotspot_vouchers/bulk_sync_to_mikrotik', to: 'hotspot_vouchers#bulk_sync_to_mikrotik'
 
-
+post '/api/hotspot_packages/bulk_sync_to_mikrotik', "hotspot_packages#bulk_sync_to_mikrotik"
+post '/hotspot_packages/bulk_sync_to_mikrotik', "hotspot_packages#bulk_sync_to_mikrotik"
 
 post '/api/hotspot_packages/:id/sync_to_mikrotik', to: 'hotspot_packages#sync_to_mikrotik'
 post '/api/hotspot_vouchers/:id/sync_to_mikrotik', to: 'hotspot_vouchers#sync_to_mikrotik'
