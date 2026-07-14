@@ -2331,8 +2331,10 @@ end
 
 
 
-def delete_voucher_natively(voucher, router_name)
-  nas = NasRouter.find_by(name: router_name)
+def delete_voucher_natively(voucher)
+   package = HotspotPackage.find_by(name: voucher.package, account_id: voucher.account_id)
+
+  nas = NasRouter.find_by(name: package.nas_router)
   return { success: false, error: 'No router specified or router not found' } unless nas
 
   begin

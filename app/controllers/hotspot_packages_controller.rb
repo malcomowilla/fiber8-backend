@@ -685,7 +685,25 @@ def sync_package_natively(pkg)
 end
 
 
+def delete_package_natively(pkg)
+  nas = NasRouter.find_by(name: pkg.nas_router)
+  return { success: false, error: 'No router assigned to this package' } unless nas
 
+  begin
+    RestClient::Request.execute(
+      method: :delete,
+      url: "http://#{nas.ip_address}/rest/ip/hotspot/user/profile/#{pkg.name}",
+      user: nas.username.to_s, password: nas.password.to_s,
+      headers: { content_type: :json },
+      timeout: 10
+    )
+    { success: true }
+  rescue RestClient::NotFound
+    { success: true }
+  rescue => e
+    { success: false, error: e.message }
+  end
+end
 
 
 def validity_in_seconds(pkg)
