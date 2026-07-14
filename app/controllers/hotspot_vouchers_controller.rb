@@ -1620,7 +1620,7 @@ def sync_to_mikrotik
   @hotspot_voucher = HotspotVoucher.find_by(id: params[:id])
   return render json: { error: 'Voucher not found' }, status: :not_found unless @hotspot_voucher
 
-  sync_voucher_natively(@hotspot_voucher, params[:router_name])
+  sync_voucher_natively(@hotspot_voucher)
   render json: @hotspot_voucher
 rescue => e
   render json: { error: "Sync failed: #{e.message}" }, status: :unprocessable_entity
@@ -1633,7 +1633,7 @@ def bulk_sync_to_mikrotik
   ids = params[:ids] || []
   vouchers = HotspotVoucher.where(id: ids)
   results = vouchers.map do |v|
-    sync_voucher_natively(v, params[:router_name])
+    sync_voucher_natively(v)
     { id: v.id, sync_status: v.sync_status, sync_error: v.sync_error }
   end
   render json: results
@@ -2304,19 +2304,22 @@ private
 
 
 
-def sync_voucher_natively(voucher, router_name)
-  nas = NasRouter.find_by(name: router_name)
-  unless nas
-    voucher.update(sync_status: 'failed', sync_error: 'No router specified or router not found')
-    return
-  end
-
-  package = HotspotPackage.find_by(name: voucher.package, account_id: voucher.account_id)
+def sync_voucher_natively(voucher)
+ package = HotspotPackage.find_by(name: voucher.package, account_id: voucher.account_id)
   unless package
     voucher.update(sync_status: 'failed', sync_error: 'Package not found')
     return
   end
 
+
+
+  nas = NasRouter.find_by(name: package.nas_router)
+  unless nas
+    voucher.update(sync_status: 'failed', sync_error: 'No router specified in this voucher or router not found')
+    return
+  end
+
+ 
   begin
     RestClient::Request.execute(
       method: :put,

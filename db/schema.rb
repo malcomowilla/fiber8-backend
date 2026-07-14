@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_07_14_101716) do
+ActiveRecord::Schema[7.2].define(version: 2026_07_14_152757) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -617,6 +617,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_07_14_101716) do
     t.string "sync_status", default: "not_synced"
     t.datetime "synced_at"
     t.string "sync_error"
+    t.string "nas_router"
     t.index ["account_id"], name: "index_hotspot_vouchers_on_account_id"
     t.index ["voucher"], name: "index_hotspot_vouchers_on_voucher", unique: true
   end
