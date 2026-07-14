@@ -1,6 +1,9 @@
 class RouterSettingsController < ApplicationController
   # before_action :set_router_setting, only: %i[ show edit update destroy ]
   load_and_authorize_resource except: [:allow_get_router_settings]
+
+  set_current_tenant_through_filter
+  before_action :set_tenant
   before_action :update_last_activity
     before_action :set_time_zone  
 
@@ -10,11 +13,21 @@ class RouterSettingsController < ApplicationController
 
 
    def set_time_zone
-  Rails.logger.info "Setting time zone"
   Time.zone = GeneralSetting.first&.timezone || Rails.application.config.time_zone
-    Rails.logger.info "Setting time zone #{Time.zone}"
-
 end
+
+
+
+def set_tenant
+    host = request.headers['X-Subdomain']
+    @account = Account.find_by(subdomain: host)
+    ActsAsTenant.current_tenant = @account
+  rescue ActiveRecord::RecordNotFound
+    render json: { error: 'Invalid tenant' }, status: :not_found
+  end
+
+
+
 
   # GET /router_settings or /router_settings.json
   def index
@@ -41,8 +54,10 @@ if current_user
       else
        render json: @router_setting.errors, status: :unprocessable_entity 
     end
-
   end
+
+
+
 
 
   def allow_get_router_settings

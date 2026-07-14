@@ -1271,22 +1271,6 @@ def create
   ).where('acctupdatetime > ?', 2.minutes.ago)
    maximum_active_sessions = active_sessions.count
 
-# if tenant.hotspot_plan.present?
-
-#   if !tenant.hotspot_plan.name == 'Hotspot Free Trial'
-#     plan_limit = tenant.hotspot_plan.hotspot_subscribers.to_i
-#     #  plan_limit = HotspotPlan.find_by(name: tenant.hotspot_plan.name).hotspot_subscribers.to_i
-# Rails.logger.info "Hotspot Plan Maximum Subscribers =>#{tenant.hotspot_plan.hotspot_subscribers}"
-
-    
-#     if maximum_active_sessions >= plan_limit
-#       render json: { 
-#         error: "Maximum active sessions (#{plan_limit}) reached.Please upgrade your plan." 
-#       }, status: :unprocessable_entity
-#       return
-#     end
-#   end
-#   end
 
 
 
@@ -1579,38 +1563,83 @@ end
 
 
 
-def destroy
+
+  def destroy
   @hotspot_voucher = set_hotspot_voucher
 
   if @hotspot_voucher.nil?
     return render json: { error: "Hotspot voucher not found" }, status: :not_found
   end
 
-  ActiveRecord::Base.transaction do
-    # ✅ Delete FreeRADIUS records first
-    RadCheck.where(username: @hotspot_voucher.voucher).destroy_all
-    RadUserGroup.where(username: @hotspot_voucher.voucher).destroy_all
-    RadGroupCheck.where(groupname: @hotspot_voucher.voucher).destroy_all
+  use_radius = router_uses_radius?
 
-    # ✅ Delete the HotspotVoucher record
-    @hotspot_voucher.destroy!
-ActivtyLog.create(action: 'delete', ip: request.remote_ip,
- description: "Deleted hotspot voucher #{@hotspot_voucher.voucher}",
-          user_agent: request.user_agent, user: current_user.username || current_user.email,
-           date: Time.current)
+  if use_radius
+    ActiveRecord::Base.transaction do
+      RadCheck.where(username: @hotspot_voucher.voucher).destroy_all
+      RadUserGroup.where(username: @hotspot_voucher.voucher).destroy_all
+      RadGroupCheck.where(groupname: @hotspot_voucher.voucher).destroy_all
+      @hotspot_voucher.destroy!
+    end
+
+    ActivtyLog.create(action: 'delete', ip: request.remote_ip,
+      description: "Deleted hotspot voucher #{@hotspot_voucher.voucher}",
+      user_agent: request.user_agent, user: current_user.username || current_user.email,
+      date: Time.current)
+
     render json: { message: "Hotspot voucher deleted successfully" }, status: :ok
+  else
+    mikrotik_result = delete_voucher_natively(@hotspot_voucher, params[:router_name])
+
+    ActiveRecord::Base.transaction do
+      @hotspot_voucher.destroy!
+    end
+
+    ActivtyLog.create(action: 'delete', ip: request.remote_ip,
+      description: "Deleted hotspot voucher #{@hotspot_voucher.voucher}",
+      user_agent: request.user_agent, user: current_user.username || current_user.email,
+      date: Time.current)
+
+    if mikrotik_result[:success]
+      render json: { message: "Hotspot voucher deleted successfully" }, status: :ok
+    else
+      Rails.logger.warn "Voucher #{@hotspot_voucher.voucher} deleted locally but MikroTik cleanup failed: #{mikrotik_result[:error]}"
+      render json: {
+        message: "Hotspot voucher deleted successfully, but could not remove it from the router",
+        mikrotik_error: mikrotik_result[:error]
+      }, status: :ok
+    end
   end
 rescue => e
   render json: { error: "Failed to delete voucher: #{e.message}" }, status: :unprocessable_entity
 end
 
-
  
 
 
+def sync_to_mikrotik
+  @hotspot_voucher = HotspotVoucher.find_by(id: params[:id])
+  return render json: { error: 'Voucher not found' }, status: :not_found unless @hotspot_voucher
+
+  sync_voucher_natively(@hotspot_voucher, params[:router_name])
+  render json: @hotspot_voucher
+rescue => e
+  render json: { error: "Sync failed: #{e.message}" }, status: :unprocessable_entity
+end
 
 
 
+
+def bulk_sync_to_mikrotik
+  ids = params[:ids] || []
+  vouchers = HotspotVoucher.where(id: ids)
+  results = vouchers.map do |v|
+    sync_voucher_natively(v, params[:router_name])
+    { id: v.id, sync_status: v.sync_status, sync_error: v.sync_error }
+  end
+  render json: results
+rescue => e
+  render json: { error: "Bulk sync failed: #{e.message}" }, status: :unprocessable_entity
+end
 
 
 # def login_with_hotspot_voucher
@@ -2268,6 +2297,72 @@ end
 
 
 private
+
+
+
+
+
+
+
+def sync_voucher_natively(voucher, router_name)
+  nas = NasRouter.find_by(name: router_name)
+  unless nas
+    voucher.update(sync_status: 'failed', sync_error: 'No router specified or router not found')
+    return
+  end
+
+  package = HotspotPackage.find_by(name: voucher.package, account_id: voucher.account_id)
+  unless package
+    voucher.update(sync_status: 'failed', sync_error: 'Package not found')
+    return
+  end
+
+  begin
+    RestClient::Request.execute(
+      method: :put,
+      url: "http://#{nas.ip_address}/rest/ip/hotspot/user",
+      user: nas.username.to_s, password: nas.password.to_s,
+      payload: { name: voucher.voucher, password: voucher.voucher, profile: package.name }.to_json,
+      headers: { content_type: :json },
+      timeout: 10
+    )
+    voucher.update(sync_status: 'synced', synced_at: Time.current, sync_error: nil)
+  rescue => e
+    voucher.update(sync_status: 'failed', sync_error: e.message)
+  end
+end
+
+
+
+def delete_voucher_natively(voucher, router_name)
+  nas = NasRouter.find_by(name: router_name)
+  return { success: false, error: 'No router specified or router not found' } unless nas
+
+  begin
+    RestClient::Request.execute(
+      method: :delete,
+      url: "http://#{nas.ip_address}/rest/ip/hotspot/user/#{voucher.voucher}",
+      user: nas.username.to_s, password: nas.password.to_s,
+      headers: { content_type: :json },
+      timeout: 10
+    )
+    { success: true }
+  rescue RestClient::NotFound
+    { success: true }
+  rescue => e
+    { success: false, error: e.message }
+  end
+end
+
+def router_uses_radius?
+  return true unless ActsAsTenant.current_tenant
+  setting = RouterSetting.find_by(account_id: ActsAsTenant.current_tenant.id)
+  setting ? ActiveModel::Type::Boolean.new.cast(setting.use_radius) : true
+end
+
+
+
+
 
 
 

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_07_12_102424) do
+ActiveRecord::Schema[7.2].define(version: 2026_07_14_101716) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -505,6 +505,9 @@ ActiveRecord::Schema[7.2].define(version: 2026_07_12_102424) do
     t.string "intended_device_type"
     t.string "device_icon"
     t.string "nas_router"
+    t.string "sync_status", default: "not_synced"
+    t.datetime "synced_at"
+    t.string "sync_error"
     t.index ["name"], name: "index_hotspot_packages_on_name"
   end
 
@@ -611,6 +614,9 @@ ActiveRecord::Schema[7.2].define(version: 2026_07_12_102424) do
     t.boolean "is_online"
     t.string "login_by"
     t.boolean "sent_sms_compensation", default: false
+    t.string "sync_status", default: "not_synced"
+    t.datetime "synced_at"
+    t.string "sync_error"
     t.index ["account_id"], name: "index_hotspot_vouchers_on_account_id"
     t.index ["voucher"], name: "index_hotspot_vouchers_on_voucher", unique: true
   end

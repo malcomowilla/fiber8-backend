@@ -264,105 +264,107 @@ end
 
 
 
+
+
+
+
+
+  
 def create
-     
-  # if HotspotPackage.exists?(name: params[:name])
-  #   render json: { error: "Hotspot package already exists" }, status: :unprocessable_entity
-  #   return
-    
-  # end
-  
-  
   if params[:name].blank?
     render json: { error: "package name is required" }, status: :unprocessable_entity
     return
   end
-  
-  if !@hotspot_package.enable_free_trial
-  
-  if params[:price].blank?
+
+  @hotspot_package = HotspotPackage.new(hotspot_package_params)
+
+  if !@hotspot_package.enable_free_trial && params[:price].blank?
     render json: { error: "price is required" }, status: :unprocessable_entity
     return
   end
 
-  end
-  @hotspot_package = HotspotPackage.new(hotspot_package_params)
-  # use_radius = ActsAsTenant.current_tenant.&router_setting&.use_radius
+  use_radius = router_uses_radius?
 
-
-
-        if @hotspot_package.enable_free_trial
-          
-        free_radius_policies_free_trial(params[:name], params[:free_trial_upload_limit],
-  params[:free_trial_download_limit],
-  params[:weekdays], @hotspot_package.account_id, params[:free_trial_duration_minutes])
-
-        else
-
- update_freeradius_policies(params[:name], 
- params[:shared_users], params[:upload_limit], params[:download_limit],
-        params[:weekdays], @hotspot_package.account_id)
-
-        end
-
-
-
-
-    if @hotspot_package.save
-    
-           ActivtyLog.create(action: 'create', ip: request.remote_ip,
- description: "Created hotspot package #{@hotspot_package.name}",
-          user_agent: request.user_agent, user: current_user.username || current_user.email,
-           date: Time.current)
-        render json: @hotspot_package, status: :created
+  if use_radius
+    if @hotspot_package.enable_free_trial
+      free_radius_policies_free_trial(params[:name], params[:free_trial_upload_limit],
+        params[:free_trial_download_limit],
+        params[:weekdays], @hotspot_package.account_id, params[:free_trial_duration_minutes])
     else
-   render json: @hotspot_package.errors, status: :unprocessable_entity
+      update_freeradius_policies(params[:name],
+        params[:shared_users], params[:upload_limit], params[:download_limit],
+        params[:weekdays], @hotspot_package.account_id)
     end
-    
+  end
+
+  if @hotspot_package.save
+    unless use_radius
+      if ActiveModel::Type::Boolean.new.cast(params[:sync_to_mikrotik])
+        sync_package_natively(@hotspot_package)
+      end
+    end
+
+    ActivtyLog.create(action: 'create', ip: request.remote_ip,
+      description: "Created hotspot package #{@hotspot_package.name}",
+      user_agent: request.user_agent, user: current_user.username || current_user.email,
+      date: Time.current)
+
+    render json: @hotspot_package, status: :created
+  else
+    render json: @hotspot_package.errors, status: :unprocessable_entity
+  end
+rescue => e
+  Rails.logger.error "HotspotPackage create failed: #{e.class} #{e.message}"
+  render json: { error: "Failed to create hotspot package: #{e.message}" }, status: :unprocessable_entity
 end
+
+
+
 
 
 
 def update
-  
   @hotspot_package = set_hotspot_package
 
-  if @hotspot_package
-   
-
-
-
-        if @hotspot_package.enable_free_trial
-          
-        free_radius_policies_free_trial(params[:name], params[:free_trial_upload_limit],
-  params[:free_trial_download_limit],
-  params[:weekdays], @hotspot_package.account_id, params[:free_trial_duration_minutes])
-
-        else
-
- update_freeradius_policies(params[:name], 
- params[:shared_users], params[:upload_limit], params[:download_limit],
-        params[:weekdays], @hotspot_package.account_id)
-
-        end
-
-
-
-
-
-    ActivtyLog.create(action: 'update', ip: request.remote_ip,
- description: "Updated hotspot package #{@hotspot_package.name}",
-          user_agent: request.user_agent, user: current_user.username || current_user.email,
-           date: Time.current)
-    @hotspot_package.update(hotspot_package_params)
-    render json: @hotspot_package
-  else
+  unless @hotspot_package
     render json: { error: 'hotspot package not found' }, status: :not_found
+    return
   end
 
+  use_radius = router_uses_radius?
 
+  if use_radius
+    if @hotspot_package.enable_free_trial
+      free_radius_policies_free_trial(params[:name], params[:free_trial_upload_limit],
+        params[:free_trial_download_limit],
+        params[:weekdays], @hotspot_package.account_id, params[:free_trial_duration_minutes])
+    else
+      update_freeradius_policies(params[:name],
+        params[:shared_users], params[:upload_limit], params[:download_limit],
+        params[:weekdays], @hotspot_package.account_id)
+    end
+  end
+
+  if @hotspot_package.update(hotspot_package_params)
+    unless use_radius
+      if ActiveModel::Type::Boolean.new.cast(params[:sync_to_mikrotik])
+        sync_package_natively(@hotspot_package)
+      end
+    end
+
+    ActivtyLog.create(action: 'update', ip: request.remote_ip,
+      description: "Updated hotspot package #{@hotspot_package.name}",
+      user_agent: request.user_agent, user: current_user.username || current_user.email,
+      date: Time.current)
+
+    render json: @hotspot_package
+  else
+    render json: @hotspot_package.errors, status: :unprocessable_entity
+  end
+rescue => e
+  Rails.logger.error "HotspotPackage update failed: #{e.class} #{e.message}"
+  render json: { error: "Failed to update hotspot package: #{e.message}" }, status: :unprocessable_entity
 end
-  
 
 
 
@@ -373,30 +375,73 @@ def destroy
   if @hotspot_package.nil?
     return render json: { error: "Hotspot package not found" }, status: :not_found
   end
-ActivtyLog.create(action: 'delete', ip: request.remote_ip,
- description: "Deleted hotspot package #{@hotspot_package.name}",
-          user_agent: request.user_agent, user: current_user.username || current_user.email,
-           date: Time.current)
-  group_name = "hotspot_#{@hotspot_package.account_id}_#{@hotspot_package.name.parameterize(separator: '_')}"
+
+  ActivtyLog.create(action: 'delete', ip: request.remote_ip,
+    description: "Deleted hotspot package #{@hotspot_package.name}",
+    user_agent: request.user_agent, user: current_user.username || current_user.email,
+    date: Time.current)
+
+  use_radius = router_uses_radius?
+
+  if use_radius
+    group_name = "hotspot_#{@hotspot_package.account_id}_#{@hotspot_package.name.parameterize(separator: '_')}"
     group_name_free_trial = "freetrial_#{@hotspot_package.account_id}_#{@hotspot_package.name.parameterize(separator: '_')}"
 
+    ActiveRecord::Base.transaction do
+      RadGroupReply.where(groupname: group_name).destroy_all
+      RadGroupReply.where(groupname: group_name_free_trial).destroy_all
+      RadGroupCheck.where(groupname: group_name).destroy_all
+      RadGroupCheck.where(groupname: group_name_free_trial).destroy_all
+      @hotspot_package.destroy!
+    end
 
+    render json: { message: "Hotspot package deleted successfully" }, status: :ok
+  else
+    mikrotik_result = delete_package_natively(@hotspot_package)
 
-  ActiveRecord::Base.transaction do
-    # ✅ Delete related FreeRADIUS records
-    RadGroupReply.where(groupname: group_name).destroy_all
-    RadGroupReply.where(groupname: group_name_free_trial).destroy_all
-    RadGroupCheck.where(groupname: group_name).destroy_all
-    RadGroupCheck.where(groupname:  group_name_free_trial).destroy_all
-    # RadGroupCheck.where(groupname: group_name).destroy_all
-    # ✅ Delete the HotspotPackage
-    @hotspot_package.destroy!
+    ActiveRecord::Base.transaction do
+      @hotspot_package.destroy!
+    end
+
+    if mikrotik_result[:success]
+      render json: { message: "Hotspot package deleted successfully" }, status: :ok
+    else
+      Rails.logger.warn "Package deleted locally but MikroTik cleanup failed: #{mikrotik_result[:error]}"
+      render json: {
+        message: "Hotspot package deleted successfully, but could not remove it from the router",
+        mikrotik_error: mikrotik_result[:error]
+      }, status: :ok
+    end
   end
-
-  render json: { message: "Hotspot package deleted successfully" }, status: :ok
 rescue => e
+  Rails.logger.error "HotspotPackage destroy failed: #{e.class} #{e.message}"
   render json: { error: "Failed to delete hotspot package: #{e.message}" }, status: :unprocessable_entity
 end
+
+def sync_to_mikrotik
+  @hotspot_package = HotspotPackage.find_by(id: params[:id])
+  return render json: { error: 'Package not found' }, status: :not_found unless @hotspot_package
+
+  sync_package_natively(@hotspot_package)
+  render json: @hotspot_package
+rescue => e
+  Rails.logger.error "HotspotPackage sync_to_mikrotik failed: #{e.class} #{e.message}"
+  render json: { error: "Sync failed: #{e.message}" }, status: :unprocessable_entity
+end
+
+def bulk_sync_to_mikrotik
+  ids = params[:ids] || []
+  packages = HotspotPackage.where(id: ids)
+  results = packages.map do |pkg|
+    sync_package_natively(pkg)
+    { id: pkg.id, sync_status: pkg.sync_status, sync_error: pkg.sync_error }
+  end
+  render json: results
+rescue => e
+  Rails.logger.error "HotspotPackage bulk_sync_to_mikrotik failed: #{e.class} #{e.message}"
+  render json: { error: "Bulk sync failed: #{e.message}" }, status: :unprocessable_entity
+end
+
 
 
   private
@@ -590,48 +635,59 @@ end
 
 
 
-# def update_freeradius_policies(package_name, shared_users, 
-#   upload_limit, download_limit, weekdays, account_id)
-#   group_name = "hotspot_#{account_id}_#{package_name.parameterize(separator: '_')}"
-
-#   ActiveRecord::Base.transaction do
-#     # Speed limits
-#     RadGroupReply.find_or_initialize_by(
-#       groupname: group_name,
-#       radiusattribute: 'Mikrotik-Rate-Limit'
-#     ).update!(
-#       op: ':=',
-#       value: "#{upload_limit}M/#{download_limit}M"
-#     )
 
 
-#     # Login-Time rule
-#     rad_days = RadGroupCheck.find_or_initialize_by(
-#       groupname: group_name,
-#       radiusattribute: 'Login-Time'
-#     )
 
-#     if weekdays.present?
-#       # Build valid FR format: "Mo0000-2359,Tu0000-2359"
-#       login_time_value = weekdays.map { |day|
-#         code = DAY_MAP[day]
-#         "#{code}0000-2359"
-#       }.join(",")
+def router_uses_radius?
+  setting = RouterSetting.find_by(account_id: ActsAsTenant.current_tenant.id)
+  setting ? ActiveModel::Type::Boolean.new.cast(setting.use_radius) : true
+end
 
-#       rad_days.update!(
-#         op: ':=',
-#         value: login_time_value
-#       )
-#     else
-#       # Allow all days OR disable restriction
-#       rad_days.update!(
-#         op: ':=',
-#         value: 'Al0000-2359'
-#       )
-#     end
-#   end
-# end
 
+
+
+
+
+
+def sync_package_natively(pkg)
+  nas = NasRouter.find_by(name: pkg.nas_router)
+  return pkg.update(sync_status: 'failed', sync_error: 'No router assigned') unless nas
+
+  begin
+    session_timeout = validity_in_seconds(pkg)
+    rate_limit = "#{pkg.upload_limit}M/#{pkg.download_limit}M"
+
+    response = RestClient::Request.execute(
+      method: :put, # put = create-or-update by name in MikroTik REST
+      url: "http://#{nas.ip_address}/rest/ip/hotspot/user/profile",
+      user: nas.username, password: nas.password,
+      payload: {
+        name: pkg.name,
+        "rate-limit": rate_limit,
+        "session-timeout": session_timeout.to_s,
+        "shared-users": pkg.shared_users.to_s
+      }.to_json,
+      headers: { content_type: :json }
+    )
+
+    pkg.update(sync_status: 'synced', synced_at: Time.current, sync_error: nil)
+  rescue => e
+    pkg.update(sync_status: 'failed', sync_error: e.message)
+  end
+end
+
+
+
+
+
+def validity_in_seconds(pkg)
+  case pkg.validity_period_units
+  when 'days' then pkg.validity.to_i.days.to_i
+  when 'hours' then pkg.validity.to_i.hours.to_i
+  when 'minutes' then pkg.validity.to_i.minutes.to_i
+  else 0
+  end
+end
 
 
     # Use callbacks to share common setup or constraints between actions.
