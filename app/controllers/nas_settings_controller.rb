@@ -83,6 +83,6 @@ if current_user
     # Only allow a list of trusted parameters through.
     def nas_setting_params
       params.require(:nas_setting).permit(:notification_when_unreachable, 
-      :unreachable_duration_minutes, :notification_phone_number)
+      :unreachable_duration_minutes, :notification_phone_number, :use_radius)
     end
 end
