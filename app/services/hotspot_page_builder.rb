@@ -866,15 +866,16 @@ async function payPackage() {
         }
 
         // ── Ads ──────────────────────────────────────────────────────────
-        const AD_POSITIONS = {
-          'top-banner':    'position:fixed;top:0;left:0;right:0;z-index:9999;',
-          'bottom-banner': 'position:fixed;bottom:0;left:0;right:0;z-index:9999;',
-          'bottom-right':  'position:fixed;bottom:16px;right:16px;z-index:9999;width:320px;max-width:calc(100vw - 32px);',
-          'bottom-left':   'position:fixed;bottom:16px;left:16px;z-index:9999;width:320px;max-width:calc(100vw - 32px);',
-          'top-left':      'position:fixed;top:16px;left:16px;z-index:9999;width:320px;max-width:calc(100vw - 32px);',
-          'top-right':     'position:fixed;top:16px;right:16px;z-index:9999;width:320px;max-width:calc(100vw - 32px);',
-          'center-modal':  'position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:rgba(2,6,23,.8);backdrop-filter:blur(12px);',
-        };
+      const AD_POSITIONS = {
+  'top-banner':    'position:fixed;top:0;left:0;right:0;z-index:9999;',
+  'bottom-banner': 'position:fixed;bottom:0;left:0;right:0;z-index:9999;',
+  'bottom-right':  'position:fixed;bottom:16px;right:16px;z-index:9999;width:320px;max-width:calc(100vw - 32px);',
+  'bottom-left':   'position:fixed;bottom:16px;left:16px;z-index:9999;width:320px;max-width:calc(100vw - 32px);',
+  'top-left':      'position:fixed;top:16px;left:16px;z-index:9999;width:320px;max-width:calc(100vw - 32px);',
+  'top-right':     'position:fixed;top:16px;right:16px;z-index:9999;width:320px;max-width:calc(100vw - 32px);',
+  'center-modal':  'position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:rgba(2,6,23,.8);backdrop-filter:blur(12px);',
+  'fullscreen':    'position:fixed;inset:0;z-index:9999;display:flex;flex-direction:column;background:rgba(2,6,23,.96);',
+};
 
         const adState = {};
         const adTimers = {};
@@ -941,22 +942,27 @@ async function payPackage() {
           return \`<div data-ad-track="\${ad.id}" style="position:relative;width:\${w}px;max-width:320px;height:\${h}px;background:\${bg};border-radius:10px;overflow:hidden;cursor:pointer;">\${parts}\${visitBtn}\${closeBtn}</div>\`;
         }
 
-        function adCardHtml(ad) {
-          const s = adState[ad.id];
-          if (!s || s.completed) return '';
-          const isVideo = ad.media_type === 'video';
-          const isImage = ad.media_type === 'image';
-          const isCustom = ad.media_type === 'custom_design';
-          const isMock = cfg.preview && String(ad.id) === 'mock-ad';
+       function adCardHtml(ad) {
+  const s = adState[ad.id];
+  if (!s || s.completed) return '';
+  const isVideo = ad.media_type === 'video';
+  const isImage = ad.media_type === 'image';
+  const isCustom = ad.media_type === 'custom_design';
+  const isMock = cfg.preview && String(ad.id) === 'mock-ad';
+  const isFullscreen = ad.position === 'fullscreen';
 
-          let media = '';
-          if (isImage) {
-            media = \`<img src="\${ad.media_url}" style="width:100%;max-height:220px;object-fit:cover;display:block;">\`;
-          } else if (isVideo) {
-            media = \`<video id="ad-video-\${ad.id}" src="\${ad.media_url}" autoplay playsinline style="width:100%;max-height:220px;object-fit:cover;display:block;"></video>\`;
-          } else if (isCustom) {
-            media = customDesignHtml(ad);
-          }
+  let media = '';
+  if (isImage) {
+    media = isFullscreen
+      ? `<img src="${ad.media_url}" style="width:100%;flex:1;object-fit:contain;display:block;">`
+      : `<img src="${ad.media_url}" style="width:100%;max-height:220px;object-fit:cover;display:block;">`;
+  } else if (isVideo) {
+    media = isFullscreen
+      ? `<video id="ad-video-${ad.id}" src="${ad.media_url}" autoplay playsinline style="width:100%;flex:1;object-fit:contain;display:block;"></video>`
+      : `<video id="ad-video-${ad.id}" src="${ad.media_url}" autoplay playsinline style="width:100%;max-height:220px;object-fit:cover;display:block;"></video>`;
+  } else if (isCustom) {
+    media = customDesignHtml(ad);
+  }
 
           let footer = '';
           if (!isCustom) {
@@ -1001,16 +1007,19 @@ async function payPackage() {
               \${progress}
             </div>\`;
         }
-
-        function renderAds() {
-          const root = document.getElementById('ad-root');
-          if (!root) return;
-          root.innerHTML = Object.values(adState)
-            .filter(s => !s.completed)
-            .map(s => \`<div style="\${AD_POSITIONS[s.ad.position] || AD_POSITIONS['bottom-right']}"><div style="width:100%;max-width:340px;margin:0 auto;">\${adCardHtml(s.ad)}</div></div>\`)
-            .join('');
-          bindAdEvents();
-        }
+function renderAds() {
+  const root = document.getElementById('ad-root');
+  if (!root) return;
+  root.innerHTML = Object.values(adState)
+    .filter(s => !s.completed)
+    .map(s => {
+      const isFullscreen = s.ad.position === 'fullscreen';
+      const wrapperStyle = isFullscreen ? 'width:100%;height:100%;' : 'width:100%;max-width:340px;margin:0 auto;';
+      return `<div style="${AD_POSITIONS[s.ad.position] || AD_POSITIONS['bottom-right']}"><div style="${wrapperStyle}">${adCardHtml(s.ad)}</div></div>`;
+    })
+    .join('');
+  bindAdEvents();
+}
 
         function bindAdEvents() {
           document.querySelectorAll('[data-ad-visit]').forEach(el => {

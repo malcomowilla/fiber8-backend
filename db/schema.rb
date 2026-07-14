@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_07_14_174814) do
+ActiveRecord::Schema[7.2].define(version: 2026_07_14_215309) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -91,6 +91,18 @@ ActiveRecord::Schema[7.2].define(version: 2026_07_14_174814) do
     t.datetime "updated_at", null: false
     t.string "user_agent"
     t.string "ip"
+  end
+
+  create_table "ad_events", force: :cascade do |t|
+    t.bigint "ad_setting_id", null: false
+    t.bigint "account_id", null: false
+    t.string "event_type", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id", "created_at"], name: "index_ad_events_on_account_id_and_created_at"
+    t.index ["account_id"], name: "index_ad_events_on_account_id"
+    t.index ["ad_setting_id", "event_type"], name: "index_ad_events_on_ad_setting_id_and_event_type"
+    t.index ["ad_setting_id"], name: "index_ad_events_on_ad_setting_id"
   end
 
   create_table "ad_settings", force: :cascade do |t|
@@ -1517,6 +1529,8 @@ ActiveRecord::Schema[7.2].define(version: 2026_07_14_174814) do
 
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "ad_events", "accounts"
+  add_foreign_key "ad_events", "ad_settings"
   add_foreign_key "maintenance_settings", "accounts"
   add_foreign_key "promotional_plans", "hotspot_packages"
 end

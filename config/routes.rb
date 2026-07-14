@@ -174,7 +174,13 @@ resources :network_connections
 
 
 
+post 'track_ad_event', to: 'ad_settings#track_ad_event'
+get  'ad_stats',        to: 'ad_settings#ad_stats'
 
+
+
+post '/api/track_ad_event', to: 'ad_settings#track_ad_event'
+get  '/api/ad_stats',        to: 'ad_settings#ad_stats'
 post 'hotspot_packages/:id/sync_to_mikrotik', to: 'hotspot_packages#sync_to_mikrotik'
 post 'hotspot_vouchers/:id/sync_to_mikrotik', to: 'hotspot_vouchers#sync_to_mikrotik'
 post 'hotspot_vouchers/bulk_sync_to_mikrotik', to: 'hotspot_vouchers#bulk_sync_to_mikrotik'

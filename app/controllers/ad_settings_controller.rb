@@ -180,6 +180,57 @@ uploaded = Cloudinary::Uploader.upload(
 
 
 
+
+
+
+
+
+
+
+
+
+
+  def track_ad_event
+  ad = AdSetting.find_by(id: params[:ad_id])
+  return render json: { error: 'Ad not found' }, status: :not_found unless ad
+
+  allowed = %w[Ad\ View click video_completed video_skipped dismissed]
+  event_type = params[:event_type].presence || 'Ad View'
+
+  AdEvent.create!(
+    ad_setting_id: ad.id,
+    account_id: ActsAsTenant.current_tenant.id,
+    event_type: event_type
+  )
+  render json: { status: 'ok' }
+rescue => e
+  render json: { error: e.message }, status: :unprocessable_entity
+end
+
+# Bulk stats for the whole table — one query, avoids N+1 per-row fetches
+def ad_stats
+  account_id = ActsAsTenant.current_tenant.id
+  counts = AdEvent.where(account_id: account_id)
+                   .group(:ad_setting_id, :event_type)
+                   .count
+
+  stats = Hash.new { |h, k| h[k] = { impressions: 0, clicks: 0, completed_views: 0 } }
+  counts.each do |(ad_id, event_type), count|
+    case event_type
+    when 'Ad View'          then stats[ad_id][:impressions] += count
+    when 'click'            then stats[ad_id][:clicks] += count
+    when 'video_completed'  then stats[ad_id][:completed_views] += count
+    end
+  end
+
+  result = stats.map do |ad_id, s|
+    ctr = s[:impressions] > 0 ? ((s[:clicks].to_f / s[:impressions]) * 100).round(1) : 0
+    { ad_id: ad_id, impressions: s[:impressions], clicks: s[:clicks], completed_views: s[:completed_views], ctr: ctr }
+  end
+
+  render json: result
+end
+
   
 
   # PATCH/PUT /ad_settings/1 or /ad_settings/1.json
