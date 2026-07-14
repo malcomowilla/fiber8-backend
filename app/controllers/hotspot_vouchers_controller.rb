@@ -1257,95 +1257,107 @@ end
     
 #   end
 
+
+
+
+
+
+
+
+
+
+
 def create
-  if params[:package].blank?
-    render json: { error: "hotspot package is required" }, status: :unprocessable_entity
+  if params[:name].blank?
+    render json: { error: "package name is required" }, status: :unprocessable_entity
     return
   end
 
-  tenant = ActsAsTenant.current_tenant
- active_sessions = RadAcct.where(
-    account_id: tenant.id,
-    acctstoptime: nil,
-    framedprotocol: ''
-  ).where('acctupdatetime > ?', 2.minutes.ago)
-   maximum_active_sessions = active_sessions.count
+  @hotspot_package = HotspotPackage.new(hotspot_package_params)
 
+  if !@hotspot_package.enable_free_trial && params[:price].blank?
+    render json: { error: "price is required" }, status: :unprocessable_entity
+    return
+  end
 
+  use_radius = router_uses_radius?
 
+  if use_radius
+    if @hotspot_package.enable_free_trial
+      free_radius_policies_free_trial(params[:name], params[:free_trial_upload_limit],
+        params[:free_trial_download_limit],
+        params[:weekdays], @hotspot_package.account_id, params[:free_trial_duration_minutes])
+    else
+      update_freeradius_policies(params[:name],
+        params[:shared_users], params[:upload_limit], params[:download_limit],
+        params[:weekdays], @hotspot_package.account_id)
+    end
+  end
 
-
-  number_of_vouchers = params[:number_of_vouchers].to_i
-  number_of_vouchers = 1 if number_of_vouchers < 1
-
-  created_vouchers = []
-  hotspot_package = HotspotPackage.find_by(name: params[:package])
-  ActiveRecord::Base.transaction do
-    number_of_vouchers.times do |index|
-      voucher_code = generate_voucher_code
-      
-      @hotspot_voucher = HotspotVoucher.new(
-        package: params[:package],
-        shared_users: params[:shared_users],
-        phone: params[:phone],
-        voucher: voucher_code,
-        hotspot_package_id: hotspot_package.id,
-        status: 'active'
-      )
-
-      # calculate_expiration(params[:package], @hotspot_voucher,
-      #  @hotspot_voucher.account_id)
-      
-       ActsAsTenant.current_tenant&.hotspot_setting&.voucher_expiration == 'Real-time expiration' ?
-       calculate_expiration(params[:package], @hotspot_voucher,
-       @hotspot_voucher.account_id) : nil
-
-
-      if @hotspot_voucher.save!
-
-         ActsAsTenant.current_tenant&.hotspot_setting&.voucher_expiration == 'Real-time expiration' ?
-       create_voucher_radcheck(voucher_code, params[:package], 
-        @hotspot_voucher.account_id) : create_voucher_radcheck_accumulated_sessions(voucher_code, params[:package], 
-        @hotspot_voucher.account_id)
-       
-        
-        # Add to created list
-        created_vouchers << @hotspot_voucher
+  if @hotspot_package.save
+    unless use_radius
+      if ActiveModel::Type::Boolean.new.cast(params[:sync_to_mikrotik])
+        sync_package_natively(@hotspot_package)
       end
     end
-    
-    # Create batch activity log
-    if number_of_vouchers == 1
-      ActivtyLog.create!(
-        action: 'create', 
-        ip: request.remote_ip,
-        description: "Created hotspot voucher #{created_vouchers.first.voucher}",
-        user_agent: request.user_agent, 
-        user: current_user.username || current_user.email,
-        date: Time.current
-      )
+
+    ActivtyLog.create(action: 'create', ip: request.remote_ip,
+      description: "Created hotspot package #{@hotspot_package.name}",
+      user_agent: request.user_agent, user: current_user.username || current_user.email,
+      date: Time.current)
+
+    render json: @hotspot_package, status: :created
+  else
+    render json: @hotspot_package.errors, status: :unprocessable_entity
+  end
+rescue => e
+  Rails.logger.info "HotspotPackage create failed: #{e.class} #{e.message}"
+  render json: { error: "Failed to create hotspot package: #{e.message}" }, status: :unprocessable_entity
+end
+
+
+
+def update
+  @hotspot_package = set_hotspot_package
+
+  unless @hotspot_package
+    render json: { error: 'hotspot package not found' }, status: :not_found
+    return
+  end
+
+  use_radius = router_uses_radius?
+
+  if use_radius
+    if @hotspot_package.enable_free_trial
+      free_radius_policies_free_trial(params[:name], params[:free_trial_upload_limit],
+        params[:free_trial_download_limit],
+        params[:weekdays], @hotspot_package.account_id, params[:free_trial_duration_minutes])
     else
-      ActivtyLog.create!(
-        action: 'create', 
-        ip: request.remote_ip,
-        description: "Created #{created_vouchers.count} hotspot vouchers for package #{params[:package]}",
-        user_agent: request.user_agent, 
-        user: current_user.username || current_user.email,
-        date: Time.current
-      )
+      update_freeradius_policies(params[:name],
+        params[:shared_users], params[:upload_limit], params[:download_limit],
+        params[:weekdays], @hotspot_package.account_id)
     end
   end
-  
-  if created_vouchers.any?
-    render json: created_vouchers, status: :created
+
+  if @hotspot_package.update(hotspot_package_params)
+    unless use_radius
+      if ActiveModel::Type::Boolean.new.cast(params[:sync_to_mikrotik])
+        sync_package_natively(@hotspot_package)
+      end
+    end
+
+    ActivtyLog.create(action: 'update', ip: request.remote_ip,
+      description: "Updated hotspot package #{@hotspot_package.name}",
+      user_agent: request.user_agent, user: current_user.username || current_user.email,
+      date: Time.current)
+
+    render json: @hotspot_package
   else
-    render json: { error: "Failed to create vouchers" }, status: :unprocessable_entity
+    render json: @hotspot_package.errors, status: :unprocessable_entity
   end
-  
-rescue ActiveRecord::RecordInvalid => e
-  render json: { error: e.message }, status: :unprocessable_entity
 rescue => e
-  render json: { error: "An error occurred: #{e.message}" }, status: :unprocessable_entity
+  Rails.logger.info "HotspotPackage update failed: #{e.class} #{e.message}"
+  render json: { error: "Failed to update hotspot package: #{e.message}" }, status: :unprocessable_entity
 end
 
 
@@ -1533,31 +1545,7 @@ end
 
 
   # PATCH/PUT /hotspot_vouchers/1 or /hotspot_vouchers/1.json
-  def update
-      @hotspot_voucher = set_hotspot_voucher
-    hotspot_package = HotspotPackage.find_by(name: params[:package])
-      if @hotspot_voucher.update(
-        package: params[:package],
-        shared_users: params[:shared_users],
-        phone: params[:phone],
-        hotspot_package_id: hotspot_package.id
-
-      )
-      ActivtyLog.create(action: 'update', ip: request.remote_ip,
- description: "Updated hotspot voucher #{@hotspot_voucher.voucher}",
-          user_agent: request.user_agent, user: current_user.username || current_user.email,
-           date: Time.current)
-
-          create_voucher_radcheck(@hotspot_voucher.voucher, @hotspot_voucher.package,
-           @hotspot_voucher.shared_users, @hotspot_voucher.account_id)
-
-        render json: @hotspot_voucher, status: :ok
-      else
-        render json: @hotspot_voucher.errors, status: :unprocessable_entity 
-      
-    end
-    
-  end
+  
 
 
 
