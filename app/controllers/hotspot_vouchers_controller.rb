@@ -2307,7 +2307,7 @@ def sync_voucher_natively(voucher)
 
 
 
-  nas = NasRouter.find_by(name:package)
+  nas = NasRouter.find_by(name: package.nas_router)
   unless nas
     voucher.update(sync_status: 'failed', sync_error: 'No router specified or router not found')
     return
