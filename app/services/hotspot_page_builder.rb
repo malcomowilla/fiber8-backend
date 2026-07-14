@@ -177,6 +177,8 @@ class HotspotPageBuilder
       .ad-card { border-radius: 16px; overflow: hidden; background: color-mix(in srgb, var(--surface) 90%, transparent);
                  border: 1px solid color-mix(in srgb, var(--text) 10%, transparent); box-shadow: 0 20px 40px rgba(0,0,0,.35); }
 
+                 .ad-card.fullscreen { display: flex; flex-direction: column; height: 100%; border-radius: 0; border: none; box-shadow: none; }
+
       /* ── Guided pay-step UI ──────────────────────────────────────── */
       .tap-hint { font-size: 12px; color: var(--muted); margin-bottom: 10px; }
       .step-back { display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; color: var(--muted);
@@ -297,7 +299,7 @@ let connectedInfo = null;
 let stkQueryInterval = null;
 let promoState = {};          // { [promoId]: secondsRemaining } — ticks down locally between refreshes
 let promoTimerInterval = null;
-
+let expandedAdId = null;
         function supportHtml() {
           const label = (cfg.footer && cfg.footer.support_label) || 'Need help?';
           const phone = (cfg.footer && cfg.footer.support_phone) || cfg.hotspot_phone || '';
@@ -631,6 +633,113 @@ function renderConnectedScreen() {
   if (startBtn) startBtn.onclick = () => { window.location.href = '$(link-orig)'; };
 }
 
+
+
+
+function renderExpandedAd() {
+  let root = document.getElementById('ad-expanded-root');
+  if (!root) {
+    root = document.createElement('div');
+    root.id = 'ad-expanded-root';
+    document.body.appendChild(root);
+  }
+  if (!expandedAdId) { root.innerHTML = ''; return; }
+
+  const s = adState[expandedAdId];
+  if (!s || s.completed) { expandedAdId = null; root.innerHTML = ''; return; }
+
+  const ad = s.ad;
+  const isVideo = ad.media_type === 'video';
+  const isImage = ad.media_type === 'image';
+
+  const rewardLabel = rewardLabelFor(ad);
+  const skipCountdown = Math.max(0, (ad.skip_after || 5) - ((ad.ad_duration || 15) - s.secondsLeft));
+
+  const media = isImage
+    ? \`<img src="\${ad.media_url}" alt="\${ad.ad_title || 'Ad'}" style="width:100%;max-height:65vh;object-fit:contain;display:block;">\`
+    : isVideo
+      ? \`<video id="ad-expanded-video" src="\${ad.media_url}" autoplay controls playsinline style="width:100%;max-height:65vh;object-fit:contain;display:block;"></video>\`
+      : '';
+
+  const rewardBanner = isVideo ? \`
+    <div style="display:flex;align-items:center;gap:10px;padding:12px 16px;background:linear-gradient(90deg,color-mix(in srgb, var(--accent) 15%, transparent),color-mix(in srgb, var(--secondary) 12%, transparent));border-bottom:1px solid color-mix(in srgb, var(--accent) 20%, transparent);">
+      <div style="width:28px;height:28px;border-radius:50%;background:color-mix(in srgb, var(--accent) 20%, transparent);display:flex;align-items:center;justify-content:center;flex-shrink:0;">🎁</div>
+      <div style="flex:1;min-width:0;">
+        <p style="margin:0;font-size:13px;font-weight:600;color:var(--accent);">Watch this ad to unlock free internet!</p>
+        <p style="margin:2px 0 0;font-size:12px;color:var(--accent);">Reward: <strong>\${rewardLabel}</strong></p>
+      </div>
+    </div>\` : '';
+
+  root.innerHTML = \`
+    <div id="ad-expanded-backdrop" style="position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.93);backdrop-filter:blur(16px);padding:16px;">
+      <p style="position:absolute;top:16px;right:20px;font-size:12px;color:rgba(255,255,255,.7);">Press ESC or click outside to close</p>
+      <div id="ad-expanded-panel" style="position:relative;width:100%;max-width:720px;border-radius:20px;overflow:hidden;box-shadow:0 30px 60px rgba(0,0,0,.5);background:color-mix(in srgb, var(--surface) 98%, transparent);border:1px solid color-mix(in srgb, var(--text) 12%, transparent);">
+        \${rewardBanner}
+        \${media}
+        <div style="padding:14px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px;">
+          <div style="display:flex;align-items:center;gap:8px;min-width:0;flex:1;">
+            <span style="font-size:11px;font-weight:800;padding:2px 8px;border-radius:6px;background:color-mix(in srgb, var(--primary) 15%, transparent);color:var(--primary);">Ad</span>
+            \${ad.ad_title ? \`<span style="font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">\${ad.ad_title}</span>\` : ''}
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
+            \${isVideo && ad.can_skip && s.skipReady ? \`<button id="ad-expanded-skip" style="display:flex;align-items:center;gap:5px;font-size:13px;padding:7px 12px;border-radius:10px;font-weight:700;border:none;background:color-mix(in srgb, var(--accent) 18%, transparent);color:var(--accent);cursor:pointer;">Skip Ad ⏭</button>\` : ''}
+            \${isVideo && ad.can_skip && !s.skipReady ? \`<span style="font-size:12px;padding:7px 12px;border-radius:10px;background:color-mix(in srgb, var(--text) 8%, transparent);color:var(--muted);">\${skipCountdown}s remaining</span>\` : ''}
+            \${ad.ad_link ? \`<button id="ad-expanded-visit" style="display:flex;align-items:center;gap:5px;font-size:13px;padding:7px 12px;border-radius:10px;font-weight:700;border:none;background:color-mix(in srgb, var(--primary) 15%, transparent);color:var(--primary);cursor:pointer;">Visit ↗</button>\` : ''}
+            \${isImage ? \`<button id="ad-expanded-dismiss" style="display:flex;align-items:center;gap:5px;font-size:13px;padding:7px 12px;border-radius:10px;font-weight:600;border:none;background:color-mix(in srgb, var(--text) 10%, transparent);color:var(--muted);cursor:pointer;">✕ Close Ad</button>\` : ''}
+            <button id="ad-expanded-collapse" style="display:flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:10px;border:none;background:color-mix(in srgb, var(--text) 10%, transparent);color:var(--muted);cursor:pointer;">⤡</button>
+          </div>
+        </div>
+        \${isVideo ? \`<div style="height:3px;background:color-mix(in srgb, var(--text) 10%, transparent);"><div style="height:100%;width:\${((ad.ad_duration || 15) - s.secondsLeft) / (ad.ad_duration || 15) * 100}%;background:linear-gradient(90deg,var(--accent),var(--secondary));transition:width 1s linear;"></div></div>\` : ''}
+      </div>
+    </div>\`;
+
+  const backdrop = document.getElementById('ad-expanded-backdrop');
+  const panel = document.getElementById('ad-expanded-panel');
+  if (backdrop) backdrop.onclick = () => collapseExpandedAd();
+  if (panel) panel.onclick = (e) => e.stopPropagation();
+
+  const collapseBtn = document.getElementById('ad-expanded-collapse');
+  if (collapseBtn) collapseBtn.onclick = () => collapseExpandedAd();
+
+  const dismissBtn = document.getElementById('ad-expanded-dismiss');
+  if (dismissBtn) dismissBtn.onclick = () => { collapseExpandedAd(); completeAd(ad.id, 'dismissed'); };
+
+  const skipBtn = document.getElementById('ad-expanded-skip');
+  if (skipBtn) skipBtn.onclick = () => { collapseExpandedAd(); completeAd(ad.id, 'skipped'); };
+
+  const visitBtn = document.getElementById('ad-expanded-visit');
+  if (visitBtn) visitBtn.onclick = () => {
+    trackAdEvent(ad.id, 'click');
+    if (ad.ad_link && !cfg.preview) window.open(ad.ad_link, '_blank');
+  };
+
+  if (isVideo) {
+    const inlineVideo = document.getElementById('ad-video-' + ad.id);
+    const expandedVideo = document.getElementById('ad-expanded-video');
+    if (inlineVideo && expandedVideo) {
+      expandedVideo.currentTime = inlineVideo.currentTime || 0;
+      inlineVideo.pause();
+    }
+    if (expandedVideo) {
+      expandedVideo.onended = () => { collapseExpandedAd(); completeAd(ad.id, 'completed'); };
+    }
+  }
+}
+
+function collapseExpandedAd() {
+  const s = expandedAdId && adState[expandedAdId];
+  if (s && s.ad.media_type === 'video') {
+    const inlineVideo = document.getElementById('ad-video-' + expandedAdId);
+    const expandedVideo = document.getElementById('ad-expanded-video');
+    if (inlineVideo && expandedVideo) {
+      inlineVideo.currentTime = expandedVideo.currentTime || 0;
+      inlineVideo.play().catch(() => {});
+    }
+  }
+  expandedAdId = null;
+  renderExpandedAd();
+}
+
 function startQueryStatus() {
   if (stkQueryInterval) clearInterval(stkQueryInterval);
 
@@ -942,7 +1051,7 @@ async function payPackage() {
           return \`<div data-ad-track="\${ad.id}" style="position:relative;width:\${w}px;max-width:320px;height:\${h}px;background:\${bg};border-radius:10px;overflow:hidden;cursor:pointer;">\${parts}\${visitBtn}\${closeBtn}</div>\`;
         }
 
-       function adCardHtml(ad) {
+     function adCardHtml(ad) {
   const s = adState[ad.id];
   if (!s || s.completed) return '';
   const isVideo = ad.media_type === 'video';
@@ -954,59 +1063,64 @@ async function payPackage() {
   let media = '';
   if (isImage) {
     media = isFullscreen
-      ? `<img src="${ad.media_url}" style="width:100%;flex:1;object-fit:contain;display:block;">`
-      : `<img src="${ad.media_url}" style="width:100%;max-height:220px;object-fit:cover;display:block;">`;
+      ? \`<img src="\${ad.media_url}" style="width:100%;flex:1;object-fit:contain;display:block;">\`
+      : \`<img src="\${ad.media_url}" style="width:100%;max-height:220px;object-fit:cover;display:block;">\`;
   } else if (isVideo) {
     media = isFullscreen
-      ? `<video id="ad-video-${ad.id}" src="${ad.media_url}" autoplay playsinline style="width:100%;flex:1;object-fit:contain;display:block;"></video>`
-      : `<video id="ad-video-${ad.id}" src="${ad.media_url}" autoplay playsinline style="width:100%;max-height:220px;object-fit:cover;display:block;"></video>`;
+      ? \`<video id="ad-video-\${ad.id}" src="\${ad.media_url}" autoplay playsinline style="width:100%;flex:1;object-fit:contain;display:block;"></video>\`
+      : \`<video id="ad-video-\${ad.id}" src="\${ad.media_url}" autoplay playsinline style="width:100%;max-height:220px;object-fit:cover;display:block;"></video>\`;
   } else if (isCustom) {
     media = customDesignHtml(ad);
   }
 
-          let footer = '';
-          if (!isCustom) {
-            const skipCountdown = Math.max(0, (ad.skip_after || 5) - ((ad.ad_duration || 15) - s.secondsLeft));
-            footer = \`
-              <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 14px;">
-                <div style="display:flex;align-items:center;gap:6px;min-width:0;flex:1;">
-                  <span style="font-weight:700;font-size:11px;padding:2px 6px;border-radius:4px;background:color-mix(in srgb, var(--primary) 15%, transparent);color:var(--primary);">Ad</span>
-                  \${isMock ? '<span class="mock-tag">Sample</span>' : ''}
-                  \${ad.ad_title ? \`<span style="font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">\${ad.ad_title}</span>\` : ''}
-                </div>
-                <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
-                  \${ad.ad_link ? \`<button data-ad-visit="\${ad.id}" style="display:flex;align-items:center;gap:4px;font-size:11px;padding:5px 10px;border-radius:8px;font-weight:700;border:none;background:color-mix(in srgb, var(--primary) 15%, transparent);color:var(--primary);cursor:pointer;">Visit ↗</button>\` : ''}
-                  \${isVideo && ad.can_skip && s.skipReady ? \`<button data-ad-skip="\${ad.id}" style="display:flex;align-items:center;gap:4px;font-size:11px;padding:5px 10px;border-radius:8px;font-weight:700;border:none;background:color-mix(in srgb, var(--accent) 15%, transparent);color:var(--accent);cursor:pointer;">Skip ⏭</button>\` : ''}
-                  \${isVideo && ad.can_skip && !s.skipReady ? \`<span style="font-size:11px;padding:5px 10px;border-radius:8px;background:color-mix(in srgb, var(--text) 8%, transparent);color:var(--muted);">Skip in \${skipCountdown}s</span>\` : ''}
-                  \${isImage ? \`<button data-ad-dismiss="\${ad.id}" style="width:26px;height:26px;border-radius:50%;border:none;background:color-mix(in srgb, var(--text) 12%, transparent);color:var(--muted);cursor:pointer;">✕</button>\` : ''}
-                </div>
-              </div>\`;
-          }
+  let footer = '';
+  if (!isCustom) {
+    const skipCountdown = Math.max(0, (ad.skip_after || 5) - ((ad.ad_duration || 15) - s.secondsLeft));
+    footer = \`
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 14px;">
+        <div style="display:flex;align-items:center;gap:6px;min-width:0;flex:1;">
+          <span style="font-weight:700;font-size:11px;padding:2px 6px;border-radius:4px;background:color-mix(in srgb, var(--primary) 15%, transparent);color:var(--primary);">Ad</span>
+          \${isMock ? '<span class="mock-tag">Sample</span>' : ''}
+          \${ad.ad_title ? \`<span style="font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">\${ad.ad_title}</span>\` : ''}
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
+          \${(isImage || isVideo) ? \`<button data-ad-expand="\${ad.id}" style="display:flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:8px;border:none;background:color-mix(in srgb, var(--text) 10%, transparent);color:var(--muted);cursor:pointer;font-size:13px;">⤢</button>\` : ''}
+          \${ad.ad_link ? \`<button data-ad-visit="\${ad.id}" style="display:flex;align-items:center;gap:4px;font-size:11px;padding:5px 10px;border-radius:8px;font-weight:700;border:none;background:color-mix(in srgb, var(--primary) 15%, transparent);color:var(--primary);cursor:pointer;">Visit ↗</button>\` : ''}
+          \${isVideo && ad.can_skip && s.skipReady ? \`<button data-ad-skip="\${ad.id}" style="display:flex;align-items:center;gap:4px;font-size:11px;padding:5px 10px;border-radius:8px;font-weight:700;border:none;background:color-mix(in srgb, var(--accent) 15%, transparent);color:var(--accent);cursor:pointer;">Skip ⏭</button>\` : ''}
+          \${isVideo && ad.can_skip && !s.skipReady ? \`<span style="font-size:11px;padding:5px 10px;border-radius:8px;background:color-mix(in srgb, var(--text) 8%, transparent);color:var(--muted);">Skip in \${skipCountdown}s</span>\` : ''}
+          \${isImage ? \`<button data-ad-dismiss="\${ad.id}" style="width:26px;height:26px;border-radius:50%;border:none;background:color-mix(in srgb, var(--text) 12%, transparent);color:var(--muted);cursor:pointer;">✕</button>\` : ''}
+        </div>
+      </div>\`;
+  }
 
-          const banner = isVideo ? \`
-            <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:linear-gradient(90deg,color-mix(in srgb, var(--accent) 15%, transparent),color-mix(in srgb, var(--secondary) 12%, transparent));border-bottom:1px solid color-mix(in srgb, var(--accent) 20%, transparent);">
-              <div style="width:26px;height:26px;border-radius:50%;background:color-mix(in srgb, var(--accent) 20%, transparent);display:flex;align-items:center;justify-content:center;flex-shrink:0;">🎁</div>
-              <div style="flex:1;min-width:0;">
-                <p style="margin:0;font-size:12px;font-weight:600;color:var(--accent);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Watch this ad to unlock free internet!</p>
-                <p style="margin:2px 0 0;font-size:11px;color:var(--accent);">Reward: <strong>\${rewardLabelFor(ad)}</strong></p>
-              </div>
-              <div style="flex-shrink:0;display:flex;align-items:center;gap:4px;padding:3px 8px;border-radius:20px;background:rgba(0,0,0,.4);">
-                <span style="font-size:11px;font-weight:700;color:#fcd34d;">\${s.secondsLeft}s</span>
-              </div>
-            </div>\` : '';
+  const banner = isVideo ? \`
+    <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:linear-gradient(90deg,color-mix(in srgb, var(--accent) 15%, transparent),color-mix(in srgb, var(--secondary) 12%, transparent));border-bottom:1px solid color-mix(in srgb, var(--accent) 20%, transparent);">
+      <div style="width:26px;height:26px;border-radius:50%;background:color-mix(in srgb, var(--accent) 20%, transparent);display:flex;align-items:center;justify-content:center;flex-shrink:0;">🎁</div>
+      <div style="flex:1;min-width:0;">
+        <p style="margin:0;font-size:12px;font-weight:600;color:var(--accent);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Watch this ad to unlock free internet!</p>
+        <p style="margin:2px 0 0;font-size:11px;color:var(--accent);">Reward: <strong>\${rewardLabelFor(ad)}</strong></p>
+      </div>
+      <div style="flex-shrink:0;display:flex;align-items:center;gap:4px;padding:3px 8px;border-radius:20px;background:rgba(0,0,0,.4);">
+        <span style="font-size:11px;font-weight:700;color:#fcd34d;">\${s.secondsLeft}s</span>
+      </div>
+    </div>\` : '';
 
-          const progress = isVideo
-            ? \`<div style="height:2px;background:color-mix(in srgb, var(--text) 10%, transparent);"><div style="height:100%;background:linear-gradient(90deg,var(--accent),var(--secondary));width:\${((ad.ad_duration || 15) - s.secondsLeft) / (ad.ad_duration || 15) * 100}%;transition:width 1s linear;"></div></div>\`
-            : '';
+  const progress = isVideo
+    ? \`<div style="height:2px;background:color-mix(in srgb, var(--text) 10%, transparent);"><div style="height:100%;background:linear-gradient(90deg,var(--accent),var(--secondary));width:\${((ad.ad_duration || 15) - s.secondsLeft) / (ad.ad_duration || 15) * 100}%;transition:width 1s linear;"></div></div>\`
+    : '';
 
-          return \`
-            <div class="ad-card" style="position:relative;">
-              \${banner}
-              \${media}
-              \${footer}
-              \${progress}
-            </div>\`;
-        }
+  const isFull = ad.position === 'fullscreen';
+  return \`
+    <div class="ad-card\${isFull ? ' fullscreen' : ''}" style="position:relative;\${isFull ? 'height:100%;' : ''}">
+      \${banner}
+      \${media}
+      \${footer}
+      \${progress}
+    </div>\`;
+}
+
+
+
 function renderAds() {
   const root = document.getElementById('ad-root');
   if (!root) return;
@@ -1021,42 +1135,54 @@ function renderAds() {
   bindAdEvents();
 }
 
-        function bindAdEvents() {
-          document.querySelectorAll('[data-ad-visit]').forEach(el => {
-            el.onclick = (e) => {
-              e.stopPropagation();
-              const id = el.dataset.adVisit;
-              const ad = adState[id]?.ad;
-              trackAdEvent(id, 'click');
-              if (ad?.ad_link && !cfg.preview) window.open(ad.ad_link, '_blank');
-            };
-          });
-          document.querySelectorAll('[data-ad-skip]').forEach(el => {
-            el.onclick = (e) => { e.stopPropagation(); completeAd(el.dataset.adSkip, 'skipped'); };
-          });
-          document.querySelectorAll('[data-ad-dismiss]').forEach(el => {
-            el.onclick = (e) => { e.stopPropagation(); completeAd(el.dataset.adDismiss, 'dismissed'); };
-          });
-          document.querySelectorAll('[data-ad-track]').forEach(el => {
-            el.onclick = () => trackAdEvent(el.dataset.adTrack, 'click');
-          });
-        }
+      function bindAdEvents() {
+  document.querySelectorAll('[data-ad-visit]').forEach(el => {
+    el.onclick = (e) => {
+      e.stopPropagation();
+      const id = el.dataset.adVisit;
+      const ad = adState[id]?.ad;
+      trackAdEvent(id, 'click');
+      if (ad?.ad_link && !cfg.preview) window.open(ad.ad_link, '_blank');
+    };
+  });
+  document.querySelectorAll('[data-ad-skip]').forEach(el => {
+    el.onclick = (e) => { e.stopPropagation(); completeAd(el.dataset.adSkip, 'skipped'); };
+  });
+  document.querySelectorAll('[data-ad-dismiss]').forEach(el => {
+    el.onclick = (e) => { e.stopPropagation(); completeAd(el.dataset.adDismiss, 'dismissed'); };
+  });
+  document.querySelectorAll('[data-ad-track]').forEach(el => {
+    el.onclick = () => trackAdEvent(el.dataset.adTrack, 'click');
+  });
+  document.querySelectorAll('[data-ad-expand]').forEach(el => {
+    el.onclick = (e) => {
+      e.stopPropagation();
+      expandedAdId = el.dataset.adExpand;
+      renderExpandedAd();
+    };
+  });
+}
 
-        function completeAd(adId, reason) {
-          const s = adState[adId];
-          if (!s || s.completed) return;
-          clearInterval(adTimers[adId]);
-          clearTimeout(adSkipTimers[adId]);
-          s.completed = true;
+       function completeAd(adId, reason) {
+  const s = adState[adId];
+  if (!s || s.completed) return;
+  clearInterval(adTimers[adId]);
+  clearTimeout(adSkipTimers[adId]);
+  s.completed = true;
 
-          const isVideo = s.ad.media_type === 'video';
-          if (isVideo) trackAdEvent(adId, reason === 'skipped' ? 'video_skipped' : 'video_completed');
-          else if (s.ad.media_type === 'image') trackAdEvent(adId, 'dismissed');
+  const isVideo = s.ad.media_type === 'video';
+  if (isVideo) trackAdEvent(adId, reason === 'skipped' ? 'video_skipped' : 'video_completed');
+  else if (s.ad.media_type === 'image') trackAdEvent(adId, 'dismissed');
 
-          if (isVideo) grantAdReward(s.ad);
+  if (isVideo) grantAdReward(s.ad);
 
-          renderAds();
-        }
+  if (expandedAdId === adId) {
+    expandedAdId = null;
+    renderExpandedAd();
+  }
+
+  renderAds();
+}
 
         function startAdTimers(ad) {
           const s = adState[ad.id];
@@ -1132,7 +1258,7 @@ function renderAds() {
             }
           }
         }
-
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && expandedAdId) collapseExpandedAd(); });
         if (cfg.features.show_ads !== false) loadAds();
         loadPromotions();
         loadPackages();

@@ -194,7 +194,6 @@ uploaded = Cloudinary::Uploader.upload(
   ad = AdSetting.find_by(id: params[:ad_id])
   return render json: { error: 'Ad not found' }, status: :not_found unless ad
 
-  allowed = %w[Ad\ View click video_completed video_skipped dismissed]
   event_type = params[:event_type].presence || 'Ad View'
 
   AdEvent.create!(
@@ -204,6 +203,7 @@ uploaded = Cloudinary::Uploader.upload(
   )
   render json: { status: 'ok' }
 rescue => e
+  Rails.logger.error "track_ad_event failed: #{e.class} - #{e.message}"
   render json: { error: e.message }, status: :unprocessable_entity
 end
 
