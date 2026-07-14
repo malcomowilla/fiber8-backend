@@ -649,7 +649,6 @@ end
 
   def generate_mikrotik_config(private_key, server_pubkey, ip)
     <<~CONFIG
-      # WireGuard MikroTik Configuration
       /interface wireguard add name=wireguard1 private-key="#{private_key}"
       
  
