@@ -1268,17 +1268,17 @@ end
 
 
 def create
-  if params[:name].blank?
-    render json: { error: "package name is required" }, status: :unprocessable_entity
+  if params[:package].blank?
+    render json: { error: "package is required" }, status: :unprocessable_entity
     return
   end
 
   @hotspot_package = HotspotPackage.new(hotspot_package_params)
 
-  if !@hotspot_package.enable_free_trial && params[:price].blank?
-    render json: { error: "price is required" }, status: :unprocessable_entity
-    return
-  end
+  # if !@hotspot_package.enable_free_trial && params[:price].blank?
+  #   render json: { error: "price is required" }, status: :unprocessable_entity
+  #   return
+  # end
 
   use_radius = router_uses_radius?
 
