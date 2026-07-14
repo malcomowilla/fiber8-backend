@@ -1263,92 +1263,86 @@ def create
     return
   end
 
-  tenant = ActsAsTenant.current_tenant
- active_sessions = RadAcct.where(
-    account_id: tenant.id,
-    acctstoptime: nil,
-    framedprotocol: ''
-  ).where('acctupdatetime > ?', 2.minutes.ago)
-   maximum_active_sessions = active_sessions.count
+  hotspot_package = HotspotPackage.find_by(name: params[:package])
+  if hotspot_package.nil?
+    render json: { error: "Hotspot package '#{params[:package]}' not found" }, status: :unprocessable_entity
+    return
+  end
 
-
-
-
+  use_radius  = router_uses_radius?
+  router_name = params[:router_name]
 
   number_of_vouchers = params[:number_of_vouchers].to_i
   number_of_vouchers = 1 if number_of_vouchers < 1
 
   created_vouchers = []
-  hotspot_package = HotspotPackage.find_by(name: params[:package])
+
   ActiveRecord::Base.transaction do
-    number_of_vouchers.times do |index|
+    number_of_vouchers.times do
       voucher_code = generate_voucher_code
-      
+
       @hotspot_voucher = HotspotVoucher.new(
         package: params[:package],
         shared_users: params[:shared_users],
         phone: params[:phone],
         voucher: voucher_code,
         hotspot_package_id: hotspot_package.id,
-        status: 'active'
+        status: 'active',
+        sync_status: use_radius ? nil : 'not_synced'
       )
 
-      # calculate_expiration(params[:package], @hotspot_voucher,
-      #  @hotspot_voucher.account_id)
-      
-       ActsAsTenant.current_tenant&.hotspot_setting&.voucher_expiration == 'Real-time expiration' ?
-       calculate_expiration(params[:package], @hotspot_voucher,
-       @hotspot_voucher.account_id) : nil
+      @hotspot_voucher.save!
 
+      calculate_expiration(params[:package], @hotspot_voucher, @hotspot_voucher.account_id)
 
-      if @hotspot_voucher.save!
-
-         ActsAsTenant.current_tenant&.hotspot_setting&.voucher_expiration == 'Real-time expiration' ?
-       create_voucher_radcheck(voucher_code, params[:package], 
-        @hotspot_voucher.account_id) : create_voucher_radcheck_accumulated_sessions(voucher_code, params[:package], 
-        @hotspot_voucher.account_id)
-       
-        
-        # Add to created list
-        created_vouchers << @hotspot_voucher
+      if use_radius
+        if ActsAsTenant.current_tenant&.hotspot_setting&.voucher_expiration == 'Real-time expiration'
+          create_voucher_radcheck(voucher_code, params[:package], @hotspot_voucher.account_id)
+        else
+          create_voucher_radcheck_accumulated_sessions(voucher_code, params[:package], @hotspot_voucher.account_id)
+        end
+      else
+        # Native MikroTik account - push the user straight to the router.
+        # sync_status/sync_error land on the record so the Sync column
+        # and the manual/bulk sync buttons reflect the real state.
+        sync_voucher_natively(@hotspot_voucher)
       end
+
+      created_vouchers << @hotspot_voucher
     end
-    
-    # Create batch activity log
+
     if number_of_vouchers == 1
       ActivtyLog.create!(
-        action: 'create', 
+        action: 'create',
         ip: request.remote_ip,
         description: "Created hotspot voucher #{created_vouchers.first.voucher}",
-        user_agent: request.user_agent, 
+        user_agent: request.user_agent,
         user: current_user.username || current_user.email,
         date: Time.current
       )
     else
       ActivtyLog.create!(
-        action: 'create', 
+        action: 'create',
         ip: request.remote_ip,
         description: "Created #{created_vouchers.count} hotspot vouchers for package #{params[:package]}",
-        user_agent: request.user_agent, 
+        user_agent: request.user_agent,
         user: current_user.username || current_user.email,
         date: Time.current
       )
     end
   end
-  
+
   if created_vouchers.any?
     render json: created_vouchers, status: :created
   else
     render json: { error: "Failed to create vouchers" }, status: :unprocessable_entity
   end
-  
+
 rescue ActiveRecord::RecordInvalid => e
   render json: { error: e.message }, status: :unprocessable_entity
 rescue => e
   render json: { error: "An error occurred: #{e.message}" }, status: :unprocessable_entity
 end
-
-
 
 
 
@@ -1588,7 +1582,7 @@ end
 
     render json: { message: "Hotspot voucher deleted successfully" }, status: :ok
   else
-    mikrotik_result = delete_voucher_natively(@hotspot_voucher)
+    mikrotik_result = delete_voucher_natively(@hotspot_voucher, params[:router_name])
 
     ActiveRecord::Base.transaction do
       @hotspot_voucher.destroy!
@@ -2313,9 +2307,9 @@ def sync_voucher_natively(voucher)
 
 
 
-  nas = NasRouter.find_by(name: package.nas_router)
+  nas = NasRouter.find_by(name:package)
   unless nas
-    voucher.update(sync_status: 'failed', sync_error: 'No router specified inthis voucher or router not found')
+    voucher.update(sync_status: 'failed', sync_error: 'No router specified or router not found')
     return
   end
 
@@ -2337,12 +2331,8 @@ end
 
 
 
-def delete_voucher_natively(voucher)
-
- package = HotspotPackage.find_by(name: voucher.package, account_id: voucher.account_id)
-
-
-  nas = NasRouter.find_by(name: package.nas_router)
+def delete_voucher_natively(voucher, router_name)
+  nas = NasRouter.find_by(name: router_name)
   return { success: false, error: 'No router specified or router not found' } unless nas
 
   begin
