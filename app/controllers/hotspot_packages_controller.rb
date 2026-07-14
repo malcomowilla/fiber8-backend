@@ -657,7 +657,7 @@ end
 def sync_package_natively(pkg, router_name = nil)
   # Prefer the router explicitly passed in (from the UI's selected router),
   # fall back to whatever is saved on the package itself.
-  router_name = router_name.presence || pkg.nas_router
+  router_name = pkg.nas_router
   nas = NasRouter.find_by(name: router_name)
   return pkg.update(sync_status: 'failed', sync_error: 'No router assigned') unless nas
 
