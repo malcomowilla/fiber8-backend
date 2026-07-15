@@ -140,6 +140,20 @@ class HotspotPageBuilder
       .btn:hover { opacity: .92; transform: translateY(-1px); }
       .pkg { display: flex; justify-content: space-between; align-items: center; padding: 14px; border-radius: 14px;
              border: 1px solid color-mix(in srgb, var(--text) 10%, transparent); margin-bottom: 10px; cursor: pointer; transition: border-color .15s; }
+
+
+.pkg-freetrial { display: flex; align-items: flex-start; gap: 10px; padding: 14px;
+  border-radius: 14px; margin-bottom: 12px;
+  background: color-mix(in srgb, #facc15 7%, transparent);
+  border: 1px solid color-mix(in srgb, #facc15 20%, transparent); }
+.pkg-freetrial .icon { flex-shrink:0; font-size:15px; margin-top:1px; }
+.pkg-freetrial-title { font-weight:700; font-size:13px; color:var(--text); }
+.pkg-freetrial-sub { font-size:11px; color:var(--muted); margin-top:2px; line-height:1.5; }
+.pkg-freetrial-btn { width:100%; margin-top:10px; padding:11px; border-radius:12px; border:none;
+  font-weight:700; font-size:13px; color:#1a1206; cursor:pointer;
+  background: linear-gradient(135deg,#facc15,#f59e0b); }
+.pkg-freetrial-btn:disabled { opacity:.6; cursor:not-allowed; }
+
       .pkg.selected { border-color: var(--primary); background: color-mix(in srgb, var(--primary) 6%, transparent); }
       .pkg-skeleton { height: 62px; border-radius: 14px; margin-bottom: 10px; background: color-mix(in srgb, var(--text) 6%, transparent); animation: pulse 1.4s ease-in-out infinite; }
       @keyframes pulse { 0%,100% { opacity: .5; } 50% { opacity: 1; } }
@@ -300,6 +314,9 @@ let stkQueryInterval = null;
 let promoState = {};          // { [promoId]: secondsRemaining } — ticks down locally between refreshes
 let promoTimerInterval = null;
 let expandedAdId = null;
+let freeTrialState = {}; 
+
+
         function supportHtml() {
           const label = (cfg.footer && cfg.footer.support_label) || 'Need help?';
           const phone = (cfg.footer && cfg.footer.support_phone) || cfg.hotspot_phone || '';
@@ -341,6 +358,13 @@ let expandedAdId = null;
           renderFooter();
           bindEvents();
         }
+
+document.querySelectorAll('[data-freetrial]').forEach(el =>
+  el.onclick = () => {
+    const pkg = state.packages.find(p => String(p.id) === el.dataset.freetrial);
+    if (pkg) startFreeTrial(pkg);
+  });
+
 
         function tabsHtml() {
           const tabs = [];
@@ -426,6 +450,7 @@ let expandedAdId = null;
             }
             const isMock = cfg.preview && state.packages.length && String(state.packages[0].id).startsWith('mock-');
 
+
             // ── Focused pay step: shown the instant a package is tapped,
             // so a non-technical customer never has to scroll to find the
             // phone-number field or guess what to do next. ──────────────
@@ -449,7 +474,10 @@ let expandedAdId = null;
               \`;
             }
 
-            const list = state.packages.map(p => \`
+            const freeTrialPkgs = state.packages.filter(p => p.enable_free_trial);
+            const paidPkgs = state.packages.filter(p => !p.enable_free_trial);
+
+            const list = paidPkgs.map(p => \`
               <div class="pkg" data-pkg="\${p.id}">
                 <div><strong>\${p.name}</strong>\${isMock ? '<span class="mock-tag">Sample</span>' : ''}<br><small>\${p.valid || ''}</small></div>
                 <div>Ksh \${p.price}</div>
@@ -457,8 +485,8 @@ let expandedAdId = null;
             const empty = !state.packages.length
               ? '<p style="color:var(--muted);font-size:12px;padding:8px 0;">No packages configured yet.</p>'
               : '';
-            const hint = state.packages.length ? '<p class="tap-hint">Tap a package to continue</p>' : '';
-            return statusHtml() + hint + list + empty;
+            const hint = paidPkgs.length ? '<p class="tap-hint">Tap a package to continue</p>' : '';
+            return statusHtml() + freeTrialHtml(freeTrialPkgs) + hint + list + empty;
           }
           if (state.tab === 'voucher') {
             return statusHtml() + \`
@@ -472,6 +500,8 @@ let expandedAdId = null;
           }
           return '';
         }
+
+
 
         function bindEvents() {
           document.querySelectorAll('[data-tab]').forEach(el =>
@@ -827,6 +857,55 @@ function startQueryStatus() {
           bindEvents();
           startPromoTimers();
         }
+
+
+
+async function startFreeTrial(pkg) {
+  freeTrialState[pkg.id] = { loading: true, success: false, error: null };
+  render();
+  try {
+    const res = await fetch(api('/api/grant_free_trial'), {
+      method: 'POST', headers,
+      body: JSON.stringify({ mac, ip, package: pkg.name })
+    });
+    const data = await res.json();
+    if (res.ok) {
+      freeTrialState[pkg.id] = { loading: false, success: true, error: null };
+      onConnected({ package: pkg.name });
+    } else {
+      freeTrialState[pkg.id] = { loading: false, success: false, error: data.error || 'Could not start free trial.' };
+      render();
+    }
+  } catch (e) {
+    freeTrialState[pkg.id] = { loading: false, success: false, error: 'Network error. Check your connection and try again.' };
+    render();
+  }
+}
+
+
+
+function freeTrialHtml(trialPkgs) {
+          if (cfg.features.show_free_trial === false) return '';
+          if (!trialPkgs || !trialPkgs.length) return '';
+          return trialPkgs.map(p => {
+            const s = freeTrialState[p.id] || {};
+            const mins = p.free_trial_duration_minutes;
+            return \`
+              <div class="pkg-freetrial">
+                <span class="icon">⚡</span>
+                <div style="flex:1;">
+                  <div class="pkg-freetrial-title">Free Trial — \${mins} min</div>
+                  <div class="pkg-freetrial-sub">Get \${mins} minute\${mins !== 1 ? 's' : ''} of free internet access.</div>
+                  \${s.error ? '<div class="status error" style="margin-top:8px;margin-bottom:0;">' + s.error + '</div>' : ''}
+                  \${!s.success ? '<button class="pkg-freetrial-btn" data-freetrial="' + p.id + '" ' + (s.loading ? 'disabled' : '') + '>' + (s.loading ? 'Starting trial…' : 'Start Free Trial') + '</button>' : ''}
+                </div>
+              </div>\`;
+          }).join('');
+        }
+
+
+
+
 async function payPackage() {
   queryModal = { status: 'processing', message: 'STK push sent — enter your M-Pesa PIN on your phone to complete payment.' };
   renderQueryModal();

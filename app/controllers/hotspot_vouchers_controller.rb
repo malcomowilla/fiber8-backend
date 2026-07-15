@@ -262,7 +262,13 @@ voucher.save!
 
 
 voucher_expiration = HotspotSetting.find_by(account_id: active_session.account_id)&.voucher_expiration
+ use_radius = router_uses_radius?
 
+
+
+
+ if use_radius
+   
 if voucher_expiration == 'Real-time expiration'
 #  calculate_expiration_login_with_voucher(hotspot_package, voucher, session.account_id)
 
@@ -282,6 +288,18 @@ else
       active_session.hotspot_package, 
 active_session.account_id)
 end
+ else
+   calculate_expiration(active_session.hotspot_package, voucher,
+ active_session.account_id)
+
+if voucher_expiration == 'Real-time expiration'
+  
+   sync_voucher_natively(voucher)
+else
+sync_voucher_natively_realtime_expiration(voucher)  
+end
+ end
+
 
 #      create_voucher_radcheck(active_session.voucher_code,
 #       active_session.hotspot_package, 
@@ -395,10 +413,11 @@ nas_routers = NasRouter.where(account_id: mpesa_revenue.account_id)
 # if present_voucher_or_username
   voucher_code = HotspotMpesaRevenue.find_by(reference: transaction_id).hotspot_voucher.voucher
 
-
+voucher_object_going_to_sync_natively = HotspotVoucher.find_by(voucher_code: voucher_code)
     
+  use_radius = router_uses_radius?
 
-
+if use_radius
   if mpesa_revenue.hotspot_voucher.expiration.nil? 
   create_voucher_radcheck(mpesa_revenue.hotspot_voucher.voucher, 
   mpesa_revenue.hotspot_voucher.hotspot_package.name, 
@@ -409,6 +428,19 @@ nas_routers = NasRouter.where(account_id: mpesa_revenue.account_id)
   mpesa_revenue.hotspot_voucher.hotspot_package, 
 mpesa_revenue.hotspot_voucher, mpesa_revenue.account_id)
   end
+else
+sync_voucher_natively(voucher_object_going_to_sync_natively)
+if mpesa_revenue.hotspot_voucher.expiration.nil? 
+ 
+    calculate_expiration_login_with_voucher(
+  mpesa_revenue.hotspot_voucher.hotspot_package, 
+mpesa_revenue.hotspot_voucher, mpesa_revenue.account_id)
+  end
+
+
+end
+
+
 
 
     
@@ -647,8 +679,10 @@ SendSmsHotspotService.send_sms(voucher.voucher, data, session.checkout_request_i
 )
 
 voucher_expiration = HotspotSetting.find_by(account_id: session.account_id)&.voucher_expiration
-
-if voucher_expiration == 'Real-time expiration'
+ 
+ use_radius = router_uses_radius?
+ if use_radius
+   if voucher_expiration == 'Real-time expiration'
  calculate_expiration_login_with_voucher(hotspot_package, voucher, session.account_id)
 
 create_voucher_radcheck(voucher_code, session.hotspot_package, 
@@ -660,6 +694,17 @@ else
   create_voucher_radcheck_accumulated_sessions(voucher_code, session.hotspot_package, 
 session.account_id)
 end
+ else
+     calculate_expiration_login_with_voucher(hotspot_package, voucher, session.account_id)
+
+if voucher_expiration == 'Real-time expiration'
+  
+   sync_voucher_natively(voucher)
+else
+sync_voucher_natively_realtime_expiration(voucher)  
+end
+ end
+
 
 
 nas_routers = NasRouter.where(account_id: session.account_id)
@@ -1270,7 +1315,6 @@ def create
   end
 
   use_radius  = router_uses_radius?
-  router_name = params[:router_name]
 
   number_of_vouchers = params[:number_of_vouchers].to_i
   number_of_vouchers = 1 if number_of_vouchers < 1
@@ -2331,6 +2375,65 @@ end
 
 
 
+
+
+
+
+
+
+
+def sync_voucher_natively_realtime_expiration(voucher)
+ package = HotspotPackage.find_by(name: voucher.package, account_id: voucher.account_id)
+  unless package
+    voucher.update(sync_status: 'failed', sync_error: 'Package not found')
+    return
+  end
+
+
+
+  nas = NasRouter.find_by(name: package.nas_router)
+  unless nas
+    voucher.update(sync_status: 'failed', sync_error: 'No router specified or router not found')
+    return
+  end
+
+ 
+  begin
+    RestClient::Request.execute(
+      method: :put,
+      url: "http://#{nas.ip_address}/rest/ip/hotspot/user",
+      user: nas.username.to_s, password: nas.password.to_s,
+      payload: { name: voucher.voucher, password: voucher.voucher,
+       profile: package.name, "limit-uptime": validity_for_mikrotik(package) }.to_json,
+      headers: { content_type: :json },
+      timeout: 10
+    )
+    voucher.update(sync_status: 'synced', synced_at: Time.current, sync_error: nil)
+  rescue => e
+    voucher.update(sync_status: 'failed', sync_error: e.message)
+  end
+end
+
+
+
+
+
+
+def validity_for_mikrotik(pkg)
+  case pkg.validity_period_units
+  when "minutes"
+    "#{pkg.validity}m"
+  when "hours"
+    "#{pkg.validity}h"
+  when "days"
+    "#{pkg.validity}d"
+  when "weeks"
+    "#{pkg.validity}w"
+  else
+    "0s"
+  end
+end
+
 def delete_voucher_natively(voucher)
    package = HotspotPackage.find_by(name: voucher.package, account_id: voucher.account_id)
 
@@ -2355,7 +2458,7 @@ end
 
 def router_uses_radius?
   return true unless ActsAsTenant.current_tenant
-  setting = RouterSetting.find_by(account_id: ActsAsTenant.current_tenant.id)
+  setting = NasSetting.find_by(account_id: ActsAsTenant.current_tenant.id)
   setting ? ActiveModel::Type::Boolean.new.cast(setting.use_radius) : true
 end
 

@@ -300,7 +300,7 @@ def create
   if @hotspot_package.save
     unless use_radius
       if ActiveModel::Type::Boolean.new.cast(params[:sync_to_mikrotik])
-        sync_package_natively(@hotspot_package, params[:router_name])
+        sync_package_natively(@hotspot_package)
       end
     end
 
@@ -644,7 +644,7 @@ end
 
 
 def router_uses_radius?
-  setting = RouterSetting.find_by(account_id: ActsAsTenant.current_tenant.id)
+  setting = NasSetting.find_by(account_id: ActsAsTenant.current_tenant.id)
   setting ? ActiveModel::Type::Boolean.new.cast(setting.use_radius) : true
 end
 
@@ -685,6 +685,24 @@ def sync_package_natively(pkg)
 end
 
 
+
+
+
+
+
+def validity_in_seconds(pkg)
+  case pkg.validity_period_units
+  when 'days' then pkg.validity.to_i.days.to_i
+  when 'hours' then pkg.validity.to_i.hours.to_i
+  when 'minutes' then pkg.validity.to_i.minutes.to_i
+  else 0
+  end
+end
+
+
+
+
+
 def delete_package_natively(pkg)
   nas = NasRouter.find_by(name: pkg.nas_router)
   return { success: false, error: 'No router assigned to this package' } unless nas
@@ -706,14 +724,6 @@ def delete_package_natively(pkg)
 end
 
 
-def validity_in_seconds(pkg)
-  case pkg.validity_period_units
-  when 'days' then pkg.validity.to_i.days.to_i
-  when 'hours' then pkg.validity.to_i.hours.to_i
-  when 'minutes' then pkg.validity.to_i.minutes.to_i
-  else 0
-  end
-end
 
 
     # Use callbacks to share common setup or constraints between actions.
