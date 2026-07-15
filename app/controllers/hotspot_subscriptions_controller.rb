@@ -83,45 +83,15 @@ def set_tenant
 
 
 def check_session
-  ip = params[:ip]
+  ip  = params[:ip]
   mac = params[:mac]
 
-  session = RadAcct
-              .where(framedipaddress: ip, framedprotocol: '')
-              .order(acctupdatetime: :desc)
-              .first ||
-            RadAcct
-              .where(callingstationid: mac, framedprotocol: '')
-              .order(acctupdatetime: :desc)
-              .first
-
-  unless session
-    return render json: {
-      session_active: false,
-      message: "No active session found"
-    }
-  end
-
-  voucher = HotspotVoucher.find_by(voucher: session.username)
-
-  if voucher && voucher.expiration > Time.current
-    render json: {
-      session_active: true,
-      ip: ip,
-      username: voucher.voucher,
-      expiration: voucher.expiration.strftime("%B %d, %Y at %I:%M %p"),
-      package: voucher.package
-    }
+  if router_uses_radius?
+    check_session_via_radius(ip, mac)
   else
-    render json: {
-      session_active: false,
-      ip: ip,
-      username: voucher&.voucher
-    }
+    check_session_natively(ip, mac)
   end
 end
-
-
 
 
  def get_active_hotspot_users
@@ -227,6 +197,78 @@ end
     def set_hotspot_subscription
       @hotspot_subscription = HotspotSubscription.find(params[:id])
     end
+
+
+
+
+    def check_session_via_radius(ip, mac)
+  session = RadAcct
+              .where(framedipaddress: ip, framedprotocol: '')
+              .order(acctupdatetime: :desc)
+              .first ||
+            RadAcct
+              .where(callingstationid: mac, framedprotocol: '')
+              .order(acctupdatetime: :desc)
+              .first
+
+  unless session
+    return render json: {
+      session_active: false,
+      message: "No active session found"
+    }
+  end
+
+  voucher = HotspotVoucher.find_by(voucher: session.username)
+  render_session_result(voucher, ip)
+end
+
+
+
+
+def check_session_natively(ip, mac)
+  voucher = HotspotVoucher.find_by(ip: ip, status: 'used') ||
+            HotspotVoucher.find_by(mac: mac, status: 'used')
+
+  unless voucher
+    return render json: {
+      session_active: false,
+      message: "No active session found"
+    }
+  end
+
+  render_session_result(voucher, ip)
+end
+
+
+
+
+
+def render_session_result(voucher, ip)
+  if voucher && voucher.expiration.present? && voucher.expiration > Time.current
+    render json: {
+      session_active: true,
+      ip: ip,
+      username: voucher.voucher,
+      expiration: voucher.expiration.strftime("%B %d, %Y at %I:%M %p"),
+      package: voucher.package
+    }
+  else
+    render json: {
+      session_active: false,
+      ip: ip,
+      username: voucher&.voucher
+    }
+  end
+end
+
+def router_uses_radius?
+  return true unless ActsAsTenant.current_tenant
+  setting = NasSetting.find_by(account_id: ActsAsTenant.current_tenant.id)
+  setting ? ActiveModel::Type::Boolean.new.cast(setting.use_radius) : true
+end
+
+
+
 
 
     def format_uptime(seconds)

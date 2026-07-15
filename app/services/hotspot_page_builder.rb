@@ -991,7 +991,6 @@ async function payPackage() {
           };
           // Critical for autologin: nothing else in this file ever wrote
           // hotspot_username to localStorage. Without this, `username` is
-          // null on every future page load and tryAutoLogin() bails out
           // before it even makes a request. This is what lets the NEXT
           // visit from this device recognize it and reconnect silently.
           if (connectedInfo.username) localStorage.setItem('hotspot_username', connectedInfo.username);
