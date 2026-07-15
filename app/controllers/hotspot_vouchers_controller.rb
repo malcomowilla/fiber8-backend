@@ -1,5 +1,4 @@
 class HotspotVouchersController < ApplicationController
-  # before_action :set_hotspot_voucher, only: %i[ show edit update destroy ]
 # :transaction_status_result,
 load_and_authorize_resource except: [:login_with_hotspot_voucher,
  :make_payment, :check_payment_status, :payment_and_conected_status,
@@ -1757,55 +1756,44 @@ end
 
 
 def login_with_hotspot_voucher
-
   return render json: { error: 'voucher is required' }, status: :bad_request unless params[:voucher].present?
-  # return render json: { error: 'ip is required' }, status: :bad_request unless params[:ip].present?
 
-  # host = request.headers['X-Subdomain']
-  
-  # return render json: { error: 'Account not found' }, status: :not_found unless account
-  # 🔹 Find voucher
   @hotspot_voucher = HotspotVoucher.find_by(voucher: params[:voucher])
   return render json: { error: 'Invalid voucher or username' }, status: :not_found unless @hotspot_voucher
-
 
   if @hotspot_voucher.expiration.present? && @hotspot_voucher.expiration < Time.current
     return render json: { error: 'Voucher Or Username expired' }, status: :forbidden
   end
 
+  enable_compensation = ActsAsTenant.current_tenant&.hotspot_customization&.enable_compensation
 
-
-     enable_compensation = ActsAsTenant.current_tenant&.hotspot_customization&.enable_compensation
-if @hotspot_voucher.expiration.nil?
-  if enable_compensation
- create_voucher_radcheck_compensation(@hotspot_voucher.voucher,
-  @hotspot_voucher.package, 
+  if @hotspot_voucher.expiration.nil?
+    if enable_compensation
+      create_voucher_radcheck_compensation(@hotspot_voucher.voucher,
+        @hotspot_voucher.package,
         @hotspot_voucher.account_id)
-
+    end
   end
 
-end
+  if @hotspot_voucher.expiration.nil?
+    create_voucher_radcheck(@hotspot_voucher.voucher,
+      @hotspot_voucher.package,
+      @hotspot_voucher.account_id)
+  end
 
- if @hotspot_voucher.expiration.nil?
-create_voucher_radcheck(@hotspot_voucher.voucher,
-  @hotspot_voucher.package, 
-        @hotspot_voucher.account_id)
- end
-
+  # get_active_sessions now already filters to just this voucher's sessions,
+  # and returns an array of hashes, e.g. [{"user"=>"ABC123", ".id"=>"*1A", ...}]
   active_sessions = get_active_sessions(params[:voucher])
   package = HotspotPackage.find_by(name: @hotspot_voucher.package)
 
   shared_users = package&.shared_users.to_i
 
-
-    
-  if active_sessions.any?
-    active_voucher_sessions = active_sessions.select { |s| s.include?(params[:voucher]) }
-    if active_voucher_sessions.count >= shared_users
-      return render json: {
-        error: "Voucher already used. Max devices allowed: #{shared_users}"
-      }, status: :forbidden
-    end
+  # no more .select { |s| s.include?(...) } needed — get_active_sessions
+  # already returns only sessions matching this voucher
+  if active_sessions.count >= shared_users
+    return render json: {
+      error: "Voucher already used. Max devices allowed: #{shared_users}"
+    }, status: :forbidden
   end
 
   nas_routers = NasRouter.where(account_id: @hotspot_voucher.account_id)
@@ -1825,35 +1813,28 @@ create_voucher_radcheck(@hotspot_voucher.voucher,
         headers: {
           content_type: :json,
           accept: :json
-        }
+        },
+        timeout: 5,       # ← added: stop hanging on a slow/dead router
+        open_timeout: 3   # ← added: stop hanging on an unreachable router
       )
 
-
       if response.code == 200
-
-   
-
-        @hotspot_voucher.update!(status:'used', last_logged_in: Time.now, 
-        ip: params[:ip], mac: params[:mac], used_voucher: true,
-        login_by:'Voucher Code'
+        @hotspot_voucher.update!(status: 'used', last_logged_in: Time.now,
+          ip: params[:ip], mac: params[:mac], used_voucher: true,
+          login_by: 'Voucher Code'
         )
 
-        
-if @hotspot_voucher.expiration.nil?
-  if enable_compensation
-  calculate_expiration_login_with_voucher_compensation(package, @hotspot_voucher,
-       @hotspot_voucher.account_id)
-  end
-end
+        if @hotspot_voucher.expiration.nil?
+          if enable_compensation
+            calculate_expiration_login_with_voucher_compensation(package, @hotspot_voucher,
+              @hotspot_voucher.account_id)
+          end
+        end
 
-
-if @hotspot_voucher.expiration.nil?
- calculate_expiration_login_with_voucher(package, @hotspot_voucher,
-       @hotspot_voucher.account_id)
-
-end 
-  
-
+        if @hotspot_voucher.expiration.nil?
+          calculate_expiration_login_with_voucher(package, @hotspot_voucher,
+            @hotspot_voucher.account_id)
+        end
 
         return render json: {
           message: 'Connected successfully',
@@ -1872,12 +1853,18 @@ end
       Rails.logger.info "MikroTik REST error (#{router.ip_address}): #{e.response}"
       next
 
+    rescue RestClient::Exceptions::Timeout, Errno::ETIMEDOUT
+      Rails.logger.info "Router #{router.ip_address} timed out during login"
+      next
+
+    rescue Errno::ECONNREFUSED, Errno::EHOSTUNREACH, SocketError => e
+      Rails.logger.info "Router #{router.ip_address} unreachable: #{e.message}"
+      next
+
     rescue StandardError => e
       Rails.logger.info "REST login error: #{e.message}"
       next
-       
     end
-    
   end
 
   return render json: { error: 'Failed to connect please try again' }, status: :unprocessable_entity
@@ -2434,27 +2421,61 @@ def validity_for_mikrotik(pkg)
   end
 end
 
+
 def delete_voucher_natively(voucher)
-   package = HotspotPackage.find_by(name: voucher.package, account_id: voucher.account_id)
+  package = HotspotPackage.find_by(
+    name: voucher.package,
+    account_id: voucher.account_id
+  )
 
   nas = NasRouter.find_by(name: package.nas_router)
-  return { success: false, error: 'No router specified or router not found' } unless nas
+  return { success: false, error: "No router specified or router not found" } unless nas
 
   begin
+    # Disconnect active session first
+    active_sessions = get_active_sessions(voucher.voucher)
+
+    if active_sessions.present?
+      active_sessions.each do |session|
+        session_id = session[".id"]  # ← changed: REST returns a hash now, not a raw text line
+        next unless session_id
+
+        RestClient::Request.execute(
+          method: :delete,
+          url: "http://#{nas.ip_address}/rest/ip/hotspot/active/#{session_id}",
+          user: nas.username,
+          password: nas.password,
+          timeout: 5,
+          open_timeout: 3
+        )
+      end
+    end
+
+    # Now delete the hotspot user
     RestClient::Request.execute(
       method: :delete,
       url: "http://#{nas.ip_address}/rest/ip/hotspot/user/#{voucher.voucher}",
-      user: nas.username.to_s, password: nas.password.to_s,
-      headers: { content_type: :json },
-      timeout: 10
+      user: nas.username,
+      password: nas.password,
+      timeout: 5,
+      open_timeout: 3
     )
+
     { success: true }
+
   rescue RestClient::NotFound
     { success: true }
+  rescue RestClient::Exceptions::Timeout, Errno::ETIMEDOUT
+    { success: false, error: "Router #{nas.ip_address} timed out" }
+  rescue Errno::ECONNREFUSED, Errno::EHOSTUNREACH, SocketError => e
+    { success: false, error: "Router #{nas.ip_address} unreachable: #{e.message}" }
   rescue => e
-    { success: false, error: e.message }
+    { success: false, error: e.response&.body || e.message }
   end
 end
+
+
+
 
 def router_uses_radius?
   return true unless ActsAsTenant.current_tenant
@@ -2794,52 +2815,53 @@ end
 
 
 
-
 def get_active_sessions(voucher)
-  command = "/ip hotspot active print where user=#{voucher}"
+  nas_routers = NasRouter.where(account_id: ActsAsTenant.current_tenant.id)
+  all_matching_sessions = []
 
-  nas_routers = NasRouter.all
-nas_routers.each do |nas_router|
+  nas_routers.each do |nas_router|
+    begin
+      response = RestClient::Request.execute(
+        method: :get,
+        url: "http://#{nas_router.ip_address}/rest/ip/hotspot/active",
+        user: nas_router.username,
+        password: nas_router.password,
+        timeout: 5,       # read timeout - how long to wait for a response
+        open_timeout: 3   # connection timeout - how long to wait to even connect
+      )
 
+      users = JSON.parse(response.body)
+      matching = users.select { |u| u["user"] == voucher }
 
-  # return [] unless nas_router
-
-  router_ip_address = nas_router.ip_address
-  router_password = nas_router.password
-  router_username = nas_router.username
-
-  begin
-    Net::SSH.start(router_ip_address, router_username, password: router_password, 
-    verify_host_key: :never) do |ssh|
-      output = ssh.exec!(command)
-
-      if output.include?('failure')
-        Rails.logger.error "Getting active sessions failed: #{output}"
-        return []
-      else
-        Rails.logger.info "Response active users from MikroTik: #{output}"
-        # active_sessions = output.split("\n").reject(&:empty?)
-        active_sessions = output.split("\n").map(&:strip).reject(&:empty?)
-
-        # Remove headers and only keep actual session rows
-        active_sessions.reject! { |line| line.start_with?("Flags", "Columns", "#") }
-        
-        Rails.logger.info "Filtered active sessions: #{active_sessions.inspect}"
-        return active_sessions
+      if matching.any?
+        Rails.logger.info "Found #{matching.count} active session(s) for voucher #{voucher} on router #{nas_router.ip_address}"
+        all_matching_sessions.concat(matching)
       end
+
+    rescue RestClient::Unauthorized
+      Rails.logger.error "REST auth failed for router #{nas_router.ip_address}"
+      next
+
+    rescue RestClient::ExceptionWithResponse => e
+      Rails.logger.error "MikroTik REST error on #{nas_router.ip_address}: #{e.response}"
+      next
+
+    rescue RestClient::Exceptions::Timeout, Errno::ETIMEDOUT
+      Rails.logger.error "Timed out reaching router #{nas_router.ip_address} for active sessions"
+      next
+
+    rescue Errno::ECONNREFUSED, Errno::EHOSTUNREACH, SocketError => e
+      Rails.logger.error "Router #{nas_router.ip_address} unreachable: #{e.message}"
+      next
+
+    rescue StandardError => e
+      Rails.logger.error "Failed to get active sessions from #{nas_router.ip_address}: #{e.message}"
+      next
     end
-  rescue Net::SSH::AuthenticationFailed
-    Rails.logger.error 'SSH authentication failed'
-    return []
-  rescue StandardError => e
-    Rails.logger.error "Failed to get active sessions: #{e.message}"
-    return []
   end
-end
-  
 
+  all_matching_sessions
 end
-
 
 
 end
