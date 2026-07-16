@@ -751,8 +751,6 @@ account_id: session.account_id,
 
 
 # company_name = CompanySetting.find_by(account_id: session.account_id).company_name
-SendSmsHotspotService.send_sms(voucher.voucher, data, session.checkout_request_id,
-)
 
 voucher_expiration = HotspotSetting.find_by(account_id: session.account_id)&.voucher_expiration
  
@@ -784,6 +782,9 @@ end
 
 
 nas_routers = NasRouter.where(account_id: session.account_id)
+SendSmsHotspotService.send_sms(voucher.voucher, data, session.checkout_request_id,
+)
+
 nas_routers.each do |nas|
   begin
     response = RestClient::Request.execute(
@@ -799,7 +800,9 @@ nas_routers.each do |nas|
       headers: {
         content_type: :json,
         accept: :json
-      }
+      },
+       timeout: 5,
+      open_timeout: 3
     )
 
     if response.code == 200
@@ -811,25 +814,10 @@ voucher.update(status:"used", last_logged_in: Time.now,
        used_voucher: true, login_by:'Voucher Code')
 
      
-# if voucher_expiration == 'Expiry After Login'
-
-
-# create_voucher_radcheck(voucher_code, session.hotspot_package, 
-# session.account_id)
-# calculate_expiration_login_with_voucher(hotspot_package, 
-
-# voucher, session.account_id)
-
-
-# end
- 
-
-      # SendSmsHotspotJob.perform_now(voucher.voucher, data)
-      # HotspotNotificationsChannel.broadcast_to(
-      #   session.ip,
-      #   message: "Payment received! You are now connected."
-      # )
     end
+
+     rescue RestClient::Exceptions::Timeout, Errno::ETIMEDOUT
+    Rails.logger.info "Router #{nas.ip_address} timed out during login"
 
   rescue RestClient::Unauthorized
     Rails.logger.info "REST auth failed for router #{nas.ip_address}"
