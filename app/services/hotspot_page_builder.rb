@@ -75,7 +75,6 @@ class HotspotPageBuilder
       header: header,
       footer: footer_cfg,
       # When true (only ever set from preview_page_design), the compiled page
-      # still renders ads/packages/promos so the designer's iframe shows what
       # a customer will actually see, but suppresses tracking + reward side
       # effects so previewing never pollutes real ad analytics. It ALSO
       # unlocks sample/mock fallback content (see loadPackages/loadAds/
@@ -253,7 +252,6 @@ class HotspotPageBuilder
   #   - shows SAMPLE/MOCK content (clearly tagged "Sample") whenever the
   #     real API returns an empty list, so the designer can see the layout
   #     before any packages/ads/promos are configured. This mock content
-  #     NEVER renders on the published page — cfg.preview is always false
   #     there, so real customers only ever see real data (or nothing).
   #   - also skips the autologin/session-check flow entirely, since there's
   #     nothing to reconnect to inside the designer's iframe.
@@ -359,11 +357,6 @@ let freeTrialState = {};
           bindEvents();
         }
 
-document.querySelectorAll('[data-freetrial]').forEach(el =>
-  el.onclick = () => {
-    const pkg = state.packages.find(p => String(p.id) === el.dataset.freetrial);
-    if (pkg) startFreeTrial(pkg);
-  });
 
 
         function tabsHtml() {
@@ -517,6 +510,13 @@ document.querySelectorAll('[data-freetrial]').forEach(el =>
                 if (card) card.scrollIntoView({ behavior: 'smooth', block: 'start' });
               });
             });
+
+
+            document.querySelectorAll('[data-freetrial]').forEach(el =>
+    el.onclick = () => {
+      const pkg = state.packages.find(p => String(p.id) === el.dataset.freetrial);
+      if (pkg) startFreeTrial(pkg);
+    });
 
           document.querySelectorAll('[data-back-to-list]').forEach(el =>
             el.onclick = () => { state.payStep = 'list'; state.selected = null; state.status = null; render(); });
