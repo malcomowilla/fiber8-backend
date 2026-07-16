@@ -1,5 +1,3 @@
-
-
 class HotspotSessionsController < ApplicationController
   
 
@@ -144,38 +142,44 @@ end
 
 
 def grant_free_trial
-  mac = params[:mac]
-  ip  = params[:ip]
+  mac     = params[:mac]
+  ip      = params[:ip]
   package = params[:package]
-  host = request.headers['X-Subdomain']
-    @account = Account.find_by(subdomain: host)
-nas_routers = NasRouter.where(account_id: @account.id)
-free_trial_duration_minutes = HotspotPackage.find_by(name: params[:package]).free_trial_duration_minutes 
-  free_trial_radius(mac, package, @account.id, free_trial_duration_minutes)
+  host    = request.headers['X-Subdomain']
+  @account = Account.find_by(subdomain: host)
 
+  hotspot_package = HotspotPackage.find_by(name: package, account_id: @account.id)
+  return render json: { error: 'Package not found' }, status: :not_found unless hotspot_package
 
+  free_trial_duration_minutes = hotspot_package.free_trial_duration_minutes
 
+  existing = FreeTrialDevice.find_by(mac_address: mac.upcase, account_id: @account.id)
 
-#  group_name = "freetrial_#{@account.id}_#{package.parameterize(separator: '_')}"
+  if existing
+    return render json: {
+      error: "Free trial already used on this device"
+    }, status: :unprocessable_entity
+  end
 
+  # ── Branch on whether this account authenticates through RADIUS or
+  # talks to the router natively. Writing RadCheck/RadUserGroup rows does
+  # nothing for a native account — there's no FreeRADIUS server sitting in
+  # front of the router to consult them, so the MAC would never actually
+  # be authorized. Mirrors the same split used for vouchers
+  # (create_voucher_radcheck vs sync_voucher_natively).
+  if router_uses_radius?
+    free_trial_radius(mac, package, @account.id, free_trial_duration_minutes)
+  else
+    free_trial_native(mac, hotspot_package, @account.id, free_trial_duration_minutes)
+  end
 
- existing = FreeTrialDevice.find_by(mac_address: mac.upcase,
-  account_id: @account.id)
+  FreeTrialDevice.create!(
+    mac_address: mac.upcase,
+    package: package,
+    used_at: Time.current
+  )
 
-if existing
-  return render json: {
-    error: "Free trial already used on this device"
-  }, status: :unprocessable_entity
-end
-
-
-FreeTrialDevice.create!(
-  mac_address: mac.upcase,
-  package: package,
-  used_at: Time.current
-)
-
-nas_routers = NasRouter.where(account_id: @account.id)
+  nas_routers = NasRouter.where(account_id: @account.id)
 
   nas_routers.each do |router|
     begin
@@ -226,9 +230,7 @@ nas_routers = NasRouter.where(account_id: @account.id)
     end
 
 
-
-
-
+  render json: { error: 'Failed to connect, please try again' }, status: :unprocessable_entity
 end
 
 
@@ -267,10 +269,58 @@ end
 
 
 
+# ── Native MikroTik equivalent of free_trial_radius. Instead of writing
+# RadCheck/RadUserGroup rows (which only get consulted by a RADIUS
+# server), this pushes a temporary hotspot user straight onto the
+# router itself, keyed by MAC, with limit-uptime capped to the trial
+# duration so it auto-expires on the router side too. Same request
+# shape as sync_voucher_natively.
+def free_trial_native(mac, hotspot_package, account_id, free_trial_duration_minutes)
+  nas = NasRouter.find_by(name: hotspot_package.nas_router, account_id: account_id) ||
+        NasRouter.where(account_id: account_id).first
+
+  unless nas
+    Rails.logger.info "free_trial_native: no router found for account #{account_id}"
+    return
+  end
+
+  macupcase = mac.upcase
+  minutes = free_trial_duration_minutes.to_i
+  minutes = 1 if minutes < 1
+
+  begin
+    RestClient::Request.execute(
+      method: :put,
+      url: "http://#{nas.ip_address}/rest/ip/hotspot/user",
+      user: nas.username.to_s,
+      password: nas.password.to_s,
+      payload: {
+        name: macupcase,
+        password: macupcase,
+        profile: hotspot_package.name,
+        "limit-uptime": "#{minutes}m",
+        comment: "free_trial"
+      }.to_json,
+      headers: { content_type: :json },
+      timeout: 10
+    )
+  rescue RestClient::Unauthorized
+    Rails.logger.info "free_trial_native: REST auth failed for router #{nas.ip_address}"
+  rescue RestClient::ExceptionWithResponse => e
+    Rails.logger.info "free_trial_native: MikroTik REST error on #{nas.ip_address}: #{e.response}"
+  rescue StandardError => e
+    Rails.logger.info "free_trial_native: REST error on #{nas.ip_address}: #{e.message}"
+  end
+end
 
 
 
+private
 
-
+def router_uses_radius?
+  return true unless @account
+  setting = NasSetting.find_by(account_id: @account.id)
+  setting ? ActiveModel::Type::Boolean.new.cast(setting.use_radius) : true
+end
 
 end
