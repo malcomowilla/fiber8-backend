@@ -149,8 +149,6 @@ def grant_free_trial
   @account = Account.find_by(subdomain: host)
 
   hotspot_package = HotspotPackage.find_by(name: package, account_id: @account.id)
-    nas_router = HotspotPackage.find_by(name: package, account_id: @account.id).nas_router
-
   return render json: { error: 'Package not found' }, status: :not_found unless hotspot_package
 
   free_trial_duration_minutes = hotspot_package.free_trial_duration_minutes
@@ -181,60 +179,46 @@ def grant_free_trial
     used_at: Time.current
   )
 
-  nas_routers = NasRouter.find_by(name: nas_router)
+  nas = NasRouter.find_by(name: hotspot_package.nas_router, account_id: @account.id)
+  return render json: { error: 'No router configured for this package' }, status: :unprocessable_entity unless nas
 
-  nas_routers.each do |router|
-    begin
-      response = RestClient::Request.execute(
-        method: :post,
-        url: "http://#{router.ip_address}/rest/ip/hotspot/active/login",
-        user: router.username,
-        password: router.password,
-        payload: {
-          ip: ip,
-          user: mac,
-          password: mac
-        }.to_json,
-        headers: {
-          content_type: :json,
-          accept: :json
-        }
-      )
+  begin
+    response = RestClient::Request.execute(
+      method: :post,
+      url: "http://#{nas.ip_address}/rest/ip/hotspot/active/login",
+      user: nas.username,
+      password: nas.password,
+      payload: {
+        ip: ip,
+        user: mac,
+        password: mac
+      }.to_json,
+      headers: {
+        content_type: :json,
+        accept: :json
+      }
+    )
 
-
-      if response.code == 200
-
-  
-
-        return render json: {
-          message: 'Connected successfully',
-          device_ip: ip,
-          username: mac,
-        }, status: :ok
-      end
-
-    rescue RestClient::Unauthorized
-      Rails.logger.info "REST auth failed for router #{router.ip_address}"
-      next
-
-    rescue RestClient::ExceptionWithResponse => e
-      Rails.logger.info "MikroTik REST error (#{router.ip_address}): #{e.response}"
-      next
-
-    rescue StandardError => e
-      Rails.logger.info "REST login error: #{e.message}"
-      next
-       
-
+    if response.code == 200
+      return render json: {
+        message: 'Connected successfully',
+        device_ip: ip,
+        username: mac,
+      }, status: :ok
     end
 
+  rescue RestClient::Unauthorized
+    Rails.logger.info "REST auth failed for router #{nas.ip_address}"
 
-    end
+  rescue RestClient::ExceptionWithResponse => e
+    Rails.logger.info "MikroTik REST error (#{nas.ip_address}): #{e.response}"
 
+  rescue StandardError => e
+    Rails.logger.info "REST login error: #{e.message}"
+  end
 
   render json: { error: 'Failed to connect, please try again' }, status: :unprocessable_entity
 end
-
 
 
 
