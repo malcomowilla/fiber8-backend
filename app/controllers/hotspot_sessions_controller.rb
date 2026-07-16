@@ -149,6 +149,8 @@ def grant_free_trial
   @account = Account.find_by(subdomain: host)
 
   hotspot_package = HotspotPackage.find_by(name: package, account_id: @account.id)
+    nas_router = HotspotPackage.find_by(name: package, account_id: @account.id).nas_router
+
   return render json: { error: 'Package not found' }, status: :not_found unless hotspot_package
 
   free_trial_duration_minutes = hotspot_package.free_trial_duration_minutes
@@ -179,7 +181,7 @@ def grant_free_trial
     used_at: Time.current
   )
 
-  nas_routers = NasRouter.where(account_id: @account.id)
+  nas_routers = NasRouter.find_by(name: nas_router)
 
   nas_routers.each do |router|
     begin
@@ -276,8 +278,7 @@ end
 # duration so it auto-expires on the router side too. Same request
 # shape as sync_voucher_natively.
 def free_trial_native(mac, hotspot_package, account_id, free_trial_duration_minutes)
-  nas = NasRouter.find_by(name: hotspot_package.nas_router, account_id: account_id) ||
-        NasRouter.where(account_id: account_id).first
+  nas = NasRouter.find_by(name: hotspot_package.nas_router, account_id: account_id) 
 
   unless nas
     Rails.logger.info "free_trial_native: no router found for account #{account_id}"
