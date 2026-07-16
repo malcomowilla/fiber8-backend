@@ -2486,8 +2486,7 @@ end
 
 
 def router_uses_radius_payment(account_id)
-  return true unless ActsAsTenant.current_tenant
-  setting = NasSetting.find_by(account_id: account_id )
+  setting = NasSetting.find_by(account_id: account_id)
   setting ? ActiveModel::Type::Boolean.new.cast(setting.use_radius) : true
 end
 
