@@ -679,7 +679,7 @@ SendSmsHotspotService.send_sms(voucher.voucher, data, session.checkout_request_i
 
 voucher_expiration = HotspotSetting.find_by(account_id: session.account_id)&.voucher_expiration
  
- use_radius = router_uses_radius?
+ use_radius = router_uses_radius_payment(session.account_id)
  if use_radius
    if voucher_expiration == 'Real-time expiration'
  calculate_expiration_login_with_voucher(hotspot_package, voucher, session.account_id)
@@ -1313,7 +1313,7 @@ def create
     return
   end
 
-  use_radius  = router_uses_radius?
+  use_radius = router_uses_radius?
 
   number_of_vouchers = params[:number_of_vouchers].to_i
   number_of_vouchers = 1 if number_of_vouchers < 1
@@ -2479,12 +2479,17 @@ end
 
 def router_uses_radius?
   return true unless ActsAsTenant.current_tenant
-  setting = NasSetting.find_by(account_id: ActsAsTenant.current_tenant.id)
+  setting = NasSetting.find_by(account_id: ActsAsTenant.current_tenant.id )
   setting ? ActiveModel::Type::Boolean.new.cast(setting.use_radius) : true
 end
 
 
 
+def router_uses_radius_payment(account_id)
+  return true unless ActsAsTenant.current_tenant
+  setting = NasSetting.find_by(account_id: account_id )
+  setting ? ActiveModel::Type::Boolean.new.cast(setting.use_radius) : true
+end
 
 
 
