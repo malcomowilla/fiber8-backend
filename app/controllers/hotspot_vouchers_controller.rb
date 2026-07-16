@@ -530,7 +530,6 @@ end
   render json: hotspot_data
 end
 
-private
 
 # ── Existing RadAcct-based logic, unchanged, just extracted ──
 def fetch_hotspot_traffic_via_radius
