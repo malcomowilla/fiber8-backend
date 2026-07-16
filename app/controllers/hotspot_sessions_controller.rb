@@ -318,8 +318,7 @@ end
 private
 
 def router_uses_radius?
-  return true unless @account
-  setting = NasSetting.find_by(account_id: @account.id)
+  setting = NasSetting.find_by(account_id: ActsAsTenant.current_tenant.id)
   setting ? ActiveModel::Type::Boolean.new.cast(setting.use_radius) : true
 end
 
