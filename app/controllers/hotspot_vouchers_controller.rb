@@ -510,77 +510,155 @@ end
 
 
   def hotspot_traffic
-  # Cache key that includes timestamp for time-based invalidation
-  cache_key = "hotspot_traffic_#{Time.current.beginning_of_minute.to_i}"
-  
-  # Use cache with 10-second expiration (adjust based on your needs)
+  account_id = ActsAsTenant.current_tenant&.id
+  use_radius = router_uses_radius?
+
+  # ← cache key now scoped per-tenant AND per-mode, so radius/native
+  # accounts (and different tenants) never share cached data
+  cache_key = "hotspot_traffic_#{account_id}_#{use_radius}_#{Time.current.beginning_of_minute.to_i}"
+
   hotspot_data = Rails.cache.fetch(cache_key, expires_in: 10.seconds) do
-    total_bytes = 0
-    total_bytes_upload_download = 0
-    total_bytes_upload = 0
-    total_bytes_download = 0
-
-    # Get active sessions within last 3 minutes
-    active_sessions_upload_download = RadAcct.where(
-      acctstoptime: nil, 
-      framedprotocol: ''
-    ).where('acctupdatetime > ?', 3.minutes.ago)
-    
-    active_sessions = RadAcct.where(
-      acctstoptime: nil,
-      framedprotocol: ""
-    ).where('acctupdatetime > ?', 3.minutes.ago)
-
-    # Calculate upload/download totals
-    active_sessions_upload_download.each do |session|
-      download_bytes = session.acctinputoctets || 0
-      upload_bytes = session.acctoutputoctets || 0
-      total_bytes_download += download_bytes
-      total_bytes_upload += upload_bytes
-      session_total = download_bytes + upload_bytes
-      total_bytes_upload_download += session_total
+    if use_radius
+      fetch_hotspot_traffic_via_radius
+    else
+      fetch_hotspot_traffic_natively(account_id)
     end
-
-    # Prepare user data
-    active_user_data = active_sessions.map do |session|
-      download_bytes = session.acctinputoctets || 0
-      upload_bytes = session.acctoutputoctets || 0
-      session_total = download_bytes + upload_bytes
-      total_bytes += session_total
-
-      {
-        username: session.username,
-        ip_address: session.framedipaddress.to_s,
-        mac_address: session.callingstationid,
-        up_time: format_uptime(session.acctsessiontime),
-        download: format_bytes(download_bytes),
-        upload: format_bytes(upload_bytes),
-        start_time: session.acctstarttime&.strftime("%B %d, %Y at %I:%M %p") || "Unknown",
-        nas_port: session.nasportid,
-        last_update: session.acctupdatetime&.iso8601 || Time.current.iso8601
-      }
-    end
-
-    # Return the data to be cached
-    {
-      active_user_count: active_user_data.size,
-      total_upload: format_bytes(total_bytes_upload),
-      total_download: format_bytes(total_bytes_download),
-      total_bandwidth: format_bytes(total_bytes_upload_download),
-      users: active_user_data,
-      timestamp: Time.current.iso8601,
-      cache_hit: false # Flag to indicate this is fresh data
-    }
   end
-  
-  # Update cache hit flag if this is a cache hit
+
   hotspot_data[:cache_hit] = true unless hotspot_data[:cache_hit]
-  
+
   render json: hotspot_data
 end
 
+private
 
-  
+# ── Existing RadAcct-based logic, unchanged, just extracted ──
+def fetch_hotspot_traffic_via_radius
+  total_bytes = 0
+  total_bytes_upload_download = 0
+  total_bytes_upload = 0
+  total_bytes_download = 0
+
+  active_sessions_upload_download = RadAcct.where(
+    acctstoptime: nil,
+    framedprotocol: ''
+  ).where('acctupdatetime > ?', 3.minutes.ago)
+
+  active_sessions = RadAcct.where(
+    acctstoptime: nil,
+    framedprotocol: ""
+  ).where('acctupdatetime > ?', 3.minutes.ago)
+
+  active_sessions_upload_download.each do |session|
+    download_bytes = session.acctinputoctets || 0
+    upload_bytes = session.acctoutputoctets || 0
+    total_bytes_download += download_bytes
+    total_bytes_upload += upload_bytes
+    session_total = download_bytes + upload_bytes
+    total_bytes_upload_download += session_total
+  end
+
+  active_user_data = active_sessions.map do |session|
+    download_bytes = session.acctinputoctets || 0
+    upload_bytes = session.acctoutputoctets || 0
+    session_total = download_bytes + upload_bytes
+    total_bytes += session_total
+
+    {
+      username: session.username,
+      ip_address: session.framedipaddress.to_s,
+      mac_address: session.callingstationid,
+      up_time: format_uptime(session.acctsessiontime),
+      download: format_bytes(download_bytes),
+      upload: format_bytes(upload_bytes),
+      start_time: session.acctstarttime&.strftime("%B %d, %Y at %I:%M %p") || "Unknown",
+      nas_port: session.nasportid,
+      last_update: session.acctupdatetime&.iso8601 || Time.current.iso8601
+    }
+  end
+
+  {
+    active_user_count: active_user_data.size,
+    total_upload: format_bytes(total_bytes_upload),
+    total_download: format_bytes(total_bytes_download),
+    total_bandwidth: format_bytes(total_bytes_upload_download),
+    users: active_user_data,
+    timestamp: Time.current.iso8601,
+    cache_hit: false
+  }
+end
+
+# ── New native MikroTik REST logic, used when use_radius is false ──
+def fetch_hotspot_traffic_natively(account_id)
+  nas_routers = NasRouter.where(account_id: account_id)
+
+  total_bytes_upload = 0
+  total_bytes_download = 0
+  active_user_data = []
+
+  nas_routers.each do |nas|
+    begin
+      response = RestClient::Request.execute(
+        method: :get,
+        url: "http://#{nas.ip_address}/rest/ip/hotspot/active",
+        user: nas.username,
+        password: nas.password,
+        timeout: 5,
+        open_timeout: 3
+      )
+
+      users = JSON.parse(response.body)
+      next unless users.is_a?(Array)
+
+      users.each do |user|
+        download_bytes = user["bytes-in"].to_i
+        upload_bytes = user["bytes-out"].to_i
+        total_bytes_download += download_bytes
+        total_bytes_upload += upload_bytes
+
+        active_user_data << {
+          username: user["user"],
+          ip_address: user["address"],
+          mac_address: user["mac-address"],
+          up_time: user["uptime"],
+          download: format_bytes(download_bytes),
+          upload: format_bytes(upload_bytes),
+          start_time: nil,
+          nas_port: nil,
+          last_update: Time.current.iso8601
+        }
+      end
+
+    rescue RestClient::Unauthorized
+      Rails.logger.error "hotspot_traffic: REST auth failed for router #{nas.ip_address}"
+      next
+    rescue RestClient::ExceptionWithResponse => e
+      Rails.logger.error "hotspot_traffic: MikroTik REST error on #{nas.ip_address}: #{e.response}"
+      next
+    rescue RestClient::Exceptions::Timeout, Errno::ETIMEDOUT
+      Rails.logger.error "hotspot_traffic: Timed out reaching router #{nas.ip_address}"
+      next
+    rescue Errno::ECONNREFUSED, Errno::EHOSTUNREACH, SocketError => e
+      Rails.logger.error "hotspot_traffic: Router #{nas.ip_address} unreachable: #{e.message}"
+      next
+    rescue StandardError => e
+      Rails.logger.error "hotspot_traffic: Failed to fetch from #{nas.ip_address}: #{e.message}"
+      next
+    end
+  end
+
+  total_bandwidth = total_bytes_download + total_bytes_upload
+
+  {
+    active_user_count: active_user_data.size,
+    total_upload: format_bytes(total_bytes_upload),
+    total_download: format_bytes(total_bytes_download),
+    total_bandwidth: format_bytes(total_bandwidth),
+    users: active_user_data,
+    timestamp: Time.current.iso8601,
+    cache_hit: false
+  }
+end
 
 
 
