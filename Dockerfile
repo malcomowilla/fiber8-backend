@@ -83,6 +83,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     wireguard-tools \
     iproute2 \
     iputils-ping \
+    libjemalloc2 \
      tnftp \
     && npm install -g yarn \
     && apt-get clean \

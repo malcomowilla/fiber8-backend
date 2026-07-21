@@ -183,6 +183,8 @@ services:
       SIDEKIQ_REDIS_URL: redis://localhost:6379/1
       SECRET_KEY_BASE: development-secret-key
       RAILS_LOG_TO_STDOUT: "true"
+      LD_PRELOAD: /usr/lib/x86_64-linux-gnu/libjemalloc.so.2
+      MALLOC_ARENA_MAX: "2"
     extra_hosts:
       - "host.docker.internal:host-gateway" # 👈 Required for Linux users
     depends_on:
@@ -218,6 +220,8 @@ services:
       SIDEKIQ_REDIS_URL: redis://localhost:6379/1
       SECRET_KEY_BASE: development-secret-key
       RAILS_LOG_TO_STDOUT: "true"
+      LD_PRELOAD: /usr/lib/x86_64-linux-gnu/libjemalloc.so.2
+      MALLOC_ARENA_MAX: "2"
     extra_hosts:
       - "host.docker.internal:host-gateway" # 👈 Required for Linux users
     depends_on:
