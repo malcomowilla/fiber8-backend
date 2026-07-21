@@ -678,14 +678,15 @@ def check_payment_status
         session = TemporarySession.find_by(session: session_id, 
         )
 
-
-
- if session&.payment_type == 'device_binding'
-    hotspot_package = HotspotPackage.find_by(
+ hotspot_package = HotspotPackage.find_by(
       name:       session.hotspot_package,
       account_id: session.account_id
     )
+    nas_router = NasRouter.find_by(name: hotspot_package.nas_router, account_id: hotspot_package.account_id)
 
+
+ if session&.payment_type == 'device_binding'
+   
     # 1. Create IP binding record
     binding = IpBinding.create!(
       name:        session.device_name,
@@ -693,7 +694,7 @@ def check_payment_status
       package:     session.hotspot_package,
       device_type: session.device_type,
       account_id:  session.account_id,
-      router_id:   NasRouter.where(account_id: session.account_id).first&.id
+      router_id:    nas_router.id
     )
 
     # 2. Record the payment (reuse HotspotMpesaRevenue or a dedicated model)
@@ -708,18 +709,16 @@ def check_payment_status
       phone_number:   session.phone_number
     )
 
-    # 3. Push binding to MikroTik via existing controller logic
-    #    (call the same private helpers IpBindingsController uses)
-    nas_routers = NasRouter.where(account_id: session.account_id)
-    nas_routers.each do |nas|
-      begin
-        mikrotik_add_binding_direct(binding, nas)
-        # If package has speed limits, add queue too
-        mikrotik_add_queue_direct(binding, hotspot_package, nas) if hotspot_package
-      rescue => e
-        Rails.logger.warn "MikroTik binding failed for #{binding.mac}: #{e.message}"
-      end
-    end
+if nas_router
+  begin
+    mikrotik_add_binding_direct(binding, nas_router)
+    mikrotik_add_queue_direct(binding, hotspot_package, nas_router) if hotspot_package
+  rescue => e
+    Rails.logger.warn "MikroTik binding failed for #{binding.mac}: #{e.message}"
+  end
+else
+  Rails.logger.warn "Router '#{hotspot_package.nas_router}' not found"
+end
 
     session.update!(connected: true, status: 'used', paid: true)
     head :ok
@@ -729,6 +728,7 @@ def check_payment_status
 
 
 
+  
         # voucher = HotspotVoucher.find_by(voucher: voucher_code)
 hotspot_package = HotspotPackage.find_by(name: session.hotspot_package,
 account_id: session.account_id
@@ -781,17 +781,16 @@ end
 
 
 
-nas_routers = NasRouter.where(account_id: session.account_id)
 SendSmsHotspotService.send_sms(voucher.voucher, data, session.checkout_request_id,
 )
 
-nas_routers.each do |nas|
+  if nas_router
   begin
     response = RestClient::Request.execute(
       method: :post,
-      url: "http://#{nas.ip_address}/rest/ip/hotspot/active/login",
-      user: nas.username,
-      password: nas.password,
+      url: "http://#{nas_router.ip_address}/rest/ip/hotspot/active/login",
+      user: nas_router.username,
+      password: nas_router.password,
       payload: {
         ip: session.ip,
         user: voucher_code,
@@ -801,36 +800,35 @@ nas_routers.each do |nas|
         content_type: :json,
         accept: :json
       },
-       timeout: 5,
+      timeout: 5,
       open_timeout: 3
     )
 
     if response.code == 200
-    #   Rails.logger.info "Device #{session.ip} successfully logged 
-    # in with voucher #{voucher_code} on router #{nas.ip_address}"
-      session.update!(connected: true, status:'used', paid: true)
+      session.update!(connected: true, status: "used", paid: true)
 
-voucher.update(status:"used", last_logged_in: Time.now,
-       used_voucher: true, login_by:'Voucher Code')
-
-     
+      voucher.update!(
+        status: "used",
+        last_logged_in: Time.current,
+        used_voucher: true,
+        login_by: "Voucher Code"
+      )
     end
 
-     rescue RestClient::Exceptions::Timeout, Errno::ETIMEDOUT
-    Rails.logger.info "Router #{nas.ip_address} timed out during login"
+  rescue RestClient::Exceptions::Timeout, Errno::ETIMEDOUT
+    Rails.logger.info "Router #{nas_router.ip_address} timed out during login"
 
   rescue RestClient::Unauthorized
-    Rails.logger.info "REST auth failed for router #{nas.ip_address}"
+    Rails.logger.info "REST auth failed for router #{nas_router.ip_address}"
 
   rescue RestClient::ExceptionWithResponse => e
-    Rails.logger.info "MikroTik REST error on #{nas.ip_address}: #{e.response}"
+    Rails.logger.info "MikroTik REST error on #{nas_router.ip_address}: #{e.response}"
 
   rescue StandardError => e
     Rails.logger.info "REST error logging in device #{session.ip}: #{e.message}"
-  else
-     
   end
-  
+else
+  Rails.logger.warn "No router found for account #{session.account_id}"
 end
 
 
