@@ -142,6 +142,7 @@
 services:
   redis:
     image: redis:7-alpine
+    network_mode: host
     command: redis-server --maxmemory 256mb --maxmemory-policy allkeys-lru
     # ports:
       # - "6379:6379"
@@ -152,8 +153,8 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-    networks:
-      - appnet
+    # networks:
+    #   - appnet
 
   web:
     build:

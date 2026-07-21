@@ -1,5 +1,5 @@
 default:
-  :concurrency: 3
+  :concurrency: 2
   :queues:
     - [invoices, 2]
     - [client_conf, 2]
@@ -25,13 +25,13 @@ development:
 
     rehydrate_wireguard_job:
       class: RehydrateWireguardJob
-      cron: "*/4 * * * *"
+      cron: "*/5 * * * *"
 
 
 
     pay_partners_job:
       class: PayPartnersJob
-      cron: "*/2 * * * *"
+      cron: "*/5 * * * *"
 
 
 
@@ -44,7 +44,7 @@ development:
 
     pay_isps_job:
       class: PayIspsJob
-      cron: "*/2 * * * *"
+      cron: "*/5 * * * *"
 
     subscription_expiration_notification_job:
         class: SubscriptionExpirationNotificationJob
@@ -116,7 +116,7 @@ development:
 
     subscription_expiration_job:
       class: SubscriptionExpirationJob
-      cron: "*/3 * * * *"
+      cron: "*/5 * * * *"
 
   
 
