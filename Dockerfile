@@ -63,6 +63,7 @@
 # CMD ["./bin/rails", "server"]
 
 # syntax=docker/dockerfile:1
+# FROM ruby:3.2.1-slim 
 
 # -------------------------------
 # Build stage
@@ -70,7 +71,7 @@
 
 # Dockerfile - Rails application with all dependencies
 
-FROM ruby:3.2.1-slim 
+FROM ruby:3.3-slim
 
 # Install system packages required for Rails and PostgreSQL
 RUN apt-get update && apt-get install -y --no-install-recommends \
