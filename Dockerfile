@@ -77,6 +77,8 @@ FROM ruby:3.3-slim
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     libpq-dev \
+    libyaml-dev \
+    pkg-config \
     nodejs \
     npm \
     git \
@@ -85,7 +87,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     iproute2 \
     iputils-ping \
     libjemalloc2 \
-     tnftp \
+    tnftp \
     && npm install -g yarn \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
