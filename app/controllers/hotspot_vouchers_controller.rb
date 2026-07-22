@@ -96,10 +96,40 @@ def index
                         .where(account_id: @account.id)
                         .includes(:hotspot_mpesa_revenue, :hotspot_package)
                         .order(created_at: :desc)
-  render json: @hotspot_vouchers
-  #  @hotspot_vouchers = HotspotVoucher.order(created_at: :desc)
-  # render json: @hotspot_vouchers
+
+                        package_names = @hotspot_vouchers.map(&:package).compact.uniq
+
+packages_by_name = HotspotPackage.where(name: package_names, account_id: @account.id)
+                                  .index_by(&:name)
+
+router_names = packages_by_name.values.map(&:nas_router).compact.uniq
+
+# 2. Cache each router's active-user list, keyed by router name via find_by
+active_by_router = Rails.cache.fetch("active_users_#{@account.id}", expires_in: 10.seconds) do
+  router_names.each_with_object({}) do |router_name, hash|
+    nas = NasRouter.find_by(name: router_name, account_id: @account.id)
+    next unless nas
+
+    begin
+      resp = RestClient::Request.execute(
+        method: :get,
+        url: "http://#{nas.ip_address}/rest/ip/hotspot/active",
+        user: nas.username, password: nas.password,
+        timeout: 3, open_timeout: 2
+      )
+      hash[router_name] = JSON.parse(resp.body).map { |u| u["user"] }
+    rescue
+      hash[router_name] = []
+    end
+  end
 end
+
+render json: @hotspot_vouchers, each_serializer: HotspotVoucherSerializer,
+       packages_by_name: packages_by_name,
+       active_by_router: active_by_router  
+end
+
+
 
 
 

@@ -6,12 +6,19 @@ class HotspotVoucherSerializer < ActiveModel::Serializer
   :is_online, :login_by, :sync_status, :synced_at, :sync_error
   
 
-  def is_online
-  object.online?
+#   def is_online
+#   object.online?
+# end
+
+
+def is_online
+  return object.online? unless instance_options[:active_by_router]
+
+  pkg = instance_options[:packages_by_name]&.[](object.package)
+  return false unless pkg
+
+  instance_options[:active_by_router][pkg.nas_router]&.include?(object.voucher) || false
 end
-
-
-
 
 
   
