@@ -186,6 +186,7 @@ services:
       RAILS_LOG_TO_STDOUT: "true"
       LD_PRELOAD: /usr/lib/x86_64-linux-gnu/libjemalloc.so.2
       MALLOC_ARENA_MAX: "2"
+      RUBY_YJIT_ENABLE: "1"
     extra_hosts:
       - "host.docker.internal:host-gateway" # 👈 Required for Linux users
     depends_on:
@@ -223,6 +224,7 @@ services:
       RAILS_LOG_TO_STDOUT: "true"
       LD_PRELOAD: /usr/lib/x86_64-linux-gnu/libjemalloc.so.2
       MALLOC_ARENA_MAX: "2"
+      RUBY_YJIT_ENABLE: "1"
     extra_hosts:
       - "host.docker.internal:host-gateway" # 👈 Required for Linux users
     depends_on:
