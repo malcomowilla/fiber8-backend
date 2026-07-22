@@ -140,23 +140,47 @@ end
 
 
   def logout_hotspot_user(voucher, tenant)
-  NasRouter.where(account_id: tenant.id).find_each do |router|
-    router_ip = router.ip_address
-    router_username = router.username
-    router_password = router.password 
+  hotspot_package = HotspotPackage.find_by(
+    name: voucher.package,
+    account_id: tenant.id
+  )
 
-    remove_command = "/ip hotspot active remove [find user=#{voucher.voucher}]"
+  return unless hotspot_package
 
-    begin
-      Net::SSH.start(router_ip, router_username, password: router_password, verify_host_key: :never, non_interactive: true) do |ssh|
-        output = ssh.exec!(remove_command)
-        Rails.logger.info("Successfully removed user #{voucher.voucher} from router #{router.name || router_ip}: #{output}")
-      end
-    rescue Net::SSH::AuthenticationFailed
-      Rails.logger.info("SSH authentication failed for MikroTik router #{router.name || router_ip}")
-    rescue StandardError => e
-      Rails.logger.info("Failed to logout user #{voucher.voucher} from router #{router.name || router_ip}: #{e.message}")
+  router = NasRouter.find_by(
+    name: hotspot_package.nas_router,
+    account_id: tenant.id
+  )
+
+  return unless router
+
+  router_ip = router.ip_address
+  router_username = router.username
+  router_password = router.password
+
+  remove_command = "/ip hotspot active remove [find user=#{voucher.voucher}]"
+
+  begin
+    Net::SSH.start(
+      router_ip,
+      router_username,
+      password: router_password,
+      verify_host_key: :never,
+      non_interactive: true
+    ) do |ssh|
+      output = ssh.exec!(remove_command)
+      Rails.logger.info(
+        "Successfully removed user #{voucher.voucher} from router #{router.name || router_ip}: #{output}"
+      )
     end
+  rescue Net::SSH::AuthenticationFailed
+    Rails.logger.info(
+      "SSH authentication failed for MikroTik router #{router.name || router_ip}"
+    )
+  rescue StandardError => e
+    Rails.logger.info(
+      "Failed to logout user #{voucher.voucher} from router #{router.name || router_ip}: #{e.message}"
+    )
   end
 end
 
