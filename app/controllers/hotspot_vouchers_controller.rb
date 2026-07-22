@@ -136,15 +136,21 @@ end
 
 
 
-    def logout_user
-            host = request.headers['X-Subdomain']
-    @account = Account.find_by!(subdomain: host)
-  
-voucher = HotspotVoucher.find_by(voucher: params[:voucher])
-nas_routers = NasRouter.where(account_id: voucher.account_id)
-nas_routers.each do |nas|
+   def logout_user
+  host = request.headers['X-Subdomain']
+  @account = Account.find_by!(subdomain: host)
+
+  voucher = HotspotVoucher.find_by(voucher: params[:voucher])
+  return render json: 'Voucher not found', status: :not_found unless voucher
+
+  package = HotspotPackage.find_by(name: voucher.package, account_id: voucher.account_id)
+  return render json: 'Package not found', status: :unprocessable_entity unless package
+
+  nas = NasRouter.find_by(name: package.nas_router, account_id: voucher.account_id)
+  return render json: 'Router not found', status: :unprocessable_entity unless nas
+
   begin
- active_users = RestClient::Request.execute(
+    active_users = RestClient::Request.execute(
       method: :get,
       url: "http://#{nas.ip_address}/rest/ip/hotspot/active",
       user: nas.username,
@@ -152,45 +158,47 @@ nas_routers.each do |nas|
     )
 
     users = JSON.parse(active_users.body)
-
     active = users.find { |u| u["user"] == voucher.voucher }
+
+    unless active
+      return render json: 'User is not currently online', status: :unprocessable_entity
+    end
+
     response = RestClient::Request.execute(
       method: :post,
       url: "http://#{nas.ip_address}/rest/ip/hotspot/active/remove",
       user: nas.username,
       password: nas.password,
-       payload: { ".id": active[".id"] }.to_json,
-        headers: { content_type: :json }
+      payload: { ".id": active[".id"] }.to_json,
+      headers: { content_type: :json }
     )
 
     if response.code == 200
-  HotspotVoucherChannel.broadcast_to(@account, {
-      type: "voucher_online",
-     is_online: false,
-     voucher: HotspotVoucher.find_by(voucher: params[:voucher]),
-     id: HotspotVoucher.find_by(voucher: params[:voucher]).id
-     
-    })
+      HotspotVoucherChannel.broadcast_to(@account, {
+        type: "voucher_online",
+        is_online: false,
+        voucher: voucher,
+        id: voucher.id
+      })
 
-     render json: 'Successfully logged out user', status: :ok
-     else
-     render json: 'Failed to log out user', status: :unprocessable_entity
-
+      render json: 'Successfully logged out user', status: :ok
+    else
+      render json: 'Failed to log out user', status: :unprocessable_entity
     end
 
   rescue RestClient::Unauthorized
     Rails.logger.info "REST auth failed for router #{nas.ip_address}"
+    render json: 'Router authentication failed', status: :unprocessable_entity
 
   rescue RestClient::ExceptionWithResponse => e
     Rails.logger.info "MikroTik REST error on #{nas.ip_address}: #{e.response}"
+    render json: 'Router error', status: :unprocessable_entity
 
   rescue StandardError => e
     Rails.logger.info "REST error logging in device #{nas.ip_address}: #{e.message}"
- 
+    render json: 'Failed to log out user', status: :unprocessable_entity
   end
-  end
-    end
-
+end
 
 
 
