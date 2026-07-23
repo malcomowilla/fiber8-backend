@@ -65,52 +65,63 @@ if current_user
 
 
   # GET /hotspot_mpesa_revenues or /hotspot_mpesa_revenues.json
-  def index
-    #  host = request.headers['X-Subdomain']
-    # @account = Account.find_by(subdomain: host)
-    # @hotspot_mpesa_revenues = HotspotMpesaRevenue.all
-    # render json: @hotspot_mpesa_revenues
-  @hotspot_mpesa_revenues = HotspotMpesaRevenue
-                  .includes(:hotspot_voucher) 
-                  .order(created_at: :desc)
+#   def index
+#     #  host = request.headers['X-Subdomain']
+#     # @account = Account.find_by(subdomain: host)
+#     # @hotspot_mpesa_revenues = HotspotMpesaRevenue.all
+#     # render json: @hotspot_mpesa_revenues
+#   @hotspot_mpesa_revenues = HotspotMpesaRevenue
+#                   .includes(:hotspot_voucher) 
+#                   .order(created_at: :desc)
    
-# @hotspot_mpesa_revenues = HotspotMpesaRevenue.all
-# HotspotMpesaRevenue.order(created_at: :desc).to_a
-    render json: @hotspot_mpesa_revenues
+# # @hotspot_mpesa_revenues = HotspotMpesaRevenue.all
+# # HotspotMpesaRevenue.order(created_at: :desc).to_a
+#     render json: @hotspot_mpesa_revenues
+#   end
+
+def index
+   host = request.headers['X-Subdomain']
+    @account = Account.find_by!(subdomain: host)
+  @hotspot_mpesa_revenues = Rails.cache.fetch("hotspot_mpesa_revenues_#{@account.id}", expires_in: 10.seconds) do
+    HotspotMpesaRevenue
+      .includes(:hotspot_voucher)
+      .order(created_at: :desc)
+      .to_a
   end
 
-
+  render json: @hotspot_mpesa_revenues
+end
   
 
 def peak_hour
-  peak = HotspotMpesaRevenue
-    .joins(:hotspot_voucher)
-    .select(
-      "EXTRACT(HOUR FROM hotspot_mpesa_revenues.created_at) AS hour,
-       COUNT(*) AS vouchers_sold,
-       SUM(hotspot_mpesa_revenues.amount) AS total_revenue"
-    )
-    .group("hour")
-    .order("vouchers_sold DESC")
-    .where(status: "Completed")
-    .limit(1)
-    .first
+   host = request.headers['X-Subdomain']
+    @account = Account.find_by!(subdomain: host)
+  result = Rails.cache.fetch("peak_hour_#{@account.id}", expires_in: 10.seconds) do
+    peak = HotspotMpesaRevenue
+      .joins(:hotspot_voucher)
+      .select(
+        "EXTRACT(HOUR FROM hotspot_mpesa_revenues.created_at) AS hour,
+         COUNT(*) AS vouchers_sold,
+         SUM(hotspot_mpesa_revenues.amount) AS total_revenue"
+      )
+      .where(status: "Completed")
+      .group("hour")
+      .order("vouchers_sold DESC")
+      .limit(1)
+      .first
 
-  if peak
-    hour = peak.hour.to_i
+    next nil unless peak
 
-    formatted_hour = Time.zone.parse("#{hour}:00").strftime("%I:00 %p")
-
-    render json: {
+    {
       title: "Peak Hour",
-      time: formatted_hour,               # e.g. "08:00 PM"
+      time: Time.zone.parse("#{peak.hour.to_i}:00").strftime("%I:00 %p"),
       vouchers_sold: peak.vouchers_sold.to_i,
       total_revenue: peak.total_revenue.to_f,
       description: "Most vouchers & revenue"
     }
-  else
-    render json: { message: "No data found" }, status: :not_found
   end
+
+  result ? render(json: result) : render(json: { message: "No data found" }, status: :not_found)
 end
 
 
@@ -119,31 +130,34 @@ end
 
 
 
-
   def best_day_summary
-  best_day = HotspotMpesaRevenue
-    .joins(:hotspot_voucher)
-    .select(
-      "DATE(hotspot_mpesa_revenues.created_at) AS day,
-       SUM(hotspot_mpesa_revenues.amount) AS total_revenue,
-       COUNT(*) AS vouchers_sold"
-    )
-    .group("day")
-    .order("total_revenue DESC")
-    .where(status: "Completed")
-    .limit(1)
-    .first
+     host = request.headers['X-Subdomain']
+    @account = Account.find_by!(subdomain: host)
+  result = Rails.cache.fetch("best_day_summary_#{@account.id}", expires_in: 10.seconds) do
+    best_day = HotspotMpesaRevenue
+      .joins(:hotspot_voucher)
+      .select(
+        "DATE(hotspot_mpesa_revenues.created_at) AS day,
+         SUM(hotspot_mpesa_revenues.amount) AS total_revenue,
+         COUNT(*) AS vouchers_sold"
+      )
+      .where(status: "Completed")
+      .group("day")
+      .order("total_revenue DESC")
+      .limit(1)
+      .first
 
-  if best_day
-    render json: {
+    next nil unless best_day
+
+    {
       title: "Best Day Ever",
       total_revenue: best_day.total_revenue.to_f,
       vouchers_sold: best_day.vouchers_sold.to_i,
-      day_name: best_day.day.strftime("%A · %d %b")  # e.g. "Tuesday · 28 Mar"
+      day_name: best_day.day.strftime("%A · %d %b")
     }
-  else
-    render json: { message: "No data found" }, status: :not_found
   end
+
+  result ? render(json: result) : render(json: { message: "No data found" }, status: :not_found)
 end
 
 
@@ -167,40 +181,42 @@ end
 
 
 def most_popular_package
-  package = HotspotMpesaRevenue
-    .joins(:hotspot_voucher)
-    .select(
-      "hotspot_vouchers.package AS package,
-       COUNT(*) AS vouchers_sold,
-       SUM(hotspot_mpesa_revenues.amount) AS total_revenue"
-    )
-    .group("hotspot_vouchers.package")
-    .order("vouchers_sold DESC")
-    .where(status: 'Completed')
-    .limit(1)
-    .first
+   host = request.headers['X-Subdomain']
+    @account = Account.find_by!(subdomain: host)
+  result = Rails.cache.fetch("most_popular_package_#{@account.id}", expires_in: 10.seconds) do
+    pkg = HotspotMpesaRevenue
+      .joins(:hotspot_voucher)
+      .select(
+        "hotspot_vouchers.package AS package,
+         COUNT(*) AS vouchers_sold,
+         SUM(hotspot_mpesa_revenues.amount) AS total_revenue"
+      )
+      .where(status: 'Completed')
+      .group("hotspot_vouchers.package")
+      .order("vouchers_sold DESC")
+      .limit(1)
+      .first
 
-  if package
-    render json: {
-      package: package.package,
-      vouchers_sold: package.vouchers_sold.to_i,
-      total_revenue: package.total_revenue.to_f
+    next nil unless pkg
+
+    {
+      package: pkg.package,
+      vouchers_sold: pkg.vouchers_sold.to_i,
+      total_revenue: pkg.total_revenue.to_f
     }
-  else
-    render json: { message: "No data found" }, status: :not_found
   end
+
+  result ? render(json: result) : render(json: { message: "No data found" }, status: :not_found)
 end
 
 
 
 
-
-
-
-
-
 def top_customers
-    top_customers = HotspotMpesaRevenue
+   host = request.headers['X-Subdomain']
+    @account = Account.find_by!(subdomain: host)
+  result = Rails.cache.fetch("top_customers_#{@account.id}", expires_in: 10.seconds) do
+    HotspotMpesaRevenue
       .joins(:hotspot_voucher)
       .select(
         "hotspot_vouchers.phone AS phone,
@@ -210,64 +226,68 @@ def top_customers
          MAX(hotspot_mpesa_revenues.created_at) AS last_payment_at,
          ARRAY_AGG(DISTINCT hotspot_vouchers.package) AS packages"
       )
+      .where(status: "Completed")
       .group("hotspot_vouchers.phone, hotspot_mpesa_revenues.name")
       .order("total_purchases DESC")
-      .where(status: "Completed")
-
-    # render json: top_customers.map { |c|
-    #   {
-    #     phone: c.phone,
-    #     name: c.name,
-    #     total_purchases: c.total_purchases.to_i,
-    #     total_spent: c.total_spent.to_f,
-    #     last_payment_at: c.last_payment_at.strftime("%B %d, %Y at %I:%M %p"),
-    #     packages: c.packages
-    #   }
-    # }
-    render json: top_customers.each_with_index.map { |c, index|
-  {
-    rank: index + 1, # 👈 ranking starts from 1
-    phone: c.phone,
-    name: c.name,
-    purchases: c.total_purchases.to_i,
-    spent: c.total_spent.to_f,
-    last_payment_at: c.last_payment_at.strftime("%B %d, %Y at %I:%M %p"),
-    pkg: c.packages
-  }
-}
+      .each_with_index.map { |c, index|
+        {
+          rank: index + 1,
+          phone: c.phone,
+          name: c.name,
+          purchases: c.total_purchases.to_i,
+          spent: c.total_spent.to_f,
+          last_payment_at: c.last_payment_at.strftime("%B %d, %Y at %I:%M %p"),
+          pkg: c.packages
+        }
+      }
   end
+
+  render json: result
+end
+
+
+
+
+
 
 
 def todays_revenue
+   host = request.headers['X-Subdomain']
+    @account = Account.find_by!(subdomain: host)
   # start_time = Time.current.beginning_of_day
   # end_time = Time.current
-  #  host = request.headers['X-Subdomain']
-  #   @account = Account.find_by(subdomain: host)
-    today_revenue = HotspotMpesaRevenue.today.sum(:amount)
-  
+   result = Rails.cache.fetch("todays_revenue_#{@account.id}", expires_in: 10.seconds) do
+     HotspotMpesaRevenue.today.sum(:amount)
+  end
    
-  render json: today_revenue
+  render json: result
 end
  
 
 
 
 def yesterdays_revenue
-yesterday_revenue = HotspotMpesaRevenue.yesterday.sum(:amount)
- render json: yesterday_revenue
+   host = request.headers['X-Subdomain']
+    @account = Account.find_by!(subdomain: host)
+     result = Rails.cache.fetch("yesterdays_revenue_#{@account.id}", expires_in: 10.seconds) do
 
+ HotspotMpesaRevenue.yesterday.sum(:amount)
+ 
+ end
+render json: result
 end
 
 
 def this_month_revenue
-  # start_time = Time.current.beginning_of_month
-  # end_time = Time.current
-#  host = request.headers['X-Subdomain']
-#     @account = Account.find_by(subdomain: host)
-  # render json: HotspotMpesaRevenue.where(created_at: start_time..end_time).sum(:amount)
-    this_month = HotspotMpesaRevenue.this_month.sum(:amount)
-    
-  render json: this_month
+ host = request.headers['X-Subdomain']
+    @account = Account.find_by!(subdomain: host)
+     result = Rails.cache.fetch("this_month_revenue_#{@account.id}", expires_in: 10.seconds) do
+
+     HotspotMpesaRevenue.this_month.sum(:amount)
+    end
+
+
+  render json: result
 end
 
 
@@ -333,32 +353,29 @@ end
     
     # GET /api/revenue_summary
     def revenue_summary
-      today = HotspotMpesaRevenue.today.sum(:amount)
-      this_week = HotspotMpesaRevenue.this_week.sum(:amount)
-      this_month = HotspotMpesaRevenue.this_month.sum(:amount)
-      all_time = HotspotMpesaRevenue.sum(:amount)
-      this_year = HotspotMpesaRevenue.this_year.sum(:amount)
-      
-      # Last 7 days revenue
-      last_7_days = (0..6).map do |i|
+  data = Rails.cache.fetch("revenue_summary_#{@account.id}", expires_in: 10.seconds) do
+    {
+      today:      HotspotMpesaRevenue.today.sum(:amount),
+      this_week:  HotspotMpesaRevenue.this_week.sum(:amount),
+      this_month: HotspotMpesaRevenue.this_month.sum(:amount),
+      all_time:   HotspotMpesaRevenue.sum(:amount),
+      this_year:  HotspotMpesaRevenue.this_year.sum(:amount),
+      last_7_days: (0..6).map { |i|
         date = i.days.ago.to_date
-        revenue = HotspotMpesaRevenue.daily_revenue(date)
-        { date: date, revenue: revenue }
-      end.reverse
-      
-      render json: {
-        success: true,
-        summary: {
-          today: today,
-          this_week: this_week,
-          this_month: this_month,
-          all_time: all_time,
-          this_year: this_year
-        },
-        last_7_days: last_7_days,
-        currency: 'KES'
-      }
-    end
+        { date: date, revenue: HotspotMpesaRevenue.daily_revenue(date) }
+      }.reverse
+    }
+  end
+
+  render json: {
+    success: true,
+    summary: data.slice(:today, :this_week, :this_month, :all_time, :this_year),
+    last_7_days: data[:last_7_days],
+    currency: 'KES'
+  }
+end
+
+
     
     # GET /api/revenue_by_date_range?start_date=2024-01-01&end_date=2024-01-31
     def revenue_by_date_range
@@ -412,11 +429,36 @@ end
   def destroy
     @hotspot_mpesa_revenue = HotspotMpesaRevenue.find_by(id: params[:id])
     @hotspot_mpesa_revenue.destroy!
+    clear_revenue_caches
     render json: { message: "Hotspot MPESA revenue deleted successfully" }, status: :ok
 
   end
 
   private
+
+
+
+  def clear_revenue_caches
+      Rails.cache.delete("hotspot_mpesa_revenues_#{@account.id}")
+      Rails.cache.delete("revenue_summary_#{@account.id}")
+      Rails.cache.delete("peak_hour_#{@account.id}")
+      Rails.cache.delete("best_day_summary_#{@account.id}")
+      Rails.cache.delete("most_popular_package_#{@account.id}")
+      Rails.cache.delete("top_customers_#{@account.id}")
+      Rails.cache.delete("this_month_revenue_#{@account.id}")
+      Rails.cache.delete("yesterdays_revenue_#{@account.id}")
+      Rails.cache.delete("todays_revenue_#{@account.id}")
+
+        
+      
+      
+    end
+
+
+
+
+
+
     # Use callbacks to share common setup or constraints between actions.
     def set_hotspot_mpesa_revenue
       @hotspot_mpesa_revenue = HotspotMpesaRevenue.find(params[:id])
