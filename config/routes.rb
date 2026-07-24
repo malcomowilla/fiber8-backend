@@ -177,6 +177,13 @@ resources :network_connections
 post 'track_ad_event', to: 'ad_settings#track_ad_event'
 get  'ad_stats',        to: 'ad_settings#ad_stats'
 
+get 'hotspot_payment_funnel',    to: 'hotspot_mpesa_revenues#payment_funnel'
+get 'hotspot_abandoned_sessions', to: 'hotspot_mpesa_revenues#abandoned_sessions'
+
+
+
+get '/api/hotspot_payment_funnel',    to: 'hotspot_mpesa_revenues#payment_funnel'
+get '/api/hotspot_abandoned_sessions', to: 'hotspot_mpesa_revenues#abandoned_sessions'
 
 
 post '/api/track_ad_event', to: 'ad_settings#track_ad_event'
@@ -230,6 +237,9 @@ post "hotspot_page_design", to: "hotspot_settings#save_page_design"
 get  "hotspot_page_design", to: "hotspot_settings#get_page_design"
 post "publish_hotspot_page", to: "hotspot_settings#publish_hotspot_page"
 get '/api/pppoe_revenue_today', to: 'pp_poe_mpesa_revenues#todays_revenue'
+get '/api/pppoe_revenue_this_month', to: 'pp_poe_mpesa_revenues#this_month_revenue'
+get '/pppoe_revenue_this_month', to: 'pp_poe_mpesa_revenues#this_month_revenue'
+
 get '/pppoe_revenue_today', to: 'pp_poe_mpesa_revenues#todays_revenue'
 get '/api/expiring_soon', to: 'subscribers#expiring_soon'
 

@@ -1210,6 +1210,12 @@ plan = ActsAsTenant.current_tenant&.hotspot_and_dial_plan
 
   expired_pppoe = plan&.expiry.present? && plan.expiry <= Time.current
 
+
+if phone_number.blank?
+    return render json: { error: 'Phone number is required to make a payment' }, status: :unprocessable_entity
+  end
+
+
   if expired_pppoe
     return render json: { error: 'License has expired'}, status: 422  
   end

@@ -128,6 +128,95 @@ end
 
 
 
+# GET /api/hotspot_payment_funnel
+# "Funnel" view: how many people started a payment vs actually finished one.
+def payment_funnel
+  result = Rails.cache.fetch("payment_funnel_#{@account.id}", expires_in: 10.seconds) do
+    window = 24.hours.ago..Time.current
+
+    sessions = TemporarySession.where(created_at: window)
+    revenues = HotspotMpesaRevenue.where(created_at: window)
+
+    total_attempts = sessions.count
+    completed      = revenues.where(status: 'Completed').count
+    pending        = revenues.where(status: 'Pending').count
+    cancelled      = revenues.where(status: 'Cancelled').count
+
+    # "Abandoned" = STK was triggered (session exists) but nobody ever paid/connected,
+    # and it's been sitting long enough that it's clearly not still mid-payment.
+    abandoned = sessions.where(paid: false, connected: false)
+                         .where('temporary_sessions.created_at < ?', 5.minutes.ago)
+                         .count
+
+    conversion_rate = total_attempts.positive? ? ((completed.to_f / total_attempts) * 100).round(1) : 0.0
+    completed_revenue = revenues.where(status: 'Completed').sum(:amount)
+
+    {
+      total_attempts: total_attempts,
+      completed: completed,
+      pending: pending,
+      cancelled: cancelled,
+      abandoned: abandoned,
+      conversion_rate: conversion_rate,
+      completed_revenue: completed_revenue
+    }
+  end
+
+  render json: result
+end
+
+# GET /api/hotspot_abandoned_sessions
+# Row-level detail for the admin: every device/phone that started a payment
+# in the last 24h and is still sitting there unpaid — so support can actually
+# see who bailed, not just a count.
+def abandoned_sessions
+  sessions = TemporarySession
+    .where(paid: false)
+    .where('created_at > ?', 24.hours.ago)
+    .order(created_at: :desc)
+    .limit(100)
+
+  # Pull matching revenue rows (by checkout_request_id) in one query instead of N+1
+  checkout_ids = sessions.map(&:checkout_request_id).compact
+  revenues_by_checkout = HotspotMpesaRevenue
+    .where(checkout_request_id: checkout_ids)
+    .index_by(&:checkout_request_id)
+
+  data = sessions.map do |s|
+    minutes_since = ((Time.current - s.created_at) / 60).round
+    revenue = revenues_by_checkout[s.checkout_request_id]
+
+    {
+      id: s.id,
+      phone_number: s.phone_number,
+      package: s.hotspot_package,
+      mac: s.mac,
+      ip: s.ip,
+      created_at: s.created_at,
+      minutes_since: minutes_since,
+      connected: s.connected,
+      revenue_status: revenue&.status || 'No STK response',
+      # simple bucketing so the UI can color-code without duplicating this logic
+      stage:
+        if s.connected
+          'connected'
+        elsif revenue&.status == 'Completed'
+          'paid_not_connected'
+        elsif revenue&.status == 'Cancelled'
+          'cancelled'
+        elsif minutes_since >= 5
+          'abandoned'
+        else
+          'in_progress'
+        end
+    }
+  end
+
+  render json: data
+end
+
+
+
 
 
   def best_day_summary
