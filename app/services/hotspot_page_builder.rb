@@ -761,10 +761,15 @@ function renderExpandedAd() {
     }
   }
 }
-
 function collapseExpandedAd() {
   const s = expandedAdId && adState[expandedAdId];
-  if (s && s.ad.media_type === 'video') {
+  if (s && s.ad.media_type === 'video' && !s.completed) {
+    // Stop the real countdown the moment they're not actually watching —
+    // it resumes from where it left off next time they expand, rather
+    // than silently ticking to completion (and granting reward) offscreen.
+    if (adTimers[expandedAdId]) { clearInterval(adTimers[expandedAdId]); delete adTimers[expandedAdId]; }
+    if (adSkipTimers[expandedAdId] && !s.skipReady) { clearTimeout(adSkipTimers[expandedAdId]); delete adSkipTimers[expandedAdId]; }
+
     const inlineVideo = document.getElementById('ad-video-' + expandedAdId);
     const expandedVideo = document.getElementById('ad-expanded-video');
     if (inlineVideo && expandedVideo) {
@@ -774,6 +779,7 @@ function collapseExpandedAd() {
   }
   expandedAdId = null;
   renderExpandedAd();
+  renderAds();
 }
 
 function startQueryStatus() {
@@ -1396,15 +1402,27 @@ function renderAds() {
     el.onclick = () => trackAdEvent(el.dataset.adTrack, 'click');
   });
 
-  document.querySelectorAll('[data-ad-expand]').forEach(el => {
+  
+
+document.querySelectorAll('[data-ad-expand]').forEach(el => {
   el.onclick = (e) => {
     e.stopPropagation();
     const id = el.dataset.adExpand;
+    const s = adState[id];
+    if (!s || s.completed) return;
     trackAdEvent(id, 'engaged_view');   // deliberate action — counts as engagement
     expandedAdId = id;
     renderExpandedAd();
+    // Real watch-timer starts here — the first time they actually open
+    // the video, not when the ad merely appeared on the page.
+    if (s.ad.media_type === 'video') startAdTimers(s.ad);
   };
 });
+
+
+
+
+
       }
 
        function completeAd(adId, reason) {
@@ -1427,32 +1445,36 @@ function renderAds() {
 
   renderAds();
 }
+
+
 function startAdTimers(ad) {
   const s = adState[ad.id];
-  if (ad.media_type !== 'video' || s.completed) return;
+  if (!s || s.completed) return;
+  if (ad.media_type !== 'video') return;
+  if (adTimers[ad.id]) return; // already running — expand was clicked again, don't restart it
 
-  if (ad.can_skip) {
+  s.started = true; // used by the footer to only show skip UI once the timer is real
+
+  if (ad.can_skip && !s.skipReady) {
     adSkipTimers[ad.id] = setTimeout(() => {
       s.skipReady = true;
-      // They watched past the mandatory unskippable window — that's a
-      // deliberate engagement regardless of whether they skip right after.
-      // Fires once per ad view, separate from video_completed, so a full
-      // watch-through still shows up distinctly in the clicks-vs-completed
-      // chart and isn't double-counted in the aggregate views total.
       trackAdEvent(ad.id, 'engaged_view');
       renderAds();
+      renderExpandedAd();
     }, (ad.skip_after || 5) * 1000);
   }
 
   adTimers[ad.id] = setInterval(() => {
     if (s.secondsLeft <= 1) {
       clearInterval(adTimers[ad.id]);
+      delete adTimers[ad.id];
       s.secondsLeft = 0;
       completeAd(ad.id, 'completed');
       return;
     }
     s.secondsLeft -= 1;
     renderAds();
+    renderExpandedAd(); // keeps the modal's countdown/skip button live too
   }, 1000);
 }
 
@@ -1496,10 +1518,16 @@ function startAdTimers(ad) {
 
             renderAds();
 
-            Object.values(adState).forEach(s => {
-              if (!s.viewTracked) { trackAdEvent(s.ad.id, 'Ad View'); s.viewTracked = true; }
-              startAdTimers(s.ad);
-            });
+Object.values(adState).forEach(s => {
+  if (!s.viewTracked) { trackAdEvent(s.ad.id, 'Ad View'); s.viewTracked = true; }
+  // Image ads have no timer to worry about. Video ads: don't start the
+  // countdown just because the ad loaded on the page — that lets anyone
+  // earn the reward without ever actually watching. The timer only starts
+  // once the viewer taps to expand and actually opens the video.
+  if (s.ad.media_type !== 'video') startAdTimers(s.ad);
+});
+
+
           } catch (e) {
             console.error('Failed to load ads:', e);
             if (cfg.preview) {
