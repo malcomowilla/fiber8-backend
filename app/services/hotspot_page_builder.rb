@@ -521,11 +521,17 @@ let freeTrialState = {};
           document.querySelectorAll('[data-back-to-list]').forEach(el =>
             el.onclick = () => { state.payStep = 'list'; state.selected = null; state.status = null; render(); });
 
-          const payBtn = document.getElementById('pay-btn');
-          if (payBtn) payBtn.onclick = () => {
-            state.phone = document.getElementById('phone').value;
-            payPackage();
-          };
+        const payBtn = document.getElementById('pay-btn');
+if (payBtn) payBtn.onclick = () => {
+  state.phone = document.getElementById('phone').value.trim();
+
+  if (!state.phone) {
+    queryModal = { status: 'error', message: 'Enter your M-Pesa phone number before paying.' };
+    renderQueryModal();
+    return;
+  }
+  payPackage();
+};
 
           const voucherBtn = document.getElementById('voucher-btn');
           if (voucherBtn) voucherBtn.onclick = () => {
@@ -905,9 +911,10 @@ function freeTrialHtml(trialPkgs) {
 
 
 
-
 async function payPackage() {
-  queryModal = { status: 'processing', message: 'STK push sent — enter your M-Pesa PIN on your phone to complete payment.' };
+  // Neutral "in flight" state — we don't know an STK push actually went
+  // out yet, so don't claim it did until the backend confirms it.
+  queryModal = { status: 'processing', message: 'Sending payment request…' };
   renderQueryModal();
   try {
     const res = await fetch(api('/api/make_payment'), {
@@ -916,6 +923,8 @@ async function payPackage() {
     });
     const data = await res.json();
     if (res.ok) {
+      queryModal = { status: 'processing', message: 'STK push sent — enter your M-Pesa PIN on your phone to complete payment.' };
+      renderQueryModal();
       localStorage.setItem('checkout_request_id', data.checkout_request_id);
       startQueryStatus();
     } else {
@@ -928,6 +937,9 @@ async function payPackage() {
     renderQueryModal();
   }
 }
+
+
+
 
         function pollPaymentStatus() {
           let elapsed = 0;
