@@ -312,8 +312,8 @@ let stkQueryInterval = null;
 let promoState = {};          // { [promoId]: secondsRemaining } — ticks down locally between refreshes
 let promoTimerInterval = null;
 let expandedAdId = null;
-let freeTrialState = {}; 
-
+let expandedAdRenderedFor = null; 
+let freeTrialState = {};
 
         function supportHtml() {
           const label = (cfg.footer && cfg.footer.support_label) || 'Need help?';
@@ -672,6 +672,7 @@ function renderConnectedScreen() {
 
 
 
+
 function renderExpandedAd() {
   let root = document.getElementById('ad-expanded-root');
   if (!root) {
@@ -679,10 +680,19 @@ function renderExpandedAd() {
     root.id = 'ad-expanded-root';
     document.body.appendChild(root);
   }
-  if (!expandedAdId) { root.innerHTML = ''; return; }
+  if (!expandedAdId) { root.innerHTML = ''; expandedAdRenderedFor = null; return; }
 
   const s = adState[expandedAdId];
-  if (!s || s.completed) { expandedAdId = null; root.innerHTML = ''; return; }
+  if (!s || s.completed) { expandedAdId = null; root.innerHTML = ''; expandedAdRenderedFor = null; return; }
+
+  // Modal already built for this exact ad — don't touch the DOM. Rebuilding
+  // innerHTML recreates the <video> element and restarts it from 0 every
+  // time, which is why it was never reaching "ended". Just refresh numbers.
+  if (expandedAdRenderedFor === expandedAdId) {
+    updateExpandedAdProgress();
+    return;
+  }
+  expandedAdRenderedFor = expandedAdId;
 
   const ad = s.ad;
   const isVideo = ad.media_type === 'video';
@@ -718,14 +728,16 @@ function renderExpandedAd() {
             \${ad.ad_title ? \`<span style="font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">\${ad.ad_title}</span>\` : ''}
           </div>
           <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
-            \${isVideo && ad.can_skip && s.skipReady ? \`<button id="ad-expanded-skip" style="display:flex;align-items:center;gap:5px;font-size:13px;padding:7px 12px;border-radius:10px;font-weight:700;border:none;background:color-mix(in srgb, var(--accent) 18%, transparent);color:var(--accent);cursor:pointer;">Skip Ad ⏭</button>\` : ''}
-            \${isVideo && ad.can_skip && !s.skipReady ? \`<span style="font-size:12px;padding:7px 12px;border-radius:10px;background:color-mix(in srgb, var(--text) 8%, transparent);color:var(--muted);">\${skipCountdown}s remaining</span>\` : ''}
+            \${isVideo && ad.can_skip ? \`
+              <button id="ad-expanded-skip" style="display:\${s.skipReady ? 'flex' : 'none'};align-items:center;gap:5px;font-size:13px;padding:7px 12px;border-radius:10px;font-weight:700;border:none;background:color-mix(in srgb, var(--accent) 18%, transparent);color:var(--accent);cursor:pointer;">Skip Ad ⏭</button>
+              <span id="ad-expanded-skip-wait" style="display:\${s.skipReady ? 'none' : 'inline'};font-size:12px;padding:7px 12px;border-radius:10px;background:color-mix(in srgb, var(--text) 8%, transparent);color:var(--muted);"><span id="ad-expanded-skip-countdown">\${skipCountdown}</span>s remaining</span>
+            \` : ''}
             \${ad.ad_link ? \`<button id="ad-expanded-visit" style="display:flex;align-items:center;gap:5px;font-size:13px;padding:7px 12px;border-radius:10px;font-weight:700;border:none;background:color-mix(in srgb, var(--primary) 15%, transparent);color:var(--primary);cursor:pointer;">Visit ↗</button>\` : ''}
             \${isImage ? \`<button id="ad-expanded-dismiss" style="display:flex;align-items:center;gap:5px;font-size:13px;padding:7px 12px;border-radius:10px;font-weight:600;border:none;background:color-mix(in srgb, var(--text) 10%, transparent);color:var(--muted);cursor:pointer;">✕ Close Ad</button>\` : ''}
             <button id="ad-expanded-collapse" style="display:flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:10px;border:none;background:color-mix(in srgb, var(--text) 10%, transparent);color:var(--muted);cursor:pointer;">⤡</button>
           </div>
         </div>
-        \${isVideo ? \`<div style="height:3px;background:color-mix(in srgb, var(--text) 10%, transparent);"><div style="height:100%;width:\${((ad.ad_duration || 15) - s.secondsLeft) / (ad.ad_duration || 15) * 100}%;background:linear-gradient(90deg,var(--accent),var(--secondary));transition:width 1s linear;"></div></div>\` : ''}
+        \${isVideo ? \`<div style="height:3px;background:color-mix(in srgb, var(--text) 10%, transparent);"><div id="ad-expanded-progress-bar" style="height:100%;width:\${((ad.ad_duration || 15) - s.secondsLeft) / (ad.ad_duration || 15) * 100}%;background:linear-gradient(90deg,var(--accent),var(--secondary));transition:width 1s linear;"></div></div>\` : ''}
       </div>
     </div>\`;
 
@@ -738,10 +750,10 @@ function renderExpandedAd() {
   if (collapseBtn) collapseBtn.onclick = () => collapseExpandedAd();
 
   const dismissBtn = document.getElementById('ad-expanded-dismiss');
-  if (dismissBtn) dismissBtn.onclick = () => { collapseExpandedAd(); completeAd(ad.id, 'dismissed'); };
+  if (dismissBtn) dismissBtn.onclick = () => completeAd(ad.id, 'dismissed');
 
   const skipBtn = document.getElementById('ad-expanded-skip');
-  if (skipBtn) skipBtn.onclick = () => { collapseExpandedAd(); completeAd(ad.id, 'skipped'); };
+  if (skipBtn) skipBtn.onclick = () => completeAd(ad.id, 'skipped');
 
   const visitBtn = document.getElementById('ad-expanded-visit');
   if (visitBtn) visitBtn.onclick = () => {
@@ -757,10 +769,49 @@ function renderExpandedAd() {
       inlineVideo.pause();
     }
     if (expandedVideo) {
-      expandedVideo.onended = () => { collapseExpandedAd(); completeAd(ad.id, 'completed'); };
+      // completeAd() already closes the modal (clears expandedAdId + hides
+      // the card) — no need to also call collapseExpandedAd() here, which
+      // would otherwise try to resume/replay the inline video pointlessly
+      // right as the ad is finishing.
+      expandedVideo.onended = () => completeAd(ad.id, 'completed');
     }
   }
 }
+
+// Updates only the countdown text and progress bar width, without ever
+// touching the <video> element — this is what runs on every 1s tick while
+// the modal is open, so the video plays through uninterrupted.
+function updateExpandedAdProgress() {
+  if (!expandedAdId) return;
+  const s = adState[expandedAdId];
+  if (!s || s.completed) return;
+  const ad = s.ad;
+  if (ad.media_type !== 'video') return;
+
+  const skipCountdown = Math.max(0, (ad.skip_after || 5) - ((ad.ad_duration || 15) - s.secondsLeft));
+  const countdownEl = document.getElementById('ad-expanded-skip-countdown');
+  if (countdownEl) countdownEl.textContent = skipCountdown;
+
+  if (s.skipReady) {
+    const skipBtn = document.getElementById('ad-expanded-skip');
+    const waitLabel = document.getElementById('ad-expanded-skip-wait');
+    if (skipBtn) skipBtn.style.display = 'flex';
+    if (waitLabel) waitLabel.style.display = 'none';
+  }
+
+  const bar = document.getElementById('ad-expanded-progress-bar');
+  if (bar) bar.style.width = (((ad.ad_duration || 15) - s.secondsLeft) / (ad.ad_duration || 15) * 100) + '%';
+}
+
+
+
+
+
+
+
+
+
+
 function collapseExpandedAd() {
   const s = expandedAdId && adState[expandedAdId];
   if (s && s.ad.media_type === 'video' && !s.completed) {
