@@ -1355,16 +1355,20 @@ function trackAdEvent(adId, eventType) {
   const isCustom = ad.media_type === 'custom_design';
   const isMock = cfg.preview && String(ad.id) === 'mock-ad';
   const isFullscreen = ad.position === 'fullscreen';
-
-  let media = '';
+let media = '';
   if (isImage) {
     media = isFullscreen
       ? \`<img src="\${ad.media_url}" style="width:100%;flex:1;object-fit:contain;display:block;">\`
       : \`<img src="\${ad.media_url}" style="width:100%;max-height:220px;object-fit:cover;display:block;">\`;
   } else if (isVideo) {
+    // muted is required here — browsers block autoplay of unmuted video
+    // without a real user gesture, so without this the inline preview
+    // never actually plays, never fires "ended", and never disappears.
+    // Sound isn't lost for the viewer: they still get full sound once
+    // they tap expand, which opens the real (unmuted) modal video.
     media = isFullscreen
-      ? \`<video id="ad-video-\${ad.id}" src="\${ad.media_url}" autoplay playsinline style="width:100%;flex:1;object-fit:contain;display:block;"></video>\`
-      : \`<video id="ad-video-\${ad.id}" src="\${ad.media_url}" autoplay playsinline style="width:100%;max-height:220px;object-fit:cover;display:block;"></video>\`;
+      ? \`<video id="ad-video-\${ad.id}" src="\${ad.media_url}" autoplay muted playsinline style="width:100%;flex:1;object-fit:contain;display:block;"></video>\`
+      : \`<video id="ad-video-\${ad.id}" src="\${ad.media_url}" autoplay muted playsinline style="width:100%;max-height:220px;object-fit:cover;display:block;"></video>\`;
   } else if (isCustom) {
     media = customDesignHtml(ad);
   }
