@@ -1453,6 +1453,18 @@ function renderAds() {
     el.onclick = () => trackAdEvent(el.dataset.adTrack, 'click');
   });
 
+
+
+  Object.values(adState).forEach(s => {
+    if (s.completed || s.ad.media_type !== 'video') return;
+    const el = document.getElementById('ad-video-' + s.ad.id);
+    if (el) {
+      el.onended = () => {
+        if (expandedAdId === s.ad.id) return; // modal owns completion in that case
+        completeAd(s.ad.id, 'dismissed');
+      };
+    }
+  });
   
 
 document.querySelectorAll('[data-ad-expand]').forEach(el => {
@@ -1487,7 +1499,8 @@ document.querySelectorAll('[data-ad-expand]').forEach(el => {
   if (isVideo) trackAdEvent(adId, reason === 'skipped' ? 'video_skipped' : 'video_completed');
   else if (s.ad.media_type === 'image') trackAdEvent(adId, 'dismissed');
 
-  if (isVideo) grantAdReward(s.ad);
+if (isVideo && s.started) grantAdReward(s.ad);
+
 
   if (expandedAdId === adId) {
     expandedAdId = null;
