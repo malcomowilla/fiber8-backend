@@ -14,7 +14,8 @@ class HotspotPackageSerializer < ActiveModel::Serializer
     :free_trial_upload_limit,
     :nas_router,
     :intended_device_type,
-      :device_icon      
+      :device_icon,
+      :shared_users     
 
 
 
