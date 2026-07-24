@@ -1235,6 +1235,8 @@ function renderAds() {
       if (ad?.ad_link && !cfg.preview) window.open(ad.ad_link, '_blank');
     };
   });
+
+
   document.querySelectorAll('[data-ad-skip]').forEach(el => {
     el.onclick = (e) => { e.stopPropagation(); completeAd(el.dataset.adSkip, 'skipped'); };
   });
@@ -1254,6 +1256,7 @@ function renderAds() {
     renderExpandedAd();
   };
 });
+      }
 
        function completeAd(adId, reason) {
   const s = adState[adId];
