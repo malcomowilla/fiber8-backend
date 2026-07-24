@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_07_14_215309) do
+ActiveRecord::Schema[7.2].define(version: 2026_07_24_054021) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -99,9 +99,11 @@ ActiveRecord::Schema[7.2].define(version: 2026_07_14_215309) do
     t.string "event_type", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "mac"
     t.index ["account_id", "created_at"], name: "index_ad_events_on_account_id_and_created_at"
     t.index ["account_id"], name: "index_ad_events_on_account_id"
     t.index ["ad_setting_id", "event_type"], name: "index_ad_events_on_ad_setting_id_and_event_type"
+    t.index ["ad_setting_id", "mac"], name: "index_ad_events_on_ad_setting_id_and_mac"
     t.index ["ad_setting_id"], name: "index_ad_events_on_ad_setting_id"
   end
 

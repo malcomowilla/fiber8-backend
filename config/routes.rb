@@ -173,6 +173,8 @@ resources :network_devices
 resources :network_connections
 
 
+get "/api/ad_engagement_trend", to: "ad_settings#ad_engagement_trend"
+get "/ad_engagement_trend", to: "ad_settings#ad_engagement_trend"
 
 post 'track_ad_event', to: 'ad_settings#track_ad_event'
 get  'ad_stats',        to: 'ad_settings#ad_stats'
