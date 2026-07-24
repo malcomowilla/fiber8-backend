@@ -27,12 +27,15 @@ class HotspotPackageSerializer < ActiveModel::Serializer
   end
 
 
-# def shared_users
-#   return unless object.shared_users.present?
+def shared_users
+  return unless object.shared_users.present?
 
-#   "#{object.shared_users.to_i}-Device"
-# end
+  "#{object.shared_users.to_i}-Device"
+end
   
+
+
+
   def valid_from
     object.valid_from.strftime('%I:%M %p') if object.valid_from.present?
   end
