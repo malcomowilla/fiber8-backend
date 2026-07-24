@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_07_24_054021) do
+ActiveRecord::Schema[7.2].define(version: 2026_07_24_070546) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -329,6 +329,16 @@ ActiveRecord::Schema[7.2].define(version: 2026_07_24_054021) do
     t.integer "account_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+  end
+
+  create_table "default_system_ad_settings", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.string "ad_id", null: false
+    t.boolean "enabled", default: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id", "ad_id"], name: "index_default_system_ad_settings_on_account_id_and_ad_id", unique: true
+    t.index ["account_id"], name: "index_default_system_ad_settings_on_account_id"
   end
 
   create_table "dial_mpesa_settings", force: :cascade do |t|
@@ -1533,6 +1543,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_07_24_054021) do
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "ad_events", "accounts"
   add_foreign_key "ad_events", "ad_settings"
+  add_foreign_key "default_system_ad_settings", "accounts"
   add_foreign_key "maintenance_settings", "accounts"
   add_foreign_key "promotional_plans", "hotspot_packages"
 end

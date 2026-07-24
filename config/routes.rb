@@ -173,6 +173,16 @@ resources :network_devices
 resources :network_connections
 
 
+  get  'default_system_ads',               to: 'default_system_ads#index'
+  post 'default_system_ads/:id/toggle',    to: 'default_system_ads#toggle'
+  get  'active_system_ad',                 to: 'default_system_ads#active'
+
+
+  get  '/api/default_system_ads',               to: 'default_system_ads#index'
+  post '/api/default_system_ads/:id/toggle',    to: 'default_system_ads#toggle'
+  get  '/api/active_system_ad',                 to: 'default_system_ads#active'
+
+
 get "/api/ad_engagement_trend", to: "ad_settings#ad_engagement_trend"
 get "/ad_engagement_trend", to: "ad_settings#ad_engagement_trend"
 

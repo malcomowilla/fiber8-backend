@@ -1019,6 +1019,155 @@ async function payPackage() {
         // mac/ip are always available (router-substituted), so this always
         // attempts the check; `username` (if we happen to have one stored)
         // is passed as an extra hint but is never required.
+
+
+
+
+
+
+
+
+
+
+// ── Default system ad ─────────────────────────────────────────────────
+async function loadSystemAd() {
+  if (cfg.preview) return;   // never show in designer preview
+  try {
+    const res = await fetch(api('/api/active_system_ad'), { headers });
+    const data = await res.json();
+    if (!data.ad_id) return;
+
+    // fetch brand
+    const brandRes = await fetch(api('/api/allow_get_company_settings'), { headers });
+    const brand = brandRes.ok ? await brandRes.json() : {};
+
+    renderSystemAd(data.ad_id, brand);
+  } catch (e) { console.error('[system ad]', e); }
+}
+
+function renderSystemAd(adId, brand) {
+  const root = document.createElement('div');
+  root.id = 'system-ad-root';
+  document.body.appendChild(root);
+
+  let elapsed = 0;
+  const scenes = {
+    advertise_with_us: [
+      { until: 4,  html: () => systemAdScene0(brand) },
+      { until: 9,  html: () => systemAdScene1(brand) },
+      { until: 14, html: () => systemAdScene2(brand) },
+      { until: 18, html: () => systemAdScene3(brand) },
+    ],
+  };
+  const scenePlan = scenes[adId] || scenes['advertise_with_us'];
+  const duration = scenePlan[scenePlan.length - 1].until;
+
+  function currentScene() {
+    return scenePlan.find(s => elapsed < s.until) || scenePlan[scenePlan.length - 1];
+  }
+
+  function draw() {
+    const canSkip = elapsed >= 5;
+    const progress = Math.min(100, (elapsed / duration) * 100);
+    root.innerHTML = \`
+      <div style="position:fixed;inset:0;z-index:99999;background:#020617;display:flex;flex-direction:column;font-family:'Plus Jakarta Sans',sans-serif;">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 16px;background:rgba(0,0,0,.4);border-bottom:1px solid rgba(255,255,255,.07);">
+          <span style="font-size:11px;font-weight:700;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.08em;">
+            ✨ Sponsored · \${brand.company_name || 'Your ISP'}
+          </span>
+          \${canSkip
+            ? '<button id="sysad-skip" style="padding:5px 10px;border-radius:8px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.07);color:rgba(255,255,255,.7);font-size:12px;font-weight:600;cursor:pointer;">Skip ✕</button>'
+            : '<span style="font-size:11px;color:rgba(255,255,255,.35);padding:5px 10px;">Skip in \${5 - elapsed}s</span>'
+          }
+        </div>
+        <div style="flex:1;overflow:hidden;">\${currentScene().html()}</div>
+        <div style="height:3px;background:rgba(255,255,255,.15);">
+          <div style="height:100%;width:\${progress}%;background:linear-gradient(90deg,#38bdf8,#a78bfa);transition:width .9s linear;"></div>
+        </div>
+        <div style="padding:8px 16px;background:rgba(0,0,0,.4);display:flex;justify-content:space-between;border-top:1px solid rgba(255,255,255,.07);">
+          <span style="font-size:11px;color:rgba(255,255,255,.3);">Ad ends in \${Math.max(0, duration - elapsed)}s</span>
+          \${brand.contact_info ? '<a href="tel:' + brand.contact_info + '" style="font-size:11px;font-weight:700;color:#38bdf8;text-decoration:none;">📞 ' + brand.contact_info + '</a>' : ''}
+        </div>
+      </div>\`;
+    const skipBtn = document.getElementById('sysad-skip');
+    if (skipBtn) skipBtn.onclick = dismiss;
+  }
+
+  function dismiss() {
+    clearInterval(iv);
+    root.remove();
+  }
+
+  draw();
+  const iv = setInterval(() => {
+    elapsed += 1;
+    if (elapsed >= duration) { dismiss(); return; }
+    draw();
+  }, 1000);
+}
+
+function systemAdScene0(b) {
+  const c = b.primary_color || '#facc15';
+  return \`<div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:28px;background:linear-gradient(160deg,#030712,#1a0f00);gap:16px;">
+    <div style="width:72px;height:72px;border-radius:50%;background:\${c}22;border:2px solid \${c};display:flex;align-items:center;justify-content:center;font-size:32px;">📢</div>
+    <p style="font-size:26px;font-weight:900;color:#fff;text-align:center;line-height:1.2;">Je, una biashara?</p>
+    <p style="font-size:15px;color:rgba(255,255,255,.6);text-align:center;">Do you own a business?</p>
+    <div style="padding:8px 20px;border-radius:999px;background:\${c}22;border:1px solid \${c}44;">
+      <p style="font-size:13px;font-weight:700;color:\${c};">Tangaza kwenye WiFi hii 📶</p>
+    </div>
+  </div>\`;
+}
+
+function systemAdScene1(b) {
+  const c = b.primary_color || '#34d399';
+  return \`<div style="flex:1;display:flex;flex-direction:column;padding:20px 24px;background:linear-gradient(160deg,#030712,#001a0f);gap:14px;">
+    <p style="font-size:17px;font-weight:800;color:#fff;">Wafikie wateja wako 🎯</p>
+    <p style="font-size:12px;color:rgba(255,255,255,.5);">Reach your customers through this hotspot</p>
+    \${[['1,000+','Wateja kila siku','#34d399'],['100%','Ad visibility','#38bdf8'],['3×','vs print ads','#a78bfa']].map(([num,label,col]) =>
+      '<div style="display:flex;align-items:center;gap:14px;padding:12px 16px;border-radius:14px;background:' + col + '0f;border:1px solid ' + col + '25;">' +
+        '<p style="font-size:20px;font-weight:900;color:' + col + ';min-width:60px;">' + num + '</p>' +
+        '<p style="font-size:11px;color:rgba(255,255,255,.5);">' + label + '</p>' +
+      '</div>'
+    ).join('')}
+  </div>\`;
+}
+
+function systemAdScene2(b) {
+  return \`<div style="flex:1;display:flex;flex-direction:column;padding:20px 24px;background:linear-gradient(160deg,#030712,#0a0018);gap:10px;">
+    <p style="font-size:16px;font-weight:800;color:#fff;">Inafaa kwa biashara yoyote 🏪</p>
+    <p style="font-size:12px;color:rgba(255,255,255,.4);">Works for any type of business</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+      \${[['🍽️','Mkahawa','Restaurant'],['💇','Salon','Barber'],['🏥','Duka la dawa','Pharmacy'],['🛒','Duka','Shop'],['🏫','Shule','School'],['🎉','Tukio','Event']].map(([e,sw,en]) =>
+        '<div style="padding:10px 12px;border-radius:12px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);display:flex;align-items:center;gap:8px;">' +
+          '<span style="font-size:20px;">' + e + '</span>' +
+          '<div><p style="font-size:11px;font-weight:700;color:#fff;">' + sw + '</p><p style="font-size:10px;color:rgba(255,255,255,.4);">' + en + '</p></div>' +
+        '</div>'
+      ).join('')}
+    </div>
+  </div>\`;
+}
+
+function systemAdScene3(b) {
+  const c = b.primary_color || '#38bdf8';
+  const logo = b.logo_url || b.logo_preview;
+  return \`<div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:28px;background:linear-gradient(160deg,#030712,\${c}22);gap:16px;">
+    \${logo ? '<img src="' + logo + '" style="width:72px;height:72px;border-radius:18px;object-fit:contain;border:2px solid ' + c + '44;padding:6px;background:rgba(255,255,255,.06);">' :
+      '<div style="width:72px;height:72px;border-radius:18px;background:linear-gradient(135deg,' + c + ',' + c + '88);display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:900;color:#fff;">' + (b.company_name||'I')[0] + '</div>'}
+    <p style="font-size:22px;font-weight:900;color:#fff;text-align:center;">\${b.company_name || 'Your ISP'}</p>
+    <p style="font-size:13px;color:\${c};font-weight:700;">WiFi Advertising Platform</p>
+    \${b.contact_info ? '<div style="display:flex;align-items:center;gap:8px;padding:10px 20px;border-radius:999px;background:' + c + '18;border:1px solid ' + c + '30;"><span style="font-size:14px;font-weight:800;color:#fff;">📞 ' + b.contact_info + '</span></div>' : ''}
+    <p style="font-size:11px;color:rgba(255,255,255,.35);text-align:center;">Powered by \${b.company_name || 'your ISP'} · WiFi Marketing</p>
+  </div>\`;
+}
+
+loadSystemAd();
+
+
+
+
+
+
+
        async function tryAutoLogin() {
           try {
             const custRes = await fetch(api('/api/allow_get_hotspot_customization'), { headers });
