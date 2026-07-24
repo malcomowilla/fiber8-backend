@@ -919,7 +919,7 @@ async function payPackage() {
       localStorage.setItem('checkout_request_id', data.checkout_request_id);
       startQueryStatus();
     } else {
-      queryModal = { status: 'error', message: data.message || 'Payment failed' };
+      queryModal = { status: 'error', message: data.error || 'Payment failed' };
       renderQueryModal();
     }
   } catch (e) {
