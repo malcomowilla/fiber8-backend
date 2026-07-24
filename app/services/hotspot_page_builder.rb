@@ -1087,13 +1087,13 @@ async function payPackage() {
           return 'Free Internet Access';
         }
 
-        function trackAdEvent(adId, eventType) {
-          if (!adId || cfg.preview) return;
-          fetch(api('/api/track_ad_event'), {
-            method: 'POST', headers,
-            body: JSON.stringify({ event_type: eventType, ad_id: adId })
-          }).catch(() => {});
-        }
+function trackAdEvent(adId, eventType) {
+  if (!adId || cfg.preview) return;
+  fetch(api('/api/track_ad_event'), {
+    method: 'POST', headers,
+    body: JSON.stringify({ event_type: eventType, ad_id: adId, mac })
+  }).catch(() => {});
+}
 
         function grantAdReward(ad) {
           if (cfg.preview) return;
@@ -1244,14 +1244,16 @@ function renderAds() {
   document.querySelectorAll('[data-ad-track]').forEach(el => {
     el.onclick = () => trackAdEvent(el.dataset.adTrack, 'click');
   });
+
   document.querySelectorAll('[data-ad-expand]').forEach(el => {
-    el.onclick = (e) => {
-      e.stopPropagation();
-      expandedAdId = el.dataset.adExpand;
-      renderExpandedAd();
-    };
-  });
-}
+  el.onclick = (e) => {
+    e.stopPropagation();
+    const id = el.dataset.adExpand;
+    trackAdEvent(id, 'engaged_view');   // deliberate action — counts as engagement
+    expandedAdId = id;
+    renderExpandedAd();
+  };
+});
 
        function completeAd(adId, reason) {
   const s = adState[adId];
@@ -1273,29 +1275,35 @@ function renderAds() {
 
   renderAds();
 }
+function startAdTimers(ad) {
+  const s = adState[ad.id];
+  if (ad.media_type !== 'video' || s.completed) return;
 
-        function startAdTimers(ad) {
-          const s = adState[ad.id];
-          if (ad.media_type !== 'video' || s.completed) return;
+  if (ad.can_skip) {
+    adSkipTimers[ad.id] = setTimeout(() => {
+      s.skipReady = true;
+      // They watched past the mandatory unskippable window — that's a
+      // deliberate engagement regardless of whether they skip right after.
+      // Fires once per ad view, separate from video_completed, so a full
+      // watch-through still shows up distinctly in the clicks-vs-completed
+      // chart and isn't double-counted in the aggregate views total.
+      trackAdEvent(ad.id, 'engaged_view');
+      renderAds();
+    }, (ad.skip_after || 5) * 1000);
+  }
 
-          if (ad.can_skip) {
-            adSkipTimers[ad.id] = setTimeout(() => {
-              s.skipReady = true;
-              renderAds();
-            }, (ad.skip_after || 5) * 1000);
-          }
+  adTimers[ad.id] = setInterval(() => {
+    if (s.secondsLeft <= 1) {
+      clearInterval(adTimers[ad.id]);
+      s.secondsLeft = 0;
+      completeAd(ad.id, 'completed');
+      return;
+    }
+    s.secondsLeft -= 1;
+    renderAds();
+  }, 1000);
+}
 
-          adTimers[ad.id] = setInterval(() => {
-            if (s.secondsLeft <= 1) {
-              clearInterval(adTimers[ad.id]);
-              s.secondsLeft = 0;
-              completeAd(ad.id, 'completed');
-              return;
-            }
-            s.secondsLeft -= 1;
-            renderAds();
-          }, 1000);
-        }
 
         async function loadAds() {
           try {
