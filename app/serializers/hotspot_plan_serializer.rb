@@ -3,7 +3,6 @@ class HotspotPlanSerializer < ActiveModel::Serializer
   :billing_cycle, :expiry, :status,
   :condition, :company_name
   
-  # belongs_to :account
 
 
 def company_name
