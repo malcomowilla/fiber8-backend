@@ -88,6 +88,29 @@ Rails.application.configure do
   # Don't log any deprecations.
   config.active_support.report_deprecations = false
 
+
+
+
+  config.active_storage.service = :cloudinary
+
+  # Don't care if the mailer can't send.
+  config.action_mailer.raise_delivery_errors = false
+  # config.hosts << "solving-choice-dutch-utah.trycloudflare.com" 
+      config.hosts << /\A[a-z0-9\-]+\.loophole\.site\z/
+
+
+
+  # Print deprecation notices to the Rails logger.
+  config.active_support.deprecation = :log
+
+  # Raise exceptions for disallowed deprecations.
+  config.active_support.disallowed_deprecation = :raise
+
+
+
+  # Store files locally.
+config.active_storage.service = :cloudinary
+
   # Do not dump schema after migrations.
   config.active_record.dump_schema_after_migration = false
 
@@ -98,4 +121,40 @@ Rails.application.configure do
   # ]
   # Skip DNS rebinding protection for the default health check endpoint.
   config.host_authorization = { exclude: ->(request) { request.path == "/up" } }
+
+
+
+
+
+
+
+config.hosts << /.*\.aitechs\.co\.ke/
+
+config.hosts << /.*\.owitech\.co\.ke/
+# config.hosts << /.*\.loophole\.site/
+config.hosts << "aitechs.co.ke"
+config.action_cable.url = "wss://localhost:3000/cable"
+# config.action_cable.url = "ws://localhost:4000/cable"
+config.action_dispatch.trusted_proxies = [
+  '127.0.0.1', '::1'
+]
+  config.action_cable.allowed_request_origins = [
+    'http://localhost:3000',
+    'http://127.0.0.1:3000',
+    'ws://localhost:3000',
+    'ws://127.0.0.1:3000',
+    'ws://127.0.0.1:4000',
+    'http://localhost:4000/',
+    'ws://localhost:4000/cable',
+
+    /http:\/\/localhost:\d+/,
+    /http:\/\/localhost:\d+/,
+    /http:\/\/127\.0\.0\.1:\d+/,
+    /https?:\/\/(www\.)?aitechs\.co\.ke/,
+    /https?:\/\/(www\.)?owitech\.co\.ke/
+
+
+]
+
+
 end

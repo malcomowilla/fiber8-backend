@@ -174,7 +174,8 @@ services:
     # ports:
     #   - "3000:3000"
     environment:
-      RAILS_ENV: development
+      RAILS_ENV: production
+      RACK_ENV: production
       DATABASE_HOST: localhost
       DATABASE_PORT: ${DB_PORT}
       DATABASE_NAME: ${DB_NAME}
@@ -184,6 +185,8 @@ services:
       SIDEKIQ_REDIS_URL: redis://localhost:6379/1
       SECRET_KEY_BASE: development-secret-key
       RAILS_LOG_TO_STDOUT: "true"
+      WEB_CONCURRENCY: 1
+      RAILS_MAX_THREADS: 5
       LD_PRELOAD: /usr/lib/x86_64-linux-gnu/libjemalloc.so.2
       MALLOC_ARENA_MAX: "2"
       RUBY_YJIT_ENABLE: "1"
@@ -212,7 +215,8 @@ services:
       - bundle_cache:/usr/local/bundle
       - /etc/freeradius/3.0:/etc/freeradius/3.0
     environment:
-      RAILS_ENV: development
+      RAILS_ENV: production
+      RACK_ENV: production
       DATABASE_HOST: localhost
       DATABASE_PORT: ${DB_PORT}
       DATABASE_NAME: ${DB_NAME}
