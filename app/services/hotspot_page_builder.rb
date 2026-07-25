@@ -390,6 +390,18 @@ let freeTrialState = {};
           return m + 'm ' + s + 's';
         }
 
+
+
+
+
+        function formatMacInput(raw) {
+  const hex = raw.toUpperCase().replace(/[^0-9A-F]/g, '').slice(0, 12);
+  return hex.match(/.{1,2}/g)?.join(':') || '';
+}
+function isValidMac(mac) {
+  return /^([0-9A-F]{2}:){5}[0-9A-F]{2}$/i.test(mac);
+}
+
         function promoHtml() {
           if (!state.promos.length) return '';
           return state.promos.map(p => {
@@ -491,12 +503,21 @@ let freeTrialState = {};
               <button class="btn" id="voucher-btn">Connect with Voucher</button>\`;
           }
 
+
+          
 if (state.tab === 'tv') {
   if (!state.tvPlansLoaded) {
     return statusHtml() + '<div class="pkg-skeleton"></div><div class="pkg-skeleton"></div>';
   }
-  const options = state.tvPlans.map(p => \`<option value="\${p.id}">\${p.name} — Ksh \${p.price}</option>\`).join('');
+  const options = state.tvPlans.map(p => {
+    const validityLabel = (p.validity && p.validity_period_units) ? \` · \${p.validity} \${p.validity_period_units}\` : '';
+    const isSelected = state.tvSelected && String(state.tvSelected.id) === String(p.id) ? ' selected' : '';
+    return \`<option value="\${p.id}"\${isSelected}>\${p.name} — Ksh \${p.price}\${validityLabel}</option>\`;
+  }).join('');
   const amount = state.tvSelected ? state.tvSelected.price : '--';
+  const validityText = (state.tvSelected && state.tvSelected.validity)
+    ? \`\${state.tvSelected.validity} \${state.tvSelected.validity_period_units || ''}\`.trim()
+    : null;
   return statusHtml() + \`
     <p style="font-size:12px;color:var(--muted);line-height:1.6;margin-bottom:16px;">
       Enter your TV or device's MAC address and your M-Pesa number, choose a plan, and pay.
@@ -505,7 +526,7 @@ if (state.tab === 'tv') {
       (sometimes shown as "Physical address" or "Wi-Fi MAC").
     </p>
     <label class="field-label">TV / Device MAC Address</label>
-    <input class="field" id="tv-mac" placeholder="AA:BB:CC:DD:EE:FF" value="\${state.tvMac || ''}">
+    <input class="field" id="tv-mac" placeholder="AA:BB:CC:DD:EE:FF" maxlength="17" value="\${state.tvMac || ''}">
     <label class="field-label">Your Phone Number (M-Pesa)</label>
     <input class="field" id="tv-phone" inputmode="tel" placeholder="07XX XXX XXX" value="\${state.tvPhone || ''}">
     <label class="field-label">Choose a Plan</label>
@@ -513,6 +534,13 @@ if (state.tab === 'tv') {
       <option value="">\${state.tvPlans.length ? 'Select a plan' : 'No TV plans available'}</option>
       \${options}
     </select>
+
+    \${validityText ? \`
+    <div style="display:flex;justify-content:space-between;align-items:center;margin:4px 0 10px;font-size:13px;">
+      <span style="color:var(--muted);">Plan Validity:</span>
+      <span style="font-weight:700;">\${validityText}</span>
+    </div>\` : ''}
+    
     <div style="display:flex;justify-content:space-between;align-items:center;margin:4px 0 14px;font-size:13px;">
       <span style="color:var(--muted);">Amount to Pay:</span>
       <span style="font-weight:800;">KES \${amount}</span>
@@ -571,7 +599,12 @@ if (payBtn) payBtn.onclick = () => {
 };
 
 
-
+const tvMacInput = document.getElementById('tv-mac');
+if (tvMacInput) tvMacInput.oninput = (e) => {
+  const formatted = formatMacInput(e.target.value);
+  e.target.value = formatted;
+  state.tvMac = formatted;
+};
 
 
 const tvPlanSel = document.getElementById('tv-plan');
@@ -585,13 +618,15 @@ if (tvPlanSel) tvPlanSel.onchange = () => {
   render();
 };
 
+
 const tvPayBtn = document.getElementById('tv-pay-btn');
 if (tvPayBtn) tvPayBtn.onclick = () => {
   state.tvMac = document.getElementById('tv-mac').value.trim();
   state.tvPhone = document.getElementById('tv-phone').value.trim();
-  if (!state.tvMac)      { queryModal = { status: 'error', message: 'Enter the TV/device MAC address.' }; renderQueryModal(); return; }
-  if (!state.tvPhone)    { queryModal = { status: 'error', message: 'Enter your M-Pesa phone number.' }; renderQueryModal(); return; }
-  if (!state.tvSelected) { queryModal = { status: 'error', message: 'Choose a TV plan first.' }; renderQueryModal(); return; }
+  if (!state.tvMac)       { queryModal = { status: 'error', message: 'Enter the TV/device MAC address.' }; renderQueryModal(); return; }
+  if (!isValidMac(state.tvMac)) { queryModal = { status: 'error', message: 'That doesn\\'t look like a valid MAC address. Format: AA:BB:CC:DD:EE:FF' }; renderQueryModal(); return; }
+  if (!state.tvPhone)     { queryModal = { status: 'error', message: 'Enter your M-Pesa phone number.' }; renderQueryModal(); return; }
+  if (!state.tvSelected)  { queryModal = { status: 'error', message: 'Choose a TV plan first.' }; renderQueryModal(); return; }
   payTvPlan();
 };
 
