@@ -82,76 +82,76 @@ class TvPlan < ApplicationRecord
 end
 
 # ═══════════════════════════════════════════════════════════════
-# app/models/hotspot_setting.rb
+# # app/models/hotspot_setting.rb
 
-class HotspotSetting < ApplicationRecord
-  acts_as_tenant :account
+# class HotspotSetting < ApplicationRecord
+#   acts_as_tenant :account
   
-  # ═══════════════════════════════════════════════════════════════
-  # ASSOCIATIONS
-  # ═══════════════════════════════════════════════════════════════
+#   # ═══════════════════════════════════════════════════════════════
+#   # ASSOCIATIONS
+#   # ═══════════════════════════════════════════════════════════════
   
-  belongs_to :account, optional: true
+#   belongs_to :account, optional: true
   
-  # ═══════════════════════════════════════════════════════════════
-  # VALIDATIONS
-  # ═══════════════════════════════════════════════════════════════
+#   # ═══════════════════════════════════════════════════════════════
+#   # VALIDATIONS
+#   # ═══════════════════════════════════════════════════════════════
   
-  validates :display_tv_plans, inclusion: { in: [true, false] }
-  validates :display_wifi_plans, inclusion: { in: [true, false] }
-  validates :display_pppoe_plans, inclusion: { in: [true, false] }
+#   validates :display_tv_plans, inclusion: { in: [true, false] }
+#   validates :display_wifi_plans, inclusion: { in: [true, false] }
+#   validates :display_pppoe_plans, inclusion: { in: [true, false] }
   
-  # ═══════════════════════════════════════════════════════════════
-  # SCOPES & METHODS
-  # ═══════════════════════════════════════════════════════════════
+#   # ═══════════════════════════════════════════════════════════════
+#   # SCOPES & METHODS
+#   # ═══════════════════════════════════════════════════════════════
   
-  def self.current
-    first || create!
-  end
+#   def self.current
+#     first || create!
+#   end
   
-  def toggle_tv_plans
-    update(display_tv_plans: !display_tv_plans)
-  end
+#   def toggle_tv_plans
+#     update(display_tv_plans: !display_tv_plans)
+#   end
   
-  def toggle_wifi_plans
-    update(display_wifi_plans: !display_wifi_plans)
-  end
+#   def toggle_wifi_plans
+#     update(display_wifi_plans: !display_wifi_plans)
+#   end
   
-  def toggle_pppoe_plans
-    update(display_pppoe_plans: !display_pppoe_plans)
-  end
-end
+#   def toggle_pppoe_plans
+#     update(display_pppoe_plans: !display_pppoe_plans)
+#   end
+# end
 
-# ═══════════════════════════════════════════════════════════════
-# app/models/nas_router.rb
+# # ═══════════════════════════════════════════════════════════════
+# # app/models/nas_router.rb
 
-class NasRouter < ApplicationRecord
-  acts_as_tenant :account
+# class NasRouter < ApplicationRecord
+#   acts_as_tenant :account
   
-  # ═══════════════════════════════════════════════════════════════
-  # ASSOCIATIONS
-  # ═══════════════════════════════════════════════════════════════
+#   # ═══════════════════════════════════════════════════════════════
+#   # ASSOCIATIONS
+#   # ═══════════════════════════════════════════════════════════════
   
-  has_many :tv_plans, dependent: :nullify      # ✅ TV plans using this router
-  has_many :packages, dependent: :nullify      # PPPoE packages
-  has_many :ip_bindings, dependent: :destroy   # Device IP bindings
+#   has_many :tv_plans, dependent: :nullify      # ✅ TV plans using this router
+#   has_many :packages, dependent: :nullify      # PPPoE packages
+#   has_many :ip_bindings, dependent: :destroy   # Device IP bindings
   
-  # ═══════════════════════════════════════════════════════════════
-  # VALIDATIONS
-  # ═══════════════════════════════════════════════════════════════
+#   # ═══════════════════════════════════════════════════════════════
+#   # VALIDATIONS
+#   # ═══════════════════════════════════════════════════════════════
   
-  validates :name, presence: true, uniqueness: { scope: :account_id }
-  validates :ip_address, presence: true, uniqueness: { scope: :account_id }
+#   validates :name, presence: true, uniqueness: { scope: :account_id }
+#   validates :ip_address, presence: true, uniqueness: { scope: :account_id }
   
-  # ═══════════════════════════════════════════════════════════════
-  # METHODS
-  # ═══════════════════════════════════════════════════════════════
+#   # ═══════════════════════════════════════════════════════════════
+#   # METHODS
+#   # ═══════════════════════════════════════════════════════════════
   
-  def tv_plans_count
-    tv_plans.count
-  end
+#   def tv_plans_count
+#     tv_plans.count
+#   end
   
-  def pppoe_packages_count
-    packages.where(type: 'PPPoEPackage').count
-  end
-end
+#   def pppoe_packages_count
+#     packages.where(type: 'PPPoEPackage').count
+#   end
+# end
