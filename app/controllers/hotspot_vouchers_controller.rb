@@ -721,9 +721,18 @@ def check_payment_status
       account_id: session.account_id,
       id:  session.tv_plan_id
     )
-    nas_router = NasRouter.find_by(name: tv_package.nas_router, account_id: tv_package.account_id)
+
+
+
+ hotspot_package = HotspotPackage.find_by(
+      name:       session.hotspot_package,
+      account_id: session.account_id,
+    )
+    nas_router = NasRouter.find_by(name: hotspot_package.nas_router, account_id: hotspot_package.account_id)
 
 if session&.payment_type == 'device_binding'
+      nas_router_tv_package = NasRouter.find_by(name: tv_package.nas_router, account_id: tv_package.account_id)
+
   tv_plan = TvPlan.find_by(id: session.tv_plan_id, account_id: session.account_id)
 
   binding = IpBinding.create!(
@@ -736,7 +745,7 @@ if session&.payment_type == 'device_binding'
     status:      'active',
     device_type: session.device_type,
     account_id:  session.account_id,
-    router_id:   nas_router&.id,
+    router_id:   nas_router_tv_package&.id,
     expiry:      tv_plan ? tv_plan_expiration(tv_plan) : nil
   )
 
