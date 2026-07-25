@@ -174,8 +174,8 @@ services:
     # ports:
     #   - "3000:3000"
     environment:
-      RAILS_ENV: production
-      RACK_ENV: production
+      RAILS_ENV: development
+      RACK_ENV: development
       DATABASE_HOST: localhost
       DATABASE_PORT: ${DB_PORT}
       DATABASE_NAME: ${DB_NAME}
@@ -215,8 +215,8 @@ services:
       - bundle_cache:/usr/local/bundle
       - /etc/freeradius/3.0:/etc/freeradius/3.0
     environment:
-      RAILS_ENV: production
-      RACK_ENV: production
+      RAILS_ENV: development
+      RACK_ENV: development
       DATABASE_HOST: localhost
       DATABASE_PORT: ${DB_PORT}
       DATABASE_NAME: ${DB_NAME}
