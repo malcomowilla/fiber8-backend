@@ -721,7 +721,7 @@ def check_payment_status
       account_id: session.account_id,
       id:  session.tv_plan_id
     )
-    nas_router = NasRouter.find_by(name: tv_packagenas_router, account_id: tv_package.account_id)
+    nas_router = NasRouter.find_by(name: tv_package.nas_router, account_id: tv_package.account_id)
 
 if session&.payment_type == 'device_binding'
   tv_plan = TvPlan.find_by(id: session.tv_plan_id, account_id: session.account_id)
