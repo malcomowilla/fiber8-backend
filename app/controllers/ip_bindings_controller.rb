@@ -195,8 +195,9 @@ end
 
 def make_device_package_payment
   phone_number = params[:phone_number]
-  amount = tv_plan.price
   tv_plan      = TvPlan.find_by(id: params[:tv_plan_id])
+    amount = tv_plan.price
+
   return render json: { message: 'TV plan not found' }, status: :unprocessable_entity unless tv_plan
 
   device_name = params[:device_name]
