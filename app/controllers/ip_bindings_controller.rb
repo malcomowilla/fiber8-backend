@@ -141,24 +141,77 @@ end
 
 
 
-def make_device_package_payment
-  phone_number  = params[:phone_number]
-  amount        = params[:amount]
-  package_name  = params[:package]
-  device_name   = params[:device_name]
-  device_mac    = params[:device_mac]
-  device_type   = params[:device_type]
-  client_ip     = params[:ip]
-  client_mac    = params[:mac]
+# def make_device_package_payment
+#   phone_number  = params[:phone_number]
+#   amount        = params[:amount]
+#   package_name  = params[:package]
+#   device_name   = params[:device_name]
+#   device_mac    = params[:device_mac]
+#   device_type   = params[:device_type]
+#   client_ip     = params[:ip]
+#   client_mac    = params[:mac]
 
-  # Generate a session token to track this payment
+#   # Generate a session token to track this payment
+#   session_token = SecureRandom.hex(8)
+#   voucher_code  = SecureRandom.hex(4).upcase
+
+#   # Store pending device binding session
+#   session = TemporarySession.create!(
+#     session:         session_token,
+#     hotspot_package: package_name,
+#     phone_number:    phone_number,
+#     voucher_code:    voucher_code,
+#     mac:             client_mac,
+#     ip:              client_ip,
+#     device_name:     device_name,
+#     device_mac:      device_mac,
+#     device_type:     device_type,
+#     payment_type:    'device_binding'  
+#   )
+
+#   shortcode       = ActsAsTenant.current_tenant&.hotspot_mpesa_setting&.short_code || ENV['B2C_SHORTCODE']
+#   passkey         = ActsAsTenant.current_tenant&.hotspot_mpesa_setting&.passkey    || ENV['PASSKEY']
+#   consumer_key    = ActsAsTenant.current_tenant&.hotspot_mpesa_setting&.consumer_key    || ENV['CONSUMER_KEY']
+#   consumer_secret = ActsAsTenant.current_tenant&.hotspot_mpesa_setting&.consumer_secret || ENV['CONSUMER_SECRET']
+
+#   result = MpesaBindingService.initiate_stk_push(
+#     phone_number, amount, shortcode, passkey,
+#     consumer_key, consumer_secret,
+#     request.subdomain, voucher_code, session_token
+#   )
+
+#   if result[:success]
+#     checkout_request_id = result[:response]['CheckoutRequestID']
+#     session.update!(checkout_request_id: checkout_request_id)
+#     render json: { checkout_request_id: checkout_request_id }, status: :ok
+#   else
+#     session.destroy
+#     render json: { message: result[:error] || 'Payment initiation failed' }, status: :unprocessable_entity
+#   end
+# end
+
+
+
+
+def make_device_package_payment
+  phone_number = params[:phone_number]
+  amount = tv_plan.price
+  tv_plan      = TvPlan.find_by(id: params[:tv_plan_id])
+  return render json: { message: 'TV plan not found' }, status: :unprocessable_entity unless tv_plan
+
+  device_name = params[:device_name]
+  device_mac  = params[:device_mac]
+  device_type = params[:device_type]
+  client_ip   = params[:ip]
+  client_mac  = params[:mac]
+
   session_token = SecureRandom.hex(8)
   voucher_code  = SecureRandom.hex(4).upcase
 
-  # Store pending device binding session
   session = TemporarySession.create!(
     session:         session_token,
-    hotspot_package: package_name,
+    hotspot_package: tv_plan.name,
+    tv_plan_id:      tv_plan.id,
     phone_number:    phone_number,
     voucher_code:    voucher_code,
     mac:             client_mac,
@@ -166,7 +219,7 @@ def make_device_package_payment
     device_name:     device_name,
     device_mac:      device_mac,
     device_type:     device_type,
-    payment_type:    'device_binding'  
+    payment_type:    'device_binding'
   )
 
   shortcode       = ActsAsTenant.current_tenant&.hotspot_mpesa_setting&.short_code || ENV['B2C_SHORTCODE']
@@ -193,11 +246,6 @@ end
 
 
 
-
-
-
-
-
   private
 
   def set_ip_binding
@@ -210,7 +258,24 @@ end
   end
 
 
+def mikrotik_add_queue_for_tv_plan(binding, tv_plan, nas)
+  return unless binding.ip.present? && tv_plan&.upload_limit.present?
+  require 'net/ssh'
 
+  queue_name = "binding_#{binding.mac.upcase.gsub(':', '')}"
+  cmd = "/queue simple add name=\"#{queue_name}\" target=\"#{binding.ip}\" " \
+        "max-limit=\"#{tv_plan.upload_limit}M/#{tv_plan.download_limit}M\" " \
+        "comment=\"tv_plan_#{binding.id}\""
+
+  Net::SSH.start(nas.ip_address, nas.username,
+    password: nas.password.to_s, verify_host_key: :never,
+    non_interactive: true, timeout: 15
+  ) { |ssh| ssh.exec!(cmd) }
+end
+
+def tv_plan_expiration(tv_plan)
+  (Time.current + tv_plan.validity_in_seconds.seconds).strftime("%Y-%m-%d %H:%M:%S")
+end
 
     def mikrotik_add_queue_for_binding(binding)
     router = find_nas_router(binding)
@@ -255,6 +320,8 @@ end
 
 
 
+
+  
   def mikrotik_remove_queue_for_binding(binding)
   router = find_nas_router(binding)
   return { error: "Router not found for binding #{binding.id}" } unless router

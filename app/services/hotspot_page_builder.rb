@@ -305,7 +305,10 @@ if (username) localStorage.setItem('hotspot_username', username);
         // packages; 'pay' shows a focused recap + phone-number step for
         // the one the customer tapped, so there's no scrolling required
         // and no ambiguity about what to do next.
-        let state = { tab: 'packages', packages: [], packagesLoaded: false, promos: [], selected: null, payStep: 'list', status: null, message: '' };
+
+
+          let state = { tab: 'packages', packages: [], packagesLoaded: false, promos: [], selected: null, payStep: 'list', status: null, message: '', tvPlans: [], tvPlansLoaded: false, tvSelected: null, tvMac: '', tvPhone: '' };
+
 let queryModal = { status: null, message: '' };
 let connectedInfo = null;
 let stkQueryInterval = null;
@@ -364,6 +367,7 @@ let freeTrialState = {};
           if (cfg.features.show_packages)   tabs.push(['packages', 'Buy Package']);
           if (cfg.features.show_voucher)    tabs.push(['voucher', 'Voucher']);
           if (cfg.features.show_mpesa_code) tabs.push(['mpesa', 'M-Pesa Code']);
+            if (cfg.features.show_tv_plans === true) tabs.push(['tv', 'Connect a TV']);
           return tabs.map(([id, label]) =>
             \`<div class="tab \${state.tab === id ? 'active' : ''}" data-tab="\${id}">\${label}</div>\`
           ).join('');
@@ -486,6 +490,39 @@ let freeTrialState = {};
               <input class="field" id="voucher-code" placeholder="Enter voucher code">
               <button class="btn" id="voucher-btn">Connect with Voucher</button>\`;
           }
+
+if (state.tab === 'tv') {
+  if (!state.tvPlansLoaded) {
+    return statusHtml() + '<div class="pkg-skeleton"></div><div class="pkg-skeleton"></div>';
+  }
+  const options = state.tvPlans.map(p => \`<option value="\${p.id}">\${p.name} — Ksh \${p.price}</option>\`).join('');
+  const amount = state.tvSelected ? state.tvSelected.price : '--';
+  return statusHtml() + \`
+    <p style="font-size:12px;color:var(--muted);line-height:1.6;margin-bottom:16px;">
+      Enter your TV or device's MAC address and your M-Pesa number, choose a plan, and pay.
+      The device connects automatically, no login needed on the TV. To find the MAC address,
+      open the TV's Settings, go to Network, then Status or About, and look for "MAC address"
+      (sometimes shown as "Physical address" or "Wi-Fi MAC").
+    </p>
+    <label class="field-label">TV / Device MAC Address</label>
+    <input class="field" id="tv-mac" placeholder="AA:BB:CC:DD:EE:FF" value="\${state.tvMac || ''}">
+    <label class="field-label">Your Phone Number (M-Pesa)</label>
+    <input class="field" id="tv-phone" inputmode="tel" placeholder="07XX XXX XXX" value="\${state.tvPhone || ''}">
+    <label class="field-label">Choose a Plan</label>
+    <select class="field" id="tv-plan">
+      <option value="">\${state.tvPlans.length ? 'Select a plan' : 'No TV plans available'}</option>
+      \${options}
+    </select>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin:4px 0 14px;font-size:13px;">
+      <span style="color:var(--muted);">Amount to Pay:</span>
+      <span style="font-weight:800;">KES \${amount}</span>
+    </div>
+    <button class="btn" id="tv-pay-btn">Pay & Connect TV</button>
+  \`;
+}
+
+
+
           if (state.tab === 'mpesa') {
             return statusHtml() + \`
               <input class="field" id="tx-code" placeholder="e.g. QHJ1234ABC">
@@ -532,6 +569,32 @@ if (payBtn) payBtn.onclick = () => {
   }
   payPackage();
 };
+
+
+
+
+
+const tvPlanSel = document.getElementById('tv-plan');
+if (tvPlanSel) tvPlanSel.onchange = () => {
+  // capture whatever the user already typed before the re-render wipes the inputs
+  const macEl = document.getElementById('tv-mac');
+  const phoneEl = document.getElementById('tv-phone');
+  if (macEl) state.tvMac = macEl.value;
+  if (phoneEl) state.tvPhone = phoneEl.value;
+  state.tvSelected = state.tvPlans.find(p => String(p.id) === tvPlanSel.value) || null;
+  render();
+};
+
+const tvPayBtn = document.getElementById('tv-pay-btn');
+if (tvPayBtn) tvPayBtn.onclick = () => {
+  state.tvMac = document.getElementById('tv-mac').value.trim();
+  state.tvPhone = document.getElementById('tv-phone').value.trim();
+  if (!state.tvMac)      { queryModal = { status: 'error', message: 'Enter the TV/device MAC address.' }; renderQueryModal(); return; }
+  if (!state.tvPhone)    { queryModal = { status: 'error', message: 'Enter your M-Pesa phone number.' }; renderQueryModal(); return; }
+  if (!state.tvSelected) { queryModal = { status: 'error', message: 'Choose a TV plan first.' }; renderQueryModal(); return; }
+  payTvPlan();
+};
+
 
           const voucherBtn = document.getElementById('voucher-btn');
           if (voucherBtn) voucherBtn.onclick = () => {
@@ -888,6 +951,85 @@ function startQueryStatus() {
     } catch (e) { /* keep polling on transient errors */ }
   }, 5000);
 }
+
+
+
+
+
+
+
+async function loadTvPlans() {
+  try {
+    const res = await fetch(api('/api/allow_get_tv_plans'), { headers });
+    state.tvPlans = res.ok ? (await res.json() || []) : [];
+  } catch (e) {
+    console.error('Failed to load TV plans:', e);
+    state.tvPlans = [];
+  } finally {
+    state.tvPlansLoaded = true;
+    render();
+  }
+}
+
+async function payTvPlan() {
+  queryModal = { status: 'processing', message: 'Sending payment request…' };
+  renderQueryModal();
+  try {
+    const res = await fetch(api('/api/make_device_package_payment'), {
+      method: 'POST', headers,
+      body: JSON.stringify({
+        phone_number: state.tvPhone,
+        tv_plan_id: state.tvSelected.id,
+        amount: state.tvSelected.price,
+        device_mac: state.tvMac,
+        device_name: 'TV',
+        device_type: 'tv',
+        mac, ip
+      })
+    });
+    const data = await res.json();
+    if (res.ok) {
+      queryModal = { status: 'processing', message: 'STK push sent — enter your M-Pesa PIN to complete payment and connect your TV.' };
+      renderQueryModal();
+      pollDeviceBindingStatus();
+    } else {
+      queryModal = { status: 'error', message: data.message || data.error || 'Payment failed' };
+      renderQueryModal();
+    }
+  } catch (e) {
+    queryModal = { status: 'error', message: 'Network error — check your connection' };
+    renderQueryModal();
+  }
+}
+
+function pollDeviceBindingStatus() {
+  let elapsed = 0;
+  const iv = setInterval(async () => {
+    elapsed += 5000;
+    try {
+      const res = await fetch(api('/api/payment_and_conected_status'), {
+        method: 'POST', headers, body: JSON.stringify({ ip, mac })
+      });
+      const data = await res.json();
+      if (data.connected) {
+        clearInterval(iv);
+        queryModal = { status: null, message: '' };
+        renderQueryModal();
+        onConnected({ package: state.tvSelected && state.tvSelected.name });
+        return;
+      }
+    } catch (e) { /* keep polling on transient errors */ }
+    if (elapsed >= 120000) {
+      clearInterval(iv);
+      queryModal = { status: 'error', message: 'Timed out waiting for payment confirmation.' };
+      renderQueryModal();
+    }
+  }, 5000);
+}
+
+
+
+
 
 
         
@@ -1608,6 +1750,8 @@ document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && expanded
         if (cfg.features.show_ads !== false) loadAds();
         loadPromotions();
         loadPackages();
+        if (cfg.features.show_tv_plans === true) loadTvPlans();
+
         render();
         tryAutoLogin();
       })();

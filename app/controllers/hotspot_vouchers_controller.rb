@@ -722,46 +722,45 @@ def check_payment_status
     )
     nas_router = NasRouter.find_by(name: hotspot_package.nas_router, account_id: hotspot_package.account_id)
 
+if session&.payment_type == 'device_binding'
+  tv_plan = TvPlan.find_by(id: session.tv_plan_id, account_id: session.account_id)
 
- if session&.payment_type == 'device_binding'
-   
-    # 1. Create IP binding record
-    binding = IpBinding.create!(
-      name:        session.device_name,
-      mac:         session.device_mac,
-      package:     session.hotspot_package,
-      device_type: session.device_type,
-      account_id:  session.account_id,
-      router_id:    nas_router.id
-    )
+  binding = IpBinding.create!(
+    name:        session.device_name,
+    mac:         session.device_mac,
+    package:     tv_plan&.name,
+    tv_plan_id:  tv_plan&.id,
+    phone:       session.phone_number,
+    source:      'tv_plan_purchase',
+    status:      'active',
+    device_type: session.device_type,
+    account_id:  session.account_id,
+    router_id:   nas_router&.id,
+    expiry:      tv_plan ? tv_plan_expiration(tv_plan) : nil
+  )
 
-    # 2. Record the payment (reuse HotspotMpesaRevenue or a dedicated model)
-    HotspotMpesaRevenue.create!(
-      amount:         data["TransAmount"],
-      voucher:        "DEVICE-#{binding.id}",
-      reference:      data["TransID"],
-      payment_method: "Mpesa",
-      time_paid:      data["TransTime"],
-      account_id:     session.account_id,
-      name:           data["FirstName"],
-      phone_number:   session.phone_number
-    )
+  HotspotMpesaRevenue.create!(
+    amount: data["TransAmount"], voucher: "DEVICE-#{binding.id}",
+    reference: data["TransID"], payment_method: "Mpesa",
+    time_paid: data["TransTime"], account_id: session.account_id,
+    name: data["FirstName"], phone_number: session.phone_number
+  )
 
-if nas_router
-  begin
-    mikrotik_add_binding_direct(binding, nas_router)
-    mikrotik_add_queue_direct(binding, hotspot_package, nas_router) if hotspot_package
-  rescue => e
-    Rails.logger.warn "MikroTik binding failed for #{binding.mac}: #{e.message}"
+  if nas_router
+    begin
+      mikrotik_add_binding_direct(binding, nas_router)
+      mikrotik_add_queue_for_tv_plan(binding, tv_plan, nas_router) if tv_plan
+    rescue => e
+      Rails.logger.warn "MikroTik binding failed for #{binding.mac}: #{e.message}"
+    end
   end
-else
-  Rails.logger.warn "Router '#{hotspot_package.nas_router}' not found"
+
+  session.update!(connected: true, status: 'used', paid: true)
+  head :ok
+  return
 end
 
-    session.update!(connected: true, status: 'used', paid: true)
-    head :ok
-    return
-  end
+
 
 
 

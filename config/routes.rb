@@ -162,6 +162,7 @@ resources :network_connections
   # resources :pppoe_plans
   # resources :hotspot_plans
 resources :promotional_plans, only: [:index, :show, :create, :update, :destroy]
+resources :tv_plans, only: [:index, :create, :update, :destroy]
 
 end
 
@@ -172,6 +173,9 @@ resources :pops
 resources :network_devices
 resources :network_connections
 
+
+get '/api/allow_get_tv_plans', to: 'tv_plans#allow_get_tv_plans'
+resources :tv_plans, only: [:index, :create, :update, :destroy]
 
   get  'default_system_ads',               to: 'default_system_ads#index'
   post 'default_system_ads/:id/toggle',    to: 'default_system_ads#toggle'

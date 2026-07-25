@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_07_24_070546) do
+ActiveRecord::Schema[7.2].define(version: 2026_07_25_102741) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -673,6 +673,11 @@ ActiveRecord::Schema[7.2].define(version: 2026_07_24_070546) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.datetime "expiry"
+    t.bigint "tv_plan_id"
+    t.string "phone"
+    t.string "source", default: "manual"
+    t.string "status", default: "active"
+    t.index ["tv_plan_id"], name: "index_ip_bindings_on_tv_plan_id"
   end
 
   create_table "ip_networks", force: :cascade do |t|
@@ -1378,6 +1383,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_07_24_070546) do
     t.string "device_mac"
     t.string "device_type"
     t.string "payment_type"
+    t.bigint "tv_plan_id"
     t.index ["connected"], name: "index_temporary_sessions_on_connected"
     t.index ["hotspot_package"], name: "index_temporary_sessions_on_hotspot_package"
     t.index ["ip"], name: "index_temporary_sessions_on_ip"
@@ -1386,6 +1392,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_07_24_070546) do
     t.index ["phone_number"], name: "index_temporary_sessions_on_phone_number"
     t.index ["session"], name: "index_temporary_sessions_on_session", unique: true
     t.index ["status"], name: "index_temporary_sessions_on_status"
+    t.index ["tv_plan_id"], name: "index_temporary_sessions_on_tv_plan_id"
     t.index ["voucher_code"], name: "index_temporary_sessions_on_voucher_code"
   end
 
@@ -1395,6 +1402,24 @@ ActiveRecord::Schema[7.2].define(version: 2026_07_24_070546) do
     t.integer "account_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+  end
+
+  create_table "tv_plans", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.string "name", null: false
+    t.decimal "price", precision: 10, scale: 2, default: "0.0"
+    t.integer "validity"
+    t.string "validity_period_units", default: "hours"
+    t.integer "download_limit"
+    t.integer "upload_limit"
+    t.string "nas_router"
+    t.boolean "active", default: true
+    t.integer "position", default: 0
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "nas_router_id"
+    t.index ["account_id"], name: "index_tv_plans_on_account_id"
+    t.index ["nas_router_id"], name: "index_tv_plans_on_nas_router_id"
   end
 
   create_table "user_groups", force: :cascade do |t|
@@ -1544,6 +1569,10 @@ ActiveRecord::Schema[7.2].define(version: 2026_07_24_070546) do
   add_foreign_key "ad_events", "accounts"
   add_foreign_key "ad_events", "ad_settings"
   add_foreign_key "default_system_ad_settings", "accounts"
+  add_foreign_key "ip_bindings", "tv_plans"
   add_foreign_key "maintenance_settings", "accounts"
   add_foreign_key "promotional_plans", "hotspot_packages"
+  add_foreign_key "temporary_sessions", "tv_plans"
+  add_foreign_key "tv_plans", "accounts"
+  add_foreign_key "tv_plans", "nas_routers", on_delete: :nullify
 end
