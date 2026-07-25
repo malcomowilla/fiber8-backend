@@ -716,11 +716,12 @@ def check_payment_status
         session = TemporarySession.find_by(session: session_id, 
         )
 
- hotspot_package = HotspotPackage.find_by(
+ tv_package = TvPlan.find_by(
       name:       session.hotspot_package,
-      account_id: session.account_id
+      account_id: session.account_id,
+      id:  session.tv_plan_id
     )
-    nas_router = NasRouter.find_by(name: hotspot_package.nas_router, account_id: hotspot_package.account_id)
+    nas_router = NasRouter.find_by(name: tv_packagenas_router, account_id: tv_package.account_id)
 
 if session&.payment_type == 'device_binding'
   tv_plan = TvPlan.find_by(id: session.tv_plan_id, account_id: session.account_id)
@@ -2611,6 +2612,8 @@ def mikrotik_add_binding_direct(binding, nas)
     non_interactive: true, timeout: 15
   ) { |ssh| ssh.exec!(cmd) }
 end
+
+
 
 def mikrotik_add_queue_direct(binding, package, nas)
   return unless binding.ip.present? && package.upload_limit.present?

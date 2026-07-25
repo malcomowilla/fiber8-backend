@@ -48,7 +48,47 @@ class IpBindingsController < ApplicationController
 
   # POST /api/ip_bindings
   
-  def create
+#   def create
+#   @ip_binding = IpBinding.new(
+#     router:      params[:router],
+#     name:        params[:name],
+#     package:     params[:package],
+#     mac:         params[:mac],
+#     ip:          params[:ip],
+#     expiry:      params[:expiry],
+#     device_type: params[:device_type] || params[:intended_device_type] ,
+#     router_id:   params[:router_id],
+#   )
+
+#   if @ip_binding.save
+#     mikrotik_result = mikrotik_add_binding(@ip_binding)
+
+#     # ── NEW: create queue if a package is chosen ──────────────────────────
+#     if @ip_binding.package.present?
+#       queue_result = mikrotik_add_queue_for_binding(@ip_binding)
+#       if queue_result[:error]
+#         Rails.logger.info "MikroTik queue create failed for #{@ip_binding.mac}: #{queue_result[:error]}"
+#       end
+#     end
+#     # ─────────────────────────────────────────────────────────────────────
+
+#     if mikrotik_result[:error]
+#       Rails.logger.info "MikroTik add failed for #{@ip_binding.mac}: #{mikrotik_result[:error]}"
+#       render json: @ip_binding.as_json.merge(mikrotik_warning: mikrotik_result[:error]), status: :created
+#     else
+#       render json: @ip_binding, status: :created
+#     end
+#   else
+#     render json: @ip_binding.errors, status: :unprocessable_entity
+#   end
+# end
+
+
+
+
+
+
+def create
   @ip_binding = IpBinding.new(
     router:      params[:router],
     name:        params[:name],
@@ -56,25 +96,25 @@ class IpBindingsController < ApplicationController
     mac:         params[:mac],
     ip:          params[:ip],
     expiry:      params[:expiry],
-    device_type: params[:device_type] || params[:intended_device_type] ,
+    device_type: params[:device_type] || params[:intended_device_type],
     router_id:   params[:router_id],
   )
 
   if @ip_binding.save
     mikrotik_result = mikrotik_add_binding(@ip_binding)
 
-    # ── NEW: create queue if a package is chosen ──────────────────────────
+    queue_error = nil
     if @ip_binding.package.present?
       queue_result = mikrotik_add_queue_for_binding(@ip_binding)
       if queue_result[:error]
         Rails.logger.info "MikroTik queue create failed for #{@ip_binding.mac}: #{queue_result[:error]}"
+        queue_error = queue_result[:error]
       end
     end
-    # ─────────────────────────────────────────────────────────────────────
 
-    if mikrotik_result[:error]
-      Rails.logger.info "MikroTik add failed for #{@ip_binding.mac}: #{mikrotik_result[:error]}"
-      render json: @ip_binding.as_json.merge(mikrotik_warning: mikrotik_result[:error]), status: :created
+    warnings = [mikrotik_result[:error], queue_error].compact
+    if warnings.any?
+      render json: @ip_binding.as_json.merge(mikrotik_warning: warnings.join(' | ')), status: :created
     else
       render json: @ip_binding, status: :created
     end
@@ -82,9 +122,6 @@ class IpBindingsController < ApplicationController
     render json: @ip_binding.errors, status: :unprocessable_entity
   end
 end
-
-
-
 
 
 
@@ -278,48 +315,79 @@ def tv_plan_expiration(tv_plan)
   (Time.current + tv_plan.validity_in_seconds.seconds).strftime("%Y-%m-%d %H:%M:%S")
 end
 
-    def mikrotik_add_queue_for_binding(binding)
-    router = find_nas_router(binding)
-    return { error: "Router not found for binding #{binding.id}" } unless router
 
-    package = HotspotPackage.find_by(name: binding.package)
-    return { error: "Package '#{binding.package}' not found" } unless package
 
-    target_ip = binding.ip.presence
-    return { error: "No IP address on binding #{binding.id}, cannot create queue" } unless target_ip
+  #   def mikrotik_add_queue_for_binding(binding)
+  #   router = find_nas_router(binding)
+  #   return { error: "Router not found for binding #{binding.id}" } unless router
 
-    queue_name = binding_queue_name(binding)
+  #   package = TvPlan.find_by(name: binding.package)
+  #   return { error: "Package '#{binding.package}' not found" } unless package
 
-    payload = {
-      name:               queue_name,
-      target:             target_ip,
-      "max-limit":        "#{package.upload_limit}M/#{package.download_limit}M",
-      # "burst-threshold":  "#{package.burst_threshold_upload}M/#{package.burst_threshold_download}M",
-      # "burst-limit":      "#{package.burst_upload_speed}M/#{package.burst_download_speed}M",
-      # "burst-time":       "#{package.burst_time}/#{package.burst_time}",
-      comment:            "ipbinding_#{binding.id}_#{binding.name}"
-    }
+  #   target_ip = binding.ip.presence
+  #   return { error: "No IP address on binding #{binding.id}, cannot create queue" } unless target_ip
 
-    uri = URI("http://#{router.ip_address}/rest/queue/simple/add")
-    req = Net::HTTP::Post.new(uri, 'Content-Type' => 'application/json')
-    req.basic_auth(router.username, router.password.to_s)
-    req.body = payload.to_json
+  #   queue_name = binding_queue_name(binding)
 
-    res = Net::HTTP.start(uri.hostname, uri.port, open_timeout: 10, read_timeout: 10) do |http|
-      http.request(req)
-    end
+  #   payload = {
+  #     name:               queue_name,
+  #     target:             target_ip,
+  #     "max-limit":        "#{package.upload_limit}M/#{package.download_limit}M",
+  #     # "burst-threshold":  "#{package.burst_threshold_upload}M/#{package.burst_threshold_download}M",
+  #     # "burst-limit":      "#{package.burst_upload_speed}M/#{package.burst_download_speed}M",
+  #     # "burst-time":       "#{package.burst_time}/#{package.burst_time}",
+  #     comment:            "ipbinding_#{binding.id}_#{binding.name}"
+  #   }
 
-    if res.is_a?(Net::HTTPSuccess)
-      Rails.logger.info "[IpBindingsController] Queue '#{queue_name}' created for binding #{binding.id}"
-      {}
-    else
-      { error: "MikroTik rejected queue creation: #{res.body}" }
-    end
-  rescue => e
-    { error: e.message }
+  #   uri = URI("http://#{router.ip_address}/rest/queue/simple/add")
+  #   req = Net::HTTP::Post.new(uri, 'Content-Type' => 'application/json')
+  #   req.basic_auth(router.username, router.password.to_s)
+  #   req.body = payload.to_json
+
+  #   res = Net::HTTP.start(uri.hostname, uri.port, open_timeout: 10, read_timeout: 10) do |http|
+  #     http.request(req)
+  #   end
+
+  #   if res.is_a?(Net::HTTPSuccess)
+  #     Rails.logger.info "[IpBindingsController] Queue '#{queue_name}' created for binding #{binding.id}"
+  #     {}
+  #   else
+  #     { error: "MikroTik rejected queue creation: #{res.body}" }
+  #   end
+  # rescue => e
+  #   { error: e.message }
+  # end
+
+
+
+
+
+
+
+
+  def mikrotik_add_queue_for_binding(binding)
+  router = find_nas_router(binding)
+  return { error: "Router not found for binding #{binding.id}" } unless router
+
+  package = TvPlan.find_by(name: binding.package)
+  return { error: "Package '#{binding.package}' not found" } unless package
+
+  target_ip = binding.ip.presence
+  return { error: "No IP address on binding #{binding.id}, cannot create queue" } unless target_ip
+
+  queue_name = binding_queue_name(binding)
+
+  with_mikrotik_ssh(router) do |ssh|
+    # remove any stale queue with the same name first, so retries don't error on "already exists"
+    ssh_exec(ssh, "/queue simple remove [find name=\"#{queue_name}\"]")
+
+    cmd = "/queue simple add name=\"#{queue_name}\" target=\"#{target_ip}/32\" " \
+          "max-limit=\"#{package.upload_limit}M/#{package.download_limit}M\" " \
+          "comment=\"ipbinding_#{binding.id}_#{binding.name}\""
+    output = ssh_exec(ssh, cmd)
+    output.downcase.include?('failure') ? { error: output } : {}
   end
-
-
+end
 
 
   
