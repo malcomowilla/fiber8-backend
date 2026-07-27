@@ -221,9 +221,9 @@ class GenerateInvoiceJob
   queue_as :invoices
   sidekiq_options lock: :until_executed, lock_timeout: 0
 
-  PPPoE_PRICE_PER_CLIENT = 20
+  PPPoE_PRICE_PER_CLIENT = 10
   HOTSPOT_PERCENTAGE = 0.04
-  SUBSCRIPTION_FEE = 500
+  SUBSCRIPTION_FEE = 1000
 
   def perform
     Account.find_each do |tenant|

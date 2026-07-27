@@ -36,10 +36,64 @@ class IpBindingsController < ApplicationController
   # ── CRUD ─────────────────────────────────────────────────────────────────────
 
   # GET /api/ip_bindings
-  def index
-    @ip_bindings = IpBinding.all
-    render json: @ip_bindings
+  # def index
+  #   @ip_bindings = IpBinding.all
+  #   render json: @ip_bindings
+  # end
+
+
+
+
+  # GET /api/ip_bindings
+def index
+  account_id = ActsAsTenant.current_tenant&.id
+
+  all_bindings = IpBinding.where(account_id: account_id).order(created_at: :desc)
+
+  tv_plan_devices     = all_bindings.select { |d| d.source == 'tv_plan_purchase' || d.tv_plan_id.present? }
+  mac_voucher_devices = all_bindings.reject { |d| d.source == 'tv_plan_purchase' || d.tv_plan_id.present? }
+
+  online_macs = live_online_macs(account_id)
+
+  serialize = lambda do |d|
+    {
+      id: d.id,
+      name: d.name,
+      mac: d.mac,
+      ip: d.ip,
+      phone: d.phone,
+      package: d.package,
+      router: d.router,
+      device_type: d.device_type,
+      status: d.status,
+      expiry: d.expiry,
+      created_at: d.created_at,
+      source: d.source,
+      online: online_macs.include?(normalize_mac(d.mac))
+    }
   end
+
+  tv_plan_json = tv_plan_devices.map(&serialize)
+  mac_voucher_json = mac_voucher_devices.map(&serialize)
+
+  active_check = lambda do |d|
+    status_ok  = (d[:status] || 'active') == 'active'
+    not_expired = d[:expiry].blank? || Time.zone.parse(d[:expiry].to_s) > Time.current
+    status_ok && not_expired
+  end
+
+  all_json = tv_plan_json + mac_voucher_json
+
+  render json: {
+    tv_plan_devices: tv_plan_json,
+    mac_voucher_devices: mac_voucher_json,
+    stats: {
+      online_devices:     all_json.count { |d| d[:online] },
+      active_devices:     all_json.count(&active_check),
+      registered_devices: all_json.count
+    }
+  }
+end
 
   # GET /api/ip_bindings/:id
   def show
@@ -294,6 +348,57 @@ end
     params.require(:ip_binding).permit(:router, :name, :package, :mac, :ip,
                                        :expiry, :device_type, :account_id, :router_id)
   end
+
+
+
+
+
+def normalize_mac(mac)
+  mac.to_s.upcase.gsub('-', ':')
+end
+
+# Queries every NAS router's live active-user list and returns a Set of
+# normalized MAC addresses currently connected. Cached 10s to avoid
+# hammering routers on every page load; tolerant of offline/slow routers.
+def live_online_macs(account_id)
+  Rails.cache.fetch("ip_bindings_online_macs_#{account_id}", expires_in: 10.seconds) do
+    macs = Set.new
+    NasRouter.where(account_id: account_id).each do |nas|
+      begin
+        response = RestClient::Request.execute(
+          method: :get,
+          url: "http://#{nas.ip_address}/rest/ip/hotspot/active",
+          user: nas.username,
+          password: nas.password,
+          timeout: 4,
+          open_timeout: 2
+        )
+        users = JSON.parse(response.body)
+        next unless users.is_a?(Array)
+
+        users.each do |u|
+          mac = u['mac-address']
+          macs << normalize_mac(mac) if mac.present?
+        end
+      rescue RestClient::Exceptions::Timeout, Errno::ETIMEDOUT
+        Rails.logger.warn "live_online_macs: router #{nas.ip_address} timed out"
+        next
+      rescue Errno::ECONNREFUSED, Errno::EHOSTUNREACH, SocketError => e
+        Rails.logger.warn "live_online_macs: router #{nas.ip_address} unreachable: #{e.message}"
+        next
+      rescue => e
+        Rails.logger.warn "live_online_macs: router #{nas.ip_address} error: #{e.message}"
+        next
+      end
+    end
+    macs.to_a
+  end.to_set
+end
+
+
+
+
+
 
 
 def mikrotik_add_queue_for_tv_plan(binding, tv_plan, nas)
