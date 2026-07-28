@@ -757,7 +757,7 @@ if session&.payment_type == 'device_binding'
       name:       session.hotspot_package,
       account_id: session.account_id,
   )
-  
+
     nas_router = NasRouter.find_by(name: hotspot_package.nas_router, account_id: hotspot_package.account_id)
 
   if nas_router
@@ -2938,7 +2938,9 @@ end
 
 
 
-
+def tv_plan_expiration(tv_plan)
+  (Time.current + tv_plan.validity_in_seconds.seconds).strftime("%Y-%m-%d %H:%M:%S")
+end
 
 
 
