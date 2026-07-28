@@ -716,11 +716,6 @@ def check_payment_status
         session = TemporarySession.find_by(session: session_id, 
         )
 
- tv_package = TvPlan.find_by(
-      name:       session.hotspot_package,
-      account_id: session.account_id,
-      id:  session.tv_plan_id
-    )
 
 
 
@@ -745,7 +740,7 @@ if session&.payment_type == 'device_binding'
   )
 
   HotspotMpesaRevenue.create!(
-    amount: data["TransAmount"], voucher: "DEVICE-#{binding.id}",
+    amount: data["TransAmount"], voucher: "DEVICE-#{binding.mac}",
     reference: data["TransID"], payment_method: "Mpesa",
     time_paid: data["TransTime"], account_id: session.account_id,
     name: data["FirstName"], phone_number: session.phone_number
@@ -753,14 +748,11 @@ if session&.payment_type == 'device_binding'
 
 
 
- hotspot_package = HotspotPackage.find_by(
-      name:       session.hotspot_package,
-      account_id: session.account_id,
-  )
+nas_router_tv_package = NasRouter.find_by(name: tv_plan.nas_router, account_id: tv_plan .account_id)
 
-    nas_router = NasRouter.find_by(name: hotspot_package.nas_router, account_id: hotspot_package.account_id)
 
-  if nas_router
+  if nas_router_tv_package
+
     begin
       mikrotik_add_binding_direct(binding, nas_router)
       mikrotik_add_queue_for_tv_plan(binding, tv_plan, nas_router) if tv_plan
@@ -775,7 +767,12 @@ if session&.payment_type == 'device_binding'
 end
 
 
+ hotspot_package = HotspotPackage.find_by(
+      name:       session.hotspot_package,
+      account_id: session.account_id,
+  )
 
+    nas_router = NasRouter.find_by(name: hotspot_package.nas_router, account_id: hotspot_package.account_id)
 
 
 
