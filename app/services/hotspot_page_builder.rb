@@ -1111,46 +1111,33 @@ function startTvQueryStatus() {
 
 
 
+
 function pollDeviceBindingStatus() {
   let elapsed = 0;
-  activePoll.interval = setInterval(async () => {
+  const iv = setInterval(async () => {
     elapsed += 5000;
-
-    if (elapsed === 20000) {
-      queryModal = { status: 'processing', message: 'Still connecting your TV… your payment was received, this can take a little longer on some networks.' };
-      renderQueryModal();
-    }
-    if (elapsed === 60000) {
-      queryModal = { status: 'processing', message: 'Almost there — finishing up your TV connection. Your payment is safe.' };
-      renderQueryModal();
-    }
-
     try {
       const res = await fetch(api('/api/payment_and_conected_status'), {
         method: 'POST', headers, body: JSON.stringify({ ip, mac })
       });
       const data = await res.json();
       if (data.connected) {
-        clearInterval(activePoll.interval); activePoll.interval = null;
+        clearInterval(iv);
         queryModal = { status: null, message: '' };
         renderQueryModal();
-        onConnected({ package: state.tvSelected && state.tvSelected.name, type: 'tv' });
+        onConnected({ package: state.tvSelected && state.tvSelected.name });
         return;
       }
     } catch (e) { /* keep polling on transient errors */ }
-
     if (elapsed >= 120000) {
-      clearInterval(activePoll.interval); activePoll.interval = null;
-      const supportPhone = (cfg.footer && cfg.footer.support_phone) || cfg.hotspot_phone;
-      queryModal = {
-        status: 'error',
-        message: 'Your payment was received, but connecting your TV is taking longer than expected. Check that your TV is powered on and nearby' +
-          (supportPhone ? ', or contact support at ' + supportPhone : '') + '. Your payment has not been lost.'
-      };
+      clearInterval(iv);
+      queryModal = { status: 'error', message: 'Timed out waiting for payment confirmation.' };
       renderQueryModal();
     }
   }, 5000);
 }
+
+
 
 
 
