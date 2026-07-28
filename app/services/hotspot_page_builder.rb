@@ -1049,7 +1049,6 @@ async function payTvPlan() {
 
 
 
-
 function startTvQueryStatus() {
   if (tvStkQueryInterval) clearInterval(tvStkQueryInterval);
 
@@ -1075,25 +1074,25 @@ function startTvQueryStatus() {
           pollDeviceBindingStatus();
           break;
         case '4999':
-          queryModal = { status: 'processing', message: 'Payment is still processing on M-Pesa\'s side. Please wait…' };
+          queryModal = { status: 'processing', message: "Payment is still processing on M-Pesa's side. Please wait…" };
           renderQueryModal();
           break;
         case '1037':
           clearInterval(tvStkQueryInterval); tvStkQueryInterval = null;
           localStorage.removeItem('tv_checkout_request_id');
-          queryModal = { status: 'no_response', message: 'We didn\'t get a response from your phone. You were not charged — please try again.' };
+          queryModal = { status: 'no_response', message: "We didn't get a response from your phone. You were not charged — please try again." };
           renderQueryModal();
           break;
         case '1032':
           clearInterval(tvStkQueryInterval); tvStkQueryInterval = null;
           localStorage.removeItem('tv_checkout_request_id');
-          queryModal = { status: 'cancelled', message: 'Payment was cancelled. You were not charged — try again when ready.' };
+          queryModal = { status: 'cancelled', message: "Payment was cancelled. You were not charged — try again when ready." };
           renderQueryModal();
           break;
         case '2001':
           clearInterval(tvStkQueryInterval); tvStkQueryInterval = null;
           localStorage.removeItem('tv_checkout_request_id');
-          queryModal = { status: 'invalid_initiator', message: 'That PIN entry was invalid. Please try again.' };
+          queryModal = { status: 'invalid_initiator', message: "That PIN entry was invalid. Please try again." };
           renderQueryModal();
           break;
         default:
