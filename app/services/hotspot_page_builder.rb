@@ -748,12 +748,19 @@ function renderConnectedScreen() {
     ['Expires', connectedInfo.expiration],
   ].filter(([, v]) => v);
 
-  root.innerHTML = `
+   const isTv = connectedInfo.type === 'tv';
+  const heading  = isTv ? 'TV Connected! 📺' : 'Connected!';
+  const subtitle = isTv
+    ? 'Your TV is now online — enjoy streaming.'
+    : "You're online — enjoy browsing.";
+  const icon = isTv ? '📺' : '✅';
+  const btnLabel = isTv ? 'Done →' : 'Start Browsing →';
+ root.innerHTML = `
     <div style="position:fixed;inset:0;z-index:21000;display:flex;align-items:center;justify-content:center;background:rgba(2,6,23,.92);backdrop-filter:blur(20px);">
       <div style="background:color-mix(in srgb, var(--surface) 90%, transparent);border:1px solid color-mix(in srgb, var(--accent) 25%, transparent);border-radius:24px;max-width:360px;width:90%;padding:32px 28px;text-align:center;box-shadow:0 0 60px rgba(52,211,153,.15);">
-        <div style="width:64px;height:64px;margin:0 auto 20px;border-radius:20px;background:color-mix(in srgb, var(--accent) 15%, transparent);border:1px solid color-mix(in srgb, var(--accent) 30%, transparent);display:flex;align-items:center;justify-content:center;font-size:28px;">✅</div>
-        <h2 style="font-size:22px;font-weight:800;color:var(--text);margin-bottom:4px;">Connected!</h2>
-        <p style="font-size:13px;color:var(--muted);margin-bottom:22px;">You're online — enjoy browsing.</p>
+        <div style="width:64px;height:64px;margin:0 auto 20px;border-radius:20px;background:color-mix(in srgb, var(--accent) 15%, transparent);border:1px solid color-mix(in srgb, var(--accent) 30%, transparent);display:flex;align-items:center;justify-content:center;font-size:28px;">${icon}</div>
+        <h2 style="font-size:22px;font-weight:800;color:var(--text);margin-bottom:4px;">${heading}</h2>
+        <p style="font-size:13px;color:var(--muted);margin-bottom:22px;">${subtitle}</p>
         ${rows.length ? `
           <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:22px;text-align:left;">
             ${rows.map(([l, v]) => `
@@ -764,12 +771,12 @@ function renderConnectedScreen() {
             `).join('')}
           </div>
         ` : ''}
-        <button id="connected-start-btn" class="btn">Start Browsing →</button>
+        <button id="connected-start-btn" class="btn">${btnLabel}</button>
       </div>
     </div>
   `;
 
-  const startBtn = document.getElementById('connected-start-btn');
+const startBtn = document.getElementById('connected-start-btn');
   if (startBtn) startBtn.onclick = () => { window.location.href = '$(link-orig)'; };
 }
 
@@ -1110,27 +1117,42 @@ function startTvQueryStatus() {
 
 
 
-
 function pollDeviceBindingStatus() {
   let elapsed = 0;
-  const iv = setInterval(async () => {
+  activePoll.interval = setInterval(async () => {
     elapsed += 5000;
+
+    if (elapsed === 20000) {
+      queryModal = { status: 'processing', message: 'Still connecting your TV… your payment was received, this can take a little longer on some networks.' };
+      renderQueryModal();
+    }
+    if (elapsed === 60000) {
+      queryModal = { status: 'processing', message: 'Almost there — finishing up your TV connection. Your payment is safe.' };
+      renderQueryModal();
+    }
+
     try {
       const res = await fetch(api('/api/payment_and_conected_status'), {
         method: 'POST', headers, body: JSON.stringify({ ip, mac })
       });
       const data = await res.json();
       if (data.connected) {
-        clearInterval(iv);
+        clearInterval(activePoll.interval); activePoll.interval = null;
         queryModal = { status: null, message: '' };
         renderQueryModal();
-        onConnected({ package: state.tvSelected && state.tvSelected.name });
+        onConnected({ package: state.tvSelected && state.tvSelected.name, type: 'tv' });
         return;
       }
     } catch (e) { /* keep polling on transient errors */ }
+
     if (elapsed >= 120000) {
-      clearInterval(iv);
-      queryModal = { status: 'error', message: 'Timed out waiting for payment confirmation.' };
+      clearInterval(activePoll.interval); activePoll.interval = null;
+      const supportPhone = (cfg.footer && cfg.footer.support_phone) || cfg.hotspot_phone;
+      queryModal = {
+        status: 'error',
+        message: 'Your payment was received, but connecting your TV is taking longer than expected. Check that your TV is powered on and nearby' +
+          (supportPhone ? ', or contact support at ' + supportPhone : '') + '. Your payment has not been lost.'
+      };
       renderQueryModal();
     }
   }, 5000);
@@ -1303,21 +1325,18 @@ async function payPackage() {
         }
 
         function onConnected(details) {
-          details = details || {};
-          connectedInfo = {
-            username: details.username || username || '',
-            package: details.package || (state.selected && state.selected.name) || '',
-            expiration: details.expiration || '',
-          };
-          // Critical for autologin: nothing else in this file ever wrote
-          // hotspot_username to localStorage. Without this, `username` is
-          // before it even makes a request. This is what lets the NEXT
-          // visit from this device recognize it and reconnect silently.
-          if (connectedInfo.username) localStorage.setItem('hotspot_username', connectedInfo.username);
-          renderConnectedScreen();
-          setStatus('success', 'Connected! Redirecting…');
-          setTimeout(() => { window.location.href = '$(link-orig)'; }, 4000);
-        }
+  details = details || {};
+  connectedInfo = {
+    username: details.username || username || '',
+    package: details.package || (state.selected && state.selected.name) || '',
+    expiration: details.expiration || '',
+    type: details.type || 'default',
+  };
+  if (connectedInfo.username) localStorage.setItem('hotspot_username', connectedInfo.username);
+  renderConnectedScreen();
+  setStatus('success', 'Connected! Redirecting…');
+  setTimeout(() => { window.location.href = '$(link-orig)'; }, 4000);
+}
 
         // ── Autologin / autoreconnect ───────────────────────────────────
         // Mirrors React's voucherAutoLogin(): if the account has
