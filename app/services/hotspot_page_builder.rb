@@ -1012,11 +1012,37 @@ async function loadTvPlans() {
   }
 }
 
-
-
-
-
-
+async function payTvPlan() {
+  queryModal = { status: 'processing', message: 'Sending payment request to your phone…' };
+  renderQueryModal();
+  try {
+    const res = await fetch(api('/api/make_device_package_payment'), {
+      method: 'POST', headers,
+      body: JSON.stringify({
+        phone_number: state.tvPhone,
+        tv_plan_id: state.tvSelected.id,
+        amount: state.tvSelected.price,
+        device_mac: state.tvMac,
+        device_name: 'TV',
+        device_type: 'tv',
+        mac, ip
+      })
+    });
+    const data = await res.json();
+    if (res.ok && data.checkout_request_id) {
+      localStorage.setItem('tv_checkout_request_id', data.checkout_request_id);
+      queryModal = { status: 'processing', message: 'Check your phone now and enter your M-Pesa PIN to confirm.' };
+      renderQueryModal();
+      startTvQueryStatus();
+    } else {
+      queryModal = { status: 'error', message: data.message || data.error || 'Could not start the payment. Please try again — you have not been charged.' };
+      renderQueryModal();
+    }
+  } catch (e) {
+    queryModal = { status: 'error', message: 'Network error — check your connection and try again. You have not been charged.' };
+    renderQueryModal();
+  }
+}
 
 function pollDeviceBindingStatus() {
   let elapsed = 0;
