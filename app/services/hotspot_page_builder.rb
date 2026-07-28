@@ -1316,21 +1316,22 @@ async function payPackage() {
           } catch (e) { console.error(e); setStatus('error', 'Network error. Check your connection and try again.'); }
         }
 
-
-        
-function onConnected(details) {
-  details = details || {};
-  connectedInfo = {
-    username: details.username || username || '',
-    package: details.package || (state.selected && state.selected.name) || '',
-    expiration: details.expiration || '',
-    type: details.type || 'default',
-  };
-  if (connectedInfo.username) localStorage.setItem('hotspot_username', connectedInfo.username);
-  renderConnectedScreen();
-  setStatus('success', 'Connected! Redirecting…');
-  setTimeout(() => { window.location.href = '$(link-orig)'; }, 4000);
-}
+        function onConnected(details) {
+          details = details || {};
+          connectedInfo = {
+            username: details.username || username || '',
+            package: details.package || (state.selected && state.selected.name) || '',
+            expiration: details.expiration || '',
+          };
+          // Critical for autologin: nothing else in this file ever wrote
+          // hotspot_username to localStorage. Without this, `username` is
+          // before it even makes a request. This is what lets the NEXT
+          // visit from this device recognize it and reconnect silently.
+          if (connectedInfo.username) localStorage.setItem('hotspot_username', connectedInfo.username);
+          renderConnectedScreen();
+          setStatus('success', 'Connected! Redirecting…');
+          setTimeout(() => { window.location.href = '$(link-orig)'; }, 4000);
+        }
 
         // ── Autologin / autoreconnect ───────────────────────────────────
         // Mirrors React's voucherAutoLogin(): if the account has
