@@ -723,7 +723,8 @@ def check_payment_status
 if session&.payment_type == 'device_binding'
 
   tv_plan = TvPlan.find_by(id: session.tv_plan_id, account_id: session.account_id)
-      nas_router_tv_package = NasRouter.find_by(name: tv_plan.nas_router, account_id: tv_plan.account_id)
+      # nas_router_tv_package = NasRouter.find_by(name: tv_plan.nas_router, account_id: tv_plan.account_id)
+      nas_router_tv_package = NasRouter.find_by(id: tv_plan.nas_router_id, account_id: tv_plan.account_id)
 
   binding = IpBinding.create!(
     name:        session.device_name,
