@@ -2937,11 +2937,40 @@ end
 end
 
 
+def mikrotik_add_queue_for_tv_plan(binding, tv_plan, nas)
+  return unless binding.ip.present? && tv_plan&.upload_limit.present?
+  require 'net/ssh'
 
-def tv_plan_expiration(tv_plan)
-  (Time.current + tv_plan.validity_in_seconds.seconds).strftime("%Y-%m-%d %H:%M:%S")
+  queue_name = "binding_#{binding.mac.upcase.gsub(':', '')}"
+  cmd = "/queue simple add name=\"#{queue_name}\" target=\"#{binding.ip}\" " \
+        "max-limit=\"#{tv_plan.upload_limit}M/#{tv_plan.download_limit}M\" " \
+        "comment=\"tv_plan_#{binding.id}\""
+
+  Net::SSH.start(nas.ip_address, nas.username,
+    password: nas.password.to_s, verify_host_key: :never,
+    non_interactive: true, timeout: 15
+  ) { |ssh| ssh.exec!(cmd) }
 end
 
+
+
+
+
+
+
+
+
+def tv_plan_expiration(tv_plan)
+  seconds =
+    case tv_plan.validity_period_units.to_s.downcase
+    when 'minutes' then tv_plan.validity.to_i.minutes
+    when 'hours'   then tv_plan.validity.to_i.hours
+    when 'days'    then tv_plan.validity.to_i.days
+    else 0.seconds
+    end
+
+  (Time.current + seconds).strftime("%Y-%m-%d %H:%M:%S")
+end
 
 
 def get_active_sessions(voucher)
