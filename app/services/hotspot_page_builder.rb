@@ -1044,6 +1044,74 @@ async function payTvPlan() {
   }
 }
 
+
+
+
+
+
+
+function startTvQueryStatus() {
+  if (tvStkQueryInterval) clearInterval(tvStkQueryInterval);
+
+  tvStkQueryInterval = setInterval(async () => {
+    const checkout_request_id = localStorage.getItem('tv_checkout_request_id');
+    if (!checkout_request_id) { clearInterval(tvStkQueryInterval); tvStkQueryInterval = null; return; }
+
+    try {
+      const res = await fetch(api('/api/query_status'), {
+        method: 'POST', headers,
+        body: JSON.stringify({ checkout_request_id })
+      });
+      const data = await res.json();
+      if (!res.ok) return;
+
+      const code = data.response && data.response.ResultCode;
+      switch (code) {
+        case '0':
+          clearInterval(tvStkQueryInterval); tvStkQueryInterval = null;
+          localStorage.removeItem('tv_checkout_request_id');
+          queryModal = { status: 'processing', message: "Payment confirmed ✅ — connecting your TV now. This usually takes under a minute, please don't close this page." };
+          renderQueryModal();
+          pollDeviceBindingStatus();
+          break;
+        case '4999':
+          queryModal = { status: 'processing', message: 'Payment is still processing on M-Pesa\'s side. Please wait…' };
+          renderQueryModal();
+          break;
+        case '1037':
+          clearInterval(tvStkQueryInterval); tvStkQueryInterval = null;
+          localStorage.removeItem('tv_checkout_request_id');
+          queryModal = { status: 'no_response', message: 'We didn\'t get a response from your phone. You were not charged — please try again.' };
+          renderQueryModal();
+          break;
+        case '1032':
+          clearInterval(tvStkQueryInterval); tvStkQueryInterval = null;
+          localStorage.removeItem('tv_checkout_request_id');
+          queryModal = { status: 'cancelled', message: 'Payment was cancelled. You were not charged — try again when ready.' };
+          renderQueryModal();
+          break;
+        case '2001':
+          clearInterval(tvStkQueryInterval); tvStkQueryInterval = null;
+          localStorage.removeItem('tv_checkout_request_id');
+          queryModal = { status: 'invalid_initiator', message: 'That PIN entry was invalid. Please try again.' };
+          renderQueryModal();
+          break;
+        default:
+          clearInterval(tvStkQueryInterval); tvStkQueryInterval = null;
+          localStorage.removeItem('tv_checkout_request_id');
+          queryModal = { status: 'error', message: (data.response && data.response.ResultDesc) || 'Payment failed. You were not charged — please try again.' };
+          renderQueryModal();
+      }
+    } catch (e) { /* keep polling on transient errors */ }
+  }, 5000);
+}
+
+
+
+
+
+
+
 function pollDeviceBindingStatus() {
   let elapsed = 0;
   const iv = setInterval(async () => {
