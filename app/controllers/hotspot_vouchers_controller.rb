@@ -724,11 +724,6 @@ def check_payment_status
 
 
 
- hotspot_package = HotspotPackage.find_by(
-      name:       session.hotspot_package,
-      account_id: session.account_id,
-    )
-    nas_router = NasRouter.find_by(name: hotspot_package.nas_router, account_id: hotspot_package.account_id)
 
 if session&.payment_type == 'device_binding'
       nas_router_tv_package = NasRouter.find_by(name: tv_package.nas_router, account_id: tv_package.account_id)
@@ -755,6 +750,15 @@ if session&.payment_type == 'device_binding'
     time_paid: data["TransTime"], account_id: session.account_id,
     name: data["FirstName"], phone_number: session.phone_number
   )
+
+
+
+ hotspot_package = HotspotPackage.find_by(
+      name:       session.hotspot_package,
+      account_id: session.account_id,
+  )
+  
+    nas_router = NasRouter.find_by(name: hotspot_package.nas_router, account_id: hotspot_package.account_id)
 
   if nas_router
     begin
