@@ -753,10 +753,10 @@ if session&.payment_type == 'device_binding'
   if nas_router_tv_package
 
     begin
-      mikrotik_add_binding_direct(binding, nas_router_tv_package)
-      mikrotik_add_queue_for_tv_plan(binding, tv_plan, nas_router_tv_package) if tv_plan
+      mikrotik_add_binding_direct(binding, nas_router_tv_plan)
+      tv_plan(binding, tv_plan, nas_router_tv_package) if tv_plan
     rescue => e
-      Rails.logger.warn "MikroTik binding failed for #{binding.mac}: #{e.message}"
+      Rails.logger.info "MikroTik binding failed for #{binding.mac}: #{e.message}"
     end
   end
 
