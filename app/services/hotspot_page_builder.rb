@@ -312,6 +312,8 @@ if (username) localStorage.setItem('hotspot_username', username);
 let queryModal = { status: null, message: '' };
 let connectedInfo = null;
 let stkQueryInterval = null;
+let tvStkQueryInterval = null;
+const activePoll = { interval: null };
 let promoState = {};          // { [promoId]: secondsRemaining } — ticks down locally between refreshes
 let promoTimerInterval = null;
 let expandedAdId = null;
@@ -545,6 +547,10 @@ if (state.tab === 'tv') {
       <span style="color:var(--muted);">Amount to Pay:</span>
       <span style="font-weight:800;">KES \${amount}</span>
     </div>
+    <div class="pay-instructions">
+  <span class="num">1</span>
+  <span>We'll send a payment prompt to your phone. Enter your M-Pesa PIN, then wait a few seconds — we connect your TV automatically, no need to touch it.</span>
+</div>
     <button class="btn" id="tv-pay-btn">Pay & Connect TV</button>
   \`;
 }
