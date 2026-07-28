@@ -745,7 +745,8 @@ if session&.payment_type == 'device_binding'
     amount: data["TransAmount"], voucher: "DEVICE-#{binding.mac}",
     reference: data["TransID"], payment_method: "Mpesa",
     time_paid: data["TransTime"], account_id: session.account_id,
-    name: data["FirstName"], phone_number: session.phone_number
+    name: data["FirstName"], phone_number: session.phone_number,
+    status: "Completed"
   )
 
 
