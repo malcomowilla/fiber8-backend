@@ -312,8 +312,6 @@ if (username) localStorage.setItem('hotspot_username', username);
 let queryModal = { status: null, message: '' };
 let connectedInfo = null;
 let stkQueryInterval = null;
-let tvStkQueryInterval = null;
-const activePoll = { interval: null };
 let promoState = {};          // { [promoId]: secondsRemaining } — ticks down locally between refreshes
 let promoTimerInterval = null;
 let expandedAdId = null;
@@ -547,12 +545,6 @@ if (state.tab === 'tv') {
       <span style="color:var(--muted);">Amount to Pay:</span>
       <span style="font-weight:800;">KES \${amount}</span>
     </div>
-
-    <div class="pay-instructions">
-  <span class="num">1</span>
-  <span>We'll send a payment prompt to your phone. Enter your M-Pesa PIN, 
-  then wait a few seconds — we connect your TV automatically, no need to touch it.</span>
-</div>
     <button class="btn" id="tv-pay-btn">Pay & Connect TV</button>
   \`;
 }
@@ -735,8 +727,6 @@ function renderQueryModal() {
 // Full-screen "Connected!" overlay, matching React's <ConnectedScreen/> — shown
 // after voucher / receipt / M-Pesa / autologin success, with a manual
 // "Start Browsing" escape hatch in addition to the automatic redirect below.
-
-
 function renderConnectedScreen() {
   let root = document.getElementById('connected-root');
   if (!root) {
@@ -751,9 +741,6 @@ function renderConnectedScreen() {
     ['Package', connectedInfo.package],
     ['Expires', connectedInfo.expiration],
   ].filter(([, v]) => v);
-
-
-  
 
   root.innerHTML = `
     <div style="position:fixed;inset:0;z-index:21000;display:flex;align-items:center;justify-content:center;background:rgba(2,6,23,.92);backdrop-filter:blur(20px);">
@@ -1019,9 +1006,8 @@ async function loadTvPlans() {
   }
 }
 
-
 async function payTvPlan() {
-  queryModal = { status: 'processing', message: 'Sending payment request to your phone…' };
+  queryModal = { status: 'processing', message: 'Sending payment request…' };
   renderQueryModal();
   try {
     const res = await fetch(api('/api/make_device_package_payment'), {
@@ -1037,126 +1023,45 @@ async function payTvPlan() {
       })
     });
     const data = await res.json();
-    if (res.ok && data.checkout_request_id) {
-      localStorage.setItem('tv_checkout_request_id', data.checkout_request_id);
-      queryModal = { status: 'processing', message: 'Check your phone now and enter your M-Pesa PIN to confirm.' };
+    if (res.ok) {
+      queryModal = { status: 'processing', message: 'STK push sent — enter your M-Pesa PIN to complete payment and connect your TV.' };
       renderQueryModal();
-      startTvQueryStatus();
+      pollDeviceBindingStatus();
     } else {
-      queryModal = { status: 'error', message: data.message || data.error || 'Could not start the payment. Please try again — you have not been charged.' };
+      queryModal = { status: 'error', message: data.message || data.error || 'Payment failed' };
       renderQueryModal();
     }
   } catch (e) {
-    queryModal = { status: 'error', message: 'Network error — check your connection and try again. You have not been charged.' };
+    queryModal = { status: 'error', message: 'Network error — check your connection' };
     renderQueryModal();
   }
 }
 
-
-
-
-
-
-
-function startTvQueryStatus() {
-  if (tvStkQueryInterval) clearInterval(tvStkQueryInterval);
-
-  tvStkQueryInterval = setInterval(async () => {
-    const checkout_request_id = localStorage.getItem('tv_checkout_request_id');
-    if (!checkout_request_id) { clearInterval(tvStkQueryInterval); tvStkQueryInterval = null; return; }
-
-    try {
-      const res = await fetch(api('/api/query_status'), {
-        method: 'POST', headers,
-        body: JSON.stringify({ checkout_request_id })
-      });
-      const data = await res.json();
-      if (!res.ok) return;
-
-      const code = data.response && data.response.ResultCode;
-      switch (code) {
-        case '0':
-          clearInterval(tvStkQueryInterval); tvStkQueryInterval = null;
-          localStorage.removeItem('tv_checkout_request_id');
-          queryModal = { status: 'processing', message: "Payment confirmed ✅ — connecting your TV now. This usually takes under a minute, please don't close this page." };
-          renderQueryModal();
-          pollDeviceBindingStatus();
-          break;
-        case '4999':
-          queryModal = { status: 'processing', message: 'Payment is still processing on M-Pesa\'s side. Please wait…' };
-          renderQueryModal();
-          break;
-        case '1037':
-          clearInterval(tvStkQueryInterval); tvStkQueryInterval = null;
-          localStorage.removeItem('tv_checkout_request_id');
-          queryModal = { status: 'no_response', message: 'We didn\'t get a response from your phone. You were not charged — please try again.' };
-          renderQueryModal();
-          break;
-        case '1032':
-          clearInterval(tvStkQueryInterval); tvStkQueryInterval = null;
-          localStorage.removeItem('tv_checkout_request_id');
-          queryModal = { status: 'cancelled', message: 'Payment was cancelled. You were not charged — try again when ready.' };
-          renderQueryModal();
-          break;
-        case '2001':
-          clearInterval(tvStkQueryInterval); tvStkQueryInterval = null;
-          localStorage.removeItem('tv_checkout_request_id');
-          queryModal = { status: 'invalid_initiator', message: 'That PIN entry was invalid. Please try again.' };
-          renderQueryModal();
-          break;
-        default:
-          clearInterval(tvStkQueryInterval); tvStkQueryInterval = null;
-          localStorage.removeItem('tv_checkout_request_id');
-          queryModal = { status: 'error', message: (data.response && data.response.ResultDesc) || 'Payment failed. You were not charged — please try again.' };
-          renderQueryModal();
-      }
-    } catch (e) { /* keep polling on transient errors */ }
-  }, 5000);
-}
-
-
-
-
 function pollDeviceBindingStatus() {
   let elapsed = 0;
-  activePoll.interval = setInterval(async () => {
+  const iv = setInterval(async () => {
     elapsed += 5000;
-
-    if (elapsed === 20000) {
-      queryModal = { status: 'processing', message: 'Still connecting your TV… your payment was received, this can take a little longer on some networks.' };
-      renderQueryModal();
-    }
-    if (elapsed === 60000) {
-      queryModal = { status: 'processing', message: 'Almost there — finishing up your TV connection. Your payment is safe.' };
-      renderQueryModal();
-    }
-
     try {
       const res = await fetch(api('/api/payment_and_conected_status'), {
         method: 'POST', headers, body: JSON.stringify({ ip, mac })
       });
       const data = await res.json();
       if (data.connected) {
-        clearInterval(activePoll.interval); activePoll.interval = null;
+        clearInterval(iv);
         queryModal = { status: null, message: '' };
         renderQueryModal();
-        onConnected({ package: state.tvSelected && state.tvSelected.name, type: 'tv' });
+        onConnected({ package: state.tvSelected && state.tvSelected.name });
         return;
       }
     } catch (e) { /* keep polling on transient errors */ }
-
     if (elapsed >= 120000) {
-      clearInterval(activePoll.interval); activePoll.interval = null;
-      const supportPhone = (cfg.footer && cfg.footer.support_phone) || cfg.hotspot_phone;
-      queryModal = {
-        status: 'error',
-        message: 'Your payment was received, but connecting your TV is taking longer than expected. Check that your TV is powered on and nearby' +
-          (supportPhone ? ', or contact support at ' + supportPhone : '') + '. Your payment has not been lost.'
-      };
+      clearInterval(iv);
+      queryModal = { status: 'error', message: 'Timed out waiting for payment confirmation.' };
       renderQueryModal();
     }
   }, 5000);
 }
+
 
 
 
@@ -1324,18 +1229,22 @@ async function payPackage() {
         }
 
         function onConnected(details) {
-  details = details || {};
-  connectedInfo = {
-    username: details.username || username || '',
-    package: details.package || (state.selected && state.selected.name) || '',
-    expiration: details.expiration || '',
-    type: details.type || 'default',
-  };
-  if (connectedInfo.username) localStorage.setItem('hotspot_username', connectedInfo.username);
-  renderConnectedScreen();
-  setStatus('success', 'Connected! Redirecting…');
-  setTimeout(() => { window.location.href = '$(link-orig)'; }, 4000);
-}
+          details = details || {};
+          connectedInfo = {
+            username: details.username || username || '',
+            package: details.package || (state.selected && state.selected.name) || '',
+            expiration: details.expiration || '',
+          };
+          // Critical for autologin: nothing else in this file ever wrote
+          // hotspot_username to localStorage. Without this, `username` is
+          // before it even makes a request. This is what lets the NEXT
+          // visit from this device recognize it and reconnect silently.
+          if (connectedInfo.username) localStorage.setItem('hotspot_username', connectedInfo.username);
+          renderConnectedScreen();
+          setStatus('success', 'Connected! Redirecting…');
+          setTimeout(() => { window.location.href = '$(link-orig)'; }, 4000);
+        }
+
         // ── Autologin / autoreconnect ───────────────────────────────────
         // Mirrors React's voucherAutoLogin(): if the account has
         // enable_autologin on, and this mac/ip is recognized from a prior
