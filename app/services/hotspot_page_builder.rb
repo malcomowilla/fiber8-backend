@@ -753,20 +753,14 @@ function renderConnectedScreen() {
   ].filter(([, v]) => v);
 
 
-   const isTv = connectedInfo.type === 'tv';
-  const heading  = isTv ? 'TV Connected! 📺' : 'Connected!';
-  const subtitle = isTv
-    ? 'Your TV is now online — enjoy streaming.'
-    : "You're online — enjoy browsing.";
-  const icon = isTv ? '📺' : '✅';
-  const btnLabel = isTv ? 'Done →' : 'Start Browsing →';
+  
 
   root.innerHTML = `
     <div style="position:fixed;inset:0;z-index:21000;display:flex;align-items:center;justify-content:center;background:rgba(2,6,23,.92);backdrop-filter:blur(20px);">
       <div style="background:color-mix(in srgb, var(--surface) 90%, transparent);border:1px solid color-mix(in srgb, var(--accent) 25%, transparent);border-radius:24px;max-width:360px;width:90%;padding:32px 28px;text-align:center;box-shadow:0 0 60px rgba(52,211,153,.15);">
-        <div style="width:64px;height:64px;margin:0 auto 20px;border-radius:20px;background:color-mix(in srgb, var(--accent) 15%, transparent);border:1px solid color-mix(in srgb, var(--accent) 30%, transparent);display:flex;align-items:center;justify-content:center;font-size:28px;">${icon}</div>
-        <h2 style="font-size:22px;font-weight:800;color:var(--text);margin-bottom:4px;">${heading}</h2>
-        <p style="font-size:13px;color:var(--muted);margin-bottom:22px;">${subtitle}</p>
+        <div style="width:64px;height:64px;margin:0 auto 20px;border-radius:20px;background:color-mix(in srgb, var(--accent) 15%, transparent);border:1px solid color-mix(in srgb, var(--accent) 30%, transparent);display:flex;align-items:center;justify-content:center;font-size:28px;">✅</div>
+        <h2 style="font-size:22px;font-weight:800;color:var(--text);margin-bottom:4px;">Connected!</h2>
+        <p style="font-size:13px;color:var(--muted);margin-bottom:22px;">You're online — enjoy browsing.</p>
         ${rows.length ? `
           <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:22px;text-align:left;">
             ${rows.map(([l, v]) => `
@@ -777,11 +771,12 @@ function renderConnectedScreen() {
             `).join('')}
           </div>
         ` : ''}
-        <button id="connected-start-btn" class="btn">${btnLabel}</button>
+        <button id="connected-start-btn" class="btn">Start Browsing →</button>
       </div>
     </div>
   `;
-const startBtn = document.getElementById('connected-start-btn');
+
+  const startBtn = document.getElementById('connected-start-btn');
   if (startBtn) startBtn.onclick = () => { window.location.href = '$(link-orig)'; };
 }
 
