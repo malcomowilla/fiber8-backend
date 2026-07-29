@@ -173,8 +173,8 @@ resources :pops
 resources :network_devices
 resources :network_connections
 
-
-  post '/api/payment_and_conected_status', to: 'hotspot_vouchers#payment_and_conected_status'
+post '/api/nas_routers/:id/remote_winbox_session', to: 'nas_routers#remote_winbox_session'
+post '/api/payment_and_conected_status', to: 'hotspot_vouchers#payment_and_conected_status'
 
 get '/api/allow_get_tv_plans', to: 'tv_plans#allow_get_tv_plans'
 resources :tv_plans, only: [:index, :create, :update, :destroy]
