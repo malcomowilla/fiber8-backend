@@ -29,7 +29,7 @@ class WinboxAccessService
 
   # Returns { success: true, expires_at: Time } or { success: false, error: String }
   def grant_temporary_access
-    vps_wg_address = ENV['VPS_WIREGUARD_ADDRESS']
+    vps_wg_address = "10.2.0.1"
     if vps_wg_address.blank?
       return { success: false, error: 'Server misconfiguration: VPS_WIREGUARD_ADDRESS not set' }
     end
