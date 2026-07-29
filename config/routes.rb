@@ -166,6 +166,21 @@ resources :tv_plans, only: [:index, :create, :update, :destroy]
 
 end
 
+
+
+
+
+
+resources :nas_routers, path: 'nas_routers' do
+  member do
+    post :remote_winbox_session         # starts the relay (existing action)
+    delete 'winbox_session', action: :stop_winbox_session   # stops it early
+  end
+end
+
+
+
+
 resources :promotional_plans, only: [:index, :show, :create, :update, :destroy]
 
 

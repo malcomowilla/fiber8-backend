@@ -139,13 +139,132 @@
 
 
 
+# services:
+#   redis:
+#     image: redis:7-alpine
+#     network_mode: host
+#     command: redis-server --maxmemory 256mb --maxmemory-policy allkeys-lru
+#     # ports:
+#       # - "6379:6379"
+#     volumes:
+#       - redisdata:/data
+#     healthcheck:
+#       test: ["CMD", "redis-cli", "ping"]
+#       interval: 10s
+#       timeout: 5s
+#       retries: 5
+#     # networks:
+#     #   - appnet
+
+#   web:
+#     build:
+#       context: .
+#       dockerfile: Dockerfile
+#     command: bash -c "rm -f tmp/pids/server.pid && bundle exec rails server -b 0.0.0.0 -p 3000"
+#     network_mode: host
+#     cap_add:
+#     - NET_ADMIN
+#     mem_limit: 780m
+#     mem_reservation: 128m
+#     restart: unless-stopped
+#     volumes:
+#       - .:/app
+#       - bundle_cache:/usr/local/bundle
+#       - freeradius_shared:/freeradius 
+#     # ports:
+#     #   - "3000:3000"
+#     environment:
+#       RAILS_ENV: development
+#       RACK_ENV: development
+#       DATABASE_HOST: localhost
+#       DATABASE_PORT: ${DB_PORT}
+#       DATABASE_NAME: ${DB_NAME}
+#       DATABASE_USERNAME: ${DATABASE_USERNAME}
+#       DATABASE_PASSWORD: ${DATABASE_PASSWORD}
+#       REDIS_URL: redis://localhost:6379/0
+#       SIDEKIQ_REDIS_URL: redis://localhost:6379/1
+#       SECRET_KEY_BASE: development-secret-key
+#       RAILS_LOG_TO_STDOUT: "true"
+#       WEB_CONCURRENCY: 1
+#       RAILS_MAX_THREADS: 5
+#       LD_PRELOAD: /usr/lib/x86_64-linux-gnu/libjemalloc.so.2
+#       MALLOC_ARENA_MAX: "2"
+#       RUBY_YJIT_ENABLE: "1"
+#     extra_hosts:
+#       - "host.docker.internal:host-gateway" # 👈 Required for Linux users
+#     depends_on:
+#       redis:
+#         condition: service_healthy
+    
+   
+
+#   sidekiq:
+#     build:
+#       context: .
+#       dockerfile: Dockerfile
+#     command: bundle exec sidekiq -C config/sidekiq.yml
+#     network_mode: host
+#     cap_add:
+#     - NET_ADMIN
+#     mem_limit: 512m
+#     mem_reservation: 256m
+#     restart: unless-stopped
+
+#     volumes:
+#       - .:/app
+#       - bundle_cache:/usr/local/bundle
+#       - /etc/freeradius/3.0:/etc/freeradius/3.0
+#     environment:
+#       RAILS_ENV: development
+#       RACK_ENV: development
+#       DATABASE_HOST: localhost
+#       DATABASE_PORT: ${DB_PORT}
+#       DATABASE_NAME: ${DB_NAME}
+#       DATABASE_USERNAME: ${DATABASE_USERNAME}
+#       DATABASE_PASSWORD: ${DATABASE_PASSWORD}
+#       REDIS_URL: redis://localhost:6379/0
+#       SIDEKIQ_REDIS_URL: redis://localhost:6379/1
+#       SECRET_KEY_BASE: development-secret-key
+#       RAILS_LOG_TO_STDOUT: "true"
+#       LD_PRELOAD: /usr/lib/x86_64-linux-gnu/libjemalloc.so.2
+#       MALLOC_ARENA_MAX: "2"
+#       RUBY_YJIT_ENABLE: "1"
+#     extra_hosts:
+#       - "host.docker.internal:host-gateway" # 👈 Required for Linux users
+#     depends_on:
+#       redis:
+#         condition: service_healthy
+#     # networks:
+#     #   - appnet
+
+# volumes:
+#   redisdata:
+#   bundle_cache:
+#   freeradius_shared:
+
+# networks:
+#   appnet:
+#     driver: bridge
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 services:
   redis:
     image: redis:7-alpine
     network_mode: host
     command: redis-server --maxmemory 256mb --maxmemory-policy allkeys-lru
-    # ports:
-      # - "6379:6379"
     volumes:
       - redisdata:/data
     healthcheck:
@@ -153,8 +272,6 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-    # networks:
-    #   - appnet
 
   web:
     build:
@@ -162,17 +279,16 @@ services:
       dockerfile: Dockerfile
     command: bash -c "rm -f tmp/pids/server.pid && bundle exec rails server -b 0.0.0.0 -p 3000"
     network_mode: host
-    cap_add:
-    - NET_ADMIN
+    # NET_ADMIN no longer needed — WinBox relay is now handled by HAProxy
+    # config files (see /etc/haproxy/conf.d mount below), not iptables.
     mem_limit: 780m
     mem_reservation: 128m
     restart: unless-stopped
     volumes:
       - .:/app
       - bundle_cache:/usr/local/bundle
-      - freeradius_shared:/freeradius 
-    # ports:
-    #   - "3000:3000"
+      - freeradius_shared:/freeradius
+      - /etc/haproxy/conf.d:/etc/haproxy/conf.d
     environment:
       RAILS_ENV: development
       RACK_ENV: development
@@ -195,8 +311,6 @@ services:
     depends_on:
       redis:
         condition: service_healthy
-    
-   
 
   sidekiq:
     build:
@@ -204,16 +318,15 @@ services:
       dockerfile: Dockerfile
     command: bundle exec sidekiq -C config/sidekiq.yml
     network_mode: host
-    cap_add:
-    - NET_ADMIN
+    # NET_ADMIN no longer needed — same reason as web above.
     mem_limit: 512m
     mem_reservation: 256m
     restart: unless-stopped
-
     volumes:
       - .:/app
       - bundle_cache:/usr/local/bundle
       - /etc/freeradius/3.0:/etc/freeradius/3.0
+      - /etc/haproxy/conf.d:/etc/haproxy/conf.d
     environment:
       RAILS_ENV: development
       RACK_ENV: development
@@ -234,8 +347,6 @@ services:
     depends_on:
       redis:
         condition: service_healthy
-    # networks:
-    #   - appnet
 
 volumes:
   redisdata:
