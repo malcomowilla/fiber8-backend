@@ -206,7 +206,6 @@ def set_tenant
 
 
 
-
 def remote_winbox_session
   port = nil
   expires_at = 15.minutes.from_now
@@ -227,12 +226,24 @@ def remote_winbox_session
     return
   end
 
-  system('iptables', '-t', 'nat', '-A', 'PREROUTING', '-p', 'tcp',
-         '--dport', port.to_s, '-j', 'DNAT',
-         '--to-destination', "#{@nas_router.ip_address}:8291")
+  dnat_out, dnat_err, dnat_status = Open3.capture3(
+    'iptables', '-t', 'nat', '-A', 'PREROUTING', '-p', 'tcp',
+    '--dport', port.to_s, '-j', 'DNAT',
+    '--to-destination', "#{@nas_router.ip_address}:8291"
+  )
+  Rails.logger.info("[WinBox relay] DNAT rule status=#{dnat_status.exitstatus} stdout=#{dnat_out} stderr=#{dnat_err}")
 
-  system('iptables', '-t', 'nat', '-A', 'POSTROUTING', '-p', 'tcp',
-         '-d', @nas_router.ip_address, '--dport', '8291', '-j', 'MASQUERADE')
+  masq_out, masq_err, masq_status = Open3.capture3(
+    'iptables', '-t', 'nat', '-A', 'POSTROUTING', '-p', 'tcp',
+    '-d', @nas_router.ip_address, '--dport', '8291', '-j', 'MASQUERADE'
+  )
+  Rails.logger.info("[WinBox relay] MASQUERADE rule status=#{masq_status.exitstatus} stdout=#{masq_out} stderr=#{masq_err}")
+
+  unless dnat_status.success? && masq_status.success?
+    @nas_router.update!(winbox_relay_port: nil, winbox_relay_expires_at: nil)
+    render json: { error: 'Failed to open relay, check server logs' }, status: :internal_server_error
+    return
+  end
 
   RemoteWinboxExpiryJob.set(wait: 15.minutes).perform_later(@nas_router.id, port)
 
@@ -242,6 +253,7 @@ def remote_winbox_session
     expires_at: expires_at.iso8601
   }
 end
+
 
 
 
@@ -256,25 +268,31 @@ end
 
   private
 
-
-
-
-
 def winbox_relay_host
-  subdomain   = request.headers['X-Subdomain']
   full_domain = request.headers['X-Domain']
+  raise 'Missing X-Domain header for WinBox relay host resolution' if full_domain.blank?
 
-  base_domain = full_domain.to_s.split('.').last(3).join('.') if full_domain.present?
-
-  platform_domain =
-    if base_domain == 'owitech.co.ke'
-      'owitech.co.ke'
-    else
-      'aitechs.co.ke'
-    end
-
-  "#{subdomain}.#{platform_domain}"
+  base_domain = full_domain.split('.').last(3).join('.')
+  base_domain == 'owitech.co.ke' ? 'relay.owitech.co.ke' : 'relay.aitechs.co.ke'
 end
+
+
+
+# def winbox_relay_host
+#   subdomain   = request.headers['X-Subdomain']
+#   full_domain = request.headers['X-Domain']
+
+#   base_domain = full_domain.to_s.split('.').last(3).join('.') if full_domain.present?
+
+#   platform_domain =
+#     if base_domain == 'owitech.co.ke'
+#       'owitech.co.ke'
+#     else
+#       'aitechs.co.ke'
+#     end
+
+#   "#{subdomain}.#{platform_domain}"
+# end
 
 
 
