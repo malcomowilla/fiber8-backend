@@ -207,7 +207,6 @@ def set_tenant
 
 
 
-
 def remote_winbox_session
   port = nil
   expires_at = 15.minutes.from_now
@@ -219,7 +218,7 @@ def remote_winbox_session
       port = candidate
       break
     rescue ActiveRecord::RecordNotUnique
-      next # someone else grabbed this port in the same instant, try another
+      next
     end
   end
 
@@ -238,11 +237,12 @@ def remote_winbox_session
   RemoteWinboxExpiryJob.set(wait: 15.minutes).perform_later(@nas_router.id, port)
 
   render json: {
-    host: ENV.fetch('WINBOX_RELAY_HOST', 'your-relay-domain.com'),
+    host: winbox_relay_host,
     port: port,
     expires_at: expires_at.iso8601
   }
 end
+
 
 
 def next_available_port
@@ -255,6 +255,29 @@ end
 
 
   private
+
+
+
+
+
+def winbox_relay_host
+  subdomain   = request.headers['X-Subdomain']
+  full_domain = request.headers['X-Domain']
+
+  base_domain = full_domain.to_s.split('.').last(3).join('.') if full_domain.present?
+
+  platform_domain =
+    if base_domain == 'owitech.co.ke'
+      'owitech.co.ke'
+    else
+      'aitechs.co.ke'
+    end
+
+  "#{subdomain}.#{platform_domain}"
+end
+
+
+
 
   def remove_wireguard_peer(ip)
     wg_config_path = "/etc/wireguard/wg0.conf"
