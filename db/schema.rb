@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_07_25_102741) do
+ActiveRecord::Schema[7.2].define(version: 2026_07_29_055021) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -768,7 +768,10 @@ ActiveRecord::Schema[7.2].define(version: 2026_07_25_102741) do
     t.string "api_password"
     t.string "router_id"
     t.string "router_ip"
+    t.integer "winbox_relay_port"
+    t.datetime "winbox_relay_expires_at"
     t.index ["account_id"], name: "index_nas_routers_on_account_id"
+    t.index ["winbox_relay_port"], name: "index_nas_routers_on_winbox_relay_port", unique: true
   end
 
   create_table "nas_settings", force: :cascade do |t|

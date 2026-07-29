@@ -203,6 +203,57 @@ def set_tenant
   #   end
   # end
 
+
+
+
+
+
+def remote_winbox_session
+  port = nil
+  expires_at = 15.minutes.from_now
+
+  10.times do
+    candidate = rand(20000..29999)
+    begin
+      @nas_router.update!(winbox_relay_port: candidate, winbox_relay_expires_at: expires_at)
+      port = candidate
+      break
+    rescue ActiveRecord::RecordNotUnique
+      next # someone else grabbed this port in the same instant, try another
+    end
+  end
+
+  unless port
+    render json: { error: 'Could not allocate a relay port, try again' }, status: :conflict
+    return
+  end
+
+  system('iptables', '-t', 'nat', '-A', 'PREROUTING', '-p', 'tcp',
+         '--dport', port.to_s, '-j', 'DNAT',
+         '--to-destination', "#{@nas_router.ip_address}:8291")
+
+  system('iptables', '-t', 'nat', '-A', 'POSTROUTING', '-p', 'tcp',
+         '-d', @nas_router.ip_address, '--dport', '8291', '-j', 'MASQUERADE')
+
+  RemoteWinboxExpiryJob.set(wait: 15.minutes).perform_later(@nas_router.id, port)
+
+  render json: {
+    host: ENV.fetch('WINBOX_RELAY_HOST', 'your-relay-domain.com'),
+    port: port,
+    expires_at: expires_at.iso8601
+  }
+end
+
+
+def next_available_port
+  (NasRouter.maximum(:winbox_relay_port) || 19999) + 1
+end
+
+
+
+
+
+
   private
 
   def remove_wireguard_peer(ip)
