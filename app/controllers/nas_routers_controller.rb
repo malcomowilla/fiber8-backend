@@ -256,25 +256,31 @@ end
 
   private
 
-
-
-
-
 def winbox_relay_host
-  subdomain   = request.headers['X-Subdomain']
   full_domain = request.headers['X-Domain']
+  raise 'Missing X-Domain header for WinBox relay host resolution' if full_domain.blank?
 
-  base_domain = full_domain.to_s.split('.').last(3).join('.') if full_domain.present?
-
-  platform_domain =
-    if base_domain == 'owitech.co.ke'
-      'owitech.co.ke'
-    else
-      'aitechs.co.ke'
-    end
-
-  "#{subdomain}.#{platform_domain}"
+  base_domain = full_domain.split('.').last(3).join('.')
+  base_domain == 'owitech.co.ke' ? 'relay.owitech.co.ke' : 'relay.aitechs.co.ke'
 end
+
+
+
+# def winbox_relay_host
+#   subdomain   = request.headers['X-Subdomain']
+#   full_domain = request.headers['X-Domain']
+
+#   base_domain = full_domain.to_s.split('.').last(3).join('.') if full_domain.present?
+
+#   platform_domain =
+#     if base_domain == 'owitech.co.ke'
+#       'owitech.co.ke'
+#     else
+#       'aitechs.co.ke'
+#     end
+
+#   "#{subdomain}.#{platform_domain}"
+# end
 
 
 
