@@ -98,7 +98,7 @@ class NasRoutersController < ApplicationController
   def remote_winbox_session
     nas_router = find_nas_router
 
-    result = Mikrotik::WinboxAccessService.new(nas_router).grant_temporary_access
+    result = WinboxAccessService.new(nas_router).grant_temporary_access
 
     unless result[:success]
       render json: { error: result[:error] || 'Failed to grant WinBox access, check server logs' },
