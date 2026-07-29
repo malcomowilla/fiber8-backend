@@ -205,55 +205,23 @@ def set_tenant
 
 
 
-
 def remote_winbox_session
-  port = nil
-  expires_at = 15.minutes.from_now
+    nas_router = find_nas_router
 
-  10.times do
-    candidate = rand(20000..29999)
-    begin
-      @nas_router.update!(winbox_relay_port: candidate, winbox_relay_expires_at: expires_at)
-      port = candidate
-      break
-    rescue ActiveRecord::RecordNotUnique
-      next
+    result = Mikrotik::WinboxAccessService.new(nas_router).grant_temporary_access
+
+    unless result[:success]
+      render json: { error: result[:error] || 'Failed to grant WinBox access, check server logs' },
+             status: :bad_gateway
+      return
     end
+
+    render json: {
+      host: winbox_relay_host,
+      port: nas_router.winbox_relay_port,
+      expires_at: result[:expires_at].iso8601
+    }
   end
-
-  unless port
-    render json: { error: 'Could not allocate a relay port, try again' }, status: :conflict
-    return
-  end
-
-  dnat_out, dnat_err, dnat_status = Open3.capture3(
-    'iptables', '-t', 'nat', '-A', 'PREROUTING', '-p', 'tcp',
-    '--dport', port.to_s, '-j', 'DNAT',
-    '--to-destination', "#{@nas_router.ip_address}:8291"
-  )
-  Rails.logger.info("[WinBox relay] DNAT rule status=#{dnat_status.exitstatus} stdout=#{dnat_out} stderr=#{dnat_err}")
-
-  masq_out, masq_err, masq_status = Open3.capture3(
-    'iptables', '-t', 'nat', '-A', 'POSTROUTING', '-p', 'tcp',
-    '-d', @nas_router.ip_address, '--dport', '8291', '-j', 'MASQUERADE'
-  )
-  Rails.logger.info("[WinBox relay] MASQUERADE rule status=#{masq_status.exitstatus} stdout=#{masq_out} stderr=#{masq_err}")
-
-  unless dnat_status.success? && masq_status.success?
-    @nas_router.update!(winbox_relay_port: nil, winbox_relay_expires_at: nil)
-    render json: { error: 'Failed to open relay, check server logs' }, status: :internal_server_error
-    return
-  end
-
-  RemoteWinboxExpiryJob.set(wait: 15.minutes).perform_later(@nas_router.id, port)
-
-  render json: {
-    host: winbox_relay_host,
-    port: port,
-    expires_at: expires_at.iso8601
-  }
-end
-
 
 
 
