@@ -36,6 +36,8 @@ class NasRoutersController < ApplicationController
     render json: { error: 'Invalid tenant' }, status: :not_found
   end
 
+
+  
   def update
     @nas_router.update(nas_router_params)
     ActivtyLog.create(action: 'update', ip: request.remote_ip,
