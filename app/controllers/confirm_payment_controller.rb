@@ -692,395 +692,282 @@ end
 
 
 
-
 def check_payment_status
   raw_body = request.body.read
-
   data = JSON.parse(raw_body) rescue {}
-  bill_ref = data["BillRefNumber"]
 
-  if bill_ref.start_with?("hotspot_")
-    # Remove "hotspot_" prefix and extract session_id and voucher_code
-    parts = bill_ref.sub("hotspot_", "").split("_")
-    session_id = parts[0]
-    voucher_code = parts[1]
-        session = TemporarySession.find_by(session: session_id, 
-        )
+  stk = data.dig("Body", "stkCallback")
 
+  if stk.present?
+    # ===== STK PUSH CALLBACK =====
+    checkout_request_id = stk["CheckoutRequestID"]
+    result_code = stk["ResultCode"]
 
-
-if session&.payment_type == 'device_binding'
-
-  tv_plan = TvPlan.find_by(id: session.tv_plan_id, account_id: session.account_id)
-      # nas_router_tv_package = NasRouter.find_by(name: tv_plan.nas_router, account_id: tv_plan.account_id)
-      nas_router_tv_package = NasRouter.find_by(id: tv_plan.nas_router_id, account_id: tv_plan.account_id)
-
-  binding = IpBinding.create!(
-    name:        session.device_name,
-    mac:         session.device_mac,
-    package:     tv_plan&.name,
-    ip:          session.ip,
-    tv_plan_id:  tv_plan&.id,
-    phone:       session.phone_number,
-    source:      'tv_plan_purchase',
-    status:      'active',
-    device_type: session.device_type,
-    account_id:  session.account_id,
-    router_id:   nas_router_tv_package&.id,
-    expiry:      tv_plan ? tv_plan_expiration(tv_plan) : nil
-  )
-
-  HotspotMpesaRevenue.create!(
-    amount: data["TransAmount"], voucher: "DEVICE-#{binding.mac}",
-    reference: data["TransID"], payment_method: "Mpesa",
-    time_paid: data["TransTime"], account_id: session.account_id,
-    name: data["FirstName"], phone_number: session.phone_number,
-    status: "Completed"
-  )
-
-
-
-
-
-  if nas_router_tv_package
-
-    begin
-       mikrotik_add_binding_direct(binding, nas_router_tv_package)              
-    mikrotik_add_queue_for_tv_plan(binding, tv_plan, nas_router_tv_package) if tv_plan
-
-
-    rescue => e
-          Rails.logger.error "MikroTik binding failed for #{binding.mac}: #{e.message}"
-
-          Rails.logger.error e.backtrace.join("\n")
-
+    if result_code != 0
+      Rails.logger.info "STK push not completed for CheckoutRequestID=#{checkout_request_id}: #{stk['ResultDesc']}"
+      session = TemporarySession.find_by(checkout_request_id: checkout_request_id)
+      session&.update(status: 'failed', paid: false)
+      head :ok
+      return
     end
-  end
 
-  session.update!(connected: true, status: 'used', paid: true)
-  head :ok
-  return
-end
+    items = stk.dig("CallbackMetadata", "Item") || []
+    meta = items.each_with_object({}) { |i, h| h[i["Name"]] = i["Value"] }
 
+    trans_amount = meta["Amount"]
+    trans_id     = meta["MpesaReceiptNumber"]
+    trans_time   = meta["TransactionDate"]
+    phone_number = meta["PhoneNumber"]
 
- hotspot_package = HotspotPackage.find_by(
-      name:       session.hotspot_package,
-      account_id: session.account_id,
-  )
+    session = TemporarySession.find_by(checkout_request_id: checkout_request_id)
+
+    unless session
+      Rails.logger.warn "No TemporarySession found for CheckoutRequestID=#{checkout_request_id}"
+      head :ok
+      return
+    end
+
+    normalized_data = {
+      "TransAmount" => trans_amount,
+      "TransID"     => trans_id,
+      "TransTime"   => trans_time,
+      "FirstName"   => nil
+    }
+
+    voucher_code = session.voucher_code
+
+    if session.payment_type == 'device_binding'
+      tv_plan = TvPlan.find_by(id: session.tv_plan_id, account_id: session.account_id)
+      nas_router_tv_package = NasRouter.find_by(id: tv_plan&.nas_router_id, account_id: tv_plan&.account_id)
+
+      binding = IpBinding.create!(
+        name:        session.device_name,
+        mac:         session.device_mac,
+        package:     tv_plan&.name,
+        ip:          session.ip,
+        tv_plan_id:  tv_plan&.id,
+        phone:       session.phone_number,
+        source:      'tv_plan_purchase',
+        status:      'active',
+        device_type: session.device_type,
+        account_id:  session.account_id,
+        router_id:   nas_router_tv_package&.id,
+        expiry:      tv_plan ? tv_plan_expiration(tv_plan) : nil
+      )
+
+      HotspotMpesaRevenue.create!(
+        amount: normalized_data["TransAmount"], voucher: "DEVICE-#{binding.mac}",
+        reference: normalized_data["TransID"], payment_method: "Mpesa",
+        time_paid: normalized_data["TransTime"], account_id: session.account_id,
+        name: normalized_data["FirstName"], phone_number: session.phone_number,
+        status: "Completed"
+      )
+
+      if nas_router_tv_package
+        begin
+          mikrotik_add_binding_direct(binding, nas_router_tv_package)
+          mikrotik_add_queue_for_tv_plan(binding, tv_plan, nas_router_tv_package) if tv_plan
+        rescue => e
+          Rails.logger.error "MikroTik binding failed for #{binding.mac}: #{e.message}"
+          Rails.logger.error e.backtrace.join("\n")
+        end
+      end
+
+      session.update!(connected: true, status: 'used', paid: true)
+      head :ok
+      return
+    end
+
+    # ===== hotspot voucher package flow =====
+    hotspot_package = HotspotPackage.find_by(
+      name: session.hotspot_package,
+      account_id: session.account_id
+    )
 
     nas_router = NasRouter.find_by(name: hotspot_package&.nas_router, account_id: hotspot_package&.account_id)
 
-
-
-  
-        # voucher = HotspotVoucher.find_by(voucher: voucher_code)
-hotspot_package = HotspotPackage.find_by(name: session.hotspot_package,
-account_id: session.account_id
-
-)
-        voucher = HotspotVoucher.create!(
-  package: session.hotspot_package,
-  phone: session.phone_number,
-  voucher: session.voucher_code,
-  mac: session.mac,
-  ip: session.ip,
-  checkout_request_id: session.checkout_request_id,
-account_id: session.account_id,
-  hotspot_package_id: hotspot_package.id,
-  status: 'active'
-)
- session.update(hotspot_voucher_id: voucher.id)
-
-
-
-
-# company_name = CompanySetting.find_by(account_id: session.account_id).company_name
-
-voucher_expiration = HotspotSetting.find_by(account_id: session.account_id)&.voucher_expiration
- 
- use_radius = router_uses_radius_payment(session.account_id)
- if use_radius
-   if voucher_expiration == 'Real-time expiration'
- calculate_expiration_login_with_voucher(hotspot_package, voucher, session.account_id)
-
-create_voucher_radcheck(voucher_code, session.hotspot_package, 
-session.account_id)
-
-else
-   calculate_expiration_login_with_voucher(hotspot_package, voucher, session.account_id)
-
-  create_voucher_radcheck_accumulated_sessions(voucher_code, session.hotspot_package, 
-session.account_id)
-end
- else
-     calculate_expiration_login_with_voucher(hotspot_package, voucher, session.account_id)
-
-if voucher_expiration == 'Real-time expiration'
-  
-   sync_voucher_natively(voucher)
-else
-sync_voucher_natively_realtime_expiration(voucher)  
-end
- end
-
-
-
-SendSmsHotspotService.send_sms(voucher.voucher, data, session.checkout_request_id,
-)
-
-  if nas_router
-  begin
-    response = RestClient::Request.execute(
-      method: :post,
-      url: "http://#{nas_router.ip_address}/rest/ip/hotspot/active/login",
-      user: nas_router.username,
-      password: nas_router.password,
-      payload: {
-        ip: session.ip,
-        user: voucher_code,
-        password: voucher_code
-      }.to_json,
-      headers: {
-        content_type: :json,
-        accept: :json
-      },
-      timeout: 5,
-      open_timeout: 3
+    voucher = HotspotVoucher.create!(
+      package: session.hotspot_package,
+      phone: session.phone_number,
+      voucher: session.voucher_code,
+      mac: session.mac,
+      ip: session.ip,
+      checkout_request_id: session.checkout_request_id,
+      account_id: session.account_id,
+      hotspot_package_id: hotspot_package.id,
+      status: 'active'
     )
+    session.update(hotspot_voucher_id: voucher.id)
 
-    if response.code == 200
-      session.update!(connected: true, status: "used", paid: true)
+    voucher_expiration = HotspotSetting.find_by(account_id: session.account_id)&.voucher_expiration
+    use_radius = router_uses_radius_payment(session.account_id)
 
-      voucher.update!(
-        status: "used",
-        last_logged_in: Time.current,
-        used_voucher: true,
-        login_by: "Voucher Code"
-      )
-    end
-
-  rescue RestClient::Exceptions::Timeout, Errno::ETIMEDOUT
-    Rails.logger.info "Router #{nas_router.ip_address} timed out during login"
-
-  rescue RestClient::Unauthorized
-    Rails.logger.info "REST auth failed for router #{nas_router.ip_address}"
-
-  rescue RestClient::ExceptionWithResponse => e
-    Rails.logger.info "MikroTik REST error on #{nas_router.ip_address}: #{e.response}"
-
-  rescue StandardError => e
-    Rails.logger.info "REST error logging in device #{session.ip}: #{e.message}"
-  end
-else
-  Rails.logger.warn "No router found for account #{session.account_id}"
-end
-
-
-
-elsif data["BillRefNumber"].starts_with?("INV")
-
-bill_ref = data["BillRefNumber"]
-paid_amount = data["TransAmount"].to_i
-
-invoice = Invoice.where(invoice_number: bill_ref,
-status: "unpaid"
-).first
-
-
-
-if invoice.total.to_i == paid_amount
-invoice.update!(status: 'paid', 
-           amount_paid: paid_amount,
-           total: data["TransAmount"],
-           plan_name: "Hotspot And PPPOE Plan"
-          
-           )
-tenant = Account.find_by(id: invoice.account_id)
-
-tenant.hotspot_and_dial_plan.update(
-  name: 'Hotspot And PPPOE Plan',
-   expiry: Time.current + 30.days,
-   expiry_days: 30
-)
-
-end
-
-
-
-  else
-
- bill_ref = data["BillRefNumber"]
-
-  # subscriber_account_number = Subscriber.find_by(ref_no:  bill_ref).ref_no
-  
-  found_subscriber = Subscriber.find_by(ref_no:  bill_ref)
-  nas_routers = NasRouter.where(account_id: found_subscriber.account_id)
-        subscription = Subscription.find_by(subscriber_id: found_subscriber.id, 
-        account_id: found_subscriber.account_id)
-paid_amount = data["TransAmount"].to_i
-         
-
-        
-  subscriber_phone_number = Subscriber.find_by(id: subscription.subscriber_id).phone_number
-
-pppoe_package = Package.find_by(name: subscription.package_name)
-
-total_wallet_balance = PpPoeMpesaRevenue
-  .where(account_number: bill_ref)
-  .sum(:amount)
-
-
-   pppoe_revenue = PpPoeMpesaRevenue.create(
-      amount: data["TransAmount"],
-      payment_method: "Mpesa",
-      time_paid: data["TransTime"],
-      account_number:  bill_ref,
-      reference: data["TransID"],
-      customer_name: data['FirstName'],
-      payment_type: "Deposit",
-      account_id: found_subscriber.account_id,
-      subscriber_id: subscription.subscriber_id
-
-    )
-
-    if pppoe_package.price === data["TransAmount"].to_i
-     SubscriberTransaction.create!(
-            transaction_type: 'Payment',
-            debit: pppoe_revenue.amount,
-            date:  pppoe_revenue.time_paid,
-            title:  pppoe_package.name,
-            description: "Payment for internet subscription",
-            account_id:  pppoe_revenue.account_id,
-            subscriber_id: pppoe_revenue.subscriber_id
-          )
-
-
-
-
-          SubscriberTransaction.create!(
-            transaction_type: 'Deposit',
-            credit: pppoe_revenue.amount,
-            date:  pppoe_revenue.time_paid,
-            title:   pppoe_revenue.reference,
-            description: "Payment made via M-Pesa",
-            account_id:  pppoe_revenue.account_id,
-            subscriber_id: pppoe_revenue.subscriber_id
-          )
-
+    if use_radius
+      calculate_expiration_login_with_voucher(hotspot_package, voucher, session.account_id)
+      if voucher_expiration == 'Real-time expiration'
+        create_voucher_radcheck(voucher_code, session.hotspot_package, session.account_id)
+      else
+        create_voucher_radcheck_accumulated_sessions(voucher_code, session.hotspot_package, session.account_id)
+      end
     else
-      SubscriberTransaction.create!(
-            transaction_type: 'Deposit',
-            credit: pppoe_revenue.amount,
-            date:  pppoe_revenue.time_paid,
-            title:  pppoe_revenue.reference,
-            description: "Payment made via M-Pesa",
-            account_id:  pppoe_revenue.account_id,
-            subscriber_id: pppoe_revenue.subscriber_id)
-
+      calculate_expiration_login_with_voucher(hotspot_package, voucher, session.account_id)
+      if voucher_expiration == 'Real-time expiration'
+        sync_voucher_natively(voucher)
+      else
+        sync_voucher_natively_realtime_expiration(voucher)
+      end
     end
-       @subscriber_wallet_balance = SubscriberWalletBalance.first_or_initialize(
-        subscriber_id: pppoe_revenue.subscriber_id,
-        amount: total_wallet_balance,
-       account_id: pppoe_revenue.account_id
-      )
-      @subscriber_wallet_balance.update(
-         subscriber_id: pppoe_revenue.subscriber_id,
-        amount: total_wallet_balance,
-       account_id: pppoe_revenue.account_id
-      )
-        # package_amount_paid = data["TransAmount"]
-  # expiration_time = Time.parse(subscription.expiration_date.to_s)
 
+    SendSmsHotspotService.send_sms(voucher.voucher, normalized_data, session.checkout_request_id)
 
-        # expiration_time > Time.current
-        # paid_right_amount = Package.find_by(
-        #   account_id: subscription.account_id,
-        #   amount: package_amount_paid
-        # )
-
-        if pppoe_package.price === data["TransAmount"].to_i
-
- invoice = SubscriberInvoice
-  .where(
-    subscriber_id: found_subscriber.id,
-    account_id: found_subscriber.account_id,
-    status: "unpaid"
-  )
-  .order(:invoice_date)
-  .first
-
-       invoice.update!(status: 'paid', description: "Invoice paid for
-           wifi package => #{subscription.package_name}",
-           
-           amount: paid_amount,
-           )
-        end
-
-          
-# company_name, account_no, tenant
-company_name = CompanySetting.find_by(account_id: subscription.account_id)
-# send_invoice_paid_notification = SubscriberSetting.find_by(account_id: found_subscriber.account_id)&.invoice_created_or_paid
-
-        #   if send_invoice_paid_notification
-        # SendInvoicePaidJob.perform_now(
-        #   company_name.company_name,
-        #   bill_ref,
-        #   invoice.account,
-        #   subscriber_phone_number
-        # )
-        #   end
-
-
-        if pppoe_package.price === data["TransAmount"].to_i
-           SendInvoicePaidJob.perform_now(
-          company_name.company_name,
-          bill_ref,
-          found_subscriber.account,
-          subscriber_phone_number
+    if nas_router
+      begin
+        response = RestClient::Request.execute(
+          method: :post,
+          url: "http://#{nas_router.ip_address}/rest/ip/hotspot/active/login",
+          user: nas_router.username,
+          password: nas_router.password,
+          payload: {
+            ip: session.ip,
+            user: voucher_code,
+            password: voucher_code
+          }.to_json,
+          headers: { content_type: :json, accept: :json },
+          timeout: 5,
+          open_timeout: 3
         )
 
-         subscription.update(invoice_expired_created_at:  nil)
+        if response.code == 200
+          session.update!(connected: true, status: "used", paid: true)
+          voucher.update!(
+            status: "used",
+            last_logged_in: Time.current,
+            used_voucher: true,
+            login_by: "Voucher Code"
+          )
+        end
 
+      rescue RestClient::Exceptions::Timeout, Errno::ETIMEDOUT
+        Rails.logger.info "Router #{nas_router.ip_address} timed out during login"
+      rescue RestClient::Unauthorized
+        Rails.logger.info "REST auth failed for router #{nas_router.ip_address}"
+      rescue RestClient::ExceptionWithResponse => e
+        Rails.logger.info "MikroTik REST error on #{nas_router.ip_address}: #{e.response}"
+      rescue StandardError => e
+        Rails.logger.info "REST error logging in device #{session.ip}: #{e.message}"
+      end
+    else
+      Rails.logger.warn "No router found for account #{session.account_id}"
+    end
 
-          if subscription.status === 'blocked'
-             subscription.update!(status: 'active', expiry: Time.current + 30.days)
+    head :ok
+    return
 
+  elsif data["BillRefNumber"].present?
+    # ===== LEGACY C2B CONFIRMATION CALLBACK (paybill) =====
+    bill_ref = data["BillRefNumber"]
+
+    if bill_ref.start_with?("INV")
+      paid_amount = data["TransAmount"].to_i
+      invoice = Invoice.where(invoice_number: bill_ref, status: "unpaid").first
+
+      if invoice && invoice.total.to_i == paid_amount
+        invoice.update!(status: 'paid', amount_paid: paid_amount, total: data["TransAmount"], plan_name: "Hotspot And PPPOE Plan")
+        tenant = Account.find_by(id: invoice.account_id)
+        tenant.hotspot_and_dial_plan.update(name: 'Hotspot And PPPOE Plan', expiry: Time.current + 30.days, expiry_days: 30)
+      end
+
+    else
+      found_subscriber = Subscriber.find_by(ref_no: bill_ref)
+
+      unless found_subscriber
+        Rails.logger.warn "No subscriber found for ref_no=#{bill_ref}"
+        head :ok
+        return
+      end
+
+      nas_routers = NasRouter.where(account_id: found_subscriber.account_id)
+      subscription = Subscription.find_by(subscriber_id: found_subscriber.id, account_id: found_subscriber.account_id)
+      paid_amount = data["TransAmount"].to_i
+      subscriber_phone_number = found_subscriber.phone_number
+      pppoe_package = Package.find_by(name: subscription.package_name)
+
+      total_wallet_balance = PpPoeMpesaRevenue.where(account_number: bill_ref).sum(:amount)
+
+      pppoe_revenue = PpPoeMpesaRevenue.create(
+        amount: data["TransAmount"],
+        payment_method: "Mpesa",
+        time_paid: data["TransTime"],
+        account_number: bill_ref,
+        reference: data["TransID"],
+        customer_name: data['FirstName'],
+        payment_type: "Deposit",
+        account_id: found_subscriber.account_id,
+        subscriber_id: subscription.subscriber_id
+      )
+
+      if pppoe_package.price === data["TransAmount"].to_i
+        SubscriberTransaction.create!(
+          transaction_type: 'Payment', debit: pppoe_revenue.amount, date: pppoe_revenue.time_paid,
+          title: pppoe_package.name, description: "Payment for internet subscription",
+          account_id: pppoe_revenue.account_id, subscriber_id: pppoe_revenue.subscriber_id
+        )
+      end
+
+      SubscriberTransaction.create!(
+        transaction_type: 'Deposit', credit: pppoe_revenue.amount, date: pppoe_revenue.time_paid,
+        title: pppoe_revenue.reference, description: "Payment made via M-Pesa",
+        account_id: pppoe_revenue.account_id, subscriber_id: pppoe_revenue.subscriber_id
+      )
+
+      @subscriber_wallet_balance = SubscriberWalletBalance.first_or_initialize(
+        subscriber_id: pppoe_revenue.subscriber_id,
+        amount: total_wallet_balance,
+        account_id: pppoe_revenue.account_id
+      )
+      @subscriber_wallet_balance.update(
+        subscriber_id: pppoe_revenue.subscriber_id,
+        amount: total_wallet_balance,
+        account_id: pppoe_revenue.account_id
+      )
+
+      if pppoe_package.price === data["TransAmount"].to_i
+        invoice = SubscriberInvoice.where(
+          subscriber_id: found_subscriber.id, account_id: found_subscriber.account_id, status: "unpaid"
+        ).order(:invoice_date).first
+
+        invoice&.update!(
+          status: 'paid',
+          description: "Invoice paid for wifi package => #{subscription.package_name}",
+          amount: paid_amount
+        )
+
+        company_name = CompanySetting.find_by(account_id: subscription.account_id)
+        SendInvoicePaidJob.perform_now(company_name.company_name, bill_ref, found_subscriber.account, subscriber_phone_number)
+
+        subscription.update(invoice_expired_created_at: nil)
+
+        if subscription.status === 'blocked'
+          subscription.update!(status: 'active', expiry: Time.current + 30.days)
+
+          nas_routers.each do |nas|
+            Rails.logger.info "PPPOE payment received: #{bill_ref}"
+            Net::SSH.start(nas.ip_address, nas.username, password: nas.password, verify_host_key: :never, non_interactive: true) do |ssh|
+              command = "/ip firewall address-list remove [find list=aitechs_blocked_list address=#{subscription.ip_address}]"
+              ssh.exec!(command)
+              puts "UnBlocked #{subscription.ppoe_username} (#{subscription.ip_address}) on MikroTik."
+            end
           end
-
-
-            if subscription.status === 'blocked'
-
-nas_routers.each do |nas|
-      Rails.logger.info "PPPOE payment received: #{bill_ref}"
-    #  ping_result = system("ping -c 1 -W 2 #{nas.ip_address}")
-
-      Net::SSH.start(nas.ip_address, nas.username, password: nas.password,
-         verify_host_key: :never, non_interactive: true) do |ssh|
-          # Correct command to remove active PPPoE session based on pppoe_username
-          command = "/ip firewall address-list remove [find list=aitechs_blocked_list address=#{subscription.ip_address}]"
-          
-          # Execute the command
-          ssh.exec!(command)
-          if subscription.status === 'blocked'
-             subscription.update!(status: 'active', expiry: Time.current + 30.days)
-
-          end
-          puts "UnBlocked #{subscription.ppoe_username} (#{subscription.ip_address}) on MikroTik."
         end
       end
     end
-      # rescue StandardError => e
-      #   Rails.logger.error "Error removing PPPoE connection for username #{subscription.ppoe_username}: #{e.message}"
-      # end
-end
-        
 
-   
+    head :ok
 
-   
+  else
+    Rails.logger.warn "Unrecognized M-Pesa callback payload: #{data.inspect}"
+    head :ok
   end
-
-  head :ok
 end
 
 
