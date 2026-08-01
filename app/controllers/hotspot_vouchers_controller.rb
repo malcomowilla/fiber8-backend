@@ -887,35 +887,50 @@ end
 
 
 elsif data["BillRefNumber"].starts_with?("INV")
+  bill_ref    = data["BillRefNumber"]
+  paid_amount = data["TransAmount"].to_i
 
-bill_ref = data["BillRefNumber"]
-paid_amount = data["TransAmount"].to_i
+  invoice = Invoice.find_by(invoice_number: bill_ref)
 
-invoice = Invoice.where(invoice_number: bill_ref,
-status: "unpaid"
-).first
+  unless invoice
+    Rails.logger.warn "check_payment_status: no invoice found for #{bill_ref}"
+    head :ok and return
+  end
+
+  # Record the payment regardless of whether it fully settles the invoice —
+  # this is now the system admin's source of truth for "what did this ISP
+  # actually pay", independent of the invoice's current status.
+  ActsAsTenant.with_tenant(Account.find_by(id: invoice.account_id)) do
+    InvoicePayment.find_or_create_by!(reference: data["TransID"]) do |p|
+      p.invoice_id    = invoice.id
+      p.account_id    = invoice.account_id
+      p.phone_number  = data["MSISDN"] || data["DebitPartyMSISDN"]
+      p.payer_name    = data["FirstName"]
+      p.amount        = paid_amount
+      p.paid_at       = Time.current
+      p.status        = paid_amount >= invoice.total.to_i ? 'completed' : 'partial'
+    end
+  end
+
+  if invoice.status == 'unpaid' && invoice.total.to_i == paid_amount
+    invoice.update!(
+      status: 'paid',
+      amount_paid: paid_amount,
+      total: data["TransAmount"],
+      plan_name: "Hotspot And PPPOE Plan"
+    )
+
+    tenant = Account.find_by(id: invoice.account_id)
+    tenant.hotspot_and_dial_plan.update(
+      name: 'Hotspot And PPPOE Plan',
+      expiry: Time.current + 30.days,
+      expiry_days: 30
+    )
+  end
 
 
 
-if invoice.total.to_i == paid_amount
-invoice.update!(status: 'paid', 
-           amount_paid: paid_amount,
-           total: data["TransAmount"],
-           plan_name: "Hotspot And PPPOE Plan"
-          
-           )
-tenant = Account.find_by(id: invoice.account_id)
-
-tenant.hotspot_and_dial_plan.update(
-  name: 'Hotspot And PPPOE Plan',
-   expiry: Time.current + 30.days,
-   expiry_days: 30
-)
-
-end
-
-
-
+  
   else
 
  bill_ref = data["BillRefNumber"]
@@ -1004,7 +1019,7 @@ total_wallet_balance = PpPoeMpesaRevenue
         # expiration_time > Time.current
         # paid_right_amount = Package.find_by(
         #   account_id: subscription.account_id,
-        #   amount: package_amount_paid
+ #   amount: package_amount_paid
         # )
 
         if pppoe_package.price === data["TransAmount"].to_i
@@ -1016,8 +1031,7 @@ total_wallet_balance = PpPoeMpesaRevenue
     status: "unpaid"
   )
   .order(:invoice_date)
-  .first
-
+  .firs
        invoice.update!(status: 'paid', description: "Invoice paid for
            wifi package => #{subscription.package_name}",
            

@@ -97,6 +97,48 @@ end
   
   end
  
+
+
+
+
+
+
+
+
+def invoice_payments
+  payments = ActsAsTenant.without_tenant do
+    InvoicePayment.includes(:invoice).order(paid_at: :desc).limit(500)
+  end
+
+  account_names = Account.where(id: payments.map(&:account_id).uniq).index_by(&:id)
+
+  render json: payments.map { |p|
+    {
+      id: p.id,
+      reference: p.reference,
+      amount: p.amount,
+      payer_name: p.payer_name,
+      phone_number: p.phone_number,
+      status: p.status,
+      paid_at: p.paid_at,
+      invoice_number: p.invoice&.invoice_number,
+      invoice_status: p.invoice&.status,
+      company_name: account_names[p.account_id]&.subdomain,
+    }
+  }
+end
+
+
+
+
+
+
+
+
+
+
+
+
   
   def verify_webauthn_login_system_admin
     begin

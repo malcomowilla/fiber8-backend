@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_07_29_055021) do
+ActiveRecord::Schema[7.2].define(version: 2026_08_01_142919) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -307,6 +307,10 @@ ActiveRecord::Schema[7.2].define(version: 2026_07_29_055021) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.string "phone_number"
+    t.string "status", default: "new", null: false
+    t.string "source", default: "manual"
+    t.index ["source"], name: "index_company_leads_on_source"
+    t.index ["status"], name: "index_company_leads_on_status"
   end
 
   create_table "company_settings", force: :cascade do |t|
@@ -644,6 +648,22 @@ ActiveRecord::Schema[7.2].define(version: 2026_07_29_055021) do
     t.string "nas_router"
     t.index ["account_id"], name: "index_hotspot_vouchers_on_account_id"
     t.index ["voucher"], name: "index_hotspot_vouchers_on_voucher", unique: true
+  end
+
+  create_table "invoice_payments", force: :cascade do |t|
+    t.string "reference"
+    t.string "phone_number"
+    t.string "payer_name"
+    t.decimal "amount", precision: 12, scale: 2
+    t.datetime "paid_at"
+    t.string "status", default: "completed"
+    t.bigint "invoice_id"
+    t.bigint "account_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id"], name: "index_invoice_payments_on_account_id"
+    t.index ["invoice_id"], name: "index_invoice_payments_on_invoice_id"
+    t.index ["reference"], name: "index_invoice_payments_on_reference", unique: true
   end
 
   create_table "invoices", force: :cascade do |t|
@@ -1572,6 +1592,8 @@ ActiveRecord::Schema[7.2].define(version: 2026_07_29_055021) do
   add_foreign_key "ad_events", "accounts"
   add_foreign_key "ad_events", "ad_settings"
   add_foreign_key "default_system_ad_settings", "accounts"
+  add_foreign_key "invoice_payments", "accounts"
+  add_foreign_key "invoice_payments", "invoices"
   add_foreign_key "ip_bindings", "tv_plans"
   add_foreign_key "maintenance_settings", "accounts"
   add_foreign_key "promotional_plans", "hotspot_packages"
