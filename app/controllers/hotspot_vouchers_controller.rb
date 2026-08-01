@@ -725,16 +725,16 @@ if session&.payment_type == 'device_binding'
       nas_router_tv_package = NasRouter.find_by(id: tv_plan.nas_router_id, account_id: tv_plan.account_id)
 
   binding = IpBinding.create!(
-    name:        session.device_name,
-    mac:         session.device_mac,
+    name:        session&.device_name,
+    mac:         session&.device_mac,
     package:     tv_plan&.name,
-    ip:          session.ip,
+    ip:          session&.ip,
     tv_plan_id:  tv_plan&.id,
-    phone:       session.phone_number,
+    phone:       session&.phone_number,
     source:      'tv_plan_purchase',
     status:      'active',
-    device_type: session.device_type,
-    account_id:  session.account_id,
+    device_type: session&.device_type,
+    account_id:  session&.account_id,
     router_id:   nas_router_tv_package&.id,
     expiry:      tv_plan ? tv_plan_expiration(tv_plan) : nil
   )
@@ -773,8 +773,8 @@ end
 
 
  hotspot_package = HotspotPackage.find_by(
-      name:       session.hotspot_package,
-      account_id: session.account_id,
+      name:       session&.hotspot_package,
+      account_id: session&.account_id,
   )
 
     nas_router = NasRouter.find_by(name: hotspot_package&.nas_router, account_id: hotspot_package&.account_id)
@@ -1064,7 +1064,8 @@ nas_routers.each do |nas|
     #  ping_result = system("ping -c 1 -W 2 #{nas.ip_address}")
 
       Net::SSH.start(nas.ip_address, nas.username, password: nas.password,
-         verify_host_key: :never, non_interactive: true) do |ssh|
+         
+      verify_host_key: :never, non_interactive: true) do |ssh|
           # Correct command to remove active PPPoE session based on pppoe_username
           command = "/ip firewall address-list remove [find list=aitechs_blocked_list address=#{subscription.ip_address}]"
           
