@@ -12,7 +12,7 @@ class TumaService
       http.use_ssl = true
 
       req = Net::HTTP::Post.new(uri.path)
-      req["Content-Type"] = "application/json"  # ✅ JSON format
+      req["Content-Type"] = "application/json"
       req.body = {
         email: setting.business_email,
         api_key: setting.api_key
@@ -25,12 +25,16 @@ class TumaService
 
       raise "Tuma auth failed: #{data['message'] || res.body}" unless data["success"]
 
+      # ✅ FIX: Token is in data["data"]["token"], not data["token"]
+      token = data["data"]["token"]
+      expires_in = data["data"]["expires_in"] || 86_400
+
       setting.update!(
-        cached_token: data["token"],
-        token_expires_at: Time.current + (data["expires_in"] || 86_400).seconds
+        cached_token: token,
+        token_expires_at: Time.current + expires_in.seconds
       )
 
-      data["token"]
+      token  # ✅ Return the actual token
     end
 
     def initiate_stk_push(setting, amount:, phone:, callback_url:, description:)
@@ -41,7 +45,7 @@ class TumaService
       http.use_ssl = true
       
       req = Net::HTTP::Post.new(uri.path)
-      req["Authorization"] = "Bearer #{token}"
+      req["Authorization"] = "Bearer #{token}"  # ✅ Now token is valid
       req["Content-Type"] = "application/json"
       req.body = {
         amount: amount.to_f,
