@@ -187,6 +187,25 @@ resources :promotional_plans, only: [:index, :show, :create, :update, :destroy]
 resources :pops
 resources :network_devices
 resources :network_connections
+
+
+resources :client_support_tickets, only: [:index, :create, :show]
+
+get  'system_admin/support_tickets',        to: 'client_support_tickets#system_admin_index'
+get  '/api/system_admin/support_tickets',        to: 'client_support_tickets#system_admin_index'
+
+patch 'system_admin/support_tickets/:id',   to: 'client_support_tickets#system_admin_update'
+patch '/api/system_admin/support_tickets/:id',   to: 'client_support_tickets#system_admin_update'
+
+get  'system_admin/support_tickets_stats',  to: 'client_support_tickets#system_admin_stats'
+get  '/api/system_admin/support_tickets_stats',  to: 'client_support_tickets#system_admin_stats'
+
+# For the client expiry insight (used in dashboard below)
+get 'system_admin/client_accounts_overview', to: 'system_admins#client_accounts_overview'
+
+get '/api/system_admin/client_accounts_overview', to: 'system_admins#client_accounts_overview'
+
+
 get '/invoice_payments', to: 'system_admins#invoice_payments'
 get '/api/invoice_payments', to: 'system_admins#invoice_payments'
 

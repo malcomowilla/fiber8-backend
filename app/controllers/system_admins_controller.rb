@@ -101,6 +101,35 @@ end
 
 
 
+# add to SystemAdminsController
+def client_accounts_overview
+  accounts = ActsAsTenant.without_tenant do
+    Account.includes(:hotspot_and_dial_plan).all
+  end
+
+  now = Time.current
+
+  data = accounts.map do |acc|
+    plan = acc.hotspot_and_dial_plan
+    expiry = plan&.expiry
+    days_left = expiry ? ((expiry - now) / 1.day).ceil : nil
+    expired = expiry.present? && expiry < now
+
+    {
+      id: acc.id,
+      company_name: acc.subdomain,
+      plan_name: plan&.name,
+      status: plan&.status,
+      expiry: expiry,
+      days_left: days_left,
+      expired: expired,
+      created_at: acc.created_at
+    }
+  end
+
+  render json: data.sort_by { |d| d[:days_left] || Float::INFINITY }
+end
+
 
 
 

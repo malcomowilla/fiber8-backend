@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_08_01_142919) do
+ActiveRecord::Schema[7.2].define(version: 2026_08_06_202704) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -275,6 +275,25 @@ ActiveRecord::Schema[7.2].define(version: 2026_08_01_142919) do
     t.string "macadress"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+  end
+
+  create_table "client_support_tickets", force: :cascade do |t|
+    t.string "subject", null: false
+    t.text "description", null: false
+    t.string "category", default: "system"
+    t.string "priority", default: "medium"
+    t.string "status", default: "open"
+    t.string "raised_by_name"
+    t.string "raised_by_email"
+    t.string "raised_by_phone"
+    t.bigint "account_id", null: false
+    t.datetime "resolved_at"
+    t.text "admin_notes"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id"], name: "index_client_support_tickets_on_account_id"
+    t.index ["priority"], name: "index_client_support_tickets_on_priority"
+    t.index ["status"], name: "index_client_support_tickets_on_status"
   end
 
   create_table "company_financial_records", force: :cascade do |t|
