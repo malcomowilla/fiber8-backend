@@ -1233,22 +1233,167 @@ end
 
 
 
+# def make_payment
+# host = request.headers['X-Subdomain']
+
+# plan = ActsAsTenant.current_tenant&.hotspot_and_dial_plan
+
+#   expired_pppoe = plan&.expiry.present? && plan.expiry <= Time.current
+
+
+
+#   if expired_pppoe
+#     return render json: { error: 'License has expired'}, status: 422  
+#   end
+
+#   phone_number = params[:phone_number]
+
+# if phone_number.blank?
+#     return render json: { error: 'Phone number is required to make a payment' }, status: :unprocessable_entity
+#   end
+
+#   amount = params[:amount]
+#   shortcode = ActsAsTenant.current_tenant&.hotspot_mpesa_setting.short_code || ENV['B2C_SHORTCODE']
+#   passkey = ActsAsTenant.current_tenant&.hotspot_mpesa_setting.passkey || ENV['PASSKEY']
+#   consumer_key = ActsAsTenant.current_tenant&.hotspot_mpesa_setting.consumer_key || ENV['CONSUMER_KEY']
+#   consumer_secret = ActsAsTenant.current_tenant&.hotspot_mpesa_setting.consumer_secret || ENV['CONSUMER_SECRET']
+
+#   voucher_code = generate_voucher_code
+# #   session_id = rand(100000..999999).to_s
+# # TemporarySession.create!(
+# #   session: session_id,
+# #   ip: params[:ip],    
+# # )
+
+# session_id = rand(100000..999999).to_s
+
+
+
+#  tuma_setting = TumaSetting.find_by(account_id: ActsAsTenant.current_tenant.id)
+#   use_tuma = tuma_setting&.enabled && tuma_setting.use_for_hotspot
+
+
+
+
+#   if use_tuma
+#     full_domain = request.headers['X-Domain']
+#     base_domain = full_domain.to_s.split('.').last(3).join('.') if full_domain.present?
+#     platform_domain = base_domain == "owitech.co.ke" ? "owitech.co.ke" : "aitechs.co.ke"
+#     callback_url = "https://#{host}.#{platform_domain}/api/tuma/hotspot_callback/#{session_id}"
+
+#     result = TumaService.initiate_stk_push(
+#       tuma_setting, amount: amount, phone: phone_number,
+#       callback_url: callback_url, description: "Hotspot package #{params[:package]}"
+#     )
+
+#     if result[:success]
+#       checkout_request_id = result[:response]['checkout_request_id']
+#       session.update!(checkout_request_id: checkout_request_id)
+#       HotspotMpesaRevenue.create!(voucher: voucher_code, amount: amount, payment_method: 'Tuma',
+#         phone_number: phone_number, status: 'Pending', checkout_request_id: checkout_request_id)
+#       return render json: { message: 'Please check your phone to complete the payment', checkout_request_id: checkout_request_id }
+#     else
+#       return render json: { error: result[:error] || 'Failed to initiate Tuma payment' }, status: :unprocessable_entity
+#     end
+#   end
+
+
+#       hotspot_payment = MpesaService.initiate_stk_push(phone_number, 
+#       amount,
+#        shortcode,  passkey,
+#         consumer_key, consumer_secret, host,voucher_code,session_id
+#       )
+  
+#  stk_response = hotspot_payment[:response]
+#  checkout_request_id = stk_response['CheckoutRequestID']
+# #  merchant_request_id = stk_response['MerchantRequestID']
+
+
+
+
+
+# session = TemporarySession.find_or_initialize_by(ip: params[:ip],
+# session: session_id,
+# paid: false, 
+# connected: false,
+# hotspot_package: params[:package],
+# voucher_code: voucher_code,
+# phone_number: phone_number,
+# mac: params[:mac],
+# status: 'pending',
+# checkout_request_id: checkout_request_id,
+#  payment_gateway: use_tuma ? 'tuma' : 'mpesa'
+
+# )
+
+
+
+
+
+# session.save!
+
+
+
+#       if hotspot_payment[:success]
+# # voucher_record = HotspotVoucher.create!(
+# #   package: params[:package],
+# #   phone: phone_number,
+# #   voucher: voucher_code,
+# #   mac: params[:mac],
+# #   ip: params[:ip],
+# #   checkout_request_id: checkout_request_id,
+# #   merchant_request_id: merchant_request_id,
+
+# #   payment_status: 'pending'
+
+# # )
+
+# # create_voucher_radcheck(voucher_code, params[:package], 
+# # voucher_record.account_id)
+
+# # calculate_expiration(params[:package], voucher_record)
+
+
+# HotspotMpesaRevenue.create!(
+#   voucher: voucher_code,
+#   amount: amount,
+#   payment_method: "Mpesa",
+#   phone_number: phone_number,
+#   status: "Pending",
+#   checkout_request_id: checkout_request_id
+# )
+
+
+
+#         render json: {
+#           message: 'Please check your phone to complete the payment',
+#           checkout_request_id: checkout_request_id
+#         }
+#       else
+#         render json: { error: 'Failed to initiate payment' }, status: :unprocessable_entity
+#       end
+# end
+
+
+
+
+
+
+
+
+
 def make_payment
-host = request.headers['X-Subdomain']
+  host = request.headers['X-Subdomain']
 
-plan = ActsAsTenant.current_tenant&.hotspot_and_dial_plan
-
+  plan = ActsAsTenant.current_tenant&.hotspot_and_dial_plan
   expired_pppoe = plan&.expiry.present? && plan.expiry <= Time.current
-
-
 
   if expired_pppoe
     return render json: { error: 'License has expired'}, status: 422  
   end
 
   phone_number = params[:phone_number]
-
-if phone_number.blank?
+  if phone_number.blank?
     return render json: { error: 'Phone number is required to make a payment' }, status: :unprocessable_entity
   end
 
@@ -1259,21 +1404,24 @@ if phone_number.blank?
   consumer_secret = ActsAsTenant.current_tenant&.hotspot_mpesa_setting.consumer_secret || ENV['CONSUMER_SECRET']
 
   voucher_code = generate_voucher_code
-#   session_id = rand(100000..999999).to_s
-# TemporarySession.create!(
-#   session: session_id,
-#   ip: params[:ip],    
-# )
+  session_id = rand(100000..999999).to_s
 
-session_id = rand(100000..999999).to_s
-
-
-
- tuma_setting = TumaSetting.find_by(account_id: ActsAsTenant.current_tenant.id)
+  tuma_setting = TumaSetting.find_by(account_id: ActsAsTenant.current_tenant.id)
   use_tuma = tuma_setting&.enabled && tuma_setting.use_for_hotspot
 
-
-
+  # ✅ RENAMED: session → temp_session
+  temp_session = TemporarySession.find_or_initialize_by(
+    ip: params[:ip],
+    session: session_id,
+    paid: false, 
+    connected: false,
+    hotspot_package: params[:package],
+    voucher_code: voucher_code,
+    phone_number: phone_number,
+    mac: params[:mac],
+    status: 'pending',
+    payment_gateway: use_tuma ? 'tuma' : 'mpesa'
+  )
 
   if use_tuma
     full_domain = request.headers['X-Domain']
@@ -1282,97 +1430,75 @@ session_id = rand(100000..999999).to_s
     callback_url = "https://#{host}.#{platform_domain}/api/tuma/hotspot_callback/#{session_id}"
 
     result = TumaService.initiate_stk_push(
-      tuma_setting, amount: amount, phone: phone_number,
-      callback_url: callback_url, description: "Hotspot package #{params[:package]}"
+      tuma_setting, 
+      amount: amount, 
+      phone: phone_number,
+      callback_url: callback_url, 
+      description: "Hotspot package #{params[:package]}"
     )
 
     if result[:success]
       checkout_request_id = result[:response]['checkout_request_id']
-      session.update!(checkout_request_id: checkout_request_id)
-      HotspotMpesaRevenue.create!(voucher: voucher_code, amount: amount, payment_method: 'Tuma',
-        phone_number: phone_number, status: 'Pending', checkout_request_id: checkout_request_id)
-      return render json: { message: 'Please check your phone to complete the payment', checkout_request_id: checkout_request_id }
+      # ✅ NOW THIS WORKS
+      temp_session.update!(checkout_request_id: checkout_request_id)
+      
+      HotspotMpesaRevenue.create!(
+        voucher: voucher_code, 
+        amount: amount, 
+        payment_method: 'Tuma',
+        phone_number: phone_number, 
+        status: 'Pending', 
+        checkout_request_id: checkout_request_id
+      )
+      
+      return render json: { 
+        message: 'Please check your phone to complete the payment', 
+        checkout_request_id: checkout_request_id 
+      }
     else
       return render json: { error: result[:error] || 'Failed to initiate Tuma payment' }, status: :unprocessable_entity
     end
   end
 
-
-      hotspot_payment = MpesaService.initiate_stk_push(phone_number, 
-      amount,
-       shortcode,  passkey,
-        consumer_key, consumer_secret, host,voucher_code,session_id
-      )
+  # Fallback to M-Pesa
+  hotspot_payment = MpesaService.initiate_stk_push(
+    phone_number, 
+    amount,
+    shortcode,  
+    passkey,
+    consumer_key, 
+    consumer_secret, 
+    host,
+    voucher_code,
+    session_id
+  )
   
- stk_response = hotspot_payment[:response]
- checkout_request_id = stk_response['CheckoutRequestID']
-#  merchant_request_id = stk_response['MerchantRequestID']
+  stk_response = hotspot_payment[:response]
+  checkout_request_id = stk_response['CheckoutRequestID']
 
+  # ✅ USE temp_session, not session
+  temp_session.checkout_request_id = checkout_request_id
+  temp_session.save!
 
+  if hotspot_payment[:success]
+    HotspotMpesaRevenue.create!(
+      voucher: voucher_code,
+      amount: amount,
+      payment_method: "Mpesa",
+      phone_number: phone_number,
+      status: "Pending",
+      checkout_request_id: checkout_request_id
+    )
 
-
-
-session = TemporarySession.find_or_initialize_by(ip: params[:ip],
-session: session_id,
-paid: false, 
-connected: false,
-hotspot_package: params[:package],
-voucher_code: voucher_code,
-phone_number: phone_number,
-mac: params[:mac],
-status: 'pending',
-checkout_request_id: checkout_request_id,
- payment_gateway: use_tuma ? 'tuma' : 'mpesa'
-
-)
-
-
-
-
-
-session.save!
-
-
-
-      if hotspot_payment[:success]
-# voucher_record = HotspotVoucher.create!(
-#   package: params[:package],
-#   phone: phone_number,
-#   voucher: voucher_code,
-#   mac: params[:mac],
-#   ip: params[:ip],
-#   checkout_request_id: checkout_request_id,
-#   merchant_request_id: merchant_request_id,
-
-#   payment_status: 'pending'
-
-# )
-
-# create_voucher_radcheck(voucher_code, params[:package], 
-# voucher_record.account_id)
-
-# calculate_expiration(params[:package], voucher_record)
-
-
-HotspotMpesaRevenue.create!(
-  voucher: voucher_code,
-  amount: amount,
-  payment_method: "Mpesa",
-  phone_number: phone_number,
-  status: "Pending",
-  checkout_request_id: checkout_request_id
-)
-
-
-
-        render json: {
-          message: 'Please check your phone to complete the payment',
-          checkout_request_id: checkout_request_id
-        }
-      else
-        render json: { error: 'Failed to initiate payment' }, status: :unprocessable_entity
-      end
+    render json: {
+      message: 'Please check your phone to complete the payment',
+      checkout_request_id: checkout_request_id
+    }
+  else
+    render json: { error: 'Failed to initiate payment' }, status: :unprocessable_entity
+  end
 end
+
 
 
   
