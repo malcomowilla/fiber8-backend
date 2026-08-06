@@ -1,4 +1,5 @@
 # app/services/tuma_service.rb
+
 class TumaService
   BASE_URL = "https://api.tuma.co.ke"
 
@@ -7,10 +8,10 @@ class TumaService
       return setting.cached_token if setting.token_valid?
 
       uri = URI("#{BASE_URL}/auth/token")
-      res = Net::HTTP.post(uri, {
+      res = Net::HTTP.post_form(uri, {
         email: setting.business_email,
         api_key: setting.api_key
-      }.to_json, "Content-Type" => "application/json")
+      })
 
       data = JSON.parse(res.body) rescue {}
       raise "Tuma auth failed: #{data['message'] || res.body}" unless data["success"]
@@ -27,21 +28,31 @@ class TumaService
       token = fetch_token(setting)
 
       uri = URI("#{BASE_URL}/payment/stk-push")
-      req = Net::HTTP::Post.new(uri, "Content-Type" => "application/json")
+      http = Net::HTTP.new(uri.hostname, uri.port)
+      http.use_ssl = true
+      
+      req = Net::HTTP::Post.new(uri.path)
       req["Authorization"] = "Bearer #{token}"
+      req["Content-Type"] = "application/json"  # ✅ FIX: Set header properly
       req.body = {
-        amount: amount,
+        amount: amount.to_f,
         phone: normalize_phone(phone),
         callback_url: callback_url,
         description: description
       }.to_json
 
-      res = Net::HTTP.start(uri.hostname, uri.port, use_ssl: true) { |http| http.request(req) }
+      res = http.request(req)
       data = JSON.parse(res.body) rescue {}
 
-      data["success"] ? { success: true, response: data["data"] }
-                       : { success: false, error: data["message"] || "Tuma STK push failed" }
+      Rails.logger.info "Tuma STK Push Response: #{res.code} - #{data.inspect}"
+
+      if data["success"]
+        { success: true, response: data["data"] }
+      else
+        { success: false, error: data["message"] || "Tuma STK push failed", status_code: res.code }
+      end
     rescue => e
+      Rails.logger.error "Tuma STK Push Error: #{e.message}"
       { success: false, error: e.message }
     end
 
@@ -51,7 +62,7 @@ class TumaService
       digits = phone.to_s.gsub(/\D/, '')
       return digits if digits.start_with?('254')
       return "254#{digits[1..]}" if digits.start_with?('0')
-      digits
+      "254#{digits}"
     end
   end
 end
