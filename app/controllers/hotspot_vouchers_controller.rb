@@ -1269,6 +1269,33 @@ session_id = rand(100000..999999).to_s
 
 
 
+ tuma_setting = TumaSetting.find_by(account_id: ActsAsTenant.current_tenant.id)
+  use_tuma = tuma_setting&.enabled && tuma_setting.use_for_hotspot
+
+
+
+
+  if use_tuma
+    full_domain = request.headers['X-Domain']
+    base_domain = full_domain.to_s.split('.').last(3).join('.') if full_domain.present?
+    platform_domain = base_domain == "owitech.co.ke" ? "owitech.co.ke" : "aitechs.co.ke"
+    callback_url = "https://#{host}.#{platform_domain}/api/tuma/hotspot_callback/#{session_id}"
+
+    result = TumaService.initiate_stk_push(
+      tuma_setting, amount: amount, phone: phone_number,
+      callback_url: callback_url, description: "Hotspot package #{params[:package]}"
+    )
+
+    if result[:success]
+      checkout_request_id = result[:response]['checkout_request_id']
+      session.update!(checkout_request_id: checkout_request_id)
+      HotspotMpesaRevenue.create!(voucher: voucher_code, amount: amount, payment_method: 'Tuma',
+        phone_number: phone_number, status: 'Pending', checkout_request_id: checkout_request_id)
+      return render json: { message: 'Please check your phone to complete the payment', checkout_request_id: checkout_request_id }
+    else
+      return render json: { error: result[:error] || 'Failed to initiate Tuma payment' }, status: :unprocessable_entity
+    end
+  end
 
 
       hotspot_payment = MpesaService.initiate_stk_push(phone_number, 
@@ -1284,6 +1311,7 @@ session_id = rand(100000..999999).to_s
 
 
 
+
 session = TemporarySession.find_or_initialize_by(ip: params[:ip],
 session: session_id,
 paid: false, 
@@ -1293,7 +1321,8 @@ voucher_code: voucher_code,
 phone_number: phone_number,
 mac: params[:mac],
 status: 'pending',
-checkout_request_id: checkout_request_id
+checkout_request_id: checkout_request_id,
+ payment_gateway: use_tuma ? 'tuma' : 'mpesa'
 
 )
 

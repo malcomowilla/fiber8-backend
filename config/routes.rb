@@ -164,6 +164,8 @@ resources :network_connections
 resources :promotional_plans, only: [:index, :show, :create, :update, :destroy]
 resources :tv_plans, only: [:index, :create, :update, :destroy]
 resources :client_support_tickets, only: [:index, :create, :show]
+resource :tuma_settings, only: [:show, :update]
+
 
 end
 
@@ -191,6 +193,19 @@ resources :network_connections
 
 
 resources :client_support_tickets, only: [:index, :create, :show]
+
+
+resource :tuma_settings, only: [:show, :update]
+post 'tuma_settings/test_connection', to: 'tuma_settings#test_connection'
+post '/api/tuma_settings/test_connection', to: 'tuma_settings#test_connection'
+post '/api/tuma_callback', to: 'tuma_callbacks#handle_payment'
+post '/tuma_callback', to: 'tuma_callbacks#handle_payment'
+post 'tuma/hotspot_callback/:session_token', to: 'tuma_callbacks#hotspot_callback'
+post '/api/tuma/hotspot_callback/:session_token', to: 'tuma_callbacks#hotspot_callback'
+
+post 'tuma/device_binding_callback/:session_token', to: 'tuma_callbacks#device_binding_callback'
+post '/api/tuma/device_binding_callback/:session_token', to: 'tuma_callbacks#device_binding_callback'
+
 
 get  'system_admin/support_tickets',        to: 'client_support_tickets#system_admin_index'
 get  '/api/system_admin/support_tickets',        to: 'client_support_tickets#system_admin_index'

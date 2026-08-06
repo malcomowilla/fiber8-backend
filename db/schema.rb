@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_08_06_202704) do
+ActiveRecord::Schema[7.2].define(version: 2026_08_06_221109) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -1426,6 +1426,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_08_06_202704) do
     t.string "device_type"
     t.string "payment_type"
     t.bigint "tv_plan_id"
+    t.string "payment_gateway", default: "mpesa"
     t.index ["connected"], name: "index_temporary_sessions_on_connected"
     t.index ["hotspot_package"], name: "index_temporary_sessions_on_hotspot_package"
     t.index ["ip"], name: "index_temporary_sessions_on_ip"
@@ -1444,6 +1445,20 @@ ActiveRecord::Schema[7.2].define(version: 2026_08_06_202704) do
     t.integer "account_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+  end
+
+  create_table "tuma_settings", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.string "business_email"
+    t.string "api_key"
+    t.string "cached_token"
+    t.datetime "token_expires_at"
+    t.boolean "enabled", default: false
+    t.boolean "use_for_hotspot", default: false
+    t.boolean "use_for_tv_plans", default: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id"], name: "index_tuma_settings_on_account_id", unique: true
   end
 
   create_table "tv_plans", force: :cascade do |t|
