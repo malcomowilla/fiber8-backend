@@ -163,6 +163,7 @@ resources :network_connections
   # resources :hotspot_plans
 resources :promotional_plans, only: [:index, :show, :create, :update, :destroy]
 resources :tv_plans, only: [:index, :create, :update, :destroy]
+resources :client_support_tickets, only: [:index, :create, :show]
 
 end
 
