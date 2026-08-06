@@ -8,12 +8,21 @@ class TumaService
       return setting.cached_token if setting.token_valid?
 
       uri = URI("#{BASE_URL}/auth/token")
-      res = Net::HTTP.post_form(uri, {
+      http = Net::HTTP.new(uri.hostname, uri.port)
+      http.use_ssl = true
+
+      req = Net::HTTP::Post.new(uri.path)
+      req["Content-Type"] = "application/json"  # ✅ JSON format
+      req.body = {
         email: setting.business_email,
         api_key: setting.api_key
-      })
+      }.to_json
 
+      res = http.request(req)
       data = JSON.parse(res.body) rescue {}
+
+      Rails.logger.info "Tuma Token Response: #{res.code} - #{data.inspect}"
+
       raise "Tuma auth failed: #{data['message'] || res.body}" unless data["success"]
 
       setting.update!(
@@ -33,7 +42,7 @@ class TumaService
       
       req = Net::HTTP::Post.new(uri.path)
       req["Authorization"] = "Bearer #{token}"
-      req["Content-Type"] = "application/json"  # ✅ FIX: Set header properly
+      req["Content-Type"] = "application/json"
       req.body = {
         amount: amount.to_f,
         phone: normalize_phone(phone),
