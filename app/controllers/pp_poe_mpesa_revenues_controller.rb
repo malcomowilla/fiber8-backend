@@ -93,6 +93,8 @@ render json: { revenue: total_revenue }
 end
 
 
+
+
 def most_popular_package
   package = PpPoeMpesaRevenue
     .joins(:subscriber)
@@ -109,14 +111,13 @@ def most_popular_package
   if package
     render json: {
       package: package.package,
-      package_sold: package.vouchers_sold.to_i,
+      package_sold: package.package_sold.to_i,
       total_revenue: package.total_revenue.to_f
     }
   else
     render json: { message: "No data found" }, status: :not_found
   end
 end
-
 
 
 
