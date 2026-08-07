@@ -196,6 +196,11 @@ resources :client_support_tickets, only: [:index, :create, :show]
 
 
 resource :tuma_settings, only: [:show, :update]
+delete 'system_admins/destroy_client/:id', to: 'system_admins#destroy_client'
+delete '/api/system_admins/destroy_client/:id', to: 'system_admins#destroy_client'
+delete 'delete_client/:id', to: 'system_admins#destroy_client'
+delete '/api/delete_client/:id', to: 'system_admins#destroy_client'
+
 post 'tuma_settings/test_connection', to: 'tuma_settings#test_connection'
 post '/api/tuma_settings/test_connection', to: 'tuma_settings#test_connection'
 post '/api/tuma_callback', to: 'tuma_callbacks#handle_payment'

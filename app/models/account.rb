@@ -1,8 +1,8 @@
 class Account < ApplicationRecord
     has_many :users, dependent: :destroy
-    has_many :hotspot_templates
-    has_one :hotspot_customization
-    has_many :ads
+    has_many :hotspot_templates,  dependent: :destroy
+    has_one :hotspot_customization,  dependent: :destroy
+    has_many :ads, dependent: :destroy
     has_many :packages, dependent: :destroy
     has_many :nas_routers, dependent: :destroy
     has_many :zones, dependent: :destroy
@@ -32,16 +32,15 @@ class Account < ApplicationRecord
     has_many :user_groups, dependent: :destroy
     has_one :hotspot_mpesa_setting, dependent: :destroy
     has_one :dial_up_mpesa_setting, dependent: :destroy
-    has_one :company_id
-    has_many :invoices
+    has_one :company_id, dependent: :destroy
+    has_many :invoices, dependent: :destroy
     # has_one :ad_setting
-    has_many :ad_settings
-    has_one :ad
-    has_many :hotspot_vouchers
-    has_one :nas_setting
-    has_one :access_point_setting
-    has_many :ip_bindings
-    has_one :router_setting
+    has_many :ad_settings, dependent: :destroy
+    has_one :ad, dependent: :destroy
+    has_many :hotspot_vouchers, dependent: :destroy
+    has_one :nas_setting, dependent: :destroy
+    has_one :access_point_setting, dependent: :destroy
+    has_many :ip_bindings, dependent: :destroy
     # validates :subdomain, presence: true
     
 end

@@ -736,6 +736,36 @@ render json: { error: 'System Admin not found' }, status: :unauthorized
 
 
 
+
+
+
+def destroy_client
+  admin = User.find_by(id: params[:id])
+  unless admin
+    return render json: { error: "Admin not found!" }, status: :not_found
+  end
+
+  account = admin.account
+  unless account
+    return render json: { error: "Account not found for this admin" }, status: :unprocessable_entity
+  end
+
+  ActsAsTenant.with_tenant(account) do
+    ActiveRecord::Base.transaction do
+      account.destroy!
+    end
+  end
+
+  render json: { message: "Admin and account deleted successfully" }, status: :ok
+rescue ActiveRecord::RecordNotDestroyed, ActiveRecord::InvalidForeignKey => e
+  Rails.logger.error "destroy_client failed: #{e.message}"
+  render json: { error: "Could not fully delete account: #{e.message}" }, status: :unprocessable_entity
+end
+
+
+
+
+
   def verify_otp_email
     system_admin = SystemAdmin.find_by(email: params[:email]) ||
      SystemAdmin.find_by(system_admin_phone_number_verified: params[:phone_number]) || 
