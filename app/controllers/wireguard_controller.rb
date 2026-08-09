@@ -619,7 +619,7 @@ client_config = <<~WGCONFIG
 
   [Peer]
   PublicKey = #{server_public_key}
-  Endpoint = 102.221.35.92:51820
+  Endpoint = 13.50.245.40:51820
   AllowedIPs = 0.0.0.0/0
 WGCONFIG
 
