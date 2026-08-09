@@ -655,7 +655,7 @@ end
         /ip route add dst-address=10.2.0.1/32 gateway=wireguard1
 
        /interface wireguard peers
-   add allowed-address=0.0.0.0/0 endpoint-address=102.221.35.92 endpoint-port=51820 interface=wireguard1 persistent-keepalive=25s public-key="#{server_pubkey}"
+   add allowed-address=0.0.0.0/0 endpoint-address=13.50.245.40 endpoint-port=51820 interface=wireguard1 persistent-keepalive=25s public-key="#{server_pubkey}"
 
       /ip address add address=#{ip} interface=wireguard1
 
