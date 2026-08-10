@@ -2456,43 +2456,51 @@ end
     #   end
     # end
 
-
 def generate_voucher_code
-  # voucher_type = HotspotSetting.first&.voucher_type || 'Mixed'
-voucher_type = ActsAsTenant.current_tenant&.hotspot_setting&.voucher_type || 'Mixed'
+  hotspot_setting = ActsAsTenant.current_tenant&.hotspot_setting
+  voucher_type = hotspot_setting&.voucher_type || 'Mixed'
+
+  prefix = hotspot_setting&.voucher_prefix.to_s.strip
+  # code_length is the length of the RANDOM portion the user configured
+  # (4-16, enforced by HotspotSettingsController#normalized_code_length).
+  # The prefix is prepended on top of that.
+  code_length = hotspot_setting&.code_length.to_i
+  code_length = 8 if code_length <= 0
+
+  numeric_chars = '0123456789'
+  alpha_chars   = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+  mixed_chars   = numeric_chars + alpha_chars
 
   loop do
-    code =
+    random_part =
       case voucher_type
       when 'Numeric'
-        # Example: 8-digit numeric code
-        rand(10**7..10**8 - 1).to_s
-
-      when 'Fixed'
-        # Example: FIXED-XXXX (you can customize)
-        "FIXED-#{SecureRandom.hex(2).upcase}"
+        Array.new(code_length) { numeric_chars.sample }.join
 
       when 'Words'
-        # Example: WORD-WORD (easy to read)
         words = %w[
           SKY NET FAST WIFI DATA ZONE LINK CLOUD
           SPEED HOT SPOT CONNECT
         ]
-        "#{words.sample}-#{words.sample}"
+        raw = "#{words.sample}#{words.sample}"
+        if raw.length >= code_length
+          raw[0, code_length]
+        else
+          raw + Array.new(code_length - raw.length) { alpha_chars.sample }.join
+        end
 
       when 'Mixed'
-        # Example: A9F3C8D2
-        SecureRandom.hex(4).upcase
+        Array.new(code_length) { mixed_chars.sample }.join
 
       else
-        # Fallback
-        SecureRandom.hex(4).upcase
+        Array.new(code_length) { mixed_chars.sample }.join
       end
+
+    code = prefix.present? ? "#{prefix}#{random_part}" : random_part
 
     break code unless HotspotVoucher.exists?(voucher: code)
   end
 end
-
 
     # Only allow a list of trusted parameters through.
     def hotspot_voucher_params

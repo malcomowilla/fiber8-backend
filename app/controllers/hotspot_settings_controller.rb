@@ -507,7 +507,7 @@ def page_design_params
 end
 
     # Clamp code length to the allowed 6-16 range, default to 6 if blank/invalid.
-    MIN_CODE_LENGTH = 6
+    MIN_CODE_LENGTH = 4
     MAX_CODE_LENGTH = 16
 
     def normalized_code_length(value)
