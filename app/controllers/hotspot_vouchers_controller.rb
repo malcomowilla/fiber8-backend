@@ -1258,7 +1258,6 @@ end
 #   consumer_key = ActsAsTenant.current_tenant&.hotspot_mpesa_setting.consumer_key || ENV['CONSUMER_KEY']
 #   consumer_secret = ActsAsTenant.current_tenant&.hotspot_mpesa_setting.consumer_secret || ENV['CONSUMER_SECRET']
 
-#   voucher_code = generate_voucher_code
 # #   session_id = rand(100000..999999).to_s
 # # TemporarySession.create!(
 # #   session: session_id,
@@ -1570,7 +1569,6 @@ end
 #       package: params[:package],
 #       shared_users: params[:shared_users],
 #       phone: params[:phone],
-#       voucher: generate_voucher_code
 #     )
 
       
@@ -2467,8 +2465,11 @@ def generate_voucher_code
   code_length = hotspot_setting&.code_length.to_i
   code_length = 8 if code_length <= 0
 
-  numeric_chars = '0123456789'
-  alpha_chars   = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+  # .chars turns the string into an array of single-char strings so
+  # .sample (an Array method) actually works — calling .sample directly
+  # on a String raised NoMethodError.
+  numeric_chars = '0123456789'.chars
+  alpha_chars   = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.chars
   mixed_chars   = numeric_chars + alpha_chars
 
   loop do
