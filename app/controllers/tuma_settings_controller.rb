@@ -1,5 +1,11 @@
 # app/controllers/tuma_settings_controller.rb
 class TumaSettingsController < ApplicationController
+  # Every action here reads or writes Tuma API credentials, so all of them
+  # (show/update/test_connection) sit behind a fresh OTP check. No action
+  # here is a webhook/callback, so nothing needs to be exempted — compare
+  # with HotspotMpesaSettingsController, which does exempt its webhook.
+  include PaymentGatewayVerifiable
+
   set_current_tenant_through_filter
   before_action :set_tenant
 

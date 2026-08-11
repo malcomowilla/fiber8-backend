@@ -104,14 +104,146 @@ class PaymentGatewayOtpController < ApplicationController
     render json: { error: 'Invalid tenant' }, status: :not_found
   end
 
-  # NOTE: adjust the class/method name below to match whatever your
-  # existing SmslLeopard wrapper is actually called elsewhere in the app
-  # (used already for support-ticket SMS notifications) — this is a
-  # best-guess call shape, not copied from a file I've seen.
+  # Sends to current_user.phone_number — the admin's OWN number on their
+  # account, not a customer's. Mirrors HotspotVouchersController#send_voucher
+  # / #send_voucher_text_sms / #send_voucher_talksasa exactly: no service
+  # wrapper class exists in this app for SMS, it's a direct HTTP call per
+  # provider, credentials pulled from SmsSetting, provider chosen from
+  # ActsAsTenant.current_tenant&.sms_provider_setting&.sms_provider.
   def deliver_sms(user, code)
     message = "Your Owitech payment settings verification code is #{code}. " \
               "It expires in #{PaymentGatewayOtp::EXPIRY_MINUTES} minutes. Do not share this code with anyone."
-    SmsLeopardService.new.send_sms(phone: user.phone_number, message: message)
+
+    provider = ActsAsTenant.current_tenant&.sms_provider_setting&.sms_provider
+
+    case provider
+    when 'TextSms'
+      send_otp_via_text_sms(user, message)
+    when 'Talk Sasa'
+      send_otp_via_talksasa(user, message)
+    else
+      # Defaults to SMS Leopard, same as the rest of the app when no
+      # provider is explicitly configured.
+      send_otp_via_sms_leopard(user, message)
+    end
+  end
+
+  # --- SMS Leopard — same endpoint/params as HotspotVouchersController#send_voucher ---
+  def send_otp_via_sms_leopard(user, message)
+    sms_setting = SmsSetting.find_by(sms_provider: 'SMS leopard')
+    api_key = sms_setting&.api_key
+    api_secret = sms_setting&.api_secret
+    sender_id = "SMS_TEST"
+
+    uri = URI("https://api.smsleopard.com/v1/sms/send")
+    query = {
+      username: api_key,
+      password: api_secret,
+      message: message,
+      destination: user.phone_number,
+      source: sender_id
+    }
+    uri.query = URI.encode_www_form(query)
+
+    response = Net::HTTP.get_response(uri)
+
+    if response.is_a?(Net::HTTPSuccess)
+      sms_data = JSON.parse(response.body)
+      recipient = sms_data.dig('recipients', 0, 'number')
+      status = sms_data.dig('recipients', 0, 'status')
+
+      SystemAdminSm.create!(
+        user: recipient,
+        message: message,
+        status: status,
+        date: Time.now.strftime("%B %d, %Y at %I:%M %p"),
+        system_user: user.username,
+        sms_provider: 'SMS leopard'
+      )
+    else
+      Rails.logger.error "PaymentGatewayOtp SMS Leopard send failed: #{response.body}"
+      raise "Could not send SMS via SMS Leopard"
+    end
+  end
+
+  # --- TextSms — same endpoint/params as HotspotVouchersController#send_voucher_text_sms ---
+  def send_otp_via_text_sms(user, message)
+    sms_setting = SmsSetting.find_by(sms_provider: 'TextSms')
+    api_key = sms_setting&.api_key
+    partner_id = sms_setting&.partnerID
+    shortcode = sms_setting&.sender_id
+
+    uri = URI("https://sms.textsms.co.ke/api/services/sendsms")
+    query = {
+      apikey: api_key,
+      message: message,
+      mobile: user.phone_number,
+      partnerID: partner_id,
+      shortcode: shortcode
+    }
+    uri.query = URI.encode_www_form(query)
+
+    response = Net::HTTP.get_response(uri)
+
+    if response.is_a?(Net::HTTPSuccess)
+      sms_data = JSON.parse(response.body)
+      recipient = sms_data.dig('responses', 0, 'mobile')
+      status = sms_data.dig('responses', 0, 'response-description')
+
+      SystemAdminSm.create!(
+        user: recipient,
+        message: message,
+        status: status,
+        date: Time.now.strftime("%B %d, %Y at %I:%M %p"),
+        system_user: user.username,
+        sms_provider: 'Text Sms'
+      )
+    else
+      Rails.logger.error "PaymentGatewayOtp TextSms send failed: #{response.body}"
+      raise "Could not send SMS via TextSms"
+    end
+  end
+
+  # --- Talk Sasa — same endpoint/params as HotspotVouchersController#send_voucher_talksasa ---
+  def send_otp_via_talksasa(user, message)
+    sms_setting = SmsSetting.find_by(sms_provider: 'Talk Sasa')
+    api_key = sms_setting&.api_key
+    sender_id = sms_setting&.sender_id
+    formatted_phone_number = "254#{user.phone_number.to_s.gsub(/\A0/, '')}"
+
+    uri = URI.parse("https://bulksms.talksasa.com/api/v3/sms/send")
+    http = Net::HTTP.new(uri.host, uri.port)
+    http.use_ssl = true
+
+    request = Net::HTTP::Post.new(uri.request_uri)
+    request["Authorization"] = "Bearer #{api_key}"
+    request["Content-Type"] = "application/json"
+    request["Accept"] = "application/json"
+    request.body = {
+      recipient: formatted_phone_number,
+      sender_id: sender_id,
+      type: "plain",
+      message: message
+    }.to_json
+
+    response = http.request(request)
+
+    if response.is_a?(Net::HTTPSuccess)
+      sms_data = JSON.parse(response.body)
+      status = sms_data['status']
+
+      SystemAdminSm.create!(
+        user: user.phone_number,
+        message: message,
+        status: status,
+        date: Time.now.strftime("%B %d, %Y at %I:%M %p"),
+        system_user: user.username,
+        sms_provider: 'Talk Sasa'
+      )
+    else
+      Rails.logger.error "PaymentGatewayOtp TalkSasa send failed: #{response.code} - #{response.body}"
+      raise "Could not send SMS via Talk Sasa"
+    end
   end
 
   def mask_phone(phone)
