@@ -12,7 +12,7 @@ class TumaCallbacksController < ApplicationController
     head :ok
   end
 
-  def device_binding_callback
+  def device_binding_callback 
     session = ActsAsTenant.without_tenant { TemporarySession.find_by(session: params[:session_token]) }
     return head(:ok) unless session
     return head(:ok) if session.paid

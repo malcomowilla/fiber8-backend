@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_08_06_221109) do
+ActiveRecord::Schema[7.2].define(version: 2026_08_11_112032) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -994,6 +994,23 @@ ActiveRecord::Schema[7.2].define(version: 2026_08_06_221109) do
     t.datetime "updated_at", null: false
   end
 
+  create_table "payment_gateway_otps", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.bigint "account_id", null: false
+    t.string "code_digest", null: false
+    t.string "channel", null: false
+    t.integer "attempts", default: 0, null: false
+    t.datetime "expires_at", null: false
+    t.datetime "consumed_at"
+    t.string "request_ip"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id"], name: "index_payment_gateway_otps_on_account_id"
+    t.index ["user_id", "consumed_at"], name: "index_payment_gateway_otps_on_user_id_and_consumed_at"
+    t.index ["user_id", "created_at"], name: "index_payment_gateway_otps_on_user_id_and_created_at"
+    t.index ["user_id"], name: "index_payment_gateway_otps_on_user_id"
+  end
+
   create_table "pops", force: :cascade do |t|
     t.string "name"
     t.decimal "lat", precision: 10, scale: 6
@@ -1630,6 +1647,8 @@ ActiveRecord::Schema[7.2].define(version: 2026_08_06_221109) do
   add_foreign_key "invoice_payments", "invoices"
   add_foreign_key "ip_bindings", "tv_plans"
   add_foreign_key "maintenance_settings", "accounts"
+  add_foreign_key "payment_gateway_otps", "accounts"
+  add_foreign_key "payment_gateway_otps", "users"
   add_foreign_key "promotional_plans", "hotspot_packages"
   add_foreign_key "temporary_sessions", "tv_plans"
   add_foreign_key "tv_plans", "accounts"

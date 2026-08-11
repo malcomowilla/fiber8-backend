@@ -20,6 +20,7 @@ Rails.application.configure do
   config.action_mailer.perform_deliveries = true
   # config.active_job.queue_adapter = :sidekiq
 
+config.active_record.async_query_executor = :global_thread_pool
 
 
   # def self.current_cloudflare_url

@@ -1,0 +1,17 @@
+<%# app/views/payment_gateway_otp_mailer/otp_code.html.erb %>
+<div style="font-family: -apple-system, Arial, sans-serif; max-width: 480px; margin: 0 auto; padding: 24px;">
+  <p style="font-size: 15px; color: #334155;">Hi <%= @user.username.presence || @user.email %>,</p>
+
+  <p style="font-size: 15px; color: #334155;">
+    Use this code to verify access to your payment gateway settings:
+  </p>
+
+  <div style="background: #f1f5f9; border-radius: 12px; padding: 20px; text-align: center; margin: 20px 0;">
+    <span style="font-size: 32px; letter-spacing: 8px; font-weight: 700; color: #0f172a;"><%= @code %></span>
+  </div>
+
+  <p style="font-size: 13px; color: #64748b;">
+    This code expires in <%= @expiry_minutes %> minutes. If you didn't request this, you can safely ignore this
+    email — someone may have mistyped their account, and no changes have been made.
+  </p>
+</div>
