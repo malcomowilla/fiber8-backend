@@ -30,8 +30,9 @@ class HotspotPackageSerializer < ActiveModel::Serializer
 
 def shared_users
   return unless object.shared_users.present?
+      "#{object.shared_users.to_i}"
 
-  "#{object.shared_users.to_i}-Device"
+  # "#{object.shared_users.to_i}-Device"
 end
   
 

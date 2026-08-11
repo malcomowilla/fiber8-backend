@@ -2503,6 +2503,11 @@ def generate_voucher_code
   end
 end
 
+
+
+
+
+
     # Only allow a list of trusted parameters through.
     def hotspot_voucher_params
       params.permit(:voucher, :status, :expiration, :speed_limit, :phone,
