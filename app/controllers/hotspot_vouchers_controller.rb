@@ -2735,7 +2735,7 @@ def delete_voucher_natively(voucher)
     account_id: voucher.account_id
   )
 
-  nas = NasRouter.find_by(name: package.nas_router)
+  nas = NasRouter.find_by(name: package&.nas_router)
   return { success: false, error: "No router specified or router not found" } unless nas
 
   begin

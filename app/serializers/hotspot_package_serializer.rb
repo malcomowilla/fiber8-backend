@@ -58,6 +58,15 @@ end
   
 
   
+  # def speed
+  #   "#{self.object.upload_limit}M/#{self.object.download_limit}M" 
+  # end
+
+  # def valid
+  #   self.object.validity_period_units == 'days' ? "#{self.object.validity}days" : "#{self.object.validity}hour"
+  
+    
+  # end
 
   def valid
     case self.object.validity_period_units
