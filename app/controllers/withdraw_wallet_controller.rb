@@ -199,8 +199,8 @@ end
     mpesa_setting = tenant.hotspot_mpesa_setting
 
   
-    consumer_key =   mpesa_setting.consumer_key || ENV['CONSUMER_KEY']
-    consumer_secret = mpesa_setting .consumer_secret || ENV['CONSUMER_SECRET']
+    consumer_key =   mpesa_setting&.consumer_key || ENV['CONSUMER_KEY']
+    consumer_secret = mpesa_setting&.consumer_secret || ENV['CONSUMER_SECRET']
 
     response = RestClient.get(
       "https://api.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials",
