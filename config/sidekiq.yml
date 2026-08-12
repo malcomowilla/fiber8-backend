@@ -106,7 +106,7 @@ development:
       class: HotspotExpirationJob
       cron: "*/3 * * * *"
 
-    voucher_sync_job
+    voucher_sync_job:
       class: VoucherSyncJob
       cron: "*/2 * * * *"
 
