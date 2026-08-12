@@ -161,11 +161,11 @@ end
 
     payload = {
       OriginatorConversationID: "600997_Test_32et3241ed8yu",
-      InitiatorName: mpesa_setting.api_initiator_username || ENV['API_INITIATOR_USERNAME'],
-      SecurityCredential: mpesa_setting.api_initiator_password || ENV['B2C_API_INITIATOR_PASSWORD'],
+      InitiatorName: mpesa_setting&.api_initiator_username || ENV['API_INITIATOR_USERNAME'],
+      SecurityCredential: mpesa_setting&.api_initiator_password || ENV['B2C_API_INITIATOR_PASSWORD'],
       CommandID: "BusinessPayment",
       Amount: amount,
-      PartyA: mpesa_setting.short_code || ENV['B2C_SHORTCODE'],
+      PartyA: mpesa_setting&.short_code || ENV['B2C_SHORTCODE'],
       PartyB: format_phone(phone_number),
       Remarks: "ok",
       QueueTimeOutURL: "https://#{tenant.subdomain}.#{ENV['HOST']}/disburse_funds_results_timeout",
