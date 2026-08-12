@@ -10,7 +10,7 @@ class ServerTimeController < ApplicationController
 
   def set_tenant
     host = request.headers['X-Subdomain']
-    @account = Account.find_by(subdomain: host)
+    @account = Account.find_by!(subdomain: host)
     ActsAsTenant.current_tenant = @account
     EmailConfiguration.configure(@account, ENV['SYSTEM_ADMIN_EMAIL'])
   rescue ActiveRecord::RecordNotFound
