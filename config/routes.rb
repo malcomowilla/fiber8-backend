@@ -198,12 +198,11 @@ resources :client_support_tickets, only: [:index, :create, :show]
 resource :tuma_settings, only: [:show, :update]
 
 
-
-post '/api/payment_gateway_otp/request', to: 'payment_gateway_otp#request_otp'
-post  '/api/payment_gateway_otp/verify',  to: 'payment_gateway_otp#verify'
-get  '/api/payment_gateway_otp/status',  to: 'payment_gateway_otp#status'
-
-
+get    '/api/payment_gateway_pin',        to: 'payment_gateway_pin#show'
+post   '/api/payment_gateway_pin/verify', to: 'payment_gateway_pin#verify'
+patch  '/api/payment_gateway_pin',        to: 'payment_gateway_pin#update'
+delete '/api/payment_gateway_pin',        to: 'payment_gateway_pin#destroy'
+get    '/api/server_time',                to: 'server_time#show'
 
 get '/api/top_pppoe_users', to: 'pp_poe_mpesa_revenues#top_customers'
 get '/api/pppoe_most_popular_package', to: 'pp_poe_mpesa_revenues#most_popular_package'

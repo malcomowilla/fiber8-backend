@@ -217,6 +217,9 @@ can :read, SmsSetting if admin.can_read_sms_settings
 can :manage, HotspotMpesaSetting if admin.can_manage_mpesa_settings
 can :read, HotspotMpesaSetting if admin.can_read_mpesa_settings
 
+
+can :manage, :payment_gateway_pin if admin.can_manage_mpesa_settings
+
 can :manage, Na if admin.can_manage_free_radius
 can :read, Na if admin.can_read_free_radius
 
