@@ -1169,10 +1169,10 @@ end
 
 
 def stk_push_status
-  shortcode = ActsAsTenant.current_tenant&.hotspot_mpesa_setting.short_code || ENV['B2C_SHORTCODE']
-  passkey = ActsAsTenant.current_tenant&.hotspot_mpesa_setting.passkey || ENV['PASSKEY']
-  consumer_key = ActsAsTenant.current_tenant&.hotspot_mpesa_setting.consumer_key || ENV['CONSUMER_KEY']
-  consumer_secret = ActsAsTenant.current_tenant&.hotspot_mpesa_setting.consumer_secret || ENV['CONSUMER_SECRET']
+  shortcode = ActsAsTenant.current_tenant&.hotspot_mpesa_setting&.short_code || ENV['B2C_SHORTCODE']
+  passkey = ActsAsTenant.current_tenant&.hotspot_mpesa_setting&.passkey || ENV['PASSKEY']
+  consumer_key = ActsAsTenant.current_tenant&.hotspot_mpesa_setting&.consumer_key || ENV['CONSUMER_KEY']
+  consumer_secret = ActsAsTenant.current_tenant&.hotspot_mpesa_setting&.consumer_secret || ENV['CONSUMER_SECRET']
 
   checkout_request_id = params[:checkout_request_id]
 
