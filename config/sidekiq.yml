@@ -106,6 +106,10 @@ development:
       class: HotspotExpirationJob
       cron: "*/3 * * * *"
 
+    voucher_sync_job
+      class: VoucherSyncJob
+      cron: "*/2 * * * *"
+
     contention_ratio_job:
       class: ContentionRatioJob
       cron: "*/4 * * * *"
