@@ -116,7 +116,7 @@ development:
 
     router_ping_job:
       class: RouterPingJob
-      cron: "*/5 * * * *"
+      cron: "*/2 * * * *"
 
     subscription_expiration_job:
       class: SubscriptionExpirationJob
