@@ -5,7 +5,6 @@ class RemoteWireguardExecutor
   WG_INTERFACE = "wg0".freeze
 
   class << self
-    # Runs an arbitrary shell command on the remote AWS host over SSH.
     def exec(command)
       full_cmd = "ssh #{SSH_OPTS} #{SSH_HOST} #{Shellwords.escape(command)}"
       result = `#{full_cmd}`
@@ -36,6 +35,20 @@ class RemoteWireguardExecutor
     def tcp_reachable?(ip, port = 80, timeout_sec = 3)
       check_cmd = "timeout #{timeout_sec} bash -c 'cat < /dev/null > /dev/tcp/#{ip}/#{port}' && echo OK || echo FAIL"
       exec(check_cmd).strip.include?("OK")
+    end
+
+    # Generates a fresh WireGuard keypair on the AWS box in one round-trip.
+    # Returns [private_key, public_key].
+    def generate_keypair
+      output = exec('priv=$(wg genkey); pub=$(echo "$priv" | wg pubkey); echo "$priv"; echo "$pub"')
+      lines = output.lines.map(&:strip).reject(&:blank?)
+      raise "Failed to generate WireGuard keypair (unexpected output: #{output.inspect})" unless lines.size == 2
+
+      [lines[0], lines[1]]
+    end
+
+    def server_public_key
+      wg("show #{WG_INTERFACE} public-key").strip
     end
   end
 end
