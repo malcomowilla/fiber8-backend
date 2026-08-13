@@ -25,7 +25,7 @@ development:
 
     rehydrate_wireguard_job:
       class: RehydrateWireguardJob
-      cron: "*/5 * * * *"
+      cron: "*/2 * * * *"
 
 
 
