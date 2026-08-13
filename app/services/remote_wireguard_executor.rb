@@ -37,6 +37,63 @@ class RemoteWireguardExecutor
       exec(check_cmd).strip.include?("OK")
     end
 
+
+
+
+
+    # Checks TCP reachability for many IPs in a single SSH round-trip.
+# Returns { ip => { reachable: true/false, latency_ms: Float|nil, message: String } }
+def batch_tcp_check(ip_port_pairs, timeout_sec = 2)
+  return {} if ip_port_pairs.empty?
+
+  script = +"#!/usr/bin/env bash\n"
+  ip_port_pairs.each do |ip, port|
+    script << <<~SH
+      start=$(date +%s%3N)
+      if timeout #{timeout_sec} bash -c 'cat < /dev/null > /dev/tcp/#{ip}/#{port}' 2>/tmp/err_#{ip.gsub('.', '_')}; then
+        end=$(date +%s%3N)
+        echo "#{ip}|OK|$((end-start))"
+      else
+        echo "#{ip}|FAIL|$(cat /tmp/err_#{ip.gsub('.', '_')} 2>/dev/null | tr -d '\\n')"
+      end
+      rm -f /tmp/err_#{ip.gsub('.', '_')}
+    SH
+  end
+
+  output = exec_script(script)
+
+  results = {}
+  output.each_line do |line|
+    ip, status, extra = line.strip.split("|", 3)
+    next unless ip
+
+    results[ip] =
+      if status == "OK"
+        { reachable: true, latency_ms: extra.to_f, message: "TCP connection successful (#{extra} ms)" }
+      else
+        { reachable: false, latency_ms: nil, message: "TCP connection failed: #{extra}" }
+      end
+  end
+
+  results
+end
+
+# Like `exec`, but writes the command to a temp script on the remote host
+# and runs it, so multi-line bash (loops, conditionals) survives the SSH hop
+# without escaping nightmares.
+def exec_script(script_body)
+  encoded = Base64.strict_encode64(script_body)
+  remote_cmd = "echo #{encoded} | base64 -d | bash"
+  full_cmd = "ssh #{SSH_OPTS} #{SSH_HOST} #{Shellwords.escape(remote_cmd)}"
+  result = `#{full_cmd}`
+
+  unless $?.success?
+    Rails.logger.error "[RemoteWireguardExecutor] script failed (#{$?.exitstatus})"
+  end
+
+  result
+end
+
     # Generates a fresh WireGuard keypair on the AWS box in one round-trip.
     # Returns [private_key, public_key].
     def generate_keypair
