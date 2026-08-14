@@ -25,11 +25,16 @@ class HotspotSmsTemplatesController < ApplicationController
       active: true
     },
 
+    # NOTE: this category isn't prefixed with "single_" or "multi_", so it won't be
+    # picked up by either section on the frontend (Expiry Reminders is still listed
+    # under "Coming soon" there). Make sure HotspotSmsTemplate::CATEGORIES includes
+    # 'expiration' or the sort_by below will hit a nil comparison. Remove this entry
+    # if it wasn't meant to go live yet.
     'expiration' => {
-    title: 'Expiration Reminder',
-    message: "Hello, your voucher {voucher_code} has expired. Renew now to stay connected. (FROM: {company_name})",
-    active: true
-  }
+      title: 'Expiration Reminder',
+      message: "Hello, your voucher {voucher_code} has expired. Renew now to stay connected. (FROM: {company_name})",
+      active: true
+    }
   }.freeze
 
   # GET /api/hotspot_sms_templates
@@ -50,13 +55,20 @@ class HotspotSmsTemplatesController < ApplicationController
       )
     end
 
-    render json: { templates: existing.values.sort_by { |t| HotspotSmsTemplate::CATEGORIES.index(t.category) } }
+    templates = existing.values.sort_by do |t|
+      # `|| 999` keeps this from blowing up if a category (e.g. 'expiration')
+      # isn't registered in CATEGORIES yet — unknown categories just sort last
+      # instead of crashing the whole endpoint.
+      HotspotSmsTemplate::CATEGORIES.index(t.category) || 999
+    end
+
+    render json: { templates: templates.map { |t| serialize_template(t) } }
   end
 
   # PATCH /api/hotspot_sms_templates/:id
   def update
     if @template.update(hotspot_sms_template_params)
-      render json: { template: @template }, status: :ok
+      render json: { template: serialize_template(@template) }, status: :ok
     else
       render json: { errors: @template.errors }, status: :unprocessable_entity
     end
@@ -72,22 +84,31 @@ class HotspotSmsTemplatesController < ApplicationController
     ActsAsTenant.current_tenant = @account
   end
 
-  # def set_template
-  #   @template = HotspotSmsTemplate.find_by(id: params[:id], account_id: @account.id)
-  #   render json: { error: 'Template not found' }, status: :not_found unless @template
-  # end
-
-
+  # Was previously looking records up by category (derived from the frontend's
+  # dash-cased pseudo id) with account scoping commented out. That broke saves,
+  # since /index now returns the real numeric primary key as `id` — and it let
+  # any tenant edit any other tenant's templates by guessing ids. Fixed to look
+  # up by the actual primary key, scoped to the current tenant.
   def set_template
-  @template = HotspotSmsTemplate.find_by(
-    category: params[:id].tr('-', '_'),
-    # account_id: @account.id
-  )
+    @template = HotspotSmsTemplate.find_by(id: params[:id], account_id: @account.id)
+    render json: { error: 'Template not found' }, status: :not_found unless @template
+  end
 
-  render json: { error: 'Template not found' }, status: :not_found unless @template
-end
-
-
+  # Adds `group`/`kind` (derived from `category`) so the frontend can keep
+  # sorting templates into the Single User / Multi User sections without
+  # re-deriving anything from the numeric id.
+  def serialize_template(template)
+    group, kind = template.category.split('_', 2)
+    {
+      id: template.id,
+      category: template.category,
+      group: group,
+      kind: kind,
+      title: template.title,
+      message: template.message,
+      active: template.active
+    }
+  end
 
   def hotspot_sms_template_params
     params.require(:hotspot_sms_template).permit(:message, :active, :title)
