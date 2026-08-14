@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_08_14_003413) do
+ActiveRecord::Schema[7.2].define(version: 2026_08_14_093523) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -1200,6 +1200,26 @@ ActiveRecord::Schema[7.2].define(version: 2026_08_14_003413) do
     t.integer "account_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+  end
+
+  create_table "speed_test_results", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.bigint "subscriber_id", null: false
+    t.bigint "nas_router_id"
+    t.float "download_mbps", null: false
+    t.float "upload_mbps", null: false
+    t.integer "ping_ms"
+    t.integer "jitter_ms"
+    t.float "plan_speed_mbps"
+    t.float "percent_of_plan"
+    t.string "status", default: "healthy"
+    t.datetime "tested_at", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id"], name: "index_speed_test_results_on_account_id"
+    t.index ["nas_router_id"], name: "index_speed_test_results_on_nas_router_id"
+    t.index ["subscriber_id", "tested_at"], name: "index_speed_test_results_on_subscriber_id_and_tested_at"
+    t.index ["subscriber_id"], name: "index_speed_test_results_on_subscriber_id"
   end
 
   create_table "subscriber_invoices", force: :cascade do |t|

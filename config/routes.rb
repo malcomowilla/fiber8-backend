@@ -220,6 +220,26 @@ post  'network_map/kml_import', to: 'kml_imports#create'
 
 
 
+
+ get  '/api/speed_test/download',        to: 'speed_tests#download'
+  post '/api/speed_test/upload',          to: 'speed_tests#upload'
+  get  '/api/speed_test/ping',            to: 'speed_tests#ping'
+  post '/api/speed_test/results',         to: 'speed_tests#create'
+  get  '/api/speed_test/history',         to: 'speed_tests#history'
+  post '/api/speed_test/results/:id/report', to: 'speed_tests#report_issue'
+
+
+
+
+ get  'speed_test/download',        to: 'speed_tests#download'
+  post 'speed_test/upload',          to: 'speed_tests#upload'
+  get  'speed_test/ping',            to: 'speed_tests#ping'
+  post 'speed_test/results',         to: 'speed_tests#create'
+  get  'speed_test/history',         to: 'speed_tests#history'
+  post 'speed_test/results/:id/report', to: 'speed_tests#report_issue'
+
+
+
 get   '/api/network_map', to: 'network_map#index'
 post  '/api/network_map/sync', to: 'network_map#sync'
 post  '/api/network_map/kml_import', to: 'kml_imports#create'
