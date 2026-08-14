@@ -77,7 +77,7 @@
 
     # GET /api/speed_test/history?limit=10
     def history
-      subscriber = current_subscriber
+      subscriber = current_customer
       return render json: { error: 'Not authenticated' }, status: :unauthorized unless subscriber
 
       limit = (params[:limit] || 10).to_i.clamp(1, 50)
@@ -95,7 +95,7 @@
     # POST /api/speed_test/results/:id/report
     # Turns a bad speed test straight into a pre-filled, diagnosable ticket.
     def report_issue
-      subscriber = current_subscriber
+      subscriber = current_customer
       return render json: { error: 'Not authenticated' }, status: :unauthorized unless subscriber
 
       result = SpeedTestResult.find_by(id: params[:id], subscriber_id: subscriber.id)
