@@ -214,7 +214,7 @@ end
   
 
 
-  def send_expiration_talksasa(phone_number, voucher_code, tenant)
+  def send_expiration_talksasa(phone_number, voucher, tenant)
 
                           formatted_phone_number = "254#{phone_number.gsub(/\A0/, '')}"
 
@@ -276,7 +276,7 @@ end
 
   
 
-  def send_expiration(phone_number, voucher_code, tenant)
+  def send_expiration(phone_number, voucher, tenant)
 
    
 
@@ -316,7 +316,7 @@ end
 
 
 
-  def send_expiration_text_sms(phone_number, voucher_code, tenant)
+  def send_expiration_text_sms(phone_number, voucher, tenant)
     # api_key = SmsSetting.find_by(sms_provider: 'TextSms')&.api_key
     # partnerID = SmsSetting.find_by(sms_provider: 'TextSms')&.partnerID
 # TextSms

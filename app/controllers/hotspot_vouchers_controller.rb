@@ -2927,7 +2927,19 @@ end
            def send_voucher_text_sms(phone_number, voucher_code,
              shared_users, company_name, current_user
             )
-       HotspotVoucher.find_by(voucher: voucher_code).update(sms_sent: true)
+  # Was previously receiving the voucher code in a param literally named
+  # `voucher`, but the body referenced an undefined `voucher_code` — a
+  # guaranteed NameError on every call. Renamed the param to match, and
+  # look up the actual HotspotVoucher record before using it, same as
+  # the SMS Leopard sender above (build_voucher_sms_data needs the
+  # record, not the bare code string).
+  hotspot_voucher = HotspotVoucher.find_by(voucher: voucher_code)
+  unless hotspot_voucher
+    Rails.logger.info "send_voucher_text_sms: voucher #{voucher_code} not found"
+    return
+  end
+
+  hotspot_voucher.update(sms_sent: true)
 
   sms_setting = SmsSetting.find_by(sms_provider: 'TextSms')
 
@@ -2962,7 +2974,7 @@ Rails.logger.info "PHONE: #{phone_number.inspect}"
     # original_message = "Your voucher code is: #{voucher_code}. This code is valid until #{voucher_expiration}.
 
 
-    data = build_voucher_sms_data(voucher, phone_number, shared_users, company_name)
+    data = build_voucher_sms_data(hotspot_voucher, phone_number, shared_users, company_name)
 original_message = render_hotspot_sms('single', data)
 
   uri = URI("https://sms.textsms.co.ke/api/services/sendsms")
@@ -3020,6 +3032,9 @@ end
                           shared_users, company_name, current_user)
 
                           formatted_phone_number = "254#{phone_number.gsub(/\A0/, '')}"
+  # Same fix as send_voucher_text_sms above: the param was named `voucher`
+  # while the body referenced the undefined `voucher_code` — renamed the
+  # param so the existing lookup below actually resolves.
   HotspotVoucher.find_by(voucher: voucher_code)&.update(sms_sent: true)
 
   sms_setting = SmsSetting.find_by(sms_provider: 'Talk Sasa')
@@ -3227,11 +3242,3 @@ end
 
 
 end
-
-
-
-
-
-
-
-
