@@ -173,7 +173,7 @@ resources :promotional_plans, only: [:index, :show, :create, :update, :destroy]
 resources :tv_plans, only: [:index, :create, :update, :destroy]
 resources :client_support_tickets, only: [:index, :create, :show]
 resource :tuma_settings, only: [:show, :update]
-
+resources :hotspot_sms_templates, only: [:index, :update]
 
 end
 
@@ -210,7 +210,7 @@ resource :tuma_settings, only: [:show, :update]
 
 
 
-
+resources :hotspot_sms_templates, only: [:index, :update]
 
 get   'network_map', to: 'network_map#index'
 post  'network_map/sync', to: 'network_map#sync'
