@@ -551,6 +551,7 @@ DEPENDENCIES
   rest-client
   rotp
   rqrcode
+  rubyzip
   sanitize
   securerandom
   selenium-webdriver

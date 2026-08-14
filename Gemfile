@@ -105,7 +105,7 @@ gem 'rack-cors'
 gem "aws-sdk-s3", require: false
 gem "net-ssh", "~> 7.2"
 
-
+gem 'rubyzip', require: 'zip'
 
 
 

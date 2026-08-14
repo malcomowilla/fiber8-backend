@@ -1,45 +1,13 @@
+# frozen_string_literal: true
+
 class PopsController < ApplicationController
+  include NetworkMapTenantScoped
 
-
-set_current_tenant_through_filter
-
-before_action :set_tenant
-
-
-
-
-
-  def set_tenant
-    host = request.headers['X-Subdomain']
-    @account = Account.find_by(subdomain: host)
-    ActsAsTenant.current_tenant = @account
-    EmailConfiguration.configure(@account, ENV['SYSTEM_ADMIN_EMAIL'])
-    # EmailSystemAdmin.configure(@current_account, current_system_admin)
-  Rails.logger.info "Setting tenant for app#{ActsAsTenant.current_tenant}"
-  
-    # set_current_tenant(@account)
-  rescue ActiveRecord::RecordNotFound
-    render json: { error: 'Invalid tenant' }, status: :not_found
-  
-    
-  end
-
-
-
-
-
-
-
-  def index
-    render json: Pop.all.map(&:as_map_json)
-  end
-
-  def show
-    render json: @pop.as_map_json
-  end
+  before_action :set_pop, only: %i[update destroy]
 
   def create
-    pop = Pop.new(pop_params)
+    authorize! :create, Pop
+    pop = Pop.new(pop_params.merge(account: @account))
     if pop.save
       render json: pop.as_map_json, status: :created
     else
@@ -48,6 +16,7 @@ before_action :set_tenant
   end
 
   def update
+    authorize! :update, @pop
     if @pop.update(pop_params)
       render json: @pop.as_map_json
     else
@@ -56,6 +25,7 @@ before_action :set_tenant
   end
 
   def destroy
+    authorize! :destroy, @pop
     @pop.destroy
     head :no_content
   end
@@ -67,9 +37,15 @@ before_action :set_tenant
   end
 
   def pop_params
-    source = params[:pop].present? ? params.require(:pop) : params
-    source.permit(:name, :lat, :lng, :address, :status, :description, :routerId).tap do |p|
-      p[:router_id] = p.delete(:routerId) if p[:routerId].present?
-    end
+    raw = params.permit(:name, :lat, :lng, :address, :routerId, :status, :description).to_h
+    {
+      name: raw['name'],
+      lat: raw['lat'],
+      lng: raw['lng'],
+      address: raw['address'],
+      router_id: raw['routerId'].presence,
+      status: raw['status'],
+      description: raw['description'],
+    }.compact
   end
 end

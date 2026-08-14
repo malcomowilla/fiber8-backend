@@ -131,6 +131,14 @@ resources :company_ids
   resources :general_settings
 
 
+
+
+resources :pops, only: %i[create update destroy]
+resources :network_devices, only: %i[create update destroy]
+resources :network_connections, only: %i[create update destroy]
+
+
+
   resources :ip_pools
   resources :user_groups
   resources :ip_networks
@@ -196,6 +204,35 @@ resources :client_support_tickets, only: [:index, :create, :show]
 
 
 resource :tuma_settings, only: [:show, :update]
+
+
+
+
+
+
+
+
+get   'network_map', to: 'network_map#index'
+post  'network_map/sync', to: 'network_map#sync'
+post  'network_map/kml_import', to: 'kml_imports#create'
+
+
+
+
+
+get   '/api/network_map', to: 'network_map#index'
+post  '/api/network_map/sync', to: 'network_map#sync'
+post  '/api/network_map/kml_import', to: 'kml_imports#create'
+
+
+resources :pops, only: %i[create update destroy]
+resources :network_devices, only: %i[create update destroy]
+resources :network_connections, only: %i[create update destroy]
+
+
+
+
+
 
 
 get    '/api/payment_gateway_pin',        to: 'payment_gateway_pin#show'

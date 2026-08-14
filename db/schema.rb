@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_08_12_112428) do
+ActiveRecord::Schema[7.2].define(version: 2026_08_14_000318) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -838,6 +838,32 @@ ActiveRecord::Schema[7.2].define(version: 2026_08_12_112428) do
     t.integer "account_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "source_type"
+    t.string "target_type"
+    t.index ["account_id"], name: "index_network_connections_on_account_id"
+    t.index ["source_type", "source_id"], name: "index_network_connections_on_source"
+    t.index ["target_type", "target_id"], name: "index_network_connections_on_target"
+  end
+
+  create_table "network_devices", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "account_id"
+    t.bigint "pop_id"
+    t.string "device_type"
+    t.string "name"
+    t.string "identifier"
+    t.float "lat"
+    t.float "lng"
+    t.string "address"
+    t.bigint "router_id"
+    t.string "status", default: "unknown"
+    t.text "description"
+    t.string "source", default: "manual"
+    t.jsonb "metadata", default: {}
+    t.index ["account_id"], name: "index_network_devices_on_account_id"
+    t.index ["pop_id"], name: "index_network_devices_on_pop_id"
+    t.index ["router_id"], name: "index_network_devices_on_router_id"
   end
 
   create_table "nodes", force: :cascade do |t|
@@ -1032,6 +1058,9 @@ ActiveRecord::Schema[7.2].define(version: 2026_08_12_112428) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.string "router"
+    t.bigint "router_id"
+    t.index ["account_id"], name: "index_pops_on_account_id"
+    t.index ["router_id"], name: "index_pops_on_router_id"
   end
 
   create_table "pp_poe_mpesa_revenues", force: :cascade do |t|
@@ -1657,6 +1686,8 @@ ActiveRecord::Schema[7.2].define(version: 2026_08_12_112428) do
   add_foreign_key "invoice_payments", "invoices"
   add_foreign_key "ip_bindings", "tv_plans"
   add_foreign_key "maintenance_settings", "accounts"
+  add_foreign_key "network_devices", "accounts"
+  add_foreign_key "network_devices", "pops"
   add_foreign_key "payment_gateway_otps", "accounts"
   add_foreign_key "payment_gateway_otps", "users"
   add_foreign_key "payment_gateway_pin_settings", "accounts"
