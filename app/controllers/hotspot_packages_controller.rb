@@ -740,12 +740,15 @@ def validity_in_seconds(pkg)
   when 'week', 'weeks'
     value * 604800
   when 'month', 'months'
-    value * 2_592_000 # 30 days
+    value * 2_592_000 
   else
     Rails.logger.warn "Unknown validity_period_units '#{pkg.validity_period_units}' for package #{pkg.id}, defaulting to days"
     value * 86400
   end
 end
+
+
+
 
 
     # Use callbacks to share common setup or constraints between actions.
