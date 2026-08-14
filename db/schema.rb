@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_08_14_000318) do
+ActiveRecord::Schema[7.2].define(version: 2026_08_14_003413) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -820,7 +820,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_08_14_000318) do
     t.datetime "updated_at", null: false
     t.integer "account_id"
     t.integer "unreachable_duration_minutes"
-    t.boolean "use_radius"
+    t.boolean "use_radius", default: false, null: false
   end
 
   create_table "network_connections", force: :cascade do |t|
