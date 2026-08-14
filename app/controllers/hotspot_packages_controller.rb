@@ -724,6 +724,30 @@ end
 
 
 
+
+
+def validity_in_seconds(pkg)
+  value = pkg.validity.to_i
+  return 0 if value <= 0
+
+  case pkg.validity_period_units.to_s.downcase
+  when 'minute', 'minutes'
+    value * 60
+  when 'hour', 'hours'
+    value * 3600
+  when 'day', 'days'
+    value * 86400
+  when 'week', 'weeks'
+    value * 604800
+  when 'month', 'months'
+    value * 2_592_000 # 30 days
+  else
+    Rails.logger.warn "Unknown validity_period_units '#{pkg.validity_period_units}' for package #{pkg.id}, defaulting to days"
+    value * 86400
+  end
+end
+
+
     # Use callbacks to share common setup or constraints between actions.
     def set_hotspot_package
       @hotspot_package = HotspotPackage.find_by(id: params[:id])
