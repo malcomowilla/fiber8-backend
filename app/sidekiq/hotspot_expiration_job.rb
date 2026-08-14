@@ -190,7 +190,7 @@ end
   def send_expiration_sms(voucher, tenant)
     provider = tenant&.sms_provider_setting.present? && tenant.sms_provider_setting&.sms_provider
     phone_number = voucher.phone
-    voucher_code = voucher.voucher
+    voucher_code = voucher
 
     case provider
     when 'TextSms'
@@ -224,8 +224,7 @@ end
   sender_id = sms_setting&.sender_id
 
 
-  original_message = "Hello, your voucher #{voucher_code} is expired renew now to stay conected."
-    
+original_message = render_expiration_message(tenant, voucher)    
 
   uri = URI.parse("https://bulksms.talksasa.com/api/v3/sms/send")
 
@@ -298,10 +297,7 @@ api_secret_api_key = tenant&.sms_setting
 end 
 
 
-    sms_template = ActsAsTenant.current_tenant.sms_template
-    send_voucher_template = sms_template&.send_voucher_template
-    original_message = sms_template ? MessageTemplate.interpolate(send_voucher_template, { voucher_code: voucher_code }) : "Hello, your voucher #{voucher_code} is expired renew now to stay conected."
-
+    original_message = render_expiration_message(tenant, voucher)
     sender_id = "SMS_TEST"
     uri = URI("https://api.smsleopard.com/v1/sms/send")
     params = {
@@ -340,11 +336,7 @@ partner_id_api_key = tenant&.sms_setting
 end 
 
     # partnerID = tenant&.sms_setting.present? && tenant.sms_setting.find_by(sms_provider: 'TextSms')&.partnerID
-    sms_template = ActsAsTenant.current_tenant.sms_template
-    send_voucher_template = sms_template&.send_voucher_template
-    original_message = sms_template ? MessageTemplate.interpolate(send_voucher_template,
-     { voucher_code: voucher_code }) : "Hello, your voucher #{voucher_code} is expired renew now to stay conected."
-
+    original_message = render_expiration_message(tenant, voucher)
     uri = URI("https://sms.textsms.co.ke/api/services/sendsms")
     params = {
       apikey: api_key,
@@ -439,7 +431,16 @@ def handle_textsms_response(response, message, phone_number, tenant)
 
 
 
-
+def render_expiration_message(tenant, voucher)
+  template = HotspotSmsTemplate.find_by(account_id: tenant.id, category: 'expiration', active: true)
+  data = {
+    customer_phone: voucher.phone,
+    voucher_code: voucher.voucher,
+    plan_name: voucher.package,
+    company_name: tenant.company_setting&.company_name
+  }
+  template ? template.render(data) : "Hello, your voucher #{voucher.voucher} is expired renew now to stay conected."
+end
   
 end
 

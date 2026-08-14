@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_08_14_093523) do
+ActiveRecord::Schema[7.2].define(version: 2026_08_14_160736) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -594,6 +594,17 @@ ActiveRecord::Schema[7.2].define(version: 2026_08_14_093523) do
     t.datetime "page_design_published_at"
     t.index ["account_id"], name: "index_hotspot_settings_on_account_id"
     t.index ["page_design"], name: "index_hotspot_settings_on_page_design", using: :gin
+  end
+
+  create_table "hotspot_sms_templates", force: :cascade do |t|
+    t.string "category", null: false
+    t.string "title", null: false
+    t.text "message", default: "", null: false
+    t.boolean "active", default: false, null: false
+    t.bigint "account_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id", "category"], name: "index_hotspot_sms_templates_on_account_and_category", unique: true
   end
 
   create_table "hotspot_subscriptions", force: :cascade do |t|

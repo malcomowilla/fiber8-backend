@@ -2887,77 +2887,39 @@ end
 
 
 
-      def send_voucher(phone_number, voucher_code,
-        shared_users, company_name, current_user
-        )
-      # api_key = ActsAsTenant.current_tenant.sms_setting.api_key
-      # api_secret = ActsAsTenant.current_tenant.sms_setting.api_secret
-    HotspotVoucher.find_by(voucher: voucher_code).update(sms_sent: true)
-      api_key = SmsSetting.find_by(sms_provider: 'SMS leopard')&.api_key
-    api_secret = SmsSetting.find_by(sms_provider: 'SMS leopard')&.api_secret
-    
-              api_key = api_key
-              api_secret = api_secret
-             
-      sms_template =  ActsAsTenant.current_tenant.sms_template
-      send_voucher_template = sms_template&.send_voucher_template
-    #   original_message = sms_template ?  MessageTemplate.interpolate(send_voucher_template,{
-        
-    #   voucher_code: voucher_code,
-    #   voucher_expiration: voucher_expiration
+    def send_voucher(phone_number, voucher_code, shared_users, company_name, current_user)
+  voucher = HotspotVoucher.find_by(voucher: voucher_code)
+  voucher.update(sms_sent: true)
 
-    #   })  :   "Your voucher code: #{voucher_code} for #{shared_users} devices. This code is valid until #{voucher_expiration}.
-    #  Enjoy your browsing"
-    #  
-    #original_message = "Your voucher code is: #{voucher_code}. This code is valid until #{voucher_expiration}.
+  data = build_voucher_sms_data(voucher, phone_number, shared_users, company_name)
+  original_message = render_hotspot_sms('single', data)   # ← was the hardcoded string
 
-               original_message = "Your voucher code is: #{voucher_code}.
-  #    Enjoy your browsing (FROM:  #{company_name})"
-      
-      
-              sender_id = "SMS_TEST" # Ensure this is a valid sender ID
-          
-              uri = URI("https://api.smsleopard.com/v1/sms/send")
-              params = {
-                username: api_key,
-                password: api_secret,
-                message: original_message,
-                destination: phone_number,
-                source: sender_id
-              }
-              uri.query = URI.encode_www_form(params)
-          
-              response = Net::HTTP.get_response(uri)
-              if response.is_a?(Net::HTTPSuccess)
-                sms_data = JSON.parse(response.body)
-            
-                  sms_recipient = sms_data['recipients'][0]['number']
-                  sms_status = sms_data['recipients'][0]['status']
-                  
-                  Rails.logger.info "Recipient: #{sms_recipient}, Status: #{sms_status}"
-            
-                  # Save the original message and response details in your database
-                  SystemAdminSm.create!(
-                    user: sms_recipient,
-                    message: original_message,
-                    status: sms_status,
-                    date: Time.now.strftime("%B %d, %Y at %I:%M %p"),
-                    system_user: current_user.username,
-                    sms_provider: 'SMS leopard'
-                  )
-                  
-                  # Return a JSON response or whatever is appropriate for your application
-                  # render json: { success: true, message: "Message sent successfully", recipient: sms_recipient, status: sms_status }
-                  
-                  # render json: { error: "Failed to send message: #{sms_data['message']}" }
-                  Rails.logger.info "Sent message: #{sms_data['message']}"
-                
-              else
-                Rails.logger.info "Failed to send message: #{response.body}"
-                # render json: { error: "Failed to send message: #{response.body}" }
-              end
-            end
+  api_key = SmsSetting.find_by(sms_provider: 'SMS leopard')&.api_key
+  api_secret = SmsSetting.find_by(sms_provider: 'SMS leopard')&.api_secret
+  sender_id = "SMS_TEST"
 
+  uri = URI("https://api.smsleopard.com/v1/sms/send")
+  params = {
+    username: api_key, password: api_secret,
+    message: original_message, destination: phone_number, source: sender_id
+  }
+  uri.query = URI.encode_www_form(params)
+  response = Net::HTTP.get_response(uri)
+
+  if response.is_a?(Net::HTTPSuccess)
+    sms_data = JSON.parse(response.body)
+    sms_recipient = sms_data['recipients'][0]['number']
+    sms_status = sms_data['recipients'][0]['status']
+
+    SystemAdminSm.create!(
+      user: sms_recipient, message: original_message, status: sms_status,
+      date: Time.now.strftime("%B %d, %Y at %I:%M %p"),
+      system_user: current_user.username, sms_provider: 'SMS leopard'
+    )
+  else
+    Rails.logger.info "Failed to send message: #{response.body}"
+  end
+end
 
              
 
@@ -3000,9 +2962,9 @@ Rails.logger.info "PHONE: #{phone_number.inspect}"
     # original_message = "Your voucher code is: #{voucher_code}. This code is valid until #{voucher_expiration}.
 
 
-  original_message = "Your voucher code is: #{voucher_code}.
-  #    Enjoy your browsing (FROM:  #{company_name})"
-  #    
+    data = build_voucher_sms_data(voucher, phone_number, shared_users, company_name)
+original_message = render_hotspot_sms('single', data)
+
   uri = URI("https://sms.textsms.co.ke/api/services/sendsms")
   params = {
     apikey: api_key,
@@ -3148,26 +3110,7 @@ end
 
 
 
-def validity_in_seconds(pkg)
-  value = pkg.validity.to_i
-  return 0 if value <= 0
 
-  case pkg.validity_period_units.to_s.downcase
-  when 'minute', 'minutes'
-    value * 60
-  when 'hour', 'hours'
-    value * 3600
-  when 'day', 'days'
-    value * 86400
-  when 'week', 'weeks'
-    value * 604800
-  when 'month', 'months'
-    value * 2_592_000 # 30 days
-  else
-    Rails.logger.warn "Unknown validity_period_units '#{pkg.validity_period_units}' for package #{pkg.id}, defaulting to days"
-    value * 86400
-  end
-end
 
 
 
@@ -3232,6 +3175,55 @@ def get_active_sessions(voucher)
 
   all_matching_sessions
 end
+
+
+
+
+
+
+
+# private section, near the other sms senders
+
+def build_voucher_sms_data(voucher, phone_number, shared_users, company_name)
+  package = HotspotPackage.find_by(name: voucher.package, account_id: voucher.account_id)
+
+  {
+    customer_phone: phone_number,
+    plan_name: package&.name,
+    voucher_code: voucher.voucher,
+    username: voucher.voucher,
+    password: voucher.voucher,
+    validity: voucher.expiration&.strftime("%B %d, %Y at %I:%M %p"),
+    price: package&.price,
+    company_name: company_name,
+    voucher_count: shared_users,
+    voucher_list: HotspotSmsTemplate.format_voucher_list(
+      [{ code: voucher.voucher, username: voucher.voucher, password: voucher.voucher }]
+    )
+  }
+end
+
+# group is 'single' because these methods send exactly one voucher code
+# to one phone number. If you later build a bulk "send N vouchers to one
+# number" flow, call render_hotspot_sms('multi', data) from there instead.
+def render_hotspot_sms(group, data)
+  template = HotspotSmsTemplate.active_for(ActsAsTenant.current_tenant.id, group)
+  return default_hotspot_sms_message(group, data) unless template
+
+  template.render(data)
+end
+
+def default_hotspot_sms_message(group, data)
+  if group == 'multi'
+    "Your voucher codes:\n#{data[:voucher_list]}\nValid for: #{data[:validity]}. Enjoy your browsing (FROM: #{data[:company_name]})"
+  else
+    "Your voucher code is: #{data[:voucher_code]}. Enjoy your browsing (FROM: #{data[:company_name]})"
+  end
+end
+
+
+
+
 
 
 end
