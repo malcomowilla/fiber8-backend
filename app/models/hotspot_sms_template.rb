@@ -1,7 +1,7 @@
 # app/models/hotspot_sms_template.rb
 class HotspotSmsTemplate < ApplicationRecord
   acts_as_tenant(:account)
-  belongs_to :account
+  # belongs_to :account
 
   CATEGORIES = %w[
     single_compact

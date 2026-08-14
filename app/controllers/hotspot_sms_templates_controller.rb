@@ -72,10 +72,22 @@ class HotspotSmsTemplatesController < ApplicationController
     ActsAsTenant.current_tenant = @account
   end
 
+  # def set_template
+  #   @template = HotspotSmsTemplate.find_by(id: params[:id], account_id: @account.id)
+  #   render json: { error: 'Template not found' }, status: :not_found unless @template
+  # end
+
+
   def set_template
-    @template = HotspotSmsTemplate.find_by(id: params[:id], account_id: @account.id)
-    render json: { error: 'Template not found' }, status: :not_found unless @template
-  end
+  @template = HotspotSmsTemplate.find_by(
+    category: params[:id].tr('-', '_'),
+    # account_id: @account.id
+  )
+
+  render json: { error: 'Template not found' }, status: :not_found unless @template
+end
+
+
 
   def hotspot_sms_template_params
     params.require(:hotspot_sms_template).permit(:message, :active, :title)
