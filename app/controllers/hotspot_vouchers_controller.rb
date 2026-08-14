@@ -1959,16 +1959,17 @@ end
 
 def bulk_sync_to_mikrotik
   ids = params[:ids] || []
-  vouchers = HotspotVoucher.where(id: ids)
-  results = vouchers.map do |v|
-    sync_voucher_natively(v)
-    { id: v.id, sync_status: v.sync_status, sync_error: v.sync_error }
-  end
-  render json: results
+  return render json: { error: 'No vouchers selected' }, status: :unprocessable_entity if ids.empty?
+
+  HotspotVoucher.where(id: ids, account_id: ActsAsTenant.current_tenant.id)
+                .update_all(sync_status: 'syncing', sync_error: nil)
+
+  HotspotVoucherBulkSyncJob.perform_async(ActsAsTenant.current_tenant.id, ids)
+
+  render json: { message: "Sync dispatched", queued: ids.size }, status: :accepted
 rescue => e
   render json: { error: "Bulk sync failed: #{e.message}" }, status: :unprocessable_entity
 end
-
 
 # def login_with_hotspot_voucher
 
@@ -2634,79 +2635,80 @@ private
 
 
 
-
-
 def sync_voucher_natively(voucher)
- package = HotspotPackage.find_by(name: voucher.package, account_id: voucher.account_id)
-  unless package
-    voucher.update(sync_status: 'failed', sync_error: 'Package not found')
-    return
-  end
-
-
+  package = HotspotPackage.find_by(name: voucher.package, account_id: voucher.account_id)
+  return voucher.update(sync_status: 'failed', sync_error: 'Package not found') unless package
 
   nas = NasRouter.find_by(name: package.nas_router, account_id: voucher.account_id)
-  unless nas
-    voucher.update(sync_status: 'failed', sync_error: 'No router specified or router not found')
-    return
-  end
+  return voucher.update(sync_status: 'failed', sync_error: 'No router specified or router not found') unless nas
 
- 
-  begin
-    RestClient::Request.execute(
-      method: :put,
-      url: "http://#{nas.ip_address}/rest/ip/hotspot/user",
-      user: nas.username.to_s, password: nas.password.to_s,
-      payload: { name: voucher.voucher, password: voucher.voucher, profile: package.name }.to_json,
-      headers: { content_type: :json },
-      timeout: 10
-    )
-    voucher.update(sync_status: 'synced', synced_at: Time.current, sync_error: nil)
-  rescue => e
-    voucher.update(sync_status: 'failed', sync_error: e.message)
-  end
+  RestClient::Request.execute(
+    method: :put,
+    url: "http://#{nas.ip_address}/rest/ip/hotspot/user",
+    user: nas.username.to_s, password: nas.password.to_s,
+    payload: { name: voucher.voucher, password: voucher.voucher, profile: package.name }.to_json,
+    headers: { content_type: :json },
+    timeout: 10,
+    open_timeout: 5
+  )
+  voucher.update(sync_status: 'synced', synced_at: Time.current, sync_error: nil)
+
+rescue RestClient::ExceptionWithResponse => e
+  voucher.update(sync_status: 'failed', sync_error: mikrotik_error_message(e))
+rescue RestClient::Exceptions::Timeout, Errno::ETIMEDOUT
+  voucher.update(sync_status: 'failed', sync_error: "Router #{nas.ip_address} timed out")
+rescue Errno::ECONNREFUSED, Errno::EHOSTUNREACH, SocketError => e
+  voucher.update(sync_status: 'failed', sync_error: "Router unreachable: #{e.message}")
+rescue => e
+  voucher.update(sync_status: 'failed', sync_error: e.message)
 end
-
-
-
-
-
-
-
-
-
 
 def sync_voucher_natively_realtime_expiration(voucher)
- package = HotspotPackage.find_by(name: voucher.package, account_id: voucher.account_id)
-  unless package
-    voucher.update(sync_status: 'failed', sync_error: 'Package not found')
-    return
-  end
-
-
+  package = HotspotPackage.find_by(name: voucher.package, account_id: voucher.account_id)
+  return voucher.update(sync_status: 'failed', sync_error: 'Package not found') unless package
 
   nas = NasRouter.find_by(name: package.nas_router)
-  unless nas
-    voucher.update(sync_status: 'failed', sync_error: 'No router specified or router not found')
-    return
-  end
+  return voucher.update(sync_status: 'failed', sync_error: 'No router specified or router not found') unless nas
 
- 
-  begin
-    RestClient::Request.execute(
-      method: :put,
-      url: "http://#{nas.ip_address}/rest/ip/hotspot/user",
-      user: nas.username.to_s, password: nas.password.to_s,
-      payload: { name: voucher.voucher, password: voucher.voucher,
-       profile: package.name, "limit-uptime": validity_for_mikrotik(package) }.to_json,
-      headers: { content_type: :json },
-      timeout: 10
-    )
-    voucher.update(sync_status: 'synced', synced_at: Time.current, sync_error: nil)
-  rescue => e
-    voucher.update(sync_status: 'failed', sync_error: e.message)
-  end
+  RestClient::Request.execute(
+    method: :put,
+    url: "http://#{nas.ip_address}/rest/ip/hotspot/user",
+    user: nas.username.to_s, password: nas.password.to_s,
+    payload: { name: voucher.voucher, password: voucher.voucher,
+      profile: package.name, "limit-uptime": validity_for_mikrotik(package) }.to_json,
+    headers: { content_type: :json },
+    timeout: 10,
+    open_timeout: 5
+  )
+  voucher.update(sync_status: 'synced', synced_at: Time.current, sync_error: nil)
+
+rescue RestClient::ExceptionWithResponse => e
+  voucher.update(sync_status: 'failed', sync_error: mikrotik_error_message(e))
+rescue RestClient::Exceptions::Timeout, Errno::ETIMEDOUT
+  voucher.update(sync_status: 'failed', sync_error: "Router #{nas.ip_address} timed out")
+rescue Errno::ECONNREFUSED, Errno::EHOSTUNREACH, SocketError => e
+  voucher.update(sync_status: 'failed', sync_error: "Router unreachable: #{e.message}")
+rescue => e
+  voucher.update(sync_status: 'failed', sync_error: e.message)
 end
+
+def mikrotik_error_message(e)
+  return e.message unless e.response
+  body = e.response.body.to_s
+  parsed = JSON.parse(body) rescue nil
+  return body.presence || e.message unless parsed
+  parsed['detail'] || parsed['message'] || parsed['error'] || body
+end
+
+
+
+
+
+
+
+
+
+
 
 
 

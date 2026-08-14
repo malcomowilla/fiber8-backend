@@ -436,12 +436,14 @@ end
 
 def bulk_sync_to_mikrotik
   ids = params[:ids] || []
-  packages = HotspotPackage.where(id: ids)
-  results = packages.map do |pkg|
-    sync_package_natively(pkg)
-    { id: pkg.id, sync_status: pkg.sync_status, sync_error: pkg.sync_error }
-  end
-  render json: results
+  return render json: { error: 'No packages selected' }, status: :unprocessable_entity if ids.empty?
+
+  HotspotPackage.where(id: ids, account_id: ActsAsTenant.current_tenant.id)
+                .update_all(sync_status: 'syncing', sync_error: nil)
+
+  HotspotPackageBulkSyncJob.perform_async(ActsAsTenant.current_tenant.id, ids)
+
+  render json: { message: "Sync dispatched", queued: ids.size }, status: :accepted
 rescue => e
   Rails.logger.error "HotspotPackage bulk_sync_to_mikrotik failed: #{e.class} #{e.message}"
   render json: { error: "Bulk sync failed: #{e.message}" }, status: :unprocessable_entity
@@ -653,52 +655,48 @@ end
 
 
 
-
 def sync_package_natively(pkg)
-  # Prefer the router explicitly passed in (from the UI's selected router),
-  # fall back to whatever is saved on the package itself.
   router_name = pkg.nas_router
   nas = NasRouter.find_by(name: router_name)
   return pkg.update(sync_status: 'failed', sync_error: 'No router assigned') unless nas
 
-  begin
-    session_timeout = validity_in_seconds(pkg)
-    rate_limit = "#{pkg.upload_limit}M/#{pkg.download_limit}M"
+  session_timeout = validity_in_seconds(pkg)
+  rate_limit = "#{pkg.upload_limit}M/#{pkg.download_limit}M"
 
-    response = RestClient::Request.execute(
-      method: :put, # put = create-or-update by name in MikroTik REST
-      url: "http://#{nas.ip_address}/rest/ip/hotspot/user/profile",
-      user: nas.username, password: nas.password,
-      payload: {
-        name: pkg.name,
-        "rate-limit": rate_limit,
-        "session-timeout": session_timeout.to_s,
-        "shared-users": pkg.shared_users.to_s
-      }.to_json,
-      headers: { content_type: :json }
-    )
+  RestClient::Request.execute(
+    method: :put,
+    url: "http://#{nas.ip_address}/rest/ip/hotspot/user/profile",
+    user: nas.username, password: nas.password,
+    payload: {
+      name: pkg.name,
+      "rate-limit": rate_limit,
+      "session-timeout": session_timeout.to_s,
+      "shared-users": pkg.shared_users.to_s
+    }.to_json,
+    headers: { content_type: :json },
+    timeout: 10,
+    open_timeout: 5
+  )
 
-    pkg.update(sync_status: 'synced', synced_at: Time.current, sync_error: nil, nas_router: router_name)
-  rescue => e
-    pkg.update(sync_status: 'failed', sync_error: e.message)
-  end
+  pkg.update(sync_status: 'synced', synced_at: Time.current, sync_error: nil, nas_router: router_name)
+
+rescue RestClient::ExceptionWithResponse => e
+  pkg.update(sync_status: 'failed', sync_error: mikrotik_error_message(e))
+rescue RestClient::Exceptions::Timeout, Errno::ETIMEDOUT
+  pkg.update(sync_status: 'failed', sync_error: "Router #{nas.ip_address} timed out")
+rescue Errno::ECONNREFUSED, Errno::EHOSTUNREACH, SocketError => e
+  pkg.update(sync_status: 'failed', sync_error: "Router unreachable: #{e.message}")
+rescue => e
+  pkg.update(sync_status: 'failed', sync_error: e.message)
 end
 
-
-
-
-
-
-
-def validity_in_seconds(pkg)
-  case pkg.validity_period_units
-  when 'days' then pkg.validity.to_i.days.to_i
-  when 'hours' then pkg.validity.to_i.hours.to_i
-  when 'minutes' then pkg.validity.to_i.minutes.to_i
-  else 0
-  end
+def mikrotik_error_message(e)
+  return e.message unless e.response
+  body = e.response.body.to_s
+  parsed = JSON.parse(body) rescue nil
+  return body.presence || e.message unless parsed
+  parsed['detail'] || parsed['message'] || parsed['error'] || body
 end
-
 
 
 
