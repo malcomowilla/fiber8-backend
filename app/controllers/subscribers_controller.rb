@@ -154,7 +154,6 @@ def import
     date:        Time.current
   )
 
-  # ── enqueue — all the CSV logic moves into the job ───────────────────────
   ImportSubscribersJob.perform_later(
     tmp_path,
     file.original_filename,
