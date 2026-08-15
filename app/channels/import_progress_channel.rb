@@ -22,7 +22,7 @@ class ImportProgressChannel < ApplicationCable::Channel
     stream_from "import_progress:#{account.id}:#{job_id}"
     Rails.logger.info "[ImportProgressChannel] subscribed OK — streaming import_progress:#{account.id}:#{job_id}"
   end
-a
+
   def unsubscribed
     stop_all_streams
   end
