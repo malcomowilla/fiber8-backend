@@ -1,6 +1,6 @@
 class ImportSubscribersJob < ApplicationJob
-  queue_as :default
-
+  # queue_as :default
+queue_as :priority
   def perform(file_path, filename, account_id, job_id)
     account = Account.find(account_id)
     channel = "import_progress:#{account_id}:#{job_id}"
