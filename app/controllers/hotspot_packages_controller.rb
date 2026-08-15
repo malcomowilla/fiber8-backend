@@ -435,7 +435,7 @@ end
 
 
 def bulk_sync_to_mikrotik
-  ids = params[:ids] || []
+  ids = params[:ids] || params.dig(:hotspot_package, :ids) || []
   return render json: { error: 'No packages selected' }, status: :unprocessable_entity if ids.empty?
 
   HotspotPackage.where(id: ids, account_id: ActsAsTenant.current_tenant.id)

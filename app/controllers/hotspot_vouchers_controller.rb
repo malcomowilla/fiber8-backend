@@ -1958,7 +1958,7 @@ end
 
 
 def bulk_sync_to_mikrotik
-  ids = params[:ids] || []
+  ids = params[:ids] || params.dig(:hotspot_voucher, :ids) || []
   return render json: { error: 'No vouchers selected' }, status: :unprocessable_entity if ids.empty?
 
   HotspotVoucher.where(id: ids, account_id: ActsAsTenant.current_tenant.id)
