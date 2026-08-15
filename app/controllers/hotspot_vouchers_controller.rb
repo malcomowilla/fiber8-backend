@@ -1964,7 +1964,7 @@ def bulk_sync_to_mikrotik
   HotspotVoucher.where(id: ids, account_id: ActsAsTenant.current_tenant.id)
                 .update_all(sync_status: 'syncing', sync_error: nil)
 
-  HotspotVoucherBulkSyncJob.perform_async(ActsAsTenant.current_tenant.id, ids)
+  HotspotVoucherBulkSyncJob.perform_later(ActsAsTenant.current_tenant.id, ids)
 
   render json: { message: "Sync dispatched", queued: ids.size }, status: :accepted
 rescue => e
