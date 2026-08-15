@@ -64,9 +64,9 @@ development:
       # every: ["20s"]
       # queue: radacct
 
-    generate_clients_conf_job:
-      class: GenerateClientsConfJob
-      cron: "*/5 * * * *"
+    # generate_clients_conf_job:
+    #   class: GenerateClientsConfJob
+    #   cron: "*/5 * * * *"
 
     access_point_ping_job:
       class: AccessPointPingJob
