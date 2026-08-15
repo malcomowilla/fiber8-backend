@@ -1,301 +1,211 @@
-
 class HotspotExpirationJob
   include Sidekiq::Job
   queue_as :default
-    #  sidekiq_options lock: :until_executed, lock_timeout: 0
-
+  # sidekiq_options lock: :until_executed, lock_timeout: 0
 
   def perform
     Account.find_each do |tenant|
       ActsAsTenant.with_tenant(tenant) do
-
-
-        # expired_vouchers = HotspotVoucher.where("expiration <= ? AND status != ?", Time.current, 'expired')
-        # expired_vouchers = HotspotVoucher.where('expiration <= ?', Time.current)
-# expired_vouchers = tenant&.hotspot_vouchers&.present? && tenant&.hotspot_vouchers&.where('expiration < ?', Time.current)
-
-
-
-
-
-expired_vouchers = HotspotVoucher.where('expiration < ?', Time.current).where(account_id: tenant.id).where(sms_sent_at: nil)
-# return unless expired_vouchers.present?
-       
-     
-        expired_vouchers.find_each do |voucher|
-
-          voucher.update_column(:status, 'expired') 
-         
-          # Only send SMS if it hasn't been sent before
-          if voucher.used_voucher && voucher.sms_sent_at.nil?   
-             send_expiration_sms(voucher, tenant) # Unified function to send SMS based on provider
-             voucher.update!(sms_sent_at: Time.current) # Track when the SMS was sent
-          end
-
-               logout_hotspot_user(voucher, tenant)
-
-        end
-
-
-
- 
-
-
-
- hotspot_subscriptions = HotspotVoucher.where(account_id: tenant.id)
-
-hotspot_subscriptions.find_each do |subscription|
-  next unless subscription.voucher.present?
-
-  # Fetch the PPPoE plan linked to this subscription/account
-  plan = tenant&.hotspot_and_dial_plan
-
-  expired_hotspot = plan&.expiry.present? && plan.expiry <= Time.current
-  # empty_expiry = subscription.expiration.nil?
-
-# expiry_voucher = HotspotSetting.find_by(account_id: tenant.id).voucher_expiration
-
-  # if empty_expiry
-  #   calculate_expiration_voucher(subscription.package, subscription, subscription.account_id)
-    
-  # end
-
-  if expired_hotspot
-    # Deny login by adding reject if not already there
-    RadCheck.find_or_create_by!(
-      username: subscription.voucher,
-      radiusattribute: 'Auth-Type',
-      account_id: subscription.account_id,
-      op: ':=',
-      value: 'Reject'
-
-      
-    )
-
-
-  else
-    # Allow login by removing the reject entry if it exists
-    RadCheck.where(
-      username: subscription.voucher,
-      account_id: subscription.account_id,
-      radiusattribute: 'Auth-Type',
-      value: 'Reject'
-    ).destroy_all
-  end
-end
- 
-
-
-
-
-
-
-
+        process_expired_vouchers(tenant)
+        process_hotspot_plan_expiry(tenant)
       end
     end
   end
 
   private
 
+  def process_expired_vouchers(tenant)
+    expired_vouchers = HotspotVoucher
+      .where('expiration < ?', Time.current)
+      .where(account_id: tenant.id)
+      .where(sms_sent_at: nil)
 
-def calculate_expiration_voucher(package, voucher_created, account_id)
-   hotspot_package = HotspotPackage.find_by(name: package, 
-  account_id: account_id)
+    expired_vouchers.find_each do |voucher|
+      # Isolated per-voucher so one bad record (SSH failure, SMS API error,
+      # nil template, etc.) can't abort find_each and silently skip every
+      # tenant/voucher that would have been processed after it.
+      begin
+        voucher.update_column(:status, 'expired')
 
-return unless hotspot_package  
-  # Calculate expiration
-  expiration_time = if hotspot_package.validity.present? && hotspot_package.validity_period_units.present?
-    case hotspot_package.validity_period_units.downcase
-    when 'days'
-      Time.current + hotspot_package.validity.days
-    when 'hours'
-      Time.current + hotspot_package.validity.hours
-    when 'minutes'
-      Time.current + hotspot_package.validity.minutes
-    else
-      nil
+        if voucher.used_voucher && voucher.sms_sent_at.nil?
+          send_expiration_sms(voucher, tenant)
+          voucher.update!(sms_sent_at: Time.current)
+        end
+
+        logout_hotspot_user(voucher, tenant)
+      rescue StandardError => e
+        Rails.logger.error(
+          "HotspotExpirationJob: failed processing voucher ##{voucher.id} " \
+          "(account ##{tenant.id}): #{e.class} - #{e.message}"
+        )
+      end
+    end
+  end
+
+  def process_hotspot_plan_expiry(tenant)
+    hotspot_subscriptions = HotspotVoucher.where(account_id: tenant.id)
+
+    hotspot_subscriptions.find_each do |subscription|
+      next unless subscription.voucher.present?
+
+      begin
+        plan = tenant&.hotspot_and_dial_plan
+        expired_hotspot = plan&.expiry.present? && plan.expiry <= Time.current
+
+        if expired_hotspot
+          RadCheck.find_or_create_by!(
+            username: subscription.voucher,
+            radiusattribute: 'Auth-Type',
+            account_id: subscription.account_id,
+            op: ':=',
+            value: 'Reject'
+          )
+        else
+          RadCheck.where(
+            username: subscription.voucher,
+            account_id: subscription.account_id,
+            radiusattribute: 'Auth-Type',
+            value: 'Reject'
+          ).destroy_all
+        end
+      rescue StandardError => e
+        Rails.logger.error(
+          "HotspotExpirationJob: RADIUS update failed for voucher " \
+          "##{subscription.id} (account ##{tenant.id}): #{e.class} - #{e.message}"
+        )
+      end
+    end
+  end
+
+  def calculate_expiration_voucher(package, voucher_created, account_id)
+    hotspot_package = HotspotPackage.find_by(name: package, account_id: account_id)
+    return unless hotspot_package
+
+    expiration_time = if hotspot_package.validity.present? && hotspot_package.validity_period_units.present?
+      case hotspot_package.validity_period_units.downcase
+      when 'days'    then Time.current + hotspot_package.validity.days
+      when 'hours'   then Time.current + hotspot_package.validity.hours
+      when 'minutes' then Time.current + hotspot_package.validity.minutes
+      else nil
+      end
     end
 
+    if expiration_time.present?
+      voucher_created.update(expiration: expiration_time)
+    end
 
-    
-
-  # elsif hotspot_package.valid_until.present? && hotspot_package.valid_from.present?
-  #   hotspot_package.valid_until
-  else
-    nil
+    { expiration: expiration_time }
   end
-
-  # Update status only if expiration is present
-  if expiration_time.present?
-    voucher_created.update(expiration: expiration_time&.strftime("%B %d, %Y at %I:%M %p"),)
-  end
-
-  # Return both expiration and status
-  {
-    expiration: expiration_time&.strftime("%B %d, %Y at %I:%M %p"),
-  }
-end
-
-
-
 
   def logout_hotspot_user(voucher, tenant)
-  hotspot_package = HotspotPackage.find_by(
-    name: voucher.package,
-    account_id: tenant.id
-  )
+    hotspot_package = HotspotPackage.find_by(name: voucher.package, account_id: tenant.id)
+    return unless hotspot_package
 
-  return unless hotspot_package
+    router = NasRouter.find_by(name: hotspot_package.nas_router, account_id: tenant.id)
+    return unless router
 
-  router = NasRouter.find_by(
-    name: hotspot_package.nas_router,
-    account_id: tenant.id
-  )
+    router_ip = router.ip_address
+    router_username = router.username
+    router_password = router.password
 
-  return unless router
+    remove_command = "/ip hotspot active remove [find user=#{voucher.voucher}]"
 
-  router_ip = router.ip_address
-  router_username = router.username
-  router_password = router.password
-
-  remove_command = "/ip hotspot active remove [find user=#{voucher.voucher}]"
-
-  begin
-    Net::SSH.start(
-      router_ip,
-      router_username,
-      password: router_password,
-      verify_host_key: :never,
-      non_interactive: true
-    ) do |ssh|
-      output = ssh.exec!(remove_command)
+    begin
+      Net::SSH.start(
+        router_ip,
+        router_username,
+        password: router_password,
+        verify_host_key: :never,
+        non_interactive: true
+      ) do |ssh|
+        output = ssh.exec!(remove_command)
+        Rails.logger.info(
+          "Successfully removed user #{voucher.voucher} from router #{router.name || router_ip}: #{output}"
+        )
+      end
+    rescue Net::SSH::AuthenticationFailed
+      Rails.logger.info("SSH authentication failed for MikroTik router #{router.name || router_ip}")
+    rescue StandardError => e
       Rails.logger.info(
-        "Successfully removed user #{voucher.voucher} from router #{router.name || router_ip}: #{output}"
+        "Failed to logout user #{voucher.voucher} from router #{router.name || router_ip}: #{e.message}"
       )
     end
-  rescue Net::SSH::AuthenticationFailed
-    Rails.logger.info(
-      "SSH authentication failed for MikroTik router #{router.name || router_ip}"
-    )
-  rescue StandardError => e
-    Rails.logger.info(
-      "Failed to logout user #{voucher.voucher} from router #{router.name || router_ip}: #{e.message}"
-    )
   end
-end
-
-
-
 
   def send_expiration_sms(voucher, tenant)
     provider = tenant&.sms_provider_setting.present? && tenant.sms_provider_setting&.sms_provider
-    phone_number = voucher.phone
-    voucher_code = voucher
 
     case provider
     when 'TextSms'
-      send_expiration_text_sms(phone_number, voucher_code, tenant)
+      send_expiration_text_sms(voucher.phone, voucher, tenant)
     when 'SMS leopard'
-      send_expiration(phone_number, voucher_code, tenant)
+      send_expiration(voucher.phone, voucher, tenant)
     when 'Talk Sasa'
-      send_expiration_talksasa(phone_number, voucher_code, tenant)
+      send_expiration_talksasa(voucher.phone, voucher, tenant)
     else
-      Rails.logger.info "No valid SMS provider configured"
+      Rails.logger.info "No valid SMS provider configured for account #{tenant.id}"
     end
   end
 
-  
-
-
-
-
-
-
-  
-
-
   def send_expiration_talksasa(phone_number, voucher, tenant)
+    formatted_phone_number = "254#{phone_number.gsub(/\A0/, '')}"
 
-                          formatted_phone_number = "254#{phone_number.gsub(/\A0/, '')}"
+    sms_setting = tenant&.sms_setting
+    api_key = sms_setting&.api_key
+    sender_id = sms_setting&.sender_id
 
-  sms_setting = SmsSetting.find_by(sms_provider: 'Talk Sasa')
+    original_message = render_expiration_message(tenant, voucher)
 
-  api_key  = sms_setting&.api_key
-  sender_id = sms_setting&.sender_id
+    uri = URI.parse("https://bulksms.talksasa.com/api/v3/sms/send")
+    http = Net::HTTP.new(uri.host, uri.port)
+    http.use_ssl = true
 
+    request = Net::HTTP::Post.new(uri.request_uri)
+    request["Authorization"] = "Bearer #{api_key}"
+    request["Content-Type"] = "application/json"
+    request["Accept"] = "application/json"
+    request.body = {
+      recipient: formatted_phone_number,
+      sender_id: sender_id,
+      type: "plain",
+      message: original_message
+    }.to_json
 
-original_message = render_expiration_message(tenant, voucher)    
+    begin
+      response = http.request(request)
+      Rails.logger.info "TalkSasa Response: #{response.body}"
 
-  uri = URI.parse("https://bulksms.talksasa.com/api/v3/sms/send")
+      if response.is_a?(Net::HTTPSuccess)
+        sms_data = JSON.parse(response.body)
+        sms_status = sms_data['status']
 
-  http = Net::HTTP.new(uri.host, uri.port)
-  http.use_ssl = true
-
-  request = Net::HTTP::Post.new(uri.request_uri)
-
-  request["Authorization"] = "Bearer #{api_key}"
-  request["Content-Type"] = "application/json"
-  request["Accept"] = "application/json"
-
-  request.body = {
-    recipient: formatted_phone_number,
-    sender_id: sender_id,
-    type: "plain",
-    message: original_message
-  }.to_json
-
-  response = http.request(request)
-
-  Rails.logger.info "TalkSasa Response: #{response.body}"
-
-  if response.is_a?(Net::HTTPSuccess)
-    sms_data = JSON.parse(response.body)
-
-
-   sms_status  = sms_data['status']
-
-
-    SystemAdminSm.create!(
-      user: phone_number,
-      message: original_message,
-      status: sms_status,
-      date: Time.now.strftime("%B %d, %Y at %I:%M %p"),
-      system_user: 'system',
-        account_id: tenant.id,
+        SystemAdminSm.create!(
+          user: phone_number,
+          message: original_message,
+          status: sms_status,
+          date: Time.current,
+          system_user: 'system',
+          account_id: tenant.id,
           sms_provider: 'Talk Sasa'
-    )
-
-    Rails.logger.info "Sent message successfully with talk sasa"
-  else
-    Rails.logger.info "Failed to send SMS with talk sasa : #{response.code} - #{response.body}"
+        )
+        Rails.logger.info "Sent message successfully with talk sasa"
+      else
+        Rails.logger.info "Failed to send SMS with talk sasa: #{response.code} - #{response.body}"
+      end
+    rescue StandardError => e
+      Rails.logger.error "TalkSasa SMS error for account #{tenant.id}: #{e.class} - #{e.message}"
+    end
   end
-end
-
-
-
-
-  
 
   def send_expiration(phone_number, voucher, tenant)
+    api_key = nil
+    api_secret = nil
+    sms_setting = tenant&.sms_setting
 
-   
-
- settings = tenant&.sms_setting.present?  
-
-
-
-if settings
-api_secret_api_key = tenant&.sms_setting
-  
-  if api_secret_api_key.sms_provider == 'SMS leopard'
-    
-  api_key = api_secret_api_key&.api_key
-  api_secret = api_secret_api_key&.api_secret
-  end
-  
-    
-end 
-
+    if sms_setting&.sms_provider == 'SMS leopard'
+      api_key = sms_setting.api_key
+      api_secret = sms_setting.api_secret
+    end
 
     original_message = render_expiration_message(tenant, voucher)
     sender_id = "SMS_TEST"
@@ -309,33 +219,26 @@ end
     }
     uri.query = URI.encode_www_form(params)
 
-    response = Net::HTTP.get_response(uri)
-    handle_sms_leopard_response(response, original_message, phone_number, tenant)
+    begin
+      response = Net::HTTP.get_response(uri)
+      handle_sms_leopard_response(response, original_message, phone_number, tenant)
+    rescue StandardError => e
+      Rails.logger.error "SMS Leopard error for account #{tenant.id}: #{e.class} - #{e.message}"
+    end
   end
-
-
-
 
   def send_expiration_text_sms(phone_number, voucher, tenant)
-    # api_key = SmsSetting.find_by(sms_provider: 'TextSms')&.api_key
-    # partnerID = SmsSetting.find_by(sms_provider: 'TextSms')&.partnerID
-# TextSms
-    settings = tenant&.sms_setting.present?  
- 
-if settings
-partner_id_api_key = tenant&.sms_setting
-  
-  if partner_id_api_key.sms_provider == 'TextSms'
-    
-  api_key = partner_id_api_key&.api_key
-  partnerID = partner_id_api_key&.partnerID
-    shortcode = partner_id_api_key&.sender_id
-  end
-  
-    
-end 
+    api_key = nil
+    partnerID = nil
+    shortcode = nil
+    sms_setting = tenant&.sms_setting
 
-    # partnerID = tenant&.sms_setting.present? && tenant.sms_setting.find_by(sms_provider: 'TextSms')&.partnerID
+    if sms_setting&.sms_provider == 'TextSms'
+      api_key = sms_setting.api_key
+      partnerID = sms_setting.partnerID
+      shortcode = sms_setting.sender_id
+    end
+
     original_message = render_expiration_message(tenant, voucher)
     uri = URI("https://sms.textsms.co.ke/api/services/sendsms")
     params = {
@@ -344,104 +247,85 @@ end
       mobile: phone_number,
       partnerID: partnerID,
       shortcode: shortcode
-
     }
     uri.query = URI.encode_www_form(params)
 
-    response = Net::HTTP.get_response(uri)
-   handle_textsms_response(response, original_message, phone_number, tenant)
-  end
-
-
-
-
-def handle_textsms_response(response, message, phone_number, tenant)
-    if response.is_a?(Net::HTTPSuccess)
-      sms_data = JSON.parse(response.body)
-        sms_recipient = sms_data['responses'][0]['mobile']
-        sms_status = sms_data['responses'][0]['response-description']
-        
-        Rails.logger.info "Recipient: #{sms_recipient}, Status: #{sms_status}"
-
-        SystemAdminSm.create!(
-          user: sms_recipient,
-          message: message,
-          status: sms_status,
-          date: Time.current,
-          system_user: 'system',
-          sms_provider: 'Text Sms',
-          account_id: tenant.id
-        )
-      
-    else
-
-      Rails.logger.error "Failed to send message: #{response.body}"
-        SystemAdminSm.create!(
-          user: sms_recipient,
-          message: message,
-          status: sms_status,
-          date: Time.current,
-          system_user: 'system',
-          sms_provider: 'Text Sms',
-          account_id: tenant.id
-        )
+    begin
+      response = Net::HTTP.get_response(uri)
+      handle_textsms_response(response, original_message, phone_number, tenant)
+    rescue StandardError => e
+      Rails.logger.error "TextSms error for account #{tenant.id}: #{e.class} - #{e.message}"
     end
   end
 
+  def handle_textsms_response(response, message, phone_number, tenant)
+    sms_recipient = phone_number
+    sms_status = nil
 
+    if response.is_a?(Net::HTTPSuccess)
+      begin
+        sms_data = JSON.parse(response.body)
+        sms_recipient = sms_data.dig('responses', 0, 'mobile') || phone_number
+        sms_status = sms_data.dig('responses', 0, 'response-description')
+        Rails.logger.info "Recipient: #{sms_recipient}, Status: #{sms_status}"
+      rescue JSON::ParserError => e
+        Rails.logger.error "TextSms: failed to parse response body: #{e.message}"
+        sms_status = 'parse_error'
+      end
+    else
+      Rails.logger.error "Failed to send message: #{response.body}"
+      sms_status = "http_error_#{response.code}"
+    end
 
-
-
-
+    SystemAdminSm.create!(
+      user: sms_recipient,
+      message: message,
+      status: sms_status,
+      date: Time.current,
+      system_user: 'system',
+      sms_provider: 'Text Sms',
+      account_id: tenant.id
+    )
+  end
 
   def handle_sms_leopard_response(response, message, phone_number, tenant)
+    sms_recipient = phone_number
+    sms_status = nil
+
     if response.is_a?(Net::HTTPSuccess)
-      sms_data = JSON.parse(response.body)
-        sms_recipient = sms_data['responses'][0]['mobile']
-        sms_status = sms_data['responses'][0]['response-description']
-        
+      begin
+        sms_data = JSON.parse(response.body)
+        sms_recipient = sms_data.dig('responses', 0, 'mobile') || phone_number
+        sms_status = sms_data.dig('responses', 0, 'response-description')
         Rails.logger.info "Recipient: #{sms_recipient}, Status: #{sms_status}"
-
-        SystemAdminSm.create!(
-          user: sms_recipient,
-          message: message,
-          status: sms_status,
-          date: Time.current,
-          system_user: 'system',
-          sms_provider: 'SMS leopard',
-          account_id: tenant.id
-        )
-      
+      rescue JSON::ParserError => e
+        Rails.logger.error "SMS Leopard: failed to parse response body: #{e.message}"
+        sms_status = 'parse_error'
+      end
     else
-
       Rails.logger.error "Failed to send message: #{response.body}"
-        SystemAdminSm.create!(
-          user: sms_recipient,
-          message: message,
-          status: sms_status,
-          date: Time.current,
-          system_user: 'system',
-          sms_provider: 'SMS leopard',
-          account_id: tenant.id
-        )
+      sms_status = "http_error_#{response.code}"
     end
+
+    SystemAdminSm.create!(
+      user: sms_recipient,
+      message: message,
+      status: sms_status,
+      date: Time.current,
+      system_user: 'system',
+      sms_provider: 'SMS leopard',
+      account_id: tenant.id
+    )
   end
 
-
-
-
-
-def render_expiration_message(tenant, voucher)
-  template = HotspotSmsTemplate.find_by(account_id: tenant.id, category: 'expiration', active: true)
-  data = {
-    customer_phone: voucher.phone,
-    voucher_code: voucher.voucher,
-    plan_name: voucher.package,
-    company_name: tenant.company_setting&.company_name
-  }
-  template ? template.render(data) : "Hello, your voucher #{voucher.voucher} is expired renew now to stay conected."
+  def render_expiration_message(tenant, voucher)
+    template = HotspotSmsTemplate.find_by(account_id: tenant.id, category: 'expiration', active: true)
+    data = {
+      customer_phone: voucher.phone,
+      voucher_code: voucher.voucher,
+      plan_name: voucher.package,
+      company_name: tenant.company_setting&.company_name
+    }
+    template ? template.render(data) : "Hello, your voucher #{voucher.voucher} is expired renew now to stay connected."
+  end
 end
-  
-end
-
-
