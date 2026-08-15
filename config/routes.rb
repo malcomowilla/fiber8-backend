@@ -159,7 +159,6 @@ resources :network_connections, only: %i[create update destroy]
   resources :hotspot_settings
   resources :hotspot_subscriptions
     resources :wireguard_peers
-
   # resources :pp_poe_plans
   # resources :hotspot_plans
   resources :system_admin_sms
@@ -781,6 +780,10 @@ get '/subscribers', to: "subscribers#index"
 post '/api/subscribers/import', to: "subscribers#import"
 post '/subscribers/import', to: "subscribers#import"
 get '/api/subscribers', to: "subscribers#index"
+post '/api/import_subscribers', to: "subscribers#index"
+post '/import_subscribers', to: "subscribers#index"
+
+
 post '/subscriber', to: "subscribers#create"
 post '/api/subscriber', to: "subscribers#create"
 patch '/update_subscriber/:id', to: 'subscribers#update'
