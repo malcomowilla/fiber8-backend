@@ -780,8 +780,8 @@ get '/subscribers', to: "subscribers#index"
 post '/api/subscribers/import', to: "subscribers#import"
 post '/subscribers/import', to: "subscribers#import"
 get '/api/subscribers', to: "subscribers#index"
-post '/api/import_subscribers', to: "subscribers#index"
-post '/import_subscribers', to: "subscribers#index"
+post '/api/import_subscribers', to: "subscribers#import"
+post '/import_subscribers', to: "subscribers#import"
 
 
 post '/subscriber', to: "subscribers#create"
