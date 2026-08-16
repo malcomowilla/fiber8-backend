@@ -255,7 +255,6 @@ production:
   :queues:
     # New top-priority queue for user-triggered, latency-sensitive jobs
     # (imports, etc.) so they never sit behind the cron backlog again.
-    - [priority, 3]
     - [invoices, 2]
     - [client_conf, 2]
     - [default, 1]
