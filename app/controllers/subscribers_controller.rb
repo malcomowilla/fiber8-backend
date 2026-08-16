@@ -1426,7 +1426,20 @@ company_name = ActsAsTenant.current_tenant&.company_setting&.company_name
   end
 
 
-  
+  def count_import_rows(file)
+          ext = File.extname(file.original_filename).downcase
+          if ext == '.csv'
+            content = File.read(file.tempfile.path)
+                      .encode('UTF-8', 'binary', invalid: :replace, undef: :replace, replace: '')
+            CSV.parse(content, headers: true).length
+          else
+            xlsx = Roo::Spreadsheet.open(file.tempfile.path)
+            [(xlsx.last_row || 1) - 1, 0].max
+          end
+        rescue => e
+          Rails.logger.warn "[count_import_rows] #{e.message}"
+          0
+        end
 
 
             def prefix_and_digits_params
