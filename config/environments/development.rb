@@ -111,7 +111,7 @@ config.active_record.async_query_executor = :global_thread_pool
   # Raise exceptions for disallowed deprecations.
   config.active_support.disallowed_deprecation = :raise
 
-
+config.solid_queue.logger = ActiveSupport::Logger.new(STDOUT)
 
   # Store files locally.
 config.active_storage.service = :cloudinary
