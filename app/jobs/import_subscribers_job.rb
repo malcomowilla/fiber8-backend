@@ -50,11 +50,17 @@ class ImportSubscribersJob < ApplicationJob
 
           pkg = Package.find_by(name: package, account: account) if package.present?
 
-          subscriber.assign_attributes(
-            name:      name,
-            address:   row['address']&.to_s&.strip,
-            id_number: row['id_number']&.to_s&.strip,
-          )
+          subscriber.assign_attributes(name: name)
+          # 'address' and 'id_number' are optional CSV columns AND may not
+          # even exist as attributes on the Subscriber model depending on
+          # your schema — assigning them unconditionally (even as nil)
+          # raised "unknown attribute" and killed every single row.
+          if row.key?('address') && subscriber.respond_to?(:address=)
+            subscriber.address = row['address']&.to_s&.strip
+          end
+          if row.key?('id_number') && subscriber.respond_to?(:id_number=)
+            subscriber.id_number = row['id_number']&.to_s&.strip
+          end
           subscriber.package         = pkg if pkg
           subscriber.expiration_date = parse_date(row['expiration_date']) if row['expiration_date'].present?
 
