@@ -70,7 +70,7 @@
 require 'sys/proctable'
 require 'sys/filesystem'
 
-class SystemMetricsJob < ApplicationJob 
+class SystemMetricsJob
   include Sidekiq::Job
   queue_as :default
 
