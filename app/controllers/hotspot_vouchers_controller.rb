@@ -923,7 +923,8 @@ elsif data["BillRefNumber"].starts_with?("INV")
     tenant = Account.find_by(id: invoice.account_id)
     tenant.hotspot_and_dial_plan.update(
       name: 'Hotspot And PPPOE Plan',
-      expiry: Time.current + 30.days,
+      # expiry: Time.current + 30.days,
+      expiry: (tenant.hotspot_and_dial_plan.expiry || Time.current) + 30.days,
       expiry_days: 30
     )
   end
