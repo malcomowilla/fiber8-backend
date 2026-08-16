@@ -8,8 +8,21 @@ default: &default
       processes: <%= ENV.fetch("JOB_CONCURRENCY", 1) %>
       polling_interval: 1
 
+# development:
+#   <<: *default
 development:
-  <<: *default
+  dispatchers:
+    - polling_interval: 1
+      batch_size: 500
+
+  workers:
+    - queues: priority
+      threads: 2
+      polling_interval: 0.1
+
+    - queues: default,client_conf,invoices,radacct
+      threads: 3
+      polling_interval: 1
 
 test:
   <<: *default
