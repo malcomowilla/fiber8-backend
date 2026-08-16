@@ -1,5 +1,5 @@
 
-class LoadRadiusJob 
+class LoadRadiusJob < ApplicationJob
 
   # include Sidekiq::Job
   self.queue_adapter = :solid_queue
