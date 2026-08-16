@@ -1,5 +1,6 @@
 class ImportSubscribersJob < ApplicationJob
   # queue_as :default
+  self.queue_adapter = :solid_queue
 queue_as :priority
   def perform(file_path, filename, account_id, job_id)
     account = Account.find(account_id)
