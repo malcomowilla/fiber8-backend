@@ -1,7 +1,6 @@
 
-class InactivityCheckJob < ApplicationJob
-  # include Sidekiq::Job
-  self.queue_adapter = :solid_queue
+class InactivityCheckJob
+  include Sidekiq::Job
   queue_as :default
 
   def perform

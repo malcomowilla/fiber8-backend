@@ -71,8 +71,7 @@ require 'sys/proctable'
 require 'sys/filesystem'
 
 class SystemMetricsJob < ApplicationJob 
-  # include Sidekiq::Job
-   self.queue_adapter = :solid_queue
+  include Sidekiq::Job
   queue_as :default
 
   def perform

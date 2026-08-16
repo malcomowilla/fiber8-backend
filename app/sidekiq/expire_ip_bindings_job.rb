@@ -4,12 +4,11 @@ require 'net/http'
 require 'uri'
 require 'json'
 
-class ExpireIpBindingsJob < ApplicationJob
-  # include Sidekiq::Job
-  self.queue_adapter = :solid_queue
+class ExpireIpBindingsJob
+  include Sidekiq::Job
   queue_as :default
 
-  # sidekiq_options lock: :until_executed, lock_timeout: 0
+  sidekiq_options lock: :until_executed, lock_timeout: 0
 
   def perform
     Account.find_each do |tenant|

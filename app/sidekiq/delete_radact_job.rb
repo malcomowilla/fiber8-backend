@@ -2,9 +2,8 @@ require 'net/http'
 require 'uri'
 require 'json'
 
-class DeleteRadactJob < ApplicationJob
-  # include Sidekiq::Job
-  self.queue_adapter = :solid_queue
+class DeleteRadactJob
+  include Sidekiq::Job
   queue_as :default
 
   def perform

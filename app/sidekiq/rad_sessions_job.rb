@@ -176,9 +176,8 @@
 # end
 # 
 
-class RadSessionsJob < ApplicationJob
-  # include Sidekiq::Job
-  self.queue_adapter = :solid_queue
+class RadSessionsJob
+  include Sidekiq::Job
   queue_as :radacct
   require 'restclient'
   require 'json'

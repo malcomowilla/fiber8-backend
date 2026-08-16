@@ -1,10 +1,9 @@
 
 require 'open3'
-class AccessPointNotificationsJob < ApplicationJob
-  # include Sidekiq::Job
-  self.queue_adapter = :solid_queue
+class AccessPointNotificationsJob
+  include Sidekiq::Job
   queue_as :default
-  #  sidekiq_options lock: :until_executed, lock_timeout: 0
+   sidekiq_options lock: :until_executed, lock_timeout: 0
 
 
   def perform

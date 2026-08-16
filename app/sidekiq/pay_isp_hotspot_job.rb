@@ -1,7 +1,6 @@
-class PayIspHotspotJob < ApplicationJob
-  # include Sidekiq::Job
-
-self.queue_adapter = :solid_queue
+class PayIspHotspotJob
+  include Sidekiq::Job
+  
   queue_as :default
 
   PLATFORM_FEE_PERCENT = 0.04

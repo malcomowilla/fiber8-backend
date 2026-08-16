@@ -1,6 +1,5 @@
-class SubscriptionExpiryReminderJob < ApplicationJob
-  # include Sidekiq::Job
-  self.queue_adapter = :solid_queue
+class SubscriptionExpiryReminderJob
+  include Sidekiq::Job
   queue_as :default
 
   def perform

@@ -1,6 +1,5 @@
-class VoucherSyncJob < ApplicationJob
-  # include Sidekiq::Job
-  self.queue_adapter = :solid_queue
+class VoucherSyncJob
+  include Sidekiq::Job
   queue_as :default
 
   def perform

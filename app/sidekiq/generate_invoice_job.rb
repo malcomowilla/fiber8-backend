@@ -341,9 +341,8 @@
 
 
 
-class GenerateInvoiceJob  < ApplicationJob
-  # include Sidekiq::Job
-  self.queue_adapter = :solid_queue
+class GenerateInvoiceJob  
+  include Sidekiq::Job
   # queue_as :invoices
   queue_as :default
 
