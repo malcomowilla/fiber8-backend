@@ -4,8 +4,9 @@ require 'net/http'
 require 'uri'
 require 'json'
 
-class ExpireIpBindingsJob
-  include Sidekiq::Job
+class ExpireIpBindingsJob < ApplicationJob
+  # include Sidekiq::Job
+  self.queue_adapter = :solid_queue
   queue_as :default
 
   sidekiq_options lock: :until_executed, lock_timeout: 0

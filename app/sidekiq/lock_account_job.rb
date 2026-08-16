@@ -1,5 +1,6 @@
-class LockAccountJob
-  include Sidekiq::Job
+class LockAccountJob < ApplicationJob
+  # include Sidekiq::Job
+  self.queue_adapter = :solid_queue
   queue_as :default
 
   def perform

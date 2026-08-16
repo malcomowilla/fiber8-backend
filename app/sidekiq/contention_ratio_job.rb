@@ -115,8 +115,9 @@ require 'net/http'
 require 'uri'
 require 'json'
 
-class ContentionRatioJob
-  include Sidekiq::Job
+class ContentionRatioJob < ApplicationJob
+  # include Sidekiq::Job
+self.queue_adapter = :solid_queue
   queue_as :default
 sidekiq_options lock: :until_executed, lock_timeout: 0
 

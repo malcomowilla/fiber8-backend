@@ -13,3 +13,108 @@ production:
   clear_solid_queue_finished_jobs:
     command: "SolidQueue::Job.clear_finished_in_batches(sleep_between_batches: 0.3)"
     schedule: every hour at minute 12
+
+
+
+
+
+development:
+  clear_solid_queue_finished_jobs:
+    command: "SolidQueue::Job.clear_finished_in_batches(sleep_between_batches: 0.3)"
+    schedule: every hour at minute 12
+
+  generate_invoice_job:
+    class: GenerateInvoiceJob
+    schedule: every 6 minutes
+
+  rehydrate_wireguard_job:
+    class: RehydrateWireguardJob
+    schedule: every 2 minutes
+
+  pay_partners_job:
+    class: PayPartnersJob
+    schedule: every 5 minutes
+
+  expire_ip_bindings_job:
+    class: ExpireIpBindingsJob
+    schedule: every 5 minutes
+
+  pay_isps_job:
+    class: PayIspsJob
+    schedule: every 5 minutes
+
+  subscription_expiration_notification_job:
+    class: SubscriptionExpirationNotificationJob
+    schedule: every 5 minutes
+
+  analytics_job:
+    class: AnalyticsJob
+    schedule: every 2 minutes
+
+  subscription_expiry_reminder_job:
+    class: SubscriptionExpiryReminderJob
+    schedule: every 4 minutes
+
+  rad_sessions_job:
+    class: RadSessionsJob
+    schedule: every minute
+
+  generate_clients_conf_job:
+    class: GenerateClientsConfJob
+    schedule: every 5 minutes
+
+  access_point_ping_job:
+    class: AccessPointPingJob
+    schedule: every 5 minutes
+
+  access_point_notifications_job:
+    class: AccessPointNotificationsJob
+    schedule: every 5 minutes
+
+  populate_radius_job:
+    class: PopulateRadiusJob
+    schedule: every 4 minutes
+
+  delete_session_job:
+    class: DeleteSessionJob
+    schedule: every 10 minutes
+
+  online_stats_broadcast_job:
+    class: OnlineStatsBroadcastJob
+    schedule: every 2 minutes
+
+  router_notification_job:
+    class: RouterNotificationJob
+    schedule: every 5 minutes
+
+  hotspot_compensation_job:
+    class: HotspotCompensationJob
+    schedule: every 5 minutes
+
+  lock_account_job:
+    class: LockAccountJob
+    schedule: every 3 minutes
+
+  hotspot_expiration_job:
+    class: HotspotExpirationJob
+    schedule: every 3 minutes
+
+  voucher_sync_job:
+    class: VoucherSyncJob
+    schedule: every 2 minutes
+
+  contention_ratio_job:
+    class: ContentionRatioJob
+    schedule: every 4 minutes
+
+  router_ping_job:
+    class: RouterPingJob
+    schedule: every 2 minutes
+
+  subscription_expiration_job:
+    class: SubscriptionExpirationJob
+    schedule: every 5 minutes
+
+  inactivity_check_job:
+    class: InactivityCheckJob
+    schedule: every 5 minutes

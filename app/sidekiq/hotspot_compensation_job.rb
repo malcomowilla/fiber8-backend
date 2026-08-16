@@ -1,8 +1,9 @@
 
 
 
-class HotspotCompensationJob 
-  include Sidekiq::Job
+class HotspotCompensationJob < ApplicationJob
+  # include Sidekiq::Job
+self.queue_adapter = :solid_queue
   queue_as :default
 
  def perform

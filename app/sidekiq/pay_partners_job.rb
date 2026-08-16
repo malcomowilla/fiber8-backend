@@ -1,6 +1,7 @@
 # app/jobs/pay_partners_job.rb
-class PayPartnersJob
-  include Sidekiq::Job
+class PayPartnersJob < ApplicationJob
+  # include Sidekiq::Job
+  self.queue_adapter = :solid_queue
   queue_as :default
 
   def perform

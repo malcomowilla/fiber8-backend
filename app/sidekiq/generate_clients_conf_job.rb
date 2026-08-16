@@ -68,9 +68,10 @@
 
 
 
-class GenerateClientsConfJob
-  include Sidekiq::Job
+class GenerateClientsConfJob  < ApplicationJob
+  # include Sidekiq::Job
 
+  self.queue_adapter = :solid_queue
   CLIENTS_CONF = "/etc/freeradius/3.0/clients.conf".freeze
 
   queue_as :client_conf

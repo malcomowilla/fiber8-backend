@@ -1,6 +1,7 @@
 
-class LoadSubscriberTransactionJob
-  include Sidekiq::Job
+class LoadSubscriberTransactionJob < ApplicationJob
+  # include Sidekiq::Job
+  self.queue_adapter = :solid_queue
   queue_as :default
 
 

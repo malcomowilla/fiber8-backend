@@ -1,7 +1,8 @@
 
 require 'open3'
-class RouterNotificationJob
-  include Sidekiq::Job
+class RouterNotificationJob < ApplicationJob
+  # include Sidekiq::Job
+  self.queue_adapter = :solid_queue
   queue_as :default
    sidekiq_options lock: :until_executed, lock_timeout: 0
 

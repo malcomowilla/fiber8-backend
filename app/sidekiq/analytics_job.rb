@@ -1,5 +1,6 @@
-class AnalyticsJob
-  include Sidekiq::Job
+class AnalyticsJob < ApplicationJob
+  # include Sidekiq::Job
+  self.queue_adapter = :solid_queue
   queue_as :default
 
   def perform
