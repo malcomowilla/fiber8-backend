@@ -341,16 +341,6 @@
 
 
 
-
-
-
-
-
-
-
-
-
-
 class GenerateInvoiceJob  < ApplicationJob
   # include Sidekiq::Job
   self.queue_adapter = :solid_queue
@@ -382,7 +372,7 @@ class GenerateInvoiceJob  < ApplicationJob
 
         # Avoid duplicate invoices (only one unpaid invoice every 25 days)
         last_unpaid = tenant.invoices.where(status: 'unpaid').order(created_at: :desc).first
-        if last_unpaid&.last_invoiced_at.present? && last_unpaid.last_invoiced_at > 25.days.ago
+        if !last_unpaid&.last_invoiced_at.present? && last_unpaid.last_invoiced_at > 25.days.ago
           Rails.logger.info "Skipping invoice for #{tenant.subdomain} — recent unpaid invoice exists"
           next
         end
