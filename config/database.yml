@@ -145,3 +145,11 @@ production:
 
 
 
+
+queue:
+  <<: *default
+  database: <%= ENV['DB_NAME'] %>
+  port: <%= ENV['DB_PORT'] %>
+  host: <%= ENV['DATABASE_HOST'] %>
+  username: <%= ENV['DATABASE_USERNAME'] %>
+  password: <%= ENV['DATABASE_PASSWORD'] %>

@@ -254,4 +254,4 @@ gem 'cloudinary'
 
 
 
-gem "solid_queue", "~> 1.6"
+# gem "solid_queue", "~> 1.6"
