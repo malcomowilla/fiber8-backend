@@ -74,8 +74,8 @@ class GenerateClientsConfJob  < ApplicationJob
   self.queue_adapter = :solid_queue
   CLIENTS_CONF = "/etc/freeradius/3.0/clients.conf".freeze
 
-  queue_as :client_conf
-
+  # queue_as :client_conf
+queue_as :default
   def perform
     Rails.logger.info "Generating clients.conf"
 

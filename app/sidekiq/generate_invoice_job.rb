@@ -354,8 +354,10 @@
 class GenerateInvoiceJob  < ApplicationJob
   # include Sidekiq::Job
   self.queue_adapter = :solid_queue
-  queue_as :invoices
-  sidekiq_options lock: :until_executed, lock_timeout: 0
+  # queue_as :invoices
+  queue_as :default
+
+  # sidekiq_options lock: :until_executed, lock_timeout: 0
 
   PPPoE_PRICE_PER_CLIENT = 10
   SUBSCRIPTION_FEE = 1000
