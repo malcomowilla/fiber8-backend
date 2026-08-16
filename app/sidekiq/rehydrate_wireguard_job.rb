@@ -4,7 +4,7 @@
 
 
 
-class RehydrateWireguardJob
+class RehydrateWireguardJob < ApplicationJob
   # include Sidekiq::Job
   self.queue_adapter = :solid_queue
   queue_as :default
