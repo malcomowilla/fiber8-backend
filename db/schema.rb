@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_08_14_160736) do
+ActiveRecord::Schema[7.2].define(version: 2026_08_16_081745) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -1451,6 +1451,21 @@ ActiveRecord::Schema[7.2].define(version: 2026_08_14_160736) do
     t.string "system_admin_phone_number"
     t.string "otp"
     t.boolean "use_sms_authentication", default: false
+  end
+
+  create_table "system_announcements", force: :cascade do |t|
+    t.string "title", null: false
+    t.text "body", null: false
+    t.string "announcement_type", default: "general", null: false
+    t.string "priority", default: "medium", null: false
+    t.boolean "active", default: true, null: false
+    t.datetime "published_at", null: false
+    t.datetime "expires_at"
+    t.string "created_by"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["active"], name: "index_system_announcements_on_active"
+    t.index ["published_at"], name: "index_system_announcements_on_published_at"
   end
 
   create_table "system_metrics", force: :cascade do |t|
