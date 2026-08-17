@@ -193,6 +193,22 @@ end
 
 
 
+
+namespace :api do
+
+  resource :hotspot_bypass_settings, only: [:show, :update]
+
+  namespace :hotspot do
+    namespace :portal do
+      post   'login',       to: 'hotspot_portal#login'
+      get    'session',     to: 'hotspot_portal#session'
+      get    'my_devices',  to: 'hotspot_portal#my_devices'
+      post   'add_device',  to: 'hotspot_portal#add_device'
+      delete 'devices/:id', to: 'hotspot_portal#remove_device'
+    end
+  end
+end
+
 resources :promotional_plans, only: [:index, :show, :create, :update, :destroy]
 
 
@@ -218,6 +234,7 @@ post  'network_map/sync', to: 'network_map#sync'
 post  'network_map/kml_import', to: 'kml_imports#create'
 
 
+post '/api/ip_bindings/:id/allow_replacement', to:'ip_bindings#allow_replacement'
 
 resource :appearance_settings, only: [:show, :create]
 resources :system_announcements, only: [:index, :create, :update, :destroy]

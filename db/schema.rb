@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_08_17_105223) do
+ActiveRecord::Schema[7.2].define(version: 2026_08_17_170819) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -492,6 +492,8 @@ ActiveRecord::Schema[7.2].define(version: 2026_08_17_105223) do
     t.integer "free_trial_duration_minutes", default: 5
     t.integer "free_trial_download_limit", default: 2
     t.integer "free_trial_upload_limit", default: 1
+    t.integer "max_customer_bypass_devices", default: 1
+    t.boolean "allow_device_self_service", default: false
   end
 
   create_table "hotspot_mpesa_revenues", force: :cascade do |t|
@@ -743,6 +745,8 @@ ActiveRecord::Schema[7.2].define(version: 2026_08_17_105223) do
     t.string "phone"
     t.string "source", default: "manual"
     t.string "status", default: "active"
+    t.boolean "replacement_allowed", default: false
+    t.string "account_number_source"
     t.index ["tv_plan_id"], name: "index_ip_bindings_on_tv_plan_id"
   end
 
@@ -1593,6 +1597,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_08_17_105223) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.bigint "nas_router_id"
+    t.integer "max_devices", default: 1, null: false
     t.index ["account_id"], name: "index_tv_plans_on_account_id"
     t.index ["nas_router_id"], name: "index_tv_plans_on_nas_router_id"
   end

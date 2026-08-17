@@ -3242,4 +3242,46 @@ end
 
 
 
+def send_tv_plan_confirmation_sms(binding, tv_plan, session)
+  return unless session.phone_number.present?
+
+  data = {
+    customer_phone: session.phone_number,
+    device_name:    binding.name,
+    plan_name:      tv_plan&.name,
+    price:          tv_plan&.price,
+    validity:       binding.expiry&.to_s,
+    portal_url:     hotspot_portal_url(session.account_id),
+    company_name:   ActsAsTenant.current_tenant&.company_setting&.company_name
+  }
+
+  template = HotspotSmsTemplate.active_for(session.account_id, 'tv_plan_purchase')
+  message = template ? template.render(data) : default_tv_plan_sms(data)
+
+  provider = ActsAsTenant.current_tenant&.sms_provider_setting&.sms_provider
+  case provider
+  when 'SMS leopard'   then send_sms_leopard_raw(session.phone_number, message)
+  when 'TextSms'       then send_textsms_raw(session.phone_number, message)
+  when 'Talk Sasa'     then send_talksasa_raw(session.phone_number, message)
+  end
+rescue => e
+  Rails.logger.error "send_tv_plan_confirmation_sms failed: #{e.message}"
+end
+
+def default_tv_plan_sms(data)
+  "Payment received! Your #{data[:plan_name]} plan for #{data[:device_name]} is active until #{data[:validity]}. " \
+  "Manage devices: #{data[:portal_url]} (login with this phone number). — #{data[:company_name]}"
+end
+
+# Build the portal URL for the customer's tenant — adjust the default
+# platform domain / account->domain mapping to match how you already
+# resolve it in make_payment's callback_url logic.
+def hotspot_portal_url(account_id)
+  account = Account.find_by(id: account_id)
+  return nil unless account
+
+  platform_domain = account.respond_to?(:platform_domain) && account.platform_domain.present? ? account.platform_domain : 'aitechs.co.ke'
+  "https://#{account.subdomain}.#{platform_domain}/hotspot-customer-portal"
+end
+
 end

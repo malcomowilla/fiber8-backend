@@ -147,11 +147,11 @@
 
 
 default:
-  :concurrency: 2
+  :concurrency: 4
   :queues:
     - [invoices, 2]
     - [client_conf, 2]
-    - [default, 1]
+    - [default, 3]
     - [radacct, 1]
 development:
   :concurrency: 2
@@ -215,7 +215,7 @@ development:
       cron: "*/2 * * * *"
     router_notification_job:
       class: RouterNotificationJob
-      cron: "*/5 * * * *"
+      cron: "*/2 * * * *"
     hotspot_compensation_job:
       class: HotspotCompensationJob
       cron: "*/5 * * * *"
@@ -232,6 +232,7 @@ development:
     contention_ratio_job:
       class: ContentionRatioJob
       cron: "*/4 * * * *"
+
     router_ping_job:
       class: RouterPingJob
       cron: "*/2 * * * *"

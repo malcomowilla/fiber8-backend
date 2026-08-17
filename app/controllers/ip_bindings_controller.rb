@@ -179,6 +179,19 @@ end
 
 
 
+
+
+# POST /api/ip_bindings/:id/allow_replacement
+def allow_replacement
+  @ip_binding.update!(replacement_allowed: true)
+  render json: @ip_binding
+end
+
+
+
+
+
+
   # PUT/PATCH /api/ip_bindings/:id
   def update
     old_mac = @ip_binding.mac   # remember before overwrite
