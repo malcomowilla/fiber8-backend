@@ -4,7 +4,7 @@ class RouterNotificationJob
   include Sidekiq::Job
   queue_as :default
   # sidekiq_options lock: :until_executed, lock_timeout: 0
-  sidekiq_options lock: :while_executing  # was: lock: :until_executed, lock_timeout: 0
+  # sidekiq_options lock: :while_executing  # was: lock: :until_executed, lock_timeout: 0
   def perform
     Account.find_each do |tenant|
       ActsAsTenant.with_tenant(tenant) do
