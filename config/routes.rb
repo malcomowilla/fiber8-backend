@@ -174,7 +174,7 @@ resources :client_support_tickets, only: [:index, :create, :show]
 resource :tuma_settings, only: [:show, :update]
 resources :hotspot_sms_templates, only: [:index, :update]
 resources :system_announcements, only: [:index, :create, :update, :destroy]
-
+resource :appearance_settings, only: [:show, :create]
 
 end
 
@@ -219,7 +219,7 @@ post  'network_map/kml_import', to: 'kml_imports#create'
 
 
 
-
+resource :appearance_settings, only: [:show, :create]
 resources :system_announcements, only: [:index, :create, :update, :destroy]
 get 'system_announcements_active', to: 'system_announcements#active'
 get '/api/system_announcements_active', to: 'system_announcements#active'

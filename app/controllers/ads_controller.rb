@@ -20,9 +20,11 @@ end
      def update_last_activity
 if current_user
       current_user.update!(last_activity_active: Time.current)
-    end
-    
+    end  
   end
+
+
+
 
 def set_tenant
 

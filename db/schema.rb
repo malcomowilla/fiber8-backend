@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_08_16_081745) do
+ActiveRecord::Schema[7.2].define(version: 2026_08_17_105223) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -202,6 +202,22 @@ ActiveRecord::Schema[7.2].define(version: 2026_08_16_081745) do
     t.string "button_name"
     t.bigint "ad_setting_id"
     t.index ["ad_setting_id"], name: "index_analytics_events_on_ad_setting_id"
+  end
+
+  create_table "appearance_settings", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.string "color_hsl", default: "173 80% 24%", null: false
+    t.string "color_preset_id", default: "teal"
+    t.string "font_key", default: "plexMono"
+    t.string "display_font_key", default: "plexMono"
+    t.boolean "font_italic", default: false
+    t.boolean "display_font_italic", default: false
+    t.string "radius", default: "balanced"
+    t.string "density", default: "comfortable"
+    t.string "mode", default: "system"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id"], name: "index_appearance_settings_on_account_id", unique: true
   end
 
   create_table "calendar_events", force: :cascade do |t|
@@ -1727,6 +1743,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_08_16_081745) do
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "ad_events", "accounts"
   add_foreign_key "ad_events", "ad_settings"
+  add_foreign_key "appearance_settings", "accounts"
   add_foreign_key "default_system_ad_settings", "accounts"
   add_foreign_key "invoice_payments", "accounts"
   add_foreign_key "invoice_payments", "invoices"
