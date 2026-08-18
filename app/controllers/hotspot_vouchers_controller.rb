@@ -744,7 +744,10 @@ if session&.payment_type == 'device_binding'
     reference: data["TransID"], payment_method: "Mpesa",
     time_paid: data["TransTime"], account_id: session.account_id,
     name: data["FirstName"], phone_number: session.phone_number,
-    status: "Completed"
+    status: "Completed",
+    payment_type: "tv_plan",          # ← NEW: lets admin filter/badge these
+    tv_plan_id: tv_plan&.id,          # ← NEW
+    device_name: binding.name         # ← NEW
   )
 
 
@@ -765,6 +768,7 @@ if session&.payment_type == 'device_binding'
 
     end
   end
+  send_tv_plan_confirmation_sms(binding, tv_plan, session)   # ← NEW: was defined but never called
 
   session.update!(connected: true, status: 'used', paid: true)
   head :ok

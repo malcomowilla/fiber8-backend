@@ -1,0 +1,2 @@
+class HotspotBypassSetting < ApplicationRecord
+end

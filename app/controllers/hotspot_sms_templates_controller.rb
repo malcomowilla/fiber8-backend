@@ -25,11 +25,15 @@ class HotspotSmsTemplatesController < ApplicationController
       active: true
     },
 
-    # NOTE: this category isn't prefixed with "single_" or "multi_", so it won't be
-    # picked up by either section on the frontend (Expiry Reminders is still listed
-    # under "Coming soon" there). Make sure HotspotSmsTemplate::CATEGORIES includes
-    # 'expiration' or the sort_by below will hit a nil comparison. Remove this entry
-    # if it wasn't meant to go live yet.
+
+'tv_plan_purchase' => {
+    title: 'TV Plan Purchase',
+    message: "Payment received! Your {plan_name} plan for {device_name} is active until {validity}. " \
+              "Manage your devices: {portal_url}. — {company_name}",
+    active: true
+  },
+
+    
     'expiration' => {
       title: 'Expiration Reminder',
       message: "Hello, your voucher {voucher_code} has expired. Renew now to stay connected. (FROM: {company_name})",

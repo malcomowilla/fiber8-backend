@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_08_17_170819) do
+ActiveRecord::Schema[7.2].define(version: 2026_08_18_145407) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -479,6 +479,14 @@ ActiveRecord::Schema[7.2].define(version: 2026_08_17_170819) do
     t.integer "account_id"
   end
 
+  create_table "hotspot_bypass_settings", force: :cascade do |t|
+    t.integer "account_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.integer "max_tv_plan_replacements", default: 1, null: false
+    t.boolean "tv_plan_replacement_requires_unlock", default: true, null: false
+  end
+
   create_table "hotspot_customizations", force: :cascade do |t|
     t.boolean "customize_template_and_package_per_location"
     t.integer "account_id"
@@ -514,6 +522,9 @@ ActiveRecord::Schema[7.2].define(version: 2026_08_17_170819) do
     t.integer "amount_disbursed"
     t.string "status"
     t.string "checkout_request_id"
+    t.string "payment_type", default: "voucher", null: false
+    t.bigint "tv_plan_id"
+    t.string "device_name"
     t.index ["created_at"], name: "index_hotspot_mpesa_revenues_on_created_at"
   end
 
@@ -592,6 +603,17 @@ ActiveRecord::Schema[7.2].define(version: 2026_08_17_170819) do
     t.string "plan_name"
     t.string "company_name"
     t.string "description", default: "4% of hotspot revenue"
+  end
+
+  create_table "hotspot_portal_otps", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.string "phone", null: false
+    t.string "code_digest", null: false
+    t.datetime "expires_at", null: false
+    t.integer "attempts", default: 0, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id", "phone"], name: "index_hotspot_portal_otps_on_account_id_and_phone"
   end
 
   create_table "hotspot_settings", force: :cascade do |t|
@@ -747,6 +769,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_08_17_170819) do
     t.string "status", default: "active"
     t.boolean "replacement_allowed", default: false
     t.string "account_number_source"
+    t.integer "replacement_count", default: 0, null: false
     t.index ["tv_plan_id"], name: "index_ip_bindings_on_tv_plan_id"
   end
 

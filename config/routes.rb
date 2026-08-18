@@ -189,10 +189,15 @@ resources :nas_routers, path: 'nas_routers' do
     delete 'winbox_session', action: :stop_winbox_session   # stops it early
   end
 end
-
-
-
-
+namespace :api do
+  post   'hotspot/portal/request_otp',        to: 'hotspot_portal#request_otp'
+  post   'hotspot/portal/verify_otp',         to: 'hotspot_portal#verify_otp'
+  get    'hotspot/portal/session',            to: 'hotspot_portal#session_info'
+  get    'hotspot/portal/my_devices',         to: 'hotspot_portal#my_devices'
+  get    'hotspot/portal/payments',           to: 'hotspot_portal#payments'
+  patch  'hotspot/portal/devices/:id/replace', to: 'hotspot_portal#replace_device'
+  post 'hotspot/portal/login', to: 'hotspot_portal#login'
+end
 
 namespace :api do
 
