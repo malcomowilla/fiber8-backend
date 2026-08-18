@@ -83,7 +83,9 @@ before_action :authenticate_portal_token!, except: [:login]
 
   # POST /api/hotspot/portal/login  { phone_number }
   def login
-    phone = normalize_phone(params[:phone_number])
+    # phone = normalize_phone(params[:phone_number])
+     phone = params[:phone_number]
+
     return render json: { error: 'Phone number required' }, status: :unprocessable_entity if phone.blank?
 
     unless customer_exists?(phone)
