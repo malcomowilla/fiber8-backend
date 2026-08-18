@@ -174,8 +174,7 @@ before_action :authenticate_portal_token!, except: [:login]
   end
 
   def customer_exists?(phone)
-    IpBinding.exists?(phone: phone) ||
-      HotspotMpesaRevenue.exists?(phone_number: phone) ||
+    IpBinding.exists?(phone: phone) 
   end
 
 
