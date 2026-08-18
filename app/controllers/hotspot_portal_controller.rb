@@ -77,6 +77,25 @@ class HotspotPortalController < ApplicationController
     }
   end
 
+
+
+  # POST /api/hotspot/portal/login  { phone_number }
+  def login
+    phone = normalize_phone(params[:phone_number])
+    return render json: { error: 'Phone number required' }, status: :unprocessable_entity if phone.blank?
+
+    unless customer_exists?(phone)
+      return render json: { error: 'No hotspot or TV plan history found for this number' }, status: :not_found
+    end
+
+    token = portal_verifier.generate([@account.id, phone, Time.current], expires_in: TOKEN_TTL, purpose: :hotspot_portal)
+    render json: { token: token, customer: { phone: phone } }, status: :ok
+  end
+
+
+
+
+
   # PATCH /api/hotspot/portal/devices/:id/replace  { mac_address, ip_address }
   #
   # This is the ONLY device-management mutation a customer can do here — no
