@@ -8,6 +8,27 @@ class HotspotPortalController < ApplicationController
 before_action :authenticate_portal_token!, except: [:login]
   TOKEN_TTL = 12.hours
 
+
+
+
+
+
+
+    def set_tenant
+    host = request.headers['X-Subdomain']
+    @account = Account.find_by(subdomain: host)
+    return render json: { error: 'Invalid tenant' }, status: :not_found unless @account
+    ActsAsTenant.current_tenant = @account
+  end
+
+
+
+
+
+
+
+
+
   # POST /api/hotspot/portal/request_otp  { phone_number }
   def request_otp
     phone = normalize_phone(params[:phone_number])
@@ -146,13 +167,6 @@ before_action :authenticate_portal_token!, except: [:login]
   private
 
 
-    def set_tenant
-    host = request.headers['X-Subdomain']
-    @account = Account.find_by(subdomain: host)
-    return render json: { error: 'Invalid tenant' }, status: :not_found unless @account
-    ActsAsTenant.current_tenant = @account
-  end
-
   def authenticate_portal_token!
     header = request.headers['Authorization'].to_s
     token = header.sub(/\ABearer /, '')
@@ -168,6 +182,11 @@ before_action :authenticate_portal_token!, except: [:login]
   end
 
 
+  def customer_exists?(phone)
+    IpBinding.exists?(phone: phone) 
+  end
+
+
   def normalize_phone(raw)
     digits = raw.to_s.gsub(/\D/, '')
     return nil if digits.blank?
@@ -175,9 +194,6 @@ before_action :authenticate_portal_token!, except: [:login]
     digits.start_with?('254') ? digits : "254#{digits}"
   end
 
-  def customer_exists?(phone)
-    IpBinding.exists?(phone: phone) 
-  end
 
 
   def serialize_device(binding, settings)

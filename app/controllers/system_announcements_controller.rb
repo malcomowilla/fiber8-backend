@@ -16,28 +16,78 @@ class SystemAnnouncementsController < ApplicationController
   end
 
   # POST /system_announcements
-  def create
-    announcement = ActsAsTenant.without_tenant do
-      SystemAnnouncement.new(announcement_params.merge(created_by: current_system_admin&.email))
-    end
+  # def create
+  #   announcement = ActsAsTenant.without_tenant do
+  #     SystemAnnouncement.new(announcement_params.merge(created_by: current_system_admin&.email))
+  #   end
 
-    if announcement.save
-      render json: announcement, status: :created
-    else
-      render json: { errors: announcement.errors }, status: :unprocessable_entity
-    end
-  end
+  #   if announcement.save
+      
+  #     render json: announcement, status: :created
+  #   else
+  #     render json: { errors: announcement.errors }, status: :unprocessable_entity
+  #   end
+  # end
 
-  # PATCH/PUT /system_announcements/:id
-  def update
-    if @announcement.update(announcement_params)
-      render json: @announcement, status: :ok
-    else
-      render json: { errors: @announcement.errors }, status: :unprocessable_entity
-    end
-  end
+  # # PATCH/PUT /system_announcements/:id
+  # def update
+  #   if @announcement.update(announcement_params)
+  #     render json: @announcement, status: :ok
+  #   else
+  #     render json: { errors: @announcement.errors }, status: :unprocessable_entity
+  #   end
+  # end
 
   # DELETE /system_announcements/:id
+  # 
+  #
+
+
+
+
+
+def create
+  announcement = ActsAsTenant.without_tenant do
+    SystemAnnouncement.new(
+      announcement_params.merge(
+        created_by: current_system_admin&.email
+      )
+    )
+  end
+
+  if announcement.save
+    ActionCable.server.broadcast(
+      "maintenance",
+      {
+        type: "created",
+        announcement: announcement.as_json
+      }
+    )
+
+    render json: announcement, status: :created
+  else
+    render json: { errors: announcement.errors }, status: :unprocessable_entity
+  end
+end
+
+def update
+  if @announcement.update(announcement_params)
+    ActionCable.server.broadcast(
+      "maintenance",
+      {
+        type: "updated",
+        announcement: @announcement.as_json
+      }
+    )
+
+    render json: @announcement, status: :ok
+  else
+    render json: { errors: @announcement.errors }, status: :unprocessable_entity
+  end
+end
+
+
+
   def destroy
     @announcement.destroy!
     head :no_content

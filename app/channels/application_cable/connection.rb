@@ -69,5 +69,35 @@ module ApplicationCable
         reject_unauthorized_connection
       end
     end
+
+
+
+
+
+
+
+
+
+    def connect_authenticated_system_admin
+      token = cookies.encrypted.signed[:jwt_system_admin]
+      decoded = JWT.decode(token, ENV["JWT_SECRET_KEY"], true, algorithm: "HS256")
+      user_id = decoded[0]["system_admin_id"]
+
+      user = SystemAdmin.find_by(id: user_id)
+
+      if user
+        self.current_user = user
+      else
+        reject_unauthorized_connection
+      end
+    end
+
   end
+
+
+
+  
+
+
+
 end
