@@ -147,11 +147,11 @@
 
 
 default:
-  :concurrency: 4
+  :concurrency: 3
   :queues:
     - [invoices, 2]
     - [client_conf, 2]
-    - [default, 3]
+    - [default, 2]
     - [radacct, 1]
 development:
   :concurrency: 2
