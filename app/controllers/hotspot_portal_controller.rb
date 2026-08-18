@@ -1,9 +1,11 @@
 # app/controllers/hotspot_portal_controller.rb
 class HotspotPortalController < ApplicationController
    skip_before_action :verify_authenticity_token, raise: false
-  before_action :set_tenant
-  before_action :authenticate_portal_token!, except: [:request_otp, :verify_otp]
+   set_current_tenant_through_filter
 
+  before_action :set_tenant
+  # before_action :authenticate_portal_token!, except: [:request_otp, :verify_otp]
+before_action :authenticate_portal_token!, except: [:login]
   TOKEN_TTL = 12.hours
 
   # POST /api/hotspot/portal/request_otp  { phone_number }
