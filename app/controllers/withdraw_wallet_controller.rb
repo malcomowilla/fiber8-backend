@@ -45,7 +45,7 @@ requested_amount = params[:amount].to_f
 
 
   unpaid_revenues = HotspotMpesaRevenue
-                      .where(paid_out: false)
+                      .where(paid_out: false, status: "Completed")
                       .order(:created_at)
 
   available_balance = unpaid_revenues.sum(:amount)
