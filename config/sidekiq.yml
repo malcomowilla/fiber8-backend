@@ -182,9 +182,7 @@ development:
     subscription_expiration_notification_job:
         class: SubscriptionExpirationNotificationJob
         cron: "*/5 * * * *"
-    analytics_job:
-        class: AnalyticsJob
-        cron: "*/2 * * * *"
+   
     subscription_expiry_reminder_job:
         class: SubscriptionExpiryReminderJob
         cron: "*/4 * * * *"
