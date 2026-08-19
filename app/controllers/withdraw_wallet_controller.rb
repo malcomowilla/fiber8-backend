@@ -120,59 +120,59 @@ class WithdrawWalletController < ApplicationController
   # two concurrent requests from both reading the same "available balance" and
   # both succeeding — the second request will block until the first commits,
   # then re-evaluate against the now-updated (locked) data.
-  def process_withdrawal(revenue_klass:, revenue_label:, requested_amount:, phone_number:)
-    outcome = { success: false, error: nil }
+  
 
-    ActiveRecord::Base.transaction do
-      # Explicit account scoping in addition to ActsAsTenant, as a defense-in-depth
-      # measure in case tenant scoping is ever bypassed or misconfigured.
-      unpaid_revenues = revenue_klass
-                          .where(paid_out: false, status: "Completed")
-                          .order(:created_at)
-                          .lock!
 
-      available_balance = unpaid_revenues.sum(:amount)
 
-      if available_balance < requested_amount
-        outcome[:error] = "Insufficient wallet balance for #{revenue_label}"
-        raise ActiveRecord::Rollback
-      end
 
-      selected_revenues = []
-      running_total = 0.0
 
-      unpaid_revenues.each do |revenue|
-        break if running_total >= requested_amount
+def process_withdrawal(revenue_klass:, revenue_label:, requested_amount:, phone_number:)
+  outcome = { success: false, error: nil }
 
-        selected_revenues << revenue
-        running_total += revenue.amount.to_f
-      end
+  ActiveRecord::Base.transaction do
+    # Materialize + lock the actual rows (plain SELECT ... FOR UPDATE, no aggregate)
+    unpaid_revenues = revenue_klass
+                        .where(paid_out: false, status: "Completed")
+                        .order(:created_at)
+                        .lock!
+                        .to_a
 
-      # Reserve the funds up front, inside the lock, before calling out to Safaricom.
-      # This closes the window where a second request could see these rows as
-      # still "unpaid" while the first request's B2C call is in flight.
-      selected_revenues.each do |revenue|
-        revenue.update!(paid_out: true, paid_out_at: Time.current, amount_disbursed: revenue.amount)
-      end
+    # Sum in Ruby now that we have real records, not a SQL aggregate query
+    available_balance = unpaid_revenues.sum(&:amount)
 
-      # send_b2c makes an external HTTP call — keeping it inside the transaction
-      # briefly holds the row locks longer than ideal, but this is required to
-      # guarantee we don't reserve funds without a matching disbursement attempt,
-      # or vice versa. If your DB/network setup makes long-held locks risky,
-      # switch to a "pending_payout" status set here, then confirm/release
-      # based on the B2C result in a follow-up step (see note below).
-      success = send_b2c(phone_number, requested_amount, @account)
-
-      unless success
-        outcome[:error] = "B2C failed for #{revenue_label}"
-        raise ActiveRecord::Rollback
-      end
-
-      outcome[:success] = true
+    if available_balance < requested_amount
+      outcome[:error] = "Insufficient wallet balance for #{revenue_label}"
+      raise ActiveRecord::Rollback
     end
 
-    outcome
+    selected_revenues = []
+    running_total = 0.0
+
+    unpaid_revenues.each do |revenue|
+      break if running_total >= requested_amount
+
+      selected_revenues << revenue
+      running_total += revenue.amount.to_f
+    end
+
+    selected_revenues.each do |revenue|
+      revenue.update!(paid_out: true, paid_out_at: Time.current, amount_disbursed: revenue.amount)
+    end
+
+    success = send_b2c(phone_number, requested_amount, @account)
+
+    unless success
+      outcome[:error] = "B2C failed for #{revenue_label}"
+      raise ActiveRecord::Rollback
+    end
+
+    outcome[:success] = true
   end
+
+  outcome
+end
+
+
 
   def send_b2c(phone_number, amount, tenant)
     token = fetch_access_token(tenant)
