@@ -231,8 +231,18 @@ end
     Rails.logger.info "Token error: #{e.response}"
     nil
   end
+def format_phone(phone)
+  digits = phone.to_s.strip.gsub(/\D/, '')
 
-  def format_phone(phone)
-    phone.gsub(/^0/, '254')
+  case digits
+  when /\A0\d{9}\z/
+    digits.sub(/\A0/, '254')
+  when /\A254\d{9}\z/
+    digits
+  when /\A7\d{8}\z/, /\A1\d{8}\z/
+    "254#{digits}"
+  else
+    digits
   end
+end
 end
