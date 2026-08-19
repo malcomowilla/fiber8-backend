@@ -20,11 +20,14 @@ class WithdrawWalletController < ApplicationController
   end
 
   def withdraw_from_wallet
+    host = request.headers['X-Subdomain']
+    @account = Account.find_by(subdomain: host)
     return render json: { error: 'Invalid tenant' }, status: :not_found unless @account
 
     wallet_type      = params[:wallettype]
     requested_amount = params[:amount].to_f
     phone_number     = params[:phonenumber]
+    description      = params[:description]
     idempotency_key  = params[:idempotency_key].presence || request.headers['X-Idempotency-Key']
 
     if requested_amount <= 0
@@ -46,6 +49,17 @@ class WithdrawWalletController < ApplicationController
                     status: :conflict
     end
 
+    # ---- Log the attempt up front, before we call out to Safaricom ----
+    withdrawal_log = Withdrawal.create!(
+      account: @account,
+      wallet_type: wallet_type,
+      amount: requested_amount,
+      phone_number: phone_number,
+      description: description,
+      idempotency_key: idempotency_key,
+      status: 'pending'
+    )
+
     begin
       revenue_klass = wallet_type == 'hotspot' ? HotspotMpesaRevenue : PpPoeMpesaRevenue
       revenue_label = wallet_type == 'hotspot' ? 'hotspot revenue' : 'pppoe revenue'
@@ -58,13 +72,45 @@ class WithdrawWalletController < ApplicationController
       )
 
       if result[:success]
+        withdrawal_log.update!(status: 'completed', paid_out_at: Time.current)
         render json: { success: true, withdrawn: requested_amount }
       else
+        withdrawal_log.update!(status: 'failed', error_message: result[:error])
         render json: { error: result[:error] }, status: :unprocessable_entity
       end
+    rescue => e
+      withdrawal_log.update!(status: 'failed', error_message: e.message)
+      raise
     ensure
       Rails.cache.delete(cache_key)
     end
+  end
+
+  # GET /api/admin/transactions
+  # Returns the withdrawal log for the current tenant, shaped for the
+  # frontend's transaction history panel.
+  def transactions
+    host = request.headers['X-Subdomain']
+    @account = Account.find_by(subdomain: host)
+    return render json: { error: 'Invalid tenant' }, status: :not_found unless @account
+
+    records = Withdrawal.where(account: @account)
+                         .order(created_at: :desc)
+                         .limit(100)
+
+    render json: records.map { |w|
+      {
+        id: w.id,
+        type: 'withdrawal',
+        walletType: w.wallet_type,
+        amount: w.amount.to_f,
+        phoneNumber: w.phone_number,
+        description: w.description,
+        status: w.status,
+        errorMessage: w.error_message,
+        timestamp: w.paid_out_at || w.created_at
+      }
+    }
   end
 
   private

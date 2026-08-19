@@ -277,7 +277,7 @@ resources :network_connections, only: %i[create update destroy]
 
 
 
-
+get "/api/admin/transactions", to: "withdraw_wallet#transactions"
 get    '/api/payment_gateway_pin',        to: 'payment_gateway_pin#show'
 post   '/api/payment_gateway_pin/verify', to: 'payment_gateway_pin#verify'
 patch  '/api/payment_gateway_pin',        to: 'payment_gateway_pin#update'

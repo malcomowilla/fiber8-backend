@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_08_18_145407) do
+ActiveRecord::Schema[7.2].define(version: 2026_08_19_135104) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -1759,6 +1759,23 @@ ActiveRecord::Schema[7.2].define(version: 2026_08_18_145407) do
     t.string "status"
   end
 
+  create_table "withdrawals", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.string "wallet_type", null: false
+    t.decimal "amount", precision: 12, scale: 2, null: false
+    t.string "phone_number", null: false
+    t.string "status", default: "pending", null: false
+    t.string "description"
+    t.string "idempotency_key"
+    t.text "error_message"
+    t.datetime "paid_out_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id", "created_at"], name: "index_withdrawals_on_account_id_and_created_at"
+    t.index ["account_id"], name: "index_withdrawals_on_account_id"
+    t.index ["idempotency_key"], name: "index_withdrawals_on_idempotency_key"
+  end
+
   create_table "zones", force: :cascade do |t|
     t.string "name"
     t.string "zone_code"
@@ -1786,4 +1803,5 @@ ActiveRecord::Schema[7.2].define(version: 2026_08_18_145407) do
   add_foreign_key "temporary_sessions", "tv_plans"
   add_foreign_key "tv_plans", "accounts"
   add_foreign_key "tv_plans", "nas_routers", on_delete: :nullify
+  add_foreign_key "withdrawals", "accounts"
 end
