@@ -168,6 +168,21 @@ end
 
 
 
+# GET /router_troubleshooting/:id/hotspot
+def hotspot_status
+  active = mikrotik_get(@nas_router, '/rest/ip/hotspot/active')
+  return render json: { error: 'Router unreachable' }, status: :service_unavailable unless active
+
+  render json: {
+    active_user_count: Array(active).size,
+    active_users: Array(active).first(25).map { |u|
+      { user: u['user'], address: u['address'], uptime: u['uptime'] }
+    }
+  }
+end
+
+
+
 
   private
 
