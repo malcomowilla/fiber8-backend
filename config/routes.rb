@@ -232,7 +232,7 @@ resource :tuma_settings, only: [:show, :update]
 
 resources :hotspot_sms_templates, only: [:index, :update]
 # config/routes.rb
-get    '/apirouter_troubleshooting',                 to: 'router_troubleshooting#overview'
+get    '/api/router_troubleshooting',                 to: 'router_troubleshooting#overview'
 get    '/api/router_troubleshooting/:id/diagnostics', to: 'router_troubleshooting#diagnostics'
 get    '/api/router_troubleshooting/:id/dhcp_leases', to: 'router_troubleshooting#dhcp_leases'
 get    '/api/router_troubleshooting/:id/firewall',    to: 'router_troubleshooting#firewall_rules'
