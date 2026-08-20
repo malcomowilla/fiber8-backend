@@ -1,12 +1,12 @@
 class WireguardPeersController < ApplicationController
 
-load_and_authorize_resource
+  load_and_authorize_resource 
 
   set_current_tenant_through_filter
 
-before_action :update_last_activity
-before_action :set_tenant
-before_action :set_time_zone
+  before_action :update_last_activity
+  before_action :set_tenant
+  before_action :set_time_zone
 
 
 

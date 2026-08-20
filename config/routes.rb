@@ -231,6 +231,15 @@ resource :tuma_settings, only: [:show, :update]
 
 
 resources :hotspot_sms_templates, only: [:index, :update]
+# config/routes.rb
+get    '/apirouter_troubleshooting',                 to: 'router_troubleshooting#overview'
+get    '/api/router_troubleshooting/:id/diagnostics', to: 'router_troubleshooting#diagnostics'
+get    '/api/router_troubleshooting/:id/dhcp_leases', to: 'router_troubleshooting#dhcp_leases'
+get    '/api/router_troubleshooting/:id/firewall',    to: 'router_troubleshooting#firewall_rules'
+get    '/api/router_troubleshooting/:id/wireguard',   to: 'router_troubleshooting#wireguard_status'
+get    '/api/router_troubleshooting/:id/hotspot',     to: 'router_troubleshooting#hotspot_status'
+post   '/api/router_troubleshooting/:id/ping',        to: 'router_troubleshooting#ping'
+post   '/api/router_troubleshooting/:id/ask',         to: 'router_troubleshooting#ask'
 
 get   'network_map', to: 'network_map#index'
 post  'network_map/sync', to: 'network_map#sync'
