@@ -1,83 +1,106 @@
-require 'open3'
+# require 'open3'
+require 'concurrent'
+
+
 
 class RouterNotificationJob
   include Sidekiq::Job
   queue_as :default
-  # sidekiq_options lock: :until_executed, lock_timeout: 0
+  sidekiq_options lock: :until_executed, lock_timeout: 0
   # sidekiq_options lock: :while_executing  # was: lock: :until_executed, lock_timeout: 0
   def perform
-    Account.find_each do |tenant|
+    Account.includes(:nas_setting, :sms_setting).find_each do |tenant|
       ActsAsTenant.with_tenant(tenant) do
-        nas_setting = tenant&.nas_setting
-        next unless nas_setting&.notification_when_unreachable
-
-        notification_phone_number = nas_setting.notification_phone_number
-        duration_minutes = nas_setting.unreachable_duration_minutes || 0
-
-        next if notification_phone_number.blank?
-
-        NasRouter.where(account_id: tenant.id).each do |nas_router|
-          check_router(nas_router, tenant, notification_phone_number, duration_minutes)
-        end
+        process_tenant(tenant)
+      rescue => e
+        Rails.logger.error "RouterNotificationJob failed for tenant #{tenant.id}: #{e.message}"
+        next 
       end
     end
   end
 
   private
 
-  # ═══════════════════════════════════════════════════════════════
-  # CHECK SINGLE ROUTER
-  # ═══════════════════════════════════════════════════════════════
 
-  def check_router(nas_router, tenant, phone_number, duration_minutes)
+
+
+ def process_tenant(tenant)
+    nas_setting = tenant.nas_setting
+    return unless nas_setting&.notification_when_unreachable
+
+    notification_phone_number = nas_setting.notification_phone_number
+    return if notification_phone_number.blank?
+
+    duration_minutes = nas_setting.unreachable_duration_minutes || 0
+    routers = NasRouter.where(account_id: tenant.id).to_a
+    return if routers.empty?
+
+    # ✅ Parallel TCP checks instead of serial — this is the main slowness fix
+    results = batch_tcp_check(routers)
+
+    routers.each do |nas_router|
+      reachable = results[nas_router.id]
+      check_router(nas_router, tenant, notification_phone_number, duration_minutes, reachable)
+    end
+  end
+
+
+
+
+ def batch_tcp_check(routers, port = 8728, timeout_sec = 3)
+    pool = Concurrent::FixedThreadPool.new([routers.size, 20].min)
+    results = Concurrent::Hash.new
+
+    routers.each do |nas_router|
+      pool.post do
+        results[nas_router.id] = tcp_reachable?(nas_router.ip_address, port, timeout_sec)
+      end
+    end
+
+    pool.shutdown
+    pool.wait_for_termination(timeout_sec + 5) # hard ceiling so a hung socket can't hang the job
+    results
+  end
+
+  def tcp_reachable?(ip, port = 8728, timeout_sec = 3)
+    Socket.tcp(ip, port, connect_timeout: timeout_sec) { true }
+  rescue Errno::ECONNREFUSED
+    true # host reachable, port closed → still "up"
+  rescue StandardError
+    false
+  end
+
+ def check_router(nas_router, tenant, phone_number, duration_minutes, reachable)
     ip_address = nas_router.ip_address
     router_name = nas_router.name
     now = Time.current
 
-    reachable = tcp_reachable?(ip_address, 8728)
     new_status = reachable ? "reachable" : "unreachable"
     previous_status = nas_router.last_status
 
-    Rails.logger.info "Router #{router_name} (#{ip_address}): #{previous_status} → #{new_status}"
-
-    # ✅ Update status only if changed
     if previous_status != new_status
-      nas_router.update!(
-        last_status: new_status,
-        last_status_changed_at: now
-      )
-      Rails.logger.info "Router #{router_name} status changed to #{new_status}"
+      nas_router.update!(last_status: new_status, last_status_changed_at: now)
     end
 
-    # ✅ Only notify when UNREACHABLE (not when reachable)
-    # ✅ Only notify if unreachable long enough
-    # ✅ Only notify once per unreachable event (not repeatedly)
     if new_status == "unreachable"
       minutes_unreachable = (now - (nas_router.last_status_changed_at || now)) / 60.0
       already_notified = nas_router.last_notification_sent_at.present? &&
-                         nas_router.last_notification_sent_at >= nas_router.last_status_changed_at
+                          nas_router.last_notification_sent_at >= nas_router.last_status_changed_at
 
       if minutes_unreachable >= duration_minutes && !already_notified
-        Rails.logger.info "Sending unreachable SMS for #{router_name}"
         send_notification_sms_unreachable(phone_number, tenant, router_name, ip_address)
         nas_router.update!(last_notification_sent_at: now)
       end
-
-    # ✅ Optionally notify when back online (only if we previously notified about it being down)
     elsif new_status == "reachable" && previous_status == "unreachable"
-      # Only send "back online" if we had previously sent an "unreachable" notification
       if nas_router.last_notification_sent_at.present? &&
          nas_router.last_notification_sent_at >= (nas_router.last_status_changed_at - 1.hour)
-        Rails.logger.info "Sending reachable SMS for #{router_name} (was unreachable)"
         send_notification_sms_reachable(phone_number, tenant, router_name, ip_address)
         nas_router.update!(last_notification_sent_at: now)
       end
     end
   end
 
-  # ═══════════════════════════════════════════════════════════════
-  # TCP CHECK
-  # ═══════════════════════════════════════════════════════════════
+
 
   def tcp_reachable?(ip, port = 8728, timeout_sec = 3)
     Timeout.timeout(timeout_sec) do
