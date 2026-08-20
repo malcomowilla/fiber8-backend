@@ -1,6 +1,6 @@
 class RouterTroubleshootingAiService
   # Free tier: no billing required. https://aistudio.google.com/apikey
-  GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent"
+  GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent"
 
   def self.ask(router:, diagnostics:, question:, history: [])
     new.ask(router: router, diagnostics: diagnostics, question: question, history: history)
