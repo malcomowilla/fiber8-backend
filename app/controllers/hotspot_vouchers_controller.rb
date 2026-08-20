@@ -2751,7 +2751,7 @@ def delete_voucher_natively(voucher)
 
     if active_sessions.present?
       active_sessions.each do |session|
-        session_id = session[".id"]  # ← changed: REST returns a hash now, not a raw text line
+        session_id = session[".id"]  
         next unless session_id
 
         RestClient::Request.execute(

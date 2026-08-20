@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_08_19_135104) do
+ActiveRecord::Schema[7.2].define(version: 2026_08_20_143441) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -863,7 +863,11 @@ ActiveRecord::Schema[7.2].define(version: 2026_08_19_135104) do
     t.string "router_ip"
     t.integer "winbox_relay_port"
     t.datetime "winbox_relay_expires_at"
+    t.index ["account_id", "last_status"], name: "index_nas_routers_on_account_id_and_last_status"
     t.index ["account_id"], name: "index_nas_routers_on_account_id"
+    t.index ["last_notification_sent_at"], name: "index_nas_routers_on_last_notification_sent_at"
+    t.index ["last_status"], name: "index_nas_routers_on_last_status"
+    t.index ["last_status_changed_at"], name: "index_nas_routers_on_last_status_changed_at"
     t.index ["winbox_relay_port"], name: "index_nas_routers_on_winbox_relay_port", unique: true
   end
 
@@ -875,6 +879,8 @@ ActiveRecord::Schema[7.2].define(version: 2026_08_19_135104) do
     t.integer "account_id"
     t.integer "unreachable_duration_minutes"
     t.boolean "use_radius", default: false, null: false
+    t.index ["account_id"], name: "index_nas_settings_on_account_id"
+    t.index ["notification_when_unreachable"], name: "index_nas_settings_on_notification_when_unreachable"
   end
 
   create_table "network_connections", force: :cascade do |t|
@@ -1230,6 +1236,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_08_19_135104) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.integer "account_id"
+    t.index ["account_id"], name: "index_sms_provider_settings_on_account_id"
   end
 
   create_table "sms_settings", force: :cascade do |t|
@@ -1246,6 +1253,8 @@ ActiveRecord::Schema[7.2].define(version: 2026_08_19_135104) do
     t.string "partnerID"
     t.datetime "sms_setting_updated_at"
     t.integer "tenant_id"
+    t.index ["account_id"], name: "index_sms_settings_on_account_id"
+    t.index ["sms_provider"], name: "index_sms_settings_on_sms_provider"
   end
 
   create_table "sms_templates", force: :cascade do |t|
@@ -1466,6 +1475,8 @@ ActiveRecord::Schema[7.2].define(version: 2026_08_19_135104) do
     t.string "sms_provider"
     t.integer "account_id"
     t.integer "subscriber_id"
+    t.index ["account_id"], name: "index_system_admin_sms_on_account_id"
+    t.index ["created_at"], name: "index_system_admin_sms_on_created_at"
   end
 
   create_table "system_admin_web_authn_credentials", force: :cascade do |t|
