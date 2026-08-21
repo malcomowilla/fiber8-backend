@@ -74,7 +74,13 @@ class MpesaService
   JSON.parse(response.body)['access_token']
 
 rescue RestClient::ExceptionWithResponse => e
-  Rails.logger.error("Error fetching access token (HTTP #{e.http_code}): #{e.response&.body}")
+  Rails.logger.error(
+    "Error fetching access token (HTTP #{e.http_code}): " \
+    "body=#{e.response&.body.inspect} " \
+    "consumer_key_present=#{consumer_key.present?} " \
+    "consumer_key_len=#{consumer_key.to_s.length} " \
+    "consumer_secret_present=#{consumer_secret.present?}"
+  )
   nil
 rescue RestClient::Exceptions::Timeout, Errno::ETIMEDOUT
   Rails.logger.error("Error fetching access token: request to #{api_url} timed out")
