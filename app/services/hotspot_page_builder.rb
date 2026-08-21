@@ -954,7 +954,7 @@ function startQueryStatus() {
     const gateway = localStorage.getItem('payment_gateway') || 'mpesa';
     if (!checkout_request_id) { clearInterval(stkQueryInterval); stkQueryInterval = null; return; }
 
-    const endpoint = gateway === 'mpesa' ? '/api/stk_push_status' : '/api/payment_reference_status';
+    const endpoint = gateway === 'mpesa' ? '/api/query_status' : '/api/payment_reference_status';
     const bodyKey  = gateway === 'mpesa' ? 'checkout_request_id' : 'reference';
     const method   = gateway === 'mpesa' ? 'POST' : 'GET';
 
@@ -1024,7 +1024,7 @@ function startQueryStatus() {
         }
         // else: still 'Pending' — keep polling
       }
-    } catch (e) {  }
+    } catch (e) { /* keep polling on transient errors */ }
   }, 5000);
 }
 
