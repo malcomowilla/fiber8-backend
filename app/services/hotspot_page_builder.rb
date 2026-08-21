@@ -946,84 +946,81 @@ function collapseExpandedAd() {
 
 
 
+
 function startQueryStatus() {
   if (stkQueryInterval) clearInterval(stkQueryInterval);
 
   stkQueryInterval = setInterval(async () => {
-    const checkout_request_id = localStorage.getItem('checkout_request_id');
-    const gateway = localStorage.getItem('payment_gateway') || 'mpesa';
-    if (!checkout_request_id) { clearInterval(stkQueryInterval); stkQueryInterval = null; return; }
-
-    const endpoint = gateway === 'mpesa' ? '/api/stk_push_status' : '/api/payment_reference_status';
-    const bodyKey  = gateway === 'mpesa' ? 'checkout_request_id' : 'reference';
-    const method   = gateway === 'mpesa' ? 'POST' : 'GET';
+     const checkout_request_id = localStorage.getItem('checkout_request_id');
+  const gateway = localStorage.getItem('payment_gateway') || 'mpesa';
+  if (!checkout_request_id) { clearInterval(stkQueryInterval); stkQueryInterval = null; return; }
+  const endpoint = gateway === 'mpesa' ? '/api/stk_push_status' : '/api/payment_reference_status';
+  const bodyKey  = gateway === 'mpesa' ? 'checkout_request_id' : 'reference';
 
     try {
-      const url = method === 'GET'
-        ? api(endpoint) + '?' + bodyKey + '=' + encodeURIComponent(checkout_request_id)
-        : api(endpoint);
-
-      const res = await fetch(url, {
-        method,
-        headers,
-        ...(method === 'POST' ? { body: JSON.stringify({ [bodyKey]: checkout_request_id }) } : {})
+      const res = await fetch(api('/api/query_status'), {
+        method: 'POST', headers,
+        body: JSON.stringify({ checkout_request_id })
       });
       const data = await res.json();
       if (!res.ok) return;
 
+
       if (gateway === 'mpesa') {
         const code = data.response && data.response.ResultCode;
-        switch (code) {
-          case '0':
-            clearInterval(stkQueryInterval); stkQueryInterval = null;
-            queryModal = { status: null, message: '' };
-            renderQueryModal();
-            localStorage.removeItem('checkout_request_id');
-            onConnected({ package: state.selected && state.selected.name });
-            break;
-          case '4999':
-            queryModal = { status: 'processing', message: 'The transaction is still under processing. Please wait…' };
-            renderQueryModal();
-            break;
-          case '1037':
-            clearInterval(stkQueryInterval); stkQueryInterval = null;
-            queryModal = { status: 'no_response', message: 'No response received from user. Please complete the M-Pesa prompt.' };
-            renderQueryModal();
-            localStorage.removeItem('checkout_request_id');
-            break;
-          case '1032':
-            clearInterval(stkQueryInterval); stkQueryInterval = null;
-            queryModal = { status: 'cancelled', message: 'Payment was cancelled. Please try again.' };
-            renderQueryModal();
-            localStorage.removeItem('checkout_request_id');
-            break;
-          case '2001':
-            clearInterval(stkQueryInterval); stkQueryInterval = null;
-            queryModal = { status: 'invalid_initiator', message: 'The initiator information is invalid.' };
-            renderQueryModal();
-            localStorage.removeItem('checkout_request_id');
-            break;
-          default:
-            clearInterval(stkQueryInterval); stkQueryInterval = null;
-            queryModal = { status: 'error', message: (data.response && data.response.ResultDesc) || 'Payment failed. Please try again.' };
-            renderQueryModal();
-            localStorage.removeItem('checkout_request_id');
-        }
-      } else {
-        if (data.status === 'Completed') {
+      switch (code) {
+        case '0':
           clearInterval(stkQueryInterval); stkQueryInterval = null;
           queryModal = { status: null, message: '' };
           renderQueryModal();
           localStorage.removeItem('checkout_request_id');
-          onConnected({ package: data.package || (state.selected && state.selected.name) });
-        } else if (data.status === 'Cancelled') {
+          onConnected({ package: state.selected && state.selected.name });
+          break;
+        case '4999':
+          queryModal = { status: 'processing', message: 'The transaction is still under processing. Please wait…' };
+          renderQueryModal();
+          break;
+        case '1037':
+          clearInterval(stkQueryInterval); stkQueryInterval = null;
+          queryModal = { status: 'no_response', message: 'No response received from user. Please complete the M-Pesa prompt.' };
+          renderQueryModal();
+          localStorage.removeItem('checkout_request_id');
+          break;
+        case '1032':
           clearInterval(stkQueryInterval); stkQueryInterval = null;
           queryModal = { status: 'cancelled', message: 'Payment was cancelled. Please try again.' };
           renderQueryModal();
           localStorage.removeItem('checkout_request_id');
-        }
-        // else: still 'Pending' — keep polling
+          break;
+        case '2001':
+          clearInterval(stkQueryInterval); stkQueryInterval = null;
+          queryModal = { status: 'invalid_initiator', message: 'The initiator information is invalid.' };
+          renderQueryModal();
+          localStorage.removeItem('checkout_request_id');
+          break;
+        default:
+          clearInterval(stkQueryInterval); stkQueryInterval = null;
+          queryModal = { status: 'error', message: (data.response && data.response.ResultDesc) || 'Payment failed. Please try again.' };
+          renderQueryModal();
+          localStorage.removeItem('checkout_request_id');
       }
+    } else {
+      if (data.status === 'Completed') {
+        clearInterval(stkQueryInterval); stkQueryInterval = null;
+        queryModal = { status: null, message: '' };
+        renderQueryModal();
+        localStorage.removeItem('checkout_request_id');
+        onConnected({ package: data.package || (state.selected && state.selected.name) });
+      } else if (data.status === 'Cancelled') {
+        clearInterval(stkQueryInterval); stkQueryInterval = null;
+        queryModal = { status: 'cancelled', message: 'Payment was cancelled. Please try again.' };
+        renderQueryModal();
+        localStorage.removeItem('checkout_request_id');
+      }
+
+    }
+
+      
     } catch (e) { /* keep polling on transient errors */ }
   }, 5000);
 }
