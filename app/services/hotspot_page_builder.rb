@@ -954,6 +954,10 @@ function startQueryStatus() {
     const gateway = localStorage.getItem('payment_gateway') || 'mpesa';
     if (!checkout_request_id) { clearInterval(stkQueryInterval); stkQueryInterval = null; return; }
 
+    const endpoint = gateway === 'mpesa' ? '/api/stk_push_status' : '/api/payment_reference_status';
+    const bodyKey  = gateway === 'mpesa' ? 'checkout_request_id' : 'reference';
+    const method   = gateway === 'mpesa' ? 'POST' : 'GET';
+
     try {
       const url = method === 'GET'
         ? api(endpoint) + '?' + bodyKey + '=' + encodeURIComponent(checkout_request_id)
