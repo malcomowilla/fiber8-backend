@@ -949,12 +949,8 @@ function startQueryStatus() {
 
   stkQueryInterval = setInterval(async () => {
     const checkout_request_id = localStorage.getItem('checkout_request_id');
-      const gateway = localStorage.getItem('payment_gateway') || 'mpesa';
-
+    
     if (!checkout_request_id) { clearInterval(stkQueryInterval); stkQueryInterval = null; return; }
-     const endpoint = gateway === 'mpesa' ? '/api/stk_push_status' : '/api/payment_reference_status';
-    const bodyKey  = gateway === 'mpesa' ? 'checkout_request_id' : 'reference';
-
 
     try {
       const res = await fetch(api('/api/query_status'), {
@@ -964,10 +960,7 @@ function startQueryStatus() {
       const data = await res.json();
       if (!res.ok) return;
 
-
-
-      if (gateway === 'mpesa') {
-        const code = data.response && data.response.ResultCode;
+      const code = data.response && data.response.ResultCode;
       switch (code) {
         case '0':
           clearInterval(stkQueryInterval); stkQueryInterval = null;
@@ -1004,21 +997,6 @@ function startQueryStatus() {
           renderQueryModal();
           localStorage.removeItem('checkout_request_id');
       }
-    } else {
-      if (data.status === 'Completed') {
-        clearInterval(stkQueryInterval); stkQueryInterval = null;
-        queryModal = { status: null, message: '' };
-        renderQueryModal();
-        localStorage.removeItem('checkout_request_id');
-        onConnected({ package: data.package || (state.selected && state.selected.name) });
-      } else if (data.status === 'Cancelled') {
-        clearInterval(stkQueryInterval); stkQueryInterval = null;
-        queryModal = { status: 'cancelled', message: 'Payment was cancelled. Please try again.' };
-        renderQueryModal();
-        localStorage.removeItem('checkout_request_id');
-      }
-    }
-      
     } catch (e) { /* keep polling on transient errors */ }
   }, 5000);
 }
