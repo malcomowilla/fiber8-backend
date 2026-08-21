@@ -3467,7 +3467,6 @@ end
 
 # Build the portal URL for the customer's tenant — adjust the default
 # platform domain / account->domain mapping to match how you already
-# resolve it in make_payment's callback_url logic.
 def hotspot_portal_url(account_id)
   account = Account.find_by(id: account_id)
   return nil unless account

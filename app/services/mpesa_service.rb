@@ -64,18 +64,28 @@ class MpesaService
     private
 
     def fetch_access_token(api_url, consumer_key, consumer_secret)
-      
-      response = RestClient.get(api_url, { params: { grant_type: 'client_credentials' }, Authorization: "Basic #{Base64.strict_encode64("#{consumer_key}:#{consumer_secret}")}" })
-    
-      body = response.body
-      Rails.logger.info("OAuth Response Body: #{body}")
-      access_token = JSON.parse(response.body)['access_token']
-    
-    access_token
-    rescue RestClient::ExceptionWithResponse => e
-      Rails.logger.error("Error fetching access token: #{e.response}")
-      nil
-    end
+  response = RestClient.get(api_url, {
+    params: { grant_type: 'client_credentials' },
+    Authorization: "Basic #{Base64.strict_encode64("#{consumer_key}:#{consumer_secret}")}"
+  })
+
+  body = response.body
+  Rails.logger.info("OAuth Response Body: #{body}")
+  JSON.parse(response.body)['access_token']
+
+rescue RestClient::ExceptionWithResponse => e
+  Rails.logger.error("Error fetching access token (HTTP #{e.http_code}): #{e.response&.body}")
+  nil
+rescue RestClient::Exceptions::Timeout, Errno::ETIMEDOUT
+  Rails.logger.error("Error fetching access token: request to #{api_url} timed out")
+  nil
+rescue SocketError, Errno::ECONNREFUSED, Errno::EHOSTUNREACH => e
+  Rails.logger.error("Error fetching access token: could not reach #{api_url} (#{e.class}: #{e.message})")
+  nil
+rescue => e
+  Rails.logger.error("Error fetching access token: #{e.class}: #{e.message}")
+  nil
+end
     
     
     
