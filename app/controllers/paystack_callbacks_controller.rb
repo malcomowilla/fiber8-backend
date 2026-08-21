@@ -3,20 +3,16 @@ class PaystackCallbacksController < ApplicationController
   skip_before_action :verify_authenticity_token, raise: false
 
   def hotspot_callback
-    payload = request.body.read
-    return head(:unauthorized) unless valid_signature?(payload)
+    payload = request.raw_post
+
+    Rails.logger.info "========== PAYSTACK WEBHOOK RECEIVED =========="
+    Rails.logger.info payload
 
     event = JSON.parse(payload) rescue {}
-    return head(:ok) unless event['event'] == 'charge.success'
 
-    data = event['data'] || {}
-    reference = data['reference']
+    Rails.logger.info "Paystack event: #{event['event']}"
+    Rails.logger.info "Paystack reference: #{event.dig('data', 'reference')}"
 
-    revenue = HotspotMpesaRevenue.find_by(checkout_request_id: reference)
-    return head(:ok) unless revenue
-    return head(:ok) if revenue.status == 'Completed' # idempotent — Paystack may retry
-
-    ActsAsTenant.with_tenant(Account.find_by(id: revenue.account_id)) { process_success(revenue) }
     head :ok
   end
 
