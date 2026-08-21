@@ -963,9 +963,7 @@ function startQueryStatus() {
       });
       const data = await res.json();
       if (!res.ok) return;
-
-
-       if (gateway === 'mpesa') {
+      
 
       const code = data.response && data.response.ResultCode;
       switch (code) {
@@ -1004,22 +1002,6 @@ function startQueryStatus() {
           renderQueryModal();
           localStorage.removeItem('checkout_request_id');
       }
-    } else {
-      if (data.status === 'Completed') {
-        clearInterval(stkQueryInterval); stkQueryInterval = null;
-        queryModal = { status: null, message: '' };
-        renderQueryModal();
-        localStorage.removeItem('checkout_request_id');
-        onConnected({ package: data.package || (state.selected && state.selected.name) });
-      } else if (data.status === 'Cancelled') {
-        clearInterval(stkQueryInterval); stkQueryInterval = null;
-        queryModal = { status: 'cancelled', message: 'Payment was cancelled. Please try again.' };
-        renderQueryModal();
-        localStorage.removeItem('checkout_request_id');
-      }
-      // 'Pending' → keep polling, no UI change needed
-    }
-
     } catch (e) { /* keep polling on transient errors */ }
   }, 5000);
 }
