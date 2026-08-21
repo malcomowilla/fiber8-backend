@@ -4,60 +4,30 @@ class MpesaService
 
 
 
-    def initiate_stk_push(phone_number, amount, shortcode,  passkey,
-       consumer_key, consumer_secret, host, voucher_code, session_id) 
-      # api_url = 'https://sandbox.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials'
-    api_url = 'https://api.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials'
+    def initiate_stk_push(phone_number, amount, shortcode, passkey,
+   consumer_key, consumer_secret, host, voucher_code, session_id)
+  api_url = 'https://api.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials'
+  callback_url = "https://malcomowilla.github.io/my-portfolio/"
+  formatted_phone_number = "254#{phone_number.gsub(/\A0/, '')}"
 
-    
-      consumer_key = consumer_key
-      consumer_secret = consumer_secret
-      shortcode = shortcode
-      callback_url= "https://malcomowilla.github.io/my-portfolio/"   
-    
-      lipa_na_mpesa_online_passkey =  passkey;
-      
-      
-      phone_number = phone_number = phone_number
-      formatted_phone_number = "254#{phone_number.gsub(/\A0/, '')}"
-    
-      # permitted_params = params.permit(:amount, :phone_number) 
-      amount = amount
-    
-      # Rails.logger.info("Received parameters: #{params}")
-    
-    
-    
-    
-    
-     token = fetch_access_token(api_url, consumer_key, consumer_secret,)
-     
-    
-    #  if token
-    #   response = initiate_payment(api_url, token, shortcode, lipa_na_mpesa_online_passkey, callback_url, formatted_phone_number, amount)
-    #   render json: response
-    # else
-    #   render json: { error: 'Failed to fetch access token' }, status: :unprocessable_entity
-    # end
-    
-    
-    # end
-    
+  token = fetch_access_token(api_url, consumer_key, consumer_secret)
 
-    if token
-      # Initiate payment
-      response = initiate_payment(api_url, token, shortcode, passkey, callback_url,
-       formatted_phone_number, amount,
-      host, voucher_code,session_id
-      )
-      { success: true, response: response }
-    else
-      { success: false, error: 'Failed to fetch access token' }
-    end
-  rescue => e
-    Rails.logger.error("MpesaService Error: #{e.message}")
-    { success: false, error: e.message }
+  unless token
+    return { success: false, error: 'Failed to fetch access token' }
   end
+
+  result = initiate_payment(api_url, token, shortcode, passkey, callback_url,
+    formatted_phone_number, amount, host, voucher_code, session_id)
+
+  if result[:error]
+    { success: false, error: result[:error] }
+  else
+    { success: true, response: result }
+  end
+rescue => e
+  Rails.logger.error("MpesaService Error: #{e.class}: #{e.message}")
+  { success: false, error: e.message }
+end
 
 
 
@@ -94,52 +64,50 @@ rescue => e
 end
     
     
-    
     def initiate_payment(api_url, token, shortcode, lipa_na_mpesa_online_passkey, callback_url,
-       formatted_phone_number, amount, host, voucher_code, session_id)
-      timestamp = Time.now.strftime('%Y%m%d%H%M%S')
-    
-      password = Base64.strict_encode64("#{shortcode}#{lipa_na_mpesa_online_passkey}#{timestamp}")
-    
-    
-      Rails.logger.info("Payment Request Timestamp: #{timestamp}")
-      Rails.logger.info("Payment Request Password: #{password}")
-    
+   formatted_phone_number, amount, host, voucher_code, session_id)
+  timestamp = Time.now.strftime('%Y%m%d%H%M%S')
+  password = Base64.strict_encode64("#{shortcode}#{lipa_na_mpesa_online_passkey}#{timestamp}")
 
-      
-    payload = {    
-      BusinessShortCode: shortcode,    
-      Password:  password,    
-      Timestamp:timestamp,    
-      TransactionType: "CustomerPayBillOnline",    
-      Amount: amount,    
-      PartyA: formatted_phone_number,    
-      PartyB: shortcode ,    
-      PhoneNumber:formatted_phone_number,     
-      CallBackURL: "https://#{host}.#{ENV['HOST2']}/#{ENV['HOTSPOT_PAYMENTS']}",    
-      AccountReference: "hotspot_#{session_id}_#{voucher_code}",
-      TransactionDesc:"Hotspot stk push"
-    }
-    
+  payload = {
+    BusinessShortCode: shortcode,
+    Password: password,
+    Timestamp: timestamp,
+    TransactionType: "CustomerPayBillOnline",
+    Amount: amount,
+    PartyA: formatted_phone_number,
+    PartyB: shortcode,
+    PhoneNumber: formatted_phone_number,
+    CallBackURL: "https://#{host}.#{ENV['HOST2']}/#{ENV['HOTSPOT_PAYMENTS']}",
+    AccountReference: "hotspot_#{session_id}_#{voucher_code}",
+    TransactionDesc: "Hotspot stk push"
+  }
 
-    Rails.logger.info("Payment Request Payload: #{payload}")
-    
-    response = RestClient.post(
-      # "https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest",
-      'https://api.safaricom.co.ke/mpesa/stkpush/v1/processrequest',
-      payload.to_json,
-      { content_type: :json, Authorization: "Bearer #{token}" }
-    )
-    
-    
-     body = response.body
-      Rails.logger.info("Stk Request Response: #{body}")
-      JSON.parse(response.body)
-    rescue RestClient::ExceptionWithResponse => e
-    Rails.logger.error("Error initiating payment: #{e.response}")
-    { error: 'Failed to initiate payment' }
-    
-    end
+  Rails.logger.info("Payment Request Payload: #{payload}")
+
+  response = RestClient.post(
+    'https://api.safaricom.co.ke/mpesa/stkpush/v1/processrequest',
+    payload.to_json,
+    { content_type: :json, Authorization: "Bearer #{token}" }
+  )
+
+  Rails.logger.info("Stk Request Response: #{response.body}")
+  JSON.parse(response.body)
+  rescue RestClient::ExceptionWithResponse => e
+  body = e.response&.body.to_s
+  Rails.logger.error("Error initiating payment (HTTP #{e.http_code}): #{body}")
+  parsed = JSON.parse(body) rescue nil
+  message = parsed && (parsed['errorMessage'] || parsed['ResultDesc'] || parsed['error']) || body.presence
+  { error: message || "Safaricom rejected the STK push (HTTP #{e.http_code})" }
+
+rescue RestClient::Exceptions::Timeout, Errno::ETIMEDOUT
+  Rails.logger.error("Error initiating payment: request timed out")
+  { error: 'Request to Safaricom timed out' }
+
+rescue SocketError, Errno::ECONNREFUSED, Errno::EHOSTUNREACH => e
+  Rails.logger.error("Error initiating payment: could not reach Safaricom (#{e.class}: #{e.message})")
+  { error: 'Could not reach Safaricom' }
+end
 
 
 
