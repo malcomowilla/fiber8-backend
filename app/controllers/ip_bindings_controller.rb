@@ -327,10 +327,10 @@ def make_device_package_payment
     payment_type:    'device_binding'
   )
 
-  shortcode       = ActsAsTenant.current_tenant&.hotspot_mpesa_setting&.short_code || ENV['B2C_SHORTCODE']
-  passkey         = ActsAsTenant.current_tenant&.hotspot_mpesa_setting&.passkey    || ENV['PASSKEY']
-  consumer_key    = ActsAsTenant.current_tenant&.hotspot_mpesa_setting&.consumer_key    || ENV['CONSUMER_KEY']
-  consumer_secret = ActsAsTenant.current_tenant&.hotspot_mpesa_setting&.consumer_secret || ENV['CONSUMER_SECRET']
+  shortcode       = ActsAsTenant.current_tenant&.hotspot_mpesa_setting&.short_code.presence || ENV['B2C_SHORTCODE']
+  passkey         = ActsAsTenant.current_tenant&.hotspot_mpesa_setting&.passkey.presence    || ENV['PASSKEY']
+  consumer_key    = ActsAsTenant.current_tenant&.hotspot_mpesa_setting&.consumer_key.presence    || ENV['CONSUMER_KEY']
+  consumer_secret = ActsAsTenant.current_tenant&.hotspot_mpesa_setting&.consumer_secret.presence || ENV['CONSUMER_SECRET']
 
   result = MpesaBindingService.initiate_stk_push(
     phone_number, amount, shortcode, passkey,
