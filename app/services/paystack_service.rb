@@ -14,7 +14,7 @@ class PaystackService
 
   body = {
     amount: (amount.to_f * 100).to_i,
-    email: email.presence || "#{digits_only}@hotspot.customer",
+    email: email.presence || "#{digits_only}@owitech.co.ke",
     currency: 'KES',
     reference: reference,
     mobile_money: { phone: formatted_phone, provider: 'mpesa' },
