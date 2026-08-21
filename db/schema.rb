@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_08_20_143441) do
+ActiveRecord::Schema[7.2].define(version: 2026_08_21_125614) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -1107,6 +1107,29 @@ ActiveRecord::Schema[7.2].define(version: 2026_08_20_143441) do
     t.index ["account_id"], name: "index_payment_gateway_pin_settings_on_account_id", unique: true
   end
 
+  create_table "payment_gateway_settings", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.string "use_case", null: false
+    t.string "gateway", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id", "use_case"], name: "index_payment_gateway_settings_on_account_id_and_use_case", unique: true
+    t.index ["account_id"], name: "index_payment_gateway_settings_on_account_id"
+  end
+
+  create_table "paystack_settings", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.string "public_key"
+    t.string "secret_key"
+    t.boolean "enabled", default: false, null: false
+    t.boolean "use_for_hotspot", default: false, null: false
+    t.boolean "use_for_tv_plans", default: false, null: false
+    t.jsonb "ip_whitelist", default: []
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id"], name: "index_paystack_settings_on_account_id", unique: true
+  end
+
   create_table "pops", force: :cascade do |t|
     t.string "name"
     t.decimal "lat", precision: 10, scale: 6
@@ -1810,6 +1833,8 @@ ActiveRecord::Schema[7.2].define(version: 2026_08_20_143441) do
   add_foreign_key "payment_gateway_otps", "accounts"
   add_foreign_key "payment_gateway_otps", "users"
   add_foreign_key "payment_gateway_pin_settings", "accounts"
+  add_foreign_key "payment_gateway_settings", "accounts"
+  add_foreign_key "paystack_settings", "accounts"
   add_foreign_key "promotional_plans", "hotspot_packages"
   add_foreign_key "temporary_sessions", "tv_plans"
   add_foreign_key "tv_plans", "accounts"

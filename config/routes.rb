@@ -175,6 +175,8 @@ resource :tuma_settings, only: [:show, :update]
 resources :hotspot_sms_templates, only: [:index, :update]
 resources :system_announcements, only: [:index, :create, :update, :destroy]
 resource :appearance_settings, only: [:show, :create]
+resource :paystack_settings, only: [:show, :update], controller: 'paystack_settings'
+resource :payment_gateway_settings, only: [:show, :update]
 
 end
 
@@ -231,7 +233,20 @@ resource :tuma_settings, only: [:show, :update]
 
 
 resources :hotspot_sms_templates, only: [:index, :update]
-# config/routes.rb
+
+
+
+
+
+
+post '/api/paystack_settings/test_connection', to: 'paystack_settings#test_connection'
+resource :paystack_settings, only: [:show, :update], controller: 'paystack_settings'
+resource :payment_gateway_settings, only: [:show, :update]
+post '/api/paystack/hotspot_callback', to: 'paystack_callbacks#hotspot_callback'
+post '/api/payment_reference_status', to: 'hotspot_vouchers#payment_reference_status'
+get  '/api/payment_reference_status', to: 'hotspot_vouchers#payment_reference_status'
+
+
 get    '/api/router_troubleshooting',                 to: 'router_troubleshooting#overview'
 get    '/api/router_troubleshooting/:id/diagnostics', to: 'router_troubleshooting#diagnostics'
 get    '/api/router_troubleshooting/:id/dhcp_leases', to: 'router_troubleshooting#dhcp_leases'

@@ -949,7 +949,12 @@ function startQueryStatus() {
 
   stkQueryInterval = setInterval(async () => {
     const checkout_request_id = localStorage.getItem('checkout_request_id');
+      const gateway = localStorage.getItem('payment_gateway') || 'mpesa';
+
     if (!checkout_request_id) { clearInterval(stkQueryInterval); stkQueryInterval = null; return; }
+     const endpoint = gateway === 'mpesa' ? '/api/stk_push_status' : '/api/payment_reference_status';
+    const bodyKey  = gateway === 'mpesa' ? 'checkout_request_id' : 'reference';
+
 
     try {
       const res = await fetch(api('/api/query_status'), {
@@ -959,7 +964,10 @@ function startQueryStatus() {
       const data = await res.json();
       if (!res.ok) return;
 
-      const code = data.response && data.response.ResultCode;
+
+
+      if (gateway === 'mpesa') {
+        const code = data.response && data.response.ResultCode;
       switch (code) {
         case '0':
           clearInterval(stkQueryInterval); stkQueryInterval = null;
@@ -996,6 +1004,21 @@ function startQueryStatus() {
           renderQueryModal();
           localStorage.removeItem('checkout_request_id');
       }
+    } else {
+      if (data.status === 'Completed') {
+        clearInterval(stkQueryInterval); stkQueryInterval = null;
+        queryModal = { status: null, message: '' };
+        renderQueryModal();
+        localStorage.removeItem('checkout_request_id');
+        onConnected({ package: data.package || (state.selected && state.selected.name) });
+      } else if (data.status === 'Cancelled') {
+        clearInterval(stkQueryInterval); stkQueryInterval = null;
+        queryModal = { status: 'cancelled', message: 'Payment was cancelled. Please try again.' };
+        renderQueryModal();
+        localStorage.removeItem('checkout_request_id');
+      }
+    }
+      
     } catch (e) { /* keep polling on transient errors */ }
   }, 5000);
 }
@@ -1240,10 +1263,7 @@ function freeTrialHtml(trialPkgs) {
         }
 
 
-
 async function payPackage() {
-  // Neutral "in flight" state — we don't know an STK push actually went
-  // out yet, so don't claim it did until the backend confirms it.
   queryModal = { status: 'processing', message: 'Sending payment request…' };
   renderQueryModal();
   try {
@@ -1253,16 +1273,16 @@ async function payPackage() {
     });
     const data = await res.json();
     if (res.ok) {
-      queryModal = { status: 'processing', message: 'STK push sent — enter your M-Pesa PIN on your phone to complete payment.' };
+      queryModal = { status: 'processing', message: data.message || 'Check your phone to complete payment.' };
       renderQueryModal();
       localStorage.setItem('checkout_request_id', data.checkout_request_id);
+      localStorage.setItem('payment_gateway', data.gateway || 'mpesa');
       startQueryStatus();
     } else {
       queryModal = { status: 'error', message: data.error || 'Payment failed' };
       renderQueryModal();
     }
   } catch (e) {
-    console.error(e);
     queryModal = { status: 'error', message: 'Network error — check your connection' };
     renderQueryModal();
   }

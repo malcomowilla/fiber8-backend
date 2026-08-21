@@ -1380,7 +1380,20 @@ end
 
 
 
+def payment_reference_status
+  reference = params[:reference] || params[:checkout_request_id]
+  revenue = HotspotMpesaRevenue.find_by(checkout_request_id: reference)
+  return render json: { error: 'Not found' }, status: :not_found unless revenue
 
+  session = TemporarySession.find_by(checkout_request_id: reference)
+
+  render json: {
+    success: true,
+    status: revenue.status,          # 'Pending' | 'Completed' | 'Cancelled'
+    connected: session&.connected || false,
+    package: session&.hotspot_package
+  }
+end
 
 
 
@@ -1411,21 +1424,48 @@ def make_payment
   session_id = rand(100000..999999).to_s
 
   tuma_setting = TumaSetting.find_by(account_id: ActsAsTenant.current_tenant.id)
-  use_tuma = tuma_setting&.enabled && tuma_setting.use_for_hotspot
 
-  # ✅ RENAMED: session → temp_session
+  active_gateway = PaymentGatewaySetting.active_gateway_for(ActsAsTenant.current_tenant.id, 'hotspot')
+
+  tuma_setting = TumaSetting.find_by(account_id: ActsAsTenant.current_tenant.id)
+  use_tuma = active_gateway == 'tuma' && tuma_setting&.enabled
+
+  paystack_setting = PaystackSetting.find_by(account_id: ActsAsTenant.current_tenant.id)
+  use_paystack = active_gateway == 'paystack' && paystack_setting&.enabled
+
+  gateway_label = use_tuma ? 'tuma' : (use_paystack ? 'paystack' : 'mpesa')
+
   temp_session = TemporarySession.find_or_initialize_by(
-    ip: params[:ip],
-    session: session_id,
-    paid: false, 
-    connected: false,
-    hotspot_package: params[:package],
-    voucher_code: voucher_code,
-    phone_number: phone_number,
-    mac: params[:mac],
-    status: 'pending',
-    payment_gateway: use_tuma ? 'tuma' : 'mpesa'
+    ip: params[:ip], session: session_id, paid: false, connected: false,
+    hotspot_package: params[:package], voucher_code: voucher_code,
+    phone_number: phone_number, mac: params[:mac], status: 'pending',
+    payment_gateway: gateway_label
   )
+
+
+  if use_paystack
+    reference = "hotspot_#{session_id}_#{voucher_code}"
+
+    result = PaystackService.initiate_mobile_money_charge(
+      paystack_setting, amount: amount, phone: phone_number, email: nil,
+      reference: reference, metadata: { package: params[:package], session_id: session_id }
+    )
+
+    if result[:success]
+      temp_session.update!(checkout_request_id: reference)
+      HotspotMpesaRevenue.create!(
+        voucher: voucher_code, amount: amount, payment_method: 'Paystack',
+        phone_number: phone_number, status: 'Pending', checkout_request_id: reference
+      )
+      return render json: {
+        message: result[:display_text].presence || 'Please check your phone to complete the payment',
+        checkout_request_id: reference
+      }
+    else
+      return render json: { error: result[:error] || 'Failed to initiate Paystack payment' }, status: :unprocessable_entity
+    end
+  end
+  
 
   if use_tuma
     full_domain = request.headers['X-Domain']
