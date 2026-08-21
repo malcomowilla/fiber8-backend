@@ -1601,7 +1601,8 @@ consumer_secret = ActsAsTenant.current_tenant&.hotspot_mpesa_setting&.consumer_s
       )
       return render json: {
         message: result[:display_text].presence || 'Please check your phone to complete the payment',
-        checkout_request_id: reference
+        checkout_request_id: reference,
+        gateway: gateway_label  
       }
     else
       return render json: { error: result[:error] || 'Failed to initiate Paystack payment' }, status: :unprocessable_entity
@@ -1637,7 +1638,8 @@ consumer_secret = ActsAsTenant.current_tenant&.hotspot_mpesa_setting&.consumer_s
 
       return render json: {
         message: 'Please check your phone to complete the payment',
-        checkout_request_id: checkout_request_id
+        checkout_request_id: checkout_request_id,
+        gateway: gateway_label  
       }
     else
       return render json: { error: result[:error] || 'Failed to initiate Tuma payment' }, status: :unprocessable_entity
@@ -1686,7 +1688,8 @@ consumer_secret = ActsAsTenant.current_tenant&.hotspot_mpesa_setting&.consumer_s
 
   render json: {
     message: 'Please check your phone to complete the payment',
-    checkout_request_id: checkout_request_id
+    checkout_request_id: checkout_request_id,
+    gateway: gateway_label  
   }
 end
 
