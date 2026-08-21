@@ -9,33 +9,35 @@ class PaystackService
   # payload. Paystack pushes the prompt to the phone itself; we get back a
   # reference + status ('pay_offline' == prompt sent, check phone).
   def self.initiate_mobile_money_charge(setting, amount:, phone:, email:, reference:, metadata: {})
-    body = {
-      amount: (amount.to_f * 100).to_i, # Paystack wants amount in kobo/cents
-      email: email.presence || "#{normalize_phone(phone)}@hotspot.customer",
-      currency: 'KES',
-      reference: reference,
-      mobile_money: { phone: normalize_phone(phone), provider: 'mpesa' },
-      metadata: metadata
+  formatted_phone = normalize_phone(phone)      # "+254722000000"
+  digits_only = formatted_phone.delete('+')      # "254722000000"
+
+  body = {
+    amount: (amount.to_f * 100).to_i,
+    email: email.presence || "#{digits_only}@hotspot.customer",
+    currency: 'KES',
+    reference: reference,
+    mobile_money: { phone: formatted_phone, provider: 'mpesa' },
+    metadata: metadata
+  }
+
+  response = post('/charge', setting.secret_key, body)
+
+  if response['status'] == true
+    data = response['data'] || {}
+    {
+      success: true,
+      reference: data['reference'] || reference,
+      status: data['status'],
+      display_text: data['display_text'],
+      raw: data
     }
-
-    response = post('/charge', setting.secret_key, body)
-
-    if response['status'] == true
-      data = response['data'] || {}
-      {
-        success: true,
-        reference: data['reference'] || reference,
-        status: data['status'], # 'pay_offline' | 'success' | 'failed' | 'send_otp'
-        display_text: data['display_text'],
-        raw: data
-      }
-    else
-      { success: false, error: response['message'] || 'Failed to initiate Paystack charge' }
-    end
-  rescue => e
-    { success: false, error: e.message }
+  else
+    { success: false, error: response['message'] || 'Failed to initiate Paystack charge' }
   end
-
+rescue => e
+  { success: false, error: e.message }
+end
   # Paystack's own recommended polling endpoint for offline/mobile-money
   # charges. Only used as a manual "check now" fallback — the webhook is
   # the primary source of truth (see PaystackCallbacksController).
@@ -58,7 +60,7 @@ class PaystackService
     false
   end
 
-  
+
 def self.normalize_phone(phone)
   digits = phone.to_s.gsub(/\D/, '')
   local_digits =
