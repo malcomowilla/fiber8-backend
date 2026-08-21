@@ -1561,11 +1561,10 @@ def make_payment
   end
 
   amount = params[:amount]
-  shortcode = ActsAsTenant.current_tenant&.hotspot_mpesa_setting&.short_code || ENV['B2C_SHORTCODE']
-  passkey = ActsAsTenant.current_tenant&.hotspot_mpesa_setting&.passkey || ENV['PASSKEY']
-  consumer_key = ActsAsTenant.current_tenant&.hotspot_mpesa_setting&.consumer_key || ENV['CONSUMER_KEY']
-  consumer_secret = ActsAsTenant.current_tenant&.hotspot_mpesa_setting&.consumer_secret || ENV['CONSUMER_SECRET']
-
+  shortcode = ActsAsTenant.current_tenant&.hotspot_mpesa_setting&.short_code.presence || ENV['B2C_SHORTCODE']
+passkey = ActsAsTenant.current_tenant&.hotspot_mpesa_setting&.passkey.presence || ENV['PASSKEY']
+consumer_key = ActsAsTenant.current_tenant&.hotspot_mpesa_setting&.consumer_key.presence || ENV['CONSUMER_KEY']
+consumer_secret = ActsAsTenant.current_tenant&.hotspot_mpesa_setting&.consumer_secret.presence || ENV['CONSUMER_SECRET']
   voucher_code = generate_voucher_code
   session_id = rand(100000..999999).to_s
 
