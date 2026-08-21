@@ -58,12 +58,21 @@ class PaystackService
     false
   end
 
-  def self.normalize_phone(phone)
-    digits = phone.to_s.gsub(/\D/, '')
-    return "254#{digits[1..]}" if digits.start_with?('0')
-    return digits if digits.start_with?('254')
-    "254#{digits}"
-  end
+  
+def self.normalize_phone(phone)
+  digits = phone.to_s.gsub(/\D/, '')
+  local_digits =
+    if digits.start_with?('254')
+      digits[3..]
+    elsif digits.start_with?('0')
+      digits[1..]
+    else
+      digits
+    end
+  "+254#{local_digits}"
+end
+
+
 
   def self.post(path, secret_key, body)
     uri = URI("#{BASE_URL}#{path}")
