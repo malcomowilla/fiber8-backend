@@ -77,14 +77,22 @@ class RouterTroubleshootingAiService
                build_messages(history) +
                [{ role: 'user', content: question }]
 
+    # Workers AI's schema for @cf/ models doesn't support the OpenAI
+    # tool/tool_calls message shape through the /compat endpoint (it
+    # rejects the request entirely rather than ignoring the field).
+    # GPT-OSS tool calling needs the separate /ai/v1/responses endpoint,
+    # which isn't wired up yet — so only enable tools for non-workers-ai
+    # models until that's built.
+    with_tools = tool_executor.present? && !model.start_with?('workers-ai/')
+
     MAX_TOOL_ROUNDS.times do
-      response = call_gateway(model, messages, api_token, tool_executor.present?)
+      response = call_gateway(model, messages, api_token, with_tools)
       return response unless response[:success]
 
       msg = response[:message]
 
-      if msg['tool_calls'].present? && tool_executor.present?
-        messages << { role: 'assistant', content: msg['content'], tool_calls: msg['tool_calls'] }
+      if msg['tool_calls'].present? && with_tools
+        messages << { role: 'assistant', content: msg['content'] || '', tool_calls: msg['tool_calls'] }
 
         msg['tool_calls'].each do |tc|
           tool_name = tc.dig('function', 'name')
