@@ -1,6 +1,6 @@
 # app/controllers/paystack_callbacks_controller.rb
 class PaystackCallbacksController < ApplicationController
-  skip_before_action :verify_authenticity_token, raise: false
+  # skip_before_action :verify_authenticity_token, raise: false
 
   def hotspot_callback
     payload = request.raw_post
