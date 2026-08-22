@@ -20,8 +20,6 @@ class RouterTroubleshootingController < ApplicationController
   end
 
   # GET /router_troubleshooting
-  # Router picker list — name, ip, quick reachability from the RouterStatus
-  # table that RouterPingJob already keeps warm, so this stays instant.
   def overview
     routers = NasRouter.where(account_id: @account.id)
     statuses = RouterStatus.where(account_id: @account.id).index_by(&:ip)
@@ -40,9 +38,6 @@ class RouterTroubleshootingController < ApplicationController
   end
 
   # GET /router_troubleshooting/:id/diagnostics
-  # CPU / memory / disk / identity + interface health, plus rule-based
-  # insights so the dashboard has something useful even before the admin
-  # asks the assistant anything.
   def diagnostics
     resource = mikrotik_get(@nas_router, '/rest/system/resource')
     identity = mikrotik_get(@nas_router, '/rest/system/identity')
@@ -103,107 +98,114 @@ class RouterTroubleshootingController < ApplicationController
   end
 
   # GET /router_troubleshooting/:id/wireguard
-  # NOTE: adjust the method call below to match your actual
-  # RemoteWireguardExecutor interface — this assumes it can report peer
-  # handshake age / tunnel reachability for a given NasRouter's tunnel IP.
-  
-
-
   def wireguard_status
-  peer = find_wireguard_peer_for(@nas_router)
+    peer = find_wireguard_peer_for(@nas_router)
 
-  unless peer
-    return render json: { configured: false, message: "No WireGuard tunnel found for this router's IP" }
-  end
-staleness_minutes = ((Time.current - peer.updated_at) / 60).round
+    unless peer
+      return render json: { configured: false, message: "No WireGuard tunnel found for this router's IP" }
+    end
 
-  parsed = parse_peer_status(peer.status)
+    staleness_minutes = ((Time.current - peer.updated_at) / 60).round
+    parsed = parse_peer_status(peer.status)
 
-  render json: {
-    configured: true,
-    tunnel_ip: peer.private_ip.presence || strip_mask(peer.allowed_ips),
-    connected: parsed[:connected],
-    reachable: parsed[:reachable],
-    endpoint: parsed[:endpoint],
-    transfer: parsed[:transfer],
-    since: parsed[:since],
-    # status is only as fresh as the last RehydrateWireguardJob run —
-    # surface that so the frontend/assistant don't imply real-time data
-    last_checked_from_job: true,
+    render json: {
+      configured: true,
+      tunnel_ip: peer.private_ip.presence || strip_mask(peer.allowed_ips),
+      connected: parsed[:connected],
+      reachable: parsed[:reachable],
+      endpoint: parsed[:endpoint],
+      transfer: parsed[:transfer],
+      since: parsed[:since],
+      last_checked_from_job: true,
       last_checked_minutes_ago: staleness_minutes
-
-  }
-end
+    }
+  end
 
   # POST /router_troubleshooting/:id/ping
   def ping
     reachable = tcp_reachable?(@nas_router.ip_address, 80, timeout: 2)
     render json: { reachable: reachable, checked_at: Time.current }
   end
-# app/controllers/router_troubleshooting_controller.rb
 
-def ask
-  diagnostics_snapshot = safe_diagnostics_snapshot
+  # POST /router_troubleshooting/:id/ask
+  def ask
+    diagnostics_snapshot = safe_diagnostics_snapshot
 
-  result = RouterTroubleshootingAiService.ask(
-    router: @nas_router,
-    diagnostics: diagnostics_snapshot,
-    question: params[:message],
-    history: params[:history] || []
-  )
+    result = RouterTroubleshootingAiService.ask(
+      router: @nas_router,
+      diagnostics: diagnostics_snapshot,
+      question: params[:message],
+      history: params[:history] || [],
+      tool_executor: method(:run_diagnostic_tool)
+    )
 
-  if result[:success]
-    render json: { reply: result[:reply] }
-  else
-    # AI is down/rate-limited — hand back the raw snapshot so the frontend
-    # can show the admin something useful instead of a dead end.
-    render json: {
-      error: result[:error],
-      fallback: true,
-      snapshot: diagnostics_snapshot
-    }, status: :service_unavailable
+    if result[:success]
+      render json: { reply: result[:reply] }
+    else
+      render json: {
+        error: result[:error],
+        fallback: true,
+        snapshot: diagnostics_snapshot
+      }, status: :service_unavailable
+    end
   end
-end
 
+  # GET /router_troubleshooting/:id/hotspot
+  def hotspot_status
+    active = mikrotik_get(@nas_router, '/rest/ip/hotspot/active')
+    return render json: { error: 'Router unreachable' }, status: :service_unavailable unless active
 
-
-
-# GET /router_troubleshooting/:id/hotspot
-def hotspot_status
-  active = mikrotik_get(@nas_router, '/rest/ip/hotspot/active')
-  return render json: { error: 'Router unreachable' }, status: :service_unavailable unless active
-
-  render json: {
-    active_user_count: Array(active).size,
-    active_users: Array(active).first(25).map { |u|
-      { user: u['user'], address: u['address'], uptime: u['uptime'] }
+    render json: {
+      active_user_count: Array(active).size,
+      active_users: Array(active).first(25).map { |u|
+        { user: u['user'], address: u['address'], uptime: u['uptime'] }
+      }
     }
-  }
-end
-
-
-
+  end
 
   private
 
+  # Dispatches read-only tool calls the AI model requests during /ask.
+  # ONLY read endpoints live here. Never add a case that writes to the
+  # router (config changes, user creation, firewall edits) — the AI
+  # should never be able to trigger those without an explicit human
+  # confirmation step in the UI, separate from this chat tool loop.
+  def run_diagnostic_tool(name, _args = {})
+    case name
+    when 'ping_router'
+      { reachable: tcp_reachable?(@nas_router.ip_address, 80, timeout: 2) }
+    when 'get_dhcp_leases'
+      leases = mikrotik_get(@nas_router, '/rest/ip/dhcp-server/lease')
+      return { error: 'router_unreachable' } unless leases
 
+      Array(leases).first(50).map { |l|
+        { address: l['address'], mac_address: l['mac-address'], host_name: l['host-name'], status: l['status'] }
+      }
+    when 'get_firewall_rules'
+      rules = mikrotik_get(@nas_router, '/rest/ip/firewall/filter')
+      return { error: 'router_unreachable' } unless rules
 
+      Array(rules).first(50).map { |r|
+        { chain: r['chain'], action: r['action'], comment: r['comment'], disabled: r['disabled'] }
+      }
+    when 'get_wireguard_status'
+      peer = find_wireguard_peer_for(@nas_router)
+      peer ? parse_peer_status(peer.status) : { configured: false }
+    when 'get_hotspot_status'
+      active = mikrotik_get(@nas_router, '/rest/ip/hotspot/active')
+      return { error: 'router_unreachable' } unless active
 
+      { active_user_count: Array(active).size }
+    else
+      { error: "unknown_tool: #{name}" }
+    end
+  end
 
-
-
-
-
-
-
-def find_wireguard_peer_for(nas_router)
-  target_ip = nas_router.ip_address
-  WireguardPeer.find_by(private_ip: target_ip) ||
-    WireguardPeer.all.find { |p| strip_mask(p.allowed_ips) == target_ip }
-end
-
-
-
+  def find_wireguard_peer_for(nas_router)
+    target_ip = nas_router.ip_address
+    WireguardPeer.find_by(private_ip: target_ip) ||
+      WireguardPeer.all.find { |p| strip_mask(p.allowed_ips) == target_ip }
+  end
 
   def find_nas_router
     @nas_router = NasRouter.find_by(id: params[:id], account_id: @account.id)
@@ -260,57 +262,44 @@ end
     insights
   end
 
-
-
   def safe_diagnostics_snapshot
-  resource = mikrotik_get(@nas_router, '/rest/system/resource') || {}
-  active_hotspot = mikrotik_get(@nas_router, '/rest/ip/hotspot/active') || []
-  interfaces = mikrotik_get(@nas_router, '/rest/interface') || []
-  wg_peer = find_wireguard_peer_for(@nas_router)
-  wg_parsed = wg_peer ? parse_peer_status(wg_peer.status) : nil
+    resource = mikrotik_get(@nas_router, '/rest/system/resource') || {}
+    active_hotspot = mikrotik_get(@nas_router, '/rest/ip/hotspot/active') || []
+    interfaces = mikrotik_get(@nas_router, '/rest/interface') || []
+    wg_peer = find_wireguard_peer_for(@nas_router)
+    wg_parsed = wg_peer ? parse_peer_status(wg_peer.status) : nil
 
-  {
-    router_name: @nas_router.name,
-    ip_address: @nas_router.ip_address,
-    cpu_load_percent: resource['cpu-load'],
-    board: resource['board-name'],
-    version: resource['version'],
-    uptime: resource['uptime'],
-    active_hotspot_users: Array(active_hotspot).size,
-    interfaces_down: Array(interfaces).select { |i| i['running'] == 'false' }.map { |i| i['name'] },
-    wireguard: wg_peer ? {
-      connected: wg_parsed[:connected],
-      reachable: wg_parsed[:reachable],
-      since: wg_parsed[:since]
-    } : { configured: false }
-  }
-end
+    {
+      router_name: @nas_router.name,
+      ip_address: @nas_router.ip_address,
+      cpu_load_percent: resource['cpu-load'],
+      board: resource['board-name'],
+      version: resource['version'],
+      uptime: resource['uptime'],
+      active_hotspot_users: Array(active_hotspot).size,
+      interfaces_down: Array(interfaces).select { |i| i['running'] == 'false' }.map { |i| i['name'] },
+      wireguard: wg_peer ? {
+        connected: wg_parsed[:connected],
+        reachable: wg_parsed[:reachable],
+        since: wg_parsed[:since]
+      } : { configured: false }
+    }
+  end
 
+  def parse_peer_status(status_text)
+    return {} if status_text.blank?
+    lines = status_text.to_s.split("\n")
 
-
-
-def parse_peer_status(status_text)
-  return {} if status_text.blank?
-  lines = status_text.to_s.split("\n")
-
-  {
-    connected: lines.first.to_s.start_with?('Connected'),
-    endpoint: lines.first.to_s[/\((.*)\)/, 1],
-    reachable: lines.find { |l| l.start_with?('Reachable:') }&.split(': ', 2)&.last == 'YES',
-    since: lines.find { |l| l.start_with?('Since:') }&.split(': ', 2)&.last,
-    transfer: lines.find { |l| l.match?(/received/) }
-  }
-end
-
-
-
-
-
-
-
-
+    {
+      connected: lines.first.to_s.start_with?('Connected'),
+      endpoint: lines.first.to_s[/\((.*)\)/, 1],
+      reachable: lines.find { |l| l.start_with?('Reachable:') }&.split(': ', 2)&.last == 'YES',
+      since: lines.find { |l| l.start_with?('Since:') }&.split(': ', 2)&.last,
+      transfer: lines.find { |l| l.match?(/received/) }
+    }
+  end
 
   def strip_mask(cidr)
-  cidr.to_s.split('/').first
-end
+    cidr.to_s.split('/').first
+  end
 end

@@ -8,7 +8,6 @@ def mikrotik
     # begin
     # url = 'ws://google.com'
     # username = 'admin'
-    # password = 'telecomhacker@$'
       
     # ws = WebSocket::Client::Simple.connect('ws://192.168.88.1')
 
