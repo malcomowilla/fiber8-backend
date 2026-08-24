@@ -1,10 +1,12 @@
 # Extends HotspotVoucher expirations for an outage and (optionally) SMS's
 # affected customers.
 #
-# ASSUMPTIONS — verify these match your schema before running:
-# - HotspotVoucher#expiration is a formatted STRING (e.g. "August 24, 2026
-#   at 03:15 PM"), matching HotspotVouchersController's
-#   `expiration_time&.strftime("%B %d, %Y at %I:%M %p")`.
+# NOTE: HotspotVoucher#expiration is a real datetime column — reading it
+# returns an ActiveSupport::TimeWithZone, not a formatted string. It's only
+# ever *displayed* as "August 24, 2026 at 03:15 PM" (see
+# HotspotVouchersController), the underlying attribute is a proper
+# timestamp. No string parsing needed — just read/write the Time object.
+#
 # - HotspotPackage#nas_router stores the router's NAME (String).
 # - Radius accounts get expiry pushed via RadCheck's 'Expiration' attribute,
 #   same as HotspotVouchersController#create_voucher_radcheck.
@@ -12,8 +14,6 @@
 #   extended here — if you enforce native expiry via a background sweep
 #   job, it just needs to read the updated column, no router call needed.
 class HotspotIncidentCompensationService
-  EXPIRATION_FORMAT = "%B %d, %Y at %I:%M %p"
-
   Result = Struct.new(:compensated_count, :sms_sent_count, :voucher_ids, keyword_init: true)
 
   def initialize(account, grace_duration)
@@ -31,7 +31,7 @@ class HotspotIncidentCompensationService
       next unless new_expiration_time
 
       voucher.update(
-        expiration: new_expiration_time.strftime(EXPIRATION_FORMAT),
+        expiration: new_expiration_time,
         status: 'active'
       )
 
@@ -47,21 +47,14 @@ class HotspotIncidentCompensationService
   private
 
   def compensated_expiration_for(voucher)
-    current_expiration = parse_expiration(voucher.expiration)
+    current_expiration = voucher.expiration
 
-    if voucher.status == 'active' && current_expiration
+    if voucher.status == 'active' && current_expiration.present?
       current_expiration + @grace_duration
     else
-      # expired (or unparseable) vouchers are graced starting now
+      # expired (or missing expiration) vouchers are graced starting now
       Time.current + @grace_duration
     end
-  end
-
-  def parse_expiration(expiration_string)
-    return nil if expiration_string.blank?
-    Time.strptime(expiration_string, EXPIRATION_FORMAT)
-  rescue ArgumentError
-    nil
   end
 
   def router_uses_radius?
