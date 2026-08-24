@@ -178,11 +178,24 @@ resource :appearance_settings, only: [:show, :create]
 resource :paystack_settings, only: [:show, :update], controller: 'paystack_settings'
 resource :payment_gateway_settings, only: [:show, :update]
 
+resources :incidents, only: [:index, :create, :show, :update, :destroy] do
+  member { post :compensate }
+  collection { get :preview_affected }
+end
+resource :grace_period_setting, only: [:show, :update], controller: 'grace_period_settings'
 end
 
 
 
 
+
+
+resources :incidents, only: [:index, :create, :show, :update, :destroy] do
+  member { post :compensate }
+  collection { get :preview_affected }
+end
+resource :grace_period_setting, only: [:show, :update], controller: 'grace_period_settings'
+post '/api/hotspot_compensations/bulk', to: 'hotspot_compensations#bulk'
 
 
 resources :nas_routers, path: 'nas_routers' do

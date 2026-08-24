@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_08_21_125614) do
+ActiveRecord::Schema[7.2].define(version: 2026_08_24_174305) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -468,6 +468,16 @@ ActiveRecord::Schema[7.2].define(version: 2026_08_21_125614) do
     t.datetime "updated_at", null: false
   end
 
+  create_table "grace_period_settings", force: :cascade do |t|
+    t.integer "grace_period_value", default: 1, null: false
+    t.string "grace_period_unit", default: "days", null: false
+    t.boolean "enabled", default: true, null: false
+    t.bigint "account_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id"], name: "index_grace_period_settings_on_account_id"
+  end
+
   create_table "hotspot_and_dial_plans", force: :cascade do |t|
     t.datetime "expiry"
     t.string "status"
@@ -718,6 +728,28 @@ ActiveRecord::Schema[7.2].define(version: 2026_08_21_125614) do
     t.string "nas_router"
     t.index ["account_id"], name: "index_hotspot_vouchers_on_account_id"
     t.index ["voucher"], name: "index_hotspot_vouchers_on_voucher", unique: true
+  end
+
+  create_table "incidents", force: :cascade do |t|
+    t.string "title", null: false
+    t.string "incident_type", default: "outage", null: false
+    t.string "status", default: "ongoing", null: false
+    t.datetime "start_time", null: false
+    t.datetime "end_time"
+    t.text "notes"
+    t.string "router_scope", default: "all", null: false
+    t.json "affected_routers", default: []
+    t.string "service_type", default: "hotspot", null: false
+    t.boolean "compensate", default: false, null: false
+    t.boolean "active_customers_only", default: false, null: false
+    t.datetime "compensated_at"
+    t.integer "compensated_count", default: 0
+    t.integer "sms_sent_count", default: 0
+    t.bigint "account_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id", "start_time"], name: "index_incidents_on_account_id_and_start_time"
+    t.index ["account_id"], name: "index_incidents_on_account_id"
   end
 
   create_table "invoice_payments", force: :cascade do |t|
@@ -1824,6 +1856,8 @@ ActiveRecord::Schema[7.2].define(version: 2026_08_21_125614) do
   add_foreign_key "ad_events", "ad_settings"
   add_foreign_key "appearance_settings", "accounts"
   add_foreign_key "default_system_ad_settings", "accounts"
+  add_foreign_key "grace_period_settings", "accounts"
+  add_foreign_key "incidents", "accounts"
   add_foreign_key "invoice_payments", "accounts"
   add_foreign_key "invoice_payments", "invoices"
   add_foreign_key "ip_bindings", "tv_plans"
