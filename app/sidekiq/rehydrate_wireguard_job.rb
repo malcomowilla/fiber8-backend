@@ -11,16 +11,19 @@ class RehydrateWireguardJob
   def perform
     interface = "wg0"
 
-    # ------------------------------------------
-    # STEP 1 — Apply IP settings to WireGuard
-    # ------------------------------------------
+   
     WireguardPeer.find_each do |peer|
-      if peer.private_ip.present?
-        `wg set #{interface} peer #{peer.public_key} allowed-ips #{peer.allowed_ips},#{peer.private_ip}`
-      else
-        `wg set #{interface} peer #{peer.public_key} allowed-ips #{peer.allowed_ips}`
-      end
+  allowed_ips =
+    if peer.private_ip.present?
+      "#{peer.allowed_ips},#{peer.private_ip}"
+    else
+      peer.allowed_ips
     end
+
+  `wg set #{interface} peer #{peer.public_key} \
+    allowed-ips #{allowed_ips} \
+    persistent-keepalive 25`
+end
 
     # ------------------------------------------
     # STEP 2 — Parse `wg show wg0`
