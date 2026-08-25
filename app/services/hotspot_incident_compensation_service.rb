@@ -1,18 +1,20 @@
 # Extends HotspotVoucher expirations for an outage and (optionally) SMS's
 # affected customers.
 #
-# NOTE: HotspotVoucher#expiration is a real datetime column — reading it
-# returns an ActiveSupport::TimeWithZone, not a formatted string. It's only
-# ever *displayed* as "August 24, 2026 at 03:15 PM" (see
-# HotspotVouchersController), the underlying attribute is a proper
-# timestamp. No string parsing needed — just read/write the Time object.
-#
-# - HotspotPackage#nas_router stores the router's NAME (String).
-# - Radius accounts get expiry pushed via RadCheck's 'Expiration' attribute,
-#   same as HotspotVouchersController#create_voucher_radcheck.
-# - Native (non-radius) accounts only get the app-level `expiration` column
-#   extended here — if you enforce native expiry via a background sweep
-#   job, it just needs to read the updated column, no router call needed.
+# Router sync now matches HotspotVouchersController's actual convention
+# (verified against transaction_status_result / check_payment_status):
+#   - Radius + Real-time expiration  -> RadCheck 'Expiration' (wall clock)
+#   - Radius + Accumulated           -> RadCheck 'Max-All-Session' incremented
+#     by the grace duration in seconds (NOT reset — this adds budget on top
+#     of whatever's there, rather than assuming a starting value).
+#   - Native + Real-time expiration  -> bare REST PUT (name/password/profile
+#     only), matching sync_voucher_natively — no limit pushed.
+#   - Native + Accumulated           -> NOT synced to the router here. Real
+#     compensation semantics for `limit-uptime` (an accumulated-seconds
+#     budget, not a deadline) aren't safe to guess — re-pushing package
+#     validity would reset usage instead of adding grace time. App-level
+#     `expiration`/`status` are still updated; the router push is skipped
+#     until this is resolved deliberately.
 class HotspotIncidentCompensationService
   Result = Struct.new(:compensated_count, :sms_sent_count, :voucher_ids, keyword_init: true)
 
@@ -21,21 +23,19 @@ class HotspotIncidentCompensationService
     @grace_duration = grace_duration
   end
 
-  # scope: HotspotVoucher relation already filtered to affected routers /
-  # active-vs-expired rule (built by the caller).
   def compensate(scope, notify: true, company_name: nil)
     compensated_ids = []
 
-    scope.find_each do |voucher|
+    deduped_scope(scope).find_each do |voucher|
       new_expiration_time = compensated_expiration_for(voucher)
       next unless new_expiration_time
 
-      voucher.update(
-        expiration: new_expiration_time,
-        status: 'active'
-      )
+      unless voucher.update(expiration: new_expiration_time, status: 'active')
+        Rails.logger.error "HotspotIncidentCompensationService: failed to update voucher #{voucher.id}: #{voucher.errors.full_messages.join(', ')}"
+        next
+      end
 
-      sync_radius_expiration(voucher, new_expiration_time) if router_uses_radius?
+      sync_to_router(voucher, new_expiration_time)
       compensated_ids << voucher.id
     end
 
@@ -46,13 +46,18 @@ class HotspotIncidentCompensationService
 
   private
 
+  def deduped_scope(scope)
+    phoned_ids    = scope.where.not(phone: [nil, '']).group(:phone).maximum(:id).values
+    phoneless_ids = scope.where(phone: [nil, '']).pluck(:id)
+    HotspotVoucher.where(id: phoned_ids + phoneless_ids)
+  end
+
   def compensated_expiration_for(voucher)
     current_expiration = voucher.expiration
 
     if voucher.status == 'active' && current_expiration.present?
       current_expiration + @grace_duration
     else
-      # expired (or missing expiration) vouchers are graced starting now
       Time.current + @grace_duration
     end
   end
@@ -62,6 +67,19 @@ class HotspotIncidentCompensationService
     setting ? ActiveModel::Type::Boolean.new.cast(setting.use_radius) : true
   end
 
+  def real_time_mode?
+    @account.hotspot_setting&.voucher_expiration == 'Real-time expiration'
+  end
+
+  def sync_to_router(voucher, expiration_time)
+    if router_uses_radius?
+      real_time_mode? ? sync_radius_expiration(voucher, expiration_time) : sync_radius_accumulated(voucher)
+    elsif real_time_mode?
+      sync_native_bare(voucher)
+    end
+    # native + accumulated: intentionally not synced — see class comment
+  end
+
   def sync_radius_expiration(voucher, expiration_time)
     RadCheck.find_or_initialize_by(
       username: voucher.voucher,
@@ -69,23 +87,57 @@ class HotspotIncidentCompensationService
       radiusattribute: 'Expiration'
     ).update!(op: ':=', value: expiration_time.strftime("%d %b %Y %H:%M:%S"))
   rescue => e
-    Rails.logger.error "HotspotIncidentCompensationService: RadCheck update failed for #{voucher.voucher}: #{e.message}"
+    Rails.logger.error "HotspotIncidentCompensationService: RadCheck Expiration update failed for #{voucher.voucher}: #{e.message}"
+  end
+
+  def sync_radius_accumulated(voucher)
+    record = RadCheck.find_or_initialize_by(
+      username: voucher.voucher,
+      account_id: @account.id,
+      radiusattribute: 'Max-All-Session'
+    )
+    current_seconds = record.value.to_i
+    record.update!(op: ':=', value: (current_seconds + @grace_duration.to_i).to_s)
+  rescue => e
+    Rails.logger.error "HotspotIncidentCompensationService: RadCheck Max-All-Session update failed for #{voucher.voucher}: #{e.message}"
+  end
+
+  def sync_native_bare(voucher)
+    package = HotspotPackage.find_by(name: voucher.package, account_id: @account.id)
+    return unless package
+
+    nas = NasRouter.find_by(name: package.nas_router, account_id: @account.id)
+    return unless nas
+
+    RestClient::Request.execute(
+      method: :put,
+      url: "http://#{nas.ip_address}/rest/ip/hotspot/user",
+      user: nas.username.to_s, password: nas.password.to_s,
+      payload: { name: voucher.voucher, password: voucher.voucher, profile: package.name }.to_json,
+      headers: { content_type: :json },
+      timeout: 10, open_timeout: 5
+    )
+    voucher.update(sync_status: 'synced', synced_at: Time.current, sync_error: nil)
+  rescue => e
+    Rails.logger.error "HotspotIncidentCompensationService: native sync failed for #{voucher.voucher}: #{e.message}"
+    voucher.update(sync_status: 'failed', sync_error: e.message)
   end
 
   def notify_customers(vouchers, company_name)
     sent = 0
     provider = @account.sms_provider_setting&.sms_provider
 
-    vouchers.each do |voucher|
+    vouchers.find_each do |voucher|
       next if voucher.phone.blank?
-      message = compensation_message(voucher, company_name)
 
       begin
+        message = compensation_message(voucher.reload, company_name)
         case provider
         when 'SMS leopard' then send_sms_leopard(voucher.phone, message)
         when 'TextSms'     then send_textsms(voucher.phone, message)
         when 'Talk Sasa'   then send_talksasa(voucher.phone, message)
-        else next
+        else
+          next
         end
         sent += 1
       rescue => e
@@ -102,12 +154,13 @@ class HotspotIncidentCompensationService
       customer_phone: voucher.phone,
       voucher_code: voucher.voucher,
       plan_name: voucher.package,
+      validity: voucher.expiration&.strftime("%B %d, %Y at %I:%M %p") || "your next login",
       company_name: company_name || @account.company_setting&.company_name
     }
     return template.render(data) if template
 
     "We're sorry for today's service interruption. Your voucher #{voucher.voucher} has been " \
-      "extended as compensation. Thank you for your patience. (FROM: #{data[:company_name]})"
+      "extended and is now valid until #{data[:validity]}. Thank you for your patience. (FROM: #{data[:company_name]})"
   end
 
   def send_sms_leopard(phone, message)

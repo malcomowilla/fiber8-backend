@@ -181,6 +181,7 @@ resource :payment_gateway_settings, only: [:show, :update]
 resources :incidents, only: [:index, :create, :show, :update, :destroy] do
   member { post :compensate }
   collection { get :preview_affected }
+  collection { get :stats } 
 end
 resource :grace_period_setting, only: [:show, :update], controller: 'grace_period_settings'
 end
@@ -193,6 +194,8 @@ end
 resources :incidents, only: [:index, :create, :show, :update, :destroy] do
   member { post :compensate }
   collection { get :preview_affected }
+    collection { get :stats } 
+
 end
 resource :grace_period_setting, only: [:show, :update], controller: 'grace_period_settings'
 post '/api/hotspot_compensations/bulk', to: 'hotspot_compensations#bulk'

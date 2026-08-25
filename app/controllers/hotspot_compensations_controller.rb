@@ -11,14 +11,19 @@ class HotspotCompensationsController < ApplicationController
   end
 
   # POST /api/hotspot_compensations/bulk
-  # { phone_numbers: ["0712...","0798..."], grace_value: 1, grace_unit: 'days', notify: true }
+  # { phone_numbers: [...], grace_value: 1, grace_unit: 'days', notify: true, expired_lookback_days: 3 }
   def bulk
     phone_numbers = Array(params[:phone_numbers]).map(&:to_s).map(&:strip).reject(&:blank?)
     return render json: { error: 'No phone numbers provided' }, status: :unprocessable_entity if phone_numbers.empty?
 
     grace_duration = build_duration(params[:grace_value], params[:grace_unit])
-    vouchers = HotspotVoucher.where(account_id: @account.id, phone: phone_numbers, status: %w[active expired])
-    return render json: { error: 'No matching vouchers found for the given numbers' }, status: :not_found if vouchers.empty?
+    lookback_days = params[:expired_lookback_days].presence&.to_i || 3
+    cutoff = Time.current - lookback_days.days
+
+    vouchers = HotspotVoucher.where(account_id: @account.id, phone: phone_numbers)
+                              .where('status = ? OR (status = ? AND expiration >= ?)', 'active', 'expired', cutoff)
+
+    return render json: { error: 'No matching (recent) vouchers found for the given numbers' }, status: :not_found if vouchers.empty?
 
     notify = ActiveModel::Type::Boolean.new.cast(params[:notify].nil? ? true : params[:notify])
     result = HotspotIncidentCompensationService.new(@account, grace_duration).compensate(vouchers, notify: notify)
