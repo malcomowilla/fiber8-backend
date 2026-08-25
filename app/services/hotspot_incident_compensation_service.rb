@@ -1,20 +1,6 @@
-# Extends HotspotVoucher expirations for an outage and (optionally) SMS's
-# affected customers.
-#
-# Router sync now matches HotspotVouchersController's actual convention
-# (verified against transaction_status_result / check_payment_status):
-#   - Radius + Real-time expiration  -> RadCheck 'Expiration' (wall clock)
-#   - Radius + Accumulated           -> RadCheck 'Max-All-Session' incremented
-#     by the grace duration in seconds (NOT reset — this adds budget on top
-#     of whatever's there, rather than assuming a starting value).
-#   - Native + Real-time expiration  -> bare REST PUT (name/password/profile
-#     only), matching sync_voucher_natively — no limit pushed.
-#   - Native + Accumulated           -> NOT synced to the router here. Real
-#     compensation semantics for `limit-uptime` (an accumulated-seconds
-#     budget, not a deadline) aren't safe to guess — re-pushing package
-#     validity would reset usage instead of adding grace time. App-level
-#     `expiration`/`status` are still updated; the router push is skipped
-#     until this is resolved deliberately.
+
+
+
 class HotspotIncidentCompensationService
   Result = Struct.new(:compensated_count, :sms_sent_count, :voucher_ids, keyword_init: true)
 
