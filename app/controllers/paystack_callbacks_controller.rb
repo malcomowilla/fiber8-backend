@@ -2,19 +2,37 @@
 class PaystackCallbacksController < ApplicationController
   # skip_before_action :verify_authenticity_token, raise: false
 
+  
+
+
+
   def hotspot_callback
-    payload = request.raw_post
+  payload = request.raw_post
 
-    Rails.logger.info "========== PAYSTACK WEBHOOK RECEIVED =========="
-    Rails.logger.info payload
+  Rails.logger.info "========== PAYSTACK WEBHOOK RECEIVED =========="
+  Rails.logger.info payload
 
-    event = JSON.parse(payload) rescue {}
-
-    Rails.logger.info "Paystack event: #{event['event']}"
-    Rails.logger.info "Paystack reference: #{event.dig('data', 'reference')}"
-
-    head :ok
+  unless valid_signature?(payload)
+    Rails.logger.warn "Invalid Paystack signature"
+    return head :unauthorized
   end
+
+  event = JSON.parse(payload)
+
+  Rails.logger.info "Paystack event: #{event['event']}"
+  Rails.logger.info "Paystack reference: #{event.dig('data', 'reference')}"
+
+  if event['event'] == 'charge.success'
+    # Find your revenue/payment using the Paystack reference
+    # process_success(revenue)
+  end
+
+  head :ok
+rescue JSON::ParserError
+  Rails.logger.warn "Invalid JSON received from Paystack"
+  head :bad_request
+end
+
 
   private
 
@@ -24,7 +42,9 @@ class PaystackCallbacksController < ApplicationController
     return false unless setting&.secret_key.present?
 
     expected = OpenSSL::HMAC.hexdigest('sha512', setting.secret_key, payload)
-    ActiveSupport::SecurityUtils.secure_compare(expected, request.headers['HTTP_X_PAYSTACK_SIGNATURE'].to_s)
+    ActiveSupport::SecurityUtils.secure_compare(expected, request.headers['X_PAYSTACK_SIGNATURE'].to_s)
+        # ActiveSupport::SecurityUtils.secure_compare(expected, request.headers['HTTP_X_PAYSTACK_SIGNATURE'].to_s)
+
   end
 
   def process_success(revenue)
