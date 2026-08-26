@@ -3134,6 +3134,7 @@ end
     return
   end
 
+
   hotspot_voucher.update(sms_sent: true)
 
   sms_setting = SmsSetting.find_by(sms_provider: 'TextSms')
@@ -3231,6 +3232,7 @@ end
   # while the body referenced the undefined `voucher_code` — renamed the
   # param so the existing lookup below actually resolves.
   HotspotVoucher.find_by(voucher: voucher_code)&.update(sms_sent: true)
+  voucher = HotspotVoucher.find_by(voucher: voucher_code)
 
   sms_setting = SmsSetting.find_by(sms_provider: 'Talk Sasa')
 
@@ -3240,7 +3242,7 @@ end
   sms_template = ActsAsTenant.current_tenant.sms_template
   send_voucher_template = sms_template&.send_voucher_template
 
-data = build_voucher_sms_data(hotspot_voucher, phone_number, shared_users, company_name)
+data = build_voucher_sms_data(voucher, phone_number, shared_users, company_name)
 original_message = render_hotspot_sms('single', data)
 
 
