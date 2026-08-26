@@ -3240,14 +3240,9 @@ end
   sms_template = ActsAsTenant.current_tenant.sms_template
   send_voucher_template = sms_template&.send_voucher_template
 
-  original_message = if send_voucher_template.present?
-    send_voucher_template
-      .gsub('{{voucher_code}}', voucher_code.to_s)
-      .gsub('{{company_name}}', company_name.to_s)
-      .gsub('{{shared_users}}', shared_users.to_s)
-  else
-    "Your voucher code is: #{voucher_code}. Enjoy your browsing (FROM: #{company_name})"
-  end
+data = build_voucher_sms_data(hotspot_voucher, phone_number, shared_users, company_name)
+original_message = render_hotspot_sms('single', data)
+
 
   uri = URI.parse("https://bulksms.talksasa.com/api/v3/sms/send")
 
