@@ -258,7 +258,7 @@ resources :hotspot_sms_templates, only: [:index, :update]
 post '/api/paystack_settings/test_connection', to: 'paystack_settings#test_connection'
 resource :paystack_settings, only: [:show, :update], controller: 'paystack_settings'
 resource :payment_gateway_settings, only: [:show, :update]
-post '/api/paystack/hotspot_callback', to: 'paystack_callbacks#hotspot_callback'
+post '/paystack_hotspot_callback', to: 'paystack_callbacks#hotspot_callback'
 post '/api/payment_reference_status', to: 'hotspot_vouchers#payment_reference_status'
 get  '/api/payment_reference_status', to: 'hotspot_vouchers#payment_reference_status'
 
