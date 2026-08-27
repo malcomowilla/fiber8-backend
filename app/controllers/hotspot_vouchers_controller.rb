@@ -1755,7 +1755,7 @@ shared_users = HotspotPackage.find_by(name: voucher.package)
    
 
         if SmsSetting.find_by(sms_provider:'Owitech Bulk SMS')
-            TenantSmsSenderService.send_sms(params[:phone], message, ActsAsTenant.current_tenant.id, voucher, current_user: current_user)
+TenantSmsSenderService.send_sms(params[:phone], message, ActsAsTenant.current_tenant.id, voucher, current_user: current_user)
 
       # expiration.strftime("%B %d, %Y at %I:%M %p"), 
 

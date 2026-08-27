@@ -981,11 +981,16 @@ def send_otp_sms(phone_number, otp,tenant)
    phone_number, otp,tenant)
 
 
+
+    when "Owitech Bulk SMS"
+      TenantSmsSenderService.send_sms(params[:phone], message, ActsAsTenant.current_tenant.id, current_user: current_user)
+
     when 'SMS leopard'
       send_otp_sms_leopard(phone_number, otp,tenant)
 
     when 'Talk Sasa'
       send_otp_talksasa(phone_number, otp,tenant)
+      
     else
       Rails.logger.info "No valid SMS provider configured"
     end
