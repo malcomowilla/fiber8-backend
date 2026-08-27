@@ -4,7 +4,7 @@ class PlatformBulkSmsService
   #
   # Pricing/short_code have no ENV equivalent yet — set these two before
   # this goes live, or tell me where you'd rather they come from.
-  SHORT_CODE = "TEXTSMS"
+  SHORT_CODE = "TextSms"
   ENABLED  = ENV.fetch('PLATFORM_BULK_SMS_ENABLED', 'true') == 'true'
 
   def self.send_sms(phone_number, message, account_id)
