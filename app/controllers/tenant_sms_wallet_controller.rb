@@ -16,38 +16,65 @@ class TenantSmsWalletController < ApplicationController
     quantity = params[:quantity].to_i
     return render json: { error: 'Minimum purchase is 10 credits' }, status: :unprocessable_entity if quantity < 10
 
-    setting = PlatformBulkSmsSetting.current
-    amount = (quantity * setting.sell_price_per_sms).round(2)
-    checkout_request_id = "smswallet_#{@account.id}_#{SecureRandom.hex(4)}"
 
-    result = MpesaService.initiate_stk_push(
-      params[:phone_number], amount,
-      @account.hotspot_mpesa_setting&.short_code, @account.hotspot_mpesa_setting&.passkey,
-      @account.hotspot_mpesa_setting&.consumer_key, @account.hotspot_mpesa_setting&.consumer_secret,
-      request.headers['X-Subdomain'], checkout_request_id, checkout_request_id
+
+
+
+ headroom = PlatformBulkSmsBalanceService.sellable_headroom
+
+  if headroom.nil?
+    return render json: {
+      error: 'SMS purchases are temporarily unavailable. Please contact your platform admin.'
+    }, status: :service_unavailable
+  end
+
+  if quantity > headroom
+    return render json: {
+      error: 'SMS credits are temporarily unavailable. Please contact your platform admin.'
+    }, status: :unprocessable_entity
+  end
+
+
+
+    setting = PlatformBulkSmsSetting.current
+    amount  = (quantity * setting.sell_price_per_sms).round(2)
+
+    wallet = TenantSmsWallet.find_or_create_by!(account_id: @account.id)
+    txn = TenantSmsWalletTransaction.create!(
+      account_id: @account.id, tenant_sms_wallet_id: wallet.id,
+      transaction_type: 'purchase', quantity: quantity, amount: amount,
+      status: 'pending'
+    )
+
+    # Same shape as hotspot's "hotspot_#{session_id}_#{voucher_code}" —
+    # check_payment_status parses this prefix to route the callback.
+    account_reference = "smswallet_#{@account.id}_#{txn.id}"
+
+    result = TenantSmsWalletMpesaService.initiate_stk_push(
+      params[:phone_number], amount, account_reference, "SMS credits purchase"
     )
 
     if result[:success]
-      TenantSmsWalletTransaction.create!(
-        account_id: @account.id,
-        tenant_sms_wallet_id: TenantSmsWallet.find_or_create_by!(account_id: @account.id).id,
-        transaction_type: 'purchase', quantity: quantity, amount: amount,
-        checkout_request_id: checkout_request_id, status: 'pending'
-      )
+      checkout_request_id = result[:response]&.dig('CheckoutRequestID')
+      txn.update!(checkout_request_id: checkout_request_id, reference: account_reference)
       render json: { message: 'Check your phone to complete payment', checkout_request_id: checkout_request_id }
     else
+      txn.update!(status: 'failed')
       render json: { error: result[:error] || 'Failed to initiate payment' }, status: :unprocessable_entity
     end
   end
 
-  def confirm_purchase
-    txn = TenantSmsWalletTransaction.find_by(checkout_request_id: params[:checkout_request_id], status: 'pending')
-    return render json: { error: 'Transaction not found' }, status: :not_found unless txn
 
-    wallet = TenantSmsWallet.find_by(id: txn.tenant_sms_wallet_id)
-    wallet.credit!(txn.quantity, reference: txn.checkout_request_id, amount: txn.amount, checkout_request_id: txn.checkout_request_id)
-    txn.update!(status: 'completed')
-    render json: { message: 'Credits added', balance: wallet.balance }
+
+
+  # Frontend polls THIS (same pattern as payment_reference_status /
+  # receipt_number_status already used for hotspot) — it just reads
+  # whatever check_payment_status already wrote, no separate flow.
+  def purchase_status
+    txn = TenantSmsWalletTransaction.find_by(account_id: @account.id, reference: params[:reference])
+    return render json: { error: 'Not found' }, status: :not_found unless txn
+
+    render json: { status: txn.status, balance: TenantSmsWallet.find_by(account_id: @account.id)&.balance }
   end
 
   private

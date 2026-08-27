@@ -889,6 +889,30 @@ else
 end
 
 
+elsif bill_ref.start_with?("smswallet_")
+  # bill_ref = "smswallet_<account_id>_<txn_id>"
+  parts = bill_ref.sub("smswallet_", "").split("_")
+  account_id = parts[0]
+  txn_id = parts[1]
+
+  txn = TenantSmsWalletTransaction.find_by(id: txn_id, account_id: account_id, status: 'pending')
+  unless txn
+    Rails.logger.warn "check_payment_status: no pending sms wallet txn for #{bill_ref}"
+    head :ok and return
+  end
+
+  paid_amount = data["TransAmount"].to_f
+  wallet = TenantSmsWallet.find_by(account_id: account_id)
+
+  if paid_amount >= txn.amount.to_f
+    wallet.credit!(txn.quantity, reference: bill_ref, amount: paid_amount, checkout_request_id: txn.checkout_request_id)
+    txn.update!(status: 'completed')
+    Rails.logger.info "SMS wallet credited: account #{account_id}, +#{txn.quantity} credits"
+  else
+    txn.update!(status: 'underpaid')
+    Rails.logger.warn "SMS wallet purchase underpaid: expected #{txn.amount}, got #{paid_amount}"
+  end
+
 
 elsif data["BillRefNumber"].starts_with?("INV")
   bill_ref    = data["BillRefNumber"]
@@ -1565,6 +1589,8 @@ def make_payment
 passkey = ActsAsTenant.current_tenant&.hotspot_mpesa_setting&.passkey.presence || ENV['PASSKEY']
 consumer_key = ActsAsTenant.current_tenant&.hotspot_mpesa_setting&.consumer_key.presence || ENV['CONSUMER_KEY']
 consumer_secret = ActsAsTenant.current_tenant&.hotspot_mpesa_setting&.consumer_secret.presence || ENV['CONSUMER_SECRET']
+
+
   voucher_code = generate_voucher_code
   session_id = rand(100000..999999).to_s
 

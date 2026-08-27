@@ -13,7 +13,7 @@ class MpesaService
       consumer_key = consumer_key
       consumer_secret = consumer_secret
       shortcode = shortcode
-      callback_url= "https://malcomowilla.github.io/my-portfolio/"   
+      callback_url= "/"   
     
       lipa_na_mpesa_online_passkey =  passkey;
       
