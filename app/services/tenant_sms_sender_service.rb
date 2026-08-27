@@ -9,7 +9,7 @@ class TenantSmsSenderService
 
 
   def self.send_sms(phone_number, message, account_id, voucher, current_user: nil)
-    result = PlatformBulkSmsService.send_sms(phone_number, message, account_id)
+    result = PlatformBulkSmsService.send_sms(phone_number, message, account_id, voucher)
     SystemAdminSm.create!(
       user: phone_number, message: message,
       status: result[:success] ? (result[:status] || 'Sent') : result[:error],
