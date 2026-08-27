@@ -4,11 +4,11 @@ class PlatformBulkSmsService
   #
   # Pricing/short_code have no ENV equivalent yet — set these two before
   # this goes live, or tell me where you'd rather they come from.
-  SHORT_CODE = ENV['TEXT_SMS_SHORTCODE']
-  ENABLED    = ENV.fetch('PLATFORM_BULK_SMS_ENABLED', 'true') == 'true'
+  SHORT_CODE = "TEXTSMS"
+  ENABLED  = ENV.fetch('PLATFORM_BULK_SMS_ENABLED', 'true') == 'true'
 
   def self.send_sms(phone_number, message, account_id)
-    return { success: false, error: 'SMS service unavailable' } unless ENABLED
+    # return { success: false, error: 'SMS service unavailable' } unless ENABLED
 
     wallet = TenantSmsWallet.find_or_create_by!(account_id: account_id)
     return { success: false, error: 'Insufficient SMS balance' } if wallet.balance < 1
