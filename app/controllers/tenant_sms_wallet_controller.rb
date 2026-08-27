@@ -2,13 +2,16 @@ class TenantSmsWalletController < ApplicationController
   set_current_tenant_through_filter
   before_action :set_tenant
 
+  # KES per credit — same "set this before going live" note as SHORT_CODE
+  # above. Move to ENV or a real settings row once you've decided which.
+  SELL_PRICE_PER_SMS = ENV.fetch('SMS_WALLET_SELL_PRICE', '0.60').to_f
+
   def balance
     wallet = TenantSmsWallet.find_or_create_by!(account_id: @account.id)
-    setting = PlatformBulkSmsSetting.current
     render json: {
       balance: wallet.balance,
-      sell_price_per_sms: setting.sell_price_per_sms,
-      enabled: setting.enabled
+      sell_price_per_sms: SELL_PRICE_PER_SMS,
+      enabled: PlatformBulkSmsService::ENABLED
     }
   end
 
@@ -16,28 +19,21 @@ class TenantSmsWalletController < ApplicationController
     quantity = params[:quantity].to_i
     return render json: { error: 'Minimum purchase is 10 credits' }, status: :unprocessable_entity if quantity < 10
 
+    headroom = PlatformBulkSmsBalanceService.sellable_headroom
 
+    if headroom.nil?
+      return render json: {
+        error: 'SMS purchases are temporarily unavailable. Please contact your platform admin.'
+      }, status: :service_unavailable
+    end
 
+    if quantity > headroom
+      return render json: {
+        error: 'SMS credits are temporarily unavailable. Please contact your platform admin.'
+      }, status: :unprocessable_entity
+    end
 
-
- headroom = PlatformBulkSmsBalanceService.sellable_headroom
-
-  if headroom.nil?
-    return render json: {
-      error: 'SMS purchases are temporarily unavailable. Please contact your platform admin.'
-    }, status: :service_unavailable
-  end
-
-  if quantity > headroom
-    return render json: {
-      error: 'SMS credits are temporarily unavailable. Please contact your platform admin.'
-    }, status: :unprocessable_entity
-  end
-
-
-
-    setting = PlatformBulkSmsSetting.current
-    amount  = (quantity * setting.sell_price_per_sms).round(2)
+    amount = (quantity * SELL_PRICE_PER_SMS).round(2)
 
     wallet = TenantSmsWallet.find_or_create_by!(account_id: @account.id)
     txn = TenantSmsWalletTransaction.create!(
@@ -46,8 +42,6 @@ class TenantSmsWalletController < ApplicationController
       status: 'pending'
     )
 
-    # Same shape as hotspot's "hotspot_#{session_id}_#{voucher_code}" —
-    # check_payment_status parses this prefix to route the callback.
     account_reference = "smswallet_#{@account.id}_#{txn.id}"
 
     result = TenantSmsWalletMpesaService.initiate_stk_push(
@@ -64,12 +58,6 @@ class TenantSmsWalletController < ApplicationController
     end
   end
 
-
-
-
-  # Frontend polls THIS (same pattern as payment_reference_status /
-  # receipt_number_status already used for hotspot) — it just reads
-  # whatever check_payment_status already wrote, no separate flow.
   def purchase_status
     txn = TenantSmsWalletTransaction.find_by(account_id: @account.id, reference: params[:reference])
     return render json: { error: 'Not found' }, status: :not_found unless txn
