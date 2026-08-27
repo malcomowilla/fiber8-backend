@@ -8,6 +8,7 @@ class PlatformSendSmsService
   ENABLED  = ENV.fetch('PLATFORM_BULK_SMS_ENABLED', 'true') == 'true'
 
   def self.send_sms(phone_number, message, account_id)
+    # return { success: false, error: 'SMS service unavailable' } unless ENABLED
 
     wallet = TenantSmsWallet.find_or_create_by!(account_id: account_id)
     return { success: false, error: 'Insufficient SMS balance' } if wallet.balance < 1

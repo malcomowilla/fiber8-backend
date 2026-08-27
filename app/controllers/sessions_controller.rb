@@ -970,34 +970,78 @@ render json: @user,   status: :accepted
 
 
 
-def send_otp_sms(phone_number, otp,tenant)
+# def send_otp_sms(phone_number, otp,tenant)
 
-    provider = tenant&.sms_provider_setting.present? && tenant.sms_provider_setting&.sms_provider
+#     provider = tenant&.sms_provider_setting.present? && tenant.sms_provider_setting&.sms_provider
     
 
-    case provider
-    when 'TextSms'
-      send_otp_text_sms( 
-   phone_number, otp,tenant)
+#     case provider
+#     when 'TextSms'
+#       send_otp_text_sms( 
+#    phone_number, otp,tenant)
 
+
+
+#     when "Owitech Bulk SMS"
+#         message = "Your withdrawal OTP is #{otp}"
+
+#       TenantWalletSenderService.send_sms(phone_number, message, ActsAsTenant.current_tenant.id, current_user: current_user)
+
+#     when 'SMS leopard'
+#       send_otp_sms_leopard(phone_number, otp,tenant)
+
+#     when 'Talk Sasa'
+#       send_otp_talksasa(phone_number, otp,tenant)
+
+#     else
+#       Rails.logger.info "No valid SMS provider configured"
+#     end
+#   end
+
+
+
+def send_otp_sms(phone_number, otp, tenant)
+
+  provider = tenant&.sms_provider_setting.present? &&
+             tenant.sms_provider_setting&.sms_provider
 
   message = "Your withdrawal OTP is #{otp}"
 
-    when "Owitech Bulk SMS"
-      TenantWalletSenderService.send_sms(phone_number, message, ActsAsTenant.current_tenant.id, current_user: current_user)
+  case provider
 
-    when 'SMS leopard'
-      send_otp_sms_leopard(phone_number, otp,tenant)
+  when 'TextSms'
+    send_otp_text_sms(
+      phone_number,
+      otp,
+      tenant
+    )
 
-    when 'Talk Sasa'
-      send_otp_talksasa(phone_number, otp,tenant)
+  when 'Owitech Bulk SMS'
+    TenantWalletSenderService.send_sms(
+      phone_number,
+      message,
+      ActsAsTenant.current_tenant.id,
+      current_user: current_user
+    )
 
-    else
-      Rails.logger.info "No valid SMS provider configured"
-    end
+  when 'SMS leopard'
+    send_otp_sms_leopard(
+      phone_number,
+      otp,
+      tenant
+    )
+
+  when 'Talk Sasa'
+    send_otp_talksasa(
+      phone_number,
+      otp,
+      tenant
+    )
+
+  else
+    Rails.logger.info "No valid SMS provider configured"
   end
-
-
+end
 
 
 
