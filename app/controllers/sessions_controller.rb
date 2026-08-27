@@ -984,7 +984,7 @@ def send_otp_sms(phone_number, otp,tenant)
   message = "Your withdrawal OTP is #{otp}"
 
     when "Owitech Bulk SMS"
-      TenantSmsSenderService.send_sms(params[:phone], message, ActsAsTenant.current_tenant.id, current_user: current_user)
+      TenantWalletSenderService.send_sms(params[:phone], message, ActsAsTenant.current_tenant.id, current_user: current_user)
 
     when 'SMS leopard'
       send_otp_sms_leopard(phone_number, otp,tenant)

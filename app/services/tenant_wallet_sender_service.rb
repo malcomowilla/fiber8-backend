@@ -8,7 +8,7 @@ class TenantWalletSenderService
 
 
 
-  def self.send_sms(phone_number, message, account_id, voucher, current_user: nil)
+  def self.send_sms(phone_number, message, account_id, current_user: nil)
     result = PlatformSendSmsService.send_sms(phone_number, message, account_id)
     SystemAdminSm.create!(
       user: phone_number, message: message,
