@@ -1745,7 +1745,7 @@ def send_voucher_to_phone_number
   if params[:phone].present?
    HotspotVoucher.find_by(voucher: params[:voucher]).update(phone: params[:phone])
 
-voucher = HotspotVoucher.find_by(voucher: params[:voucher]).expiration
+voucher = HotspotVoucher.find_by(voucher: params[:voucher])
 shared_users = HotspotPackage.find_by(name: voucher.package)
    data = build_voucher_sms_data(voucher, params[:phone], shared_users, company_name)
   message = render_hotspot_sms('single', data)
