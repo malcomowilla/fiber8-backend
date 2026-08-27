@@ -137,32 +137,77 @@ end
 
 
 
-
 def get_text_sms_balance(selected_provider)
-  api_key = SmsSetting.find_by(sms_provider: 'TextSms')&.api_key
-  partnerId = SmsSetting.find_by(sms_provider: selected_provider)&.partnerID
-https://sms.textsms.co.ke/api/services/getbalance
+  sms_setting = SmsSetting.find_by(sms_provider: selected_provider)
 
-  uri = URI("https://sms.textsms.co.ke/api/services/getbalance")  
-  params = {
+  unless sms_setting
+    return render json: { error: "SMS settings not found" }, status: :not_found
+  end
+
+  api_key = sms_setting.api_key
+  partner_id = sms_setting.partnerID
+
+  uri = URI("https://sms.textsms.co.ke/api/services/getbalance")
+
+  http = Net::HTTP.new(uri.host, uri.port)
+  http.use_ssl = uri.scheme == 'https'
+  http.open_timeout = 5
+  http.read_timeout = 8
+
+  request = Net::HTTP::Post.new(uri.request_uri)
+  request['Content-Type'] = 'application/json'
+  request['Accept'] = 'application/json'
+
+  request.body = {
     apikey: api_key,
-    partnerID: partnerId,
-   
-  }
-  uri.query = URI.encode_www_form(params)
+    partnerID: partner_id
+  }.to_json
 
-  response = Net::HTTP.get_response(uri)
+  response = http.request(request)
+
+  Rails.logger.info(
+    "TextSMS balance: HTTP #{response.code} - #{response.body}"
+  )
+
   if response.is_a?(Net::HTTPSuccess)
-    puts "Your Balance #{response.body}"
     balance_data = JSON.parse(response.body)
     balance = balance_data['credit']
-    render json: {message: "#{balance}"},status: :ok
+
+    render json: {
+      message: balance
+    }, status: :ok
   else
-    render json: {error: "Error Getting Balance: #{response.body}" }
-    puts "Error Getting Balance: #{response.body}"
-  end 
+    Rails.logger.error(
+      "TextSMS balance error: HTTP #{response.code} - #{response.body}"
+    )
 
+    render json: {
+      error: "Error Getting Balance: #{response.body}"
+    }, status: :service_unavailable
+  end
 
+rescue Net::OpenTimeout, Net::ReadTimeout
+  Rails.logger.error "TextSMS balance request timed out"
+
+  render json: {
+    error: "TextSMS provider timed out"
+  }, status: :service_unavailable
+
+rescue JSON::ParserError => e
+  Rails.logger.error "TextSMS invalid JSON response: #{e.message}"
+
+  render json: {
+    error: "Invalid response from TextSMS"
+  }, status: :service_unavailable
+
+rescue => e
+  Rails.logger.error(
+    "TextSMS balance failed: #{e.class}: #{e.message}"
+  )
+
+  render json: {
+    error: e.message
+  }, status: :service_unavailable
 end
 
 

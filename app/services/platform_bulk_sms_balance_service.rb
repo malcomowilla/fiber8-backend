@@ -27,32 +27,53 @@ class PlatformBulkSmsBalanceService
 
 
 
-  
-
   def self.fetch_live_balance
-    uri = URI("https://sms.textsms.co.ke/api/services/getbalance")
-    uri.query = URI.encode_www_form(
-      apikey: ENV['TEXT_SMS_API_KEY'],
-      partnerID: ENV['TEXTSMS_PARTNER_ID']
-    )
+  uri = URI("https://sms.textsms.co.ke/api/services/getbalance")
 
-    http = Net::HTTP.new(uri.host, uri.port)
-    http.use_ssl = uri.scheme == 'https'
-    http.open_timeout = 5
-    http.read_timeout = 8
+  http = Net::HTTP.new(uri.host, uri.port)
+  http.use_ssl = uri.scheme == 'https'
+  http.open_timeout = 5
+  http.read_timeout = 8
 
-    response = http.get(uri.request_uri)
-    return nil unless response.is_a?(Net::HTTPSuccess)
+  request = Net::HTTP::Post.new(uri.request_uri)
+  request['Content-Type'] = 'application/json'
+  request['Accept'] = 'application/json'
 
-    JSON.parse(response.body)['credit'].to_i
-  rescue Net::OpenTimeout, Net::ReadTimeout
-    Rails.logger.error "PlatformBulkSmsBalanceService: TextSMS request timed out"
-    nil
-  rescue SocketError, Errno::ECONNREFUSED, Errno::EHOSTUNREACH => e
-    Rails.logger.error "PlatformBulkSmsBalanceService: unreachable (#{e.class}: #{e.message})"
-    nil
-  rescue => e
-    Rails.logger.error "PlatformBulkSmsBalanceService: failed to fetch balance: #{e.message}"
-    nil
-  end
+  request.body = {
+    apikey: ENV['TEXT_SMS_API_KEY'],
+    partnerID: ENV['TEXTSMS_PARTNER_ID']
+  }.to_json
+
+  response = http.request(request)
+
+  Rails.logger.info(
+    "PlatformBulkSmsBalanceService: HTTP #{response.code} - #{response.body}"
+  )
+
+  return nil unless response.is_a?(Net::HTTPSuccess)
+
+  JSON.parse(response.body)['credit'].to_f
+
+rescue Net::OpenTimeout, Net::ReadTimeout
+  Rails.logger.error "PlatformBulkSmsBalanceService: TextSMS request timed out"
+  nil
+
+rescue SocketError, Errno::ECONNREFUSED, Errno::EHOSTUNREACH => e
+  Rails.logger.error(
+    "PlatformBulkSmsBalanceService: unreachable (#{e.class}: #{e.message})"
+  )
+  nil
+
+rescue JSON::ParserError => e
+  Rails.logger.error(
+    "PlatformBulkSmsBalanceService: invalid JSON response: #{e.message}"
+  )
+  nil
+
+rescue => e
+  Rails.logger.error(
+    "PlatformBulkSmsBalanceService: failed to fetch balance: #{e.class}: #{e.message}"
+  )
+  nil
+end
 end
