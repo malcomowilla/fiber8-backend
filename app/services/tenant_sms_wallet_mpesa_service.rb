@@ -58,10 +58,6 @@ class TenantSmsWalletMpesaService
         PartyA: formatted_phone_number,
         PartyB: shortcode,
         PhoneNumber: formatted_phone_number,
-        # NOT tenant-subdomain based — this is YOUR paybill's single
-        # registered callback, same one check_payment_status already
-        # handles for hotspot/invoice/pppoe via BillRefNumber prefix.
-        # CallBackURL: "https://#{ENV['PLATFORM_CALLBACK_HOST']}/#{ENV['HOTSPOT_PAYMENTS']}",
         CallBackURL: "https://owitech.co.ke/tenant-sms",
         AccountReference: account_reference,
         TransactionDesc: description

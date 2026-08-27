@@ -45,6 +45,11 @@ class SendSmsHotspotService
       message = build_message(voucher, tenant)
 
       case sms_setting.sms_provider
+
+
+      when 'Owitech Bulk SMS'
+        TenantWalletSenderService.send_sms(voucher.phone, message, tenant.id, current_user: current_user)
+
       when "SMS leopard"
         send_voucher_sms_leopard(voucher, tenant, message)
       when "TextSms"
