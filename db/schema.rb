@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_08_25_024727) do
+ActiveRecord::Schema[7.2].define(version: 2026_08_27_085914) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -1164,6 +1164,17 @@ ActiveRecord::Schema[7.2].define(version: 2026_08_25_024727) do
     t.index ["account_id"], name: "index_paystack_settings_on_account_id", unique: true
   end
 
+  create_table "platform_bulk_sms_settings", force: :cascade do |t|
+    t.string "api_key"
+    t.string "partner_id"
+    t.string "shortcode"
+    t.decimal "cost_price_per_sms", precision: 8, scale: 4, default: "0.3"
+    t.decimal "sell_price_per_sms", precision: 8, scale: 4, default: "0.6"
+    t.boolean "enabled", default: true
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
+
   create_table "pops", force: :cascade do |t|
     t.string "name"
     t.decimal "lat", precision: 10, scale: 6
@@ -1650,6 +1661,31 @@ ActiveRecord::Schema[7.2].define(version: 2026_08_25_024727) do
     t.index ["status"], name: "index_temporary_sessions_on_status"
     t.index ["tv_plan_id"], name: "index_temporary_sessions_on_tv_plan_id"
     t.index ["voucher_code"], name: "index_temporary_sessions_on_voucher_code"
+  end
+
+  create_table "tenant_sms_wallet_transactions", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.bigint "tenant_sms_wallet_id", null: false
+    t.string "transaction_type", null: false
+    t.integer "quantity", null: false
+    t.decimal "amount", precision: 10, scale: 2
+    t.string "reference"
+    t.string "status", default: "completed"
+    t.string "checkout_request_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id"], name: "index_tenant_sms_wallet_transactions_on_account_id"
+    t.index ["checkout_request_id"], name: "index_tenant_sms_wallet_transactions_on_checkout_request_id"
+    t.index ["reference"], name: "index_tenant_sms_wallet_transactions_on_reference"
+    t.index ["tenant_sms_wallet_id"], name: "index_tenant_sms_wallet_transactions_on_tenant_sms_wallet_id"
+  end
+
+  create_table "tenant_sms_wallets", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.integer "balance", default: 0, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id"], name: "index_tenant_sms_wallets_on_account_id", unique: true
   end
 
   create_table "ticket_settings", force: :cascade do |t|
