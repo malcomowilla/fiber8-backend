@@ -61,11 +61,13 @@ class TenantSmsWalletMpesaService
         # NOT tenant-subdomain based — this is YOUR paybill's single
         # registered callback, same one check_payment_status already
         # handles for hotspot/invoice/pppoe via BillRefNumber prefix.
-        CallBackURL: "https://#{ENV['PLATFORM_CALLBACK_HOST']}/#{ENV['HOTSPOT_PAYMENTS']}",
+        # CallBackURL: "https://#{ENV['PLATFORM_CALLBACK_HOST']}/#{ENV['HOTSPOT_PAYMENTS']}",
+        CallBackURL: "owitech.co.ke",
         AccountReference: account_reference,
         TransactionDesc: description
       }
 
+      
       response = RestClient.post(
         'https://api.safaricom.co.ke/mpesa/stkpush/v1/processrequest',
         payload.to_json,
