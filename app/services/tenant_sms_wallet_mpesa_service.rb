@@ -62,7 +62,7 @@ class TenantSmsWalletMpesaService
         # registered callback, same one check_payment_status already
         # handles for hotspot/invoice/pppoe via BillRefNumber prefix.
         # CallBackURL: "https://#{ENV['PLATFORM_CALLBACK_HOST']}/#{ENV['HOTSPOT_PAYMENTS']}",
-        CallBackURL: "owitech.co.ke",
+        CallBackURL: "owitech.co.ke/tenant-sms",
         AccountReference: account_reference,
         TransactionDesc: description
       }
