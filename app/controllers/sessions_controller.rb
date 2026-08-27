@@ -981,6 +981,7 @@ def send_otp_sms(phone_number, otp,tenant)
    phone_number, otp,tenant)
 
 
+  message = "Your withdrawal OTP is #{otp}"
 
     when "Owitech Bulk SMS"
       TenantSmsSenderService.send_sms(params[:phone], message, ActsAsTenant.current_tenant.id, current_user: current_user)
@@ -990,7 +991,7 @@ def send_otp_sms(phone_number, otp,tenant)
 
     when 'Talk Sasa'
       send_otp_talksasa(phone_number, otp,tenant)
-      
+
     else
       Rails.logger.info "No valid SMS provider configured"
     end
@@ -1000,7 +1001,20 @@ def send_otp_sms(phone_number, otp,tenant)
 
 
 
+def render_hotspot_sms(group)
+  template = HotspotSmsTemplate.active_for(ActsAsTenant.current_tenant.id, group)
+  return default_hotspot_sms_message(group, data) unless template
 
+  template.render(data)
+end
+
+def default_hotspot_sms_message(group, data)
+  if group == 'multi'
+    "Your voucher codes:\n#{data[:voucher_list]}\nValid for: #{data[:validity]}. Enjoy your browsing (FROM: #{data[:company_name]})"
+  else
+    "Your voucher code is: #{data[:voucher_code]}. Enjoy your browsing (FROM: #{data[:company_name]})"
+  end
+end
 
 
 
