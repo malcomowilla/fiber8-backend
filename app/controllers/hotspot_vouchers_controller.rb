@@ -3205,7 +3205,6 @@ Rails.logger.info "MESSAGE: #{original_message}"
         date: Time.now.strftime("%B %d, %Y at %I:%M %p"),
         system_user: current_user.username,
         sms_provider: 'Text Sms')
-
     
       # render json: { error: "Failed to send message: #{sms_data['responses'][0]['response-description']}" }
        Rails.logger.info "sent message: #{sms_data['responses'][0]['response-description']}"
@@ -3241,7 +3240,6 @@ end
 
   sms_template = ActsAsTenant.current_tenant.sms_template
   send_voucher_template = sms_template&.send_voucher_template
-
 data = build_voucher_sms_data(voucher, phone_number, shared_users, company_name)
 original_message = render_hotspot_sms('single', data)
 
@@ -3290,6 +3288,14 @@ original_message = render_hotspot_sms('single', data)
     Rails.logger.info "Sent message successfully with talk sasa"
   else
     Rails.logger.info "Failed to send SMS: #{response.code} - #{response.body}"
+    SystemAdminSm.create!(
+      user: phone_number,
+      message: original_message,
+      status: sms_status,
+      date: Time.now.strftime("%B %d, %Y at %I:%M %p"),
+      system_user: current_user.username,
+      sms_provider: 'Talk Sasa'
+    )
   end
 end
 
