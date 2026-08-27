@@ -1052,6 +1052,8 @@ def render_hotspot_sms(group)
   template.render(data)
 end
 
+
+
 def default_hotspot_sms_message(group, data)
   if group == 'multi'
     "Your voucher codes:\n#{data[:voucher_list]}\nValid for: #{data[:validity]}. Enjoy your browsing (FROM: #{data[:company_name]})"
