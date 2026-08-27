@@ -1745,23 +1745,37 @@ def send_voucher_to_phone_number
   if params[:phone].present?
    HotspotVoucher.find_by(voucher: params[:voucher]).update(phone: params[:phone])
 
-expiration = HotspotVoucher.find_by(voucher: params[:voucher]).expiration
-             if ActsAsTenant.current_tenant&.sms_provider_setting&.sms_provider == "SMS leopard"
-               send_voucher(params[:phone], params[:voucher],
-                params[:shared_users], company_name, current_user
-               )
+voucher = HotspotVoucher.find_by(voucher: params[:voucher]).expiration
+shared_users = HotspotPackage.find_by(name: voucher.package)
+   data = build_voucher_sms_data(voucher, params[:phone], shared_users, company_name)
+  message = render_hotspot_sms('single', data)
+
+
+
+
+             if TenantSmsSenderService.uses_platform?(ActsAsTenant.current_tenant.id)
+    TenantSmsSenderService.send_sms(params[:phone], message, ActsAsTenant.current_tenant.id, current_user: current_user)
+
       # expiration.strftime("%B %d, %Y at %I:%M %p"), 
+
+
+             elsif ActsAsTenant.current_tenant&.sms_provider_setting&.sms_provider == "SMS leopard"
+               send_voucher(params[:phone], params[:voucher],
+                shared_users, company_name, current_user
+               )
+              
+            
 
              elsif ActsAsTenant.current_tenant&.sms_provider_setting&.sms_provider == "TextSms"
                send_voucher_text_sms(params[:phone], params[:voucher],
-               params[:shared_users], company_name, current_user
+               shared_users, company_name, current_user
                )
 
 
 
                elsif ActsAsTenant.current_tenant&.sms_provider_setting&.sms_provider == "Talk Sasa"
                send_voucher_talksasa(params[:phone], params[:voucher],
-               params[:shared_users], company_name, current_user
+               shared_users, company_name, current_user
                )
              end
          

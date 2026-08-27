@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_08_27_085914) do
+ActiveRecord::Schema[7.2].define(version: 2026_08_27_133614) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -1321,6 +1321,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_08_27_085914) do
     t.string "partnerID"
     t.datetime "sms_setting_updated_at"
     t.integer "tenant_id"
+    t.index ["account_id", "sms_provider"], name: "index_sms_settings_on_account_and_provider", unique: true
     t.index ["account_id"], name: "index_sms_settings_on_account_id"
     t.index ["sms_provider"], name: "index_sms_settings_on_sms_provider"
   end

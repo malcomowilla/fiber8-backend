@@ -20,13 +20,7 @@ class SmsSettingsController < ApplicationController
 end
 
 
-  def index
-    Rails.logger.info "current tenant sms settin: #{ActsAsTenant.current_tenant.sms_setting.sms_provider}"
-    @sms_settings = SmsSetting.find_by(sms_provider: params[:provider])
-
-    render json: @sms_settings
-  end
-
+  
 
 
 
@@ -40,14 +34,7 @@ if current_user
 
 
 
-  def saved_sms_settings
-    
-    # @sms_settings = SmsSetting.all
-    # render json: @sms_settings
-    # @sms_settings = SmsSetting.order(updated_at: :asc)
-    @sms_settings = SmsSetting.order(sms_setting_updated_at: :desc)
-  render json: @sms_settings
-  end
+  
 
 
 
@@ -70,36 +57,44 @@ rescue ActiveRecord::RecordNotFound
 
   
   def create
-    # @sms_setting = SmsSetting.find_or_initialize_by(sms_setting_params)
-      host = request.headers['X-Subdomain']
-    @account = Account.find_by(subdomain: host)
-      @sms_setting = SmsSetting.find_or_initialize_by(
-        # api_secret: params[:api_secret],
-        # api_key: params[:api_key],
-      tenant_id: @account.id,
-      ) 
-    @sms_setting.update!(
-      api_key: params[:api_key],
-      api_secret: params[:api_secret],
-      sender_id: params[:sender_id],
-      short_code: params[:short_code],
-      sms_provider: params[:sms_provider],
-      partnerID: params[:partnerID],
-      sms_setting_updated_at: Time.current,
-      username: params[:username],
+  host = request.headers['X-Subdomain']
+  @account = Account.find_by(subdomain: host)
 
-    )
-      if  @sms_setting.save 
-        ActivtyLog.create(action: 'create', ip: request.remote_ip,
- description: "Created SMS settings #{@sms_setting.short_code}",
-          user_agent: request.user_agent, user: current_user.username || current_user.email,
-           date: Time.current)
-        render json: @sms_setting, status: :created
-      else
-        render json: @sms_setting.errors, status: :unprocessable_entity 
-      
-    end
+  @sms_setting = SmsSetting.find_or_initialize_by(
+    account_id: @account.id,
+    sms_provider: params[:sms_provider]
+  )
+
+  @sms_setting.assign_attributes(
+    api_key: params[:api_key],
+    api_secret: params[:api_secret],
+    sender_id: params[:sender_id],
+    short_code: params[:short_code],
+    partnerID: params[:partnerID],
+    username: params[:username],
+    sms_setting_updated_at: Time.current
+  )
+
+  if @sms_setting.save
+    ActivtyLog.create(action: 'create', ip: request.remote_ip,
+      description: "Updated SMS settings for #{@sms_setting.sms_provider}",
+      user_agent: request.user_agent, user: current_user.username || current_user.email,
+      date: Time.current)
+    render json: @sms_setting, status: :created
+  else
+    render json: @sms_setting.errors, status: :unprocessable_entity
   end
+end
+
+def index
+  @sms_settings = SmsSetting.find_by(account_id: @account.id, sms_provider: params[:provider])
+  render json: @sms_settings
+end
+
+def saved_sms_settings
+  @sms_settings = SmsSetting.where(account_id: @account.id).order(sms_setting_updated_at: :desc)
+  render json: @sms_settings
+end
 
   
   private
