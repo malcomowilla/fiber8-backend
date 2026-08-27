@@ -7,7 +7,7 @@ class PlatformBulkSmsService
   SHORT_CODE = "TextSms"
   ENABLED  = ENV.fetch('PLATFORM_BULK_SMS_ENABLED', 'true') == 'true'
 
-  def self.send_sms(phone_number, message, account_id)
+  def self.send_sms(phone_number, message, account_id, voucher)
     # return { success: false, error: 'SMS service unavailable' } unless ENABLED
 
     wallet = TenantSmsWallet.find_or_create_by!(account_id: account_id)
@@ -34,6 +34,8 @@ class PlatformBulkSmsService
       status = data.dig('responses', 0, 'response-description')
       wallet.debit!(1, reference: data.dig('responses', 0, 'messageid'))
       { success: true, status: status }
+        voucher.update(sms_sent: true)
+
     else
       Rails.logger.error "PlatformBulkSmsService failed: #{response.body}"
       { success: false, error: 'Failed to send message' }

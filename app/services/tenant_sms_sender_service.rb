@@ -5,7 +5,10 @@ class TenantSmsSenderService
     SmsSetting.find_by(account_id: account_id)&.sms_provider == PLATFORM_PROVIDER
   end
 
-  def self.send_sms(phone_number, message, account_id, current_user: nil)
+
+
+
+  def self.send_sms(phone_number, message, account_id, voucher, current_user: nil)
     result = PlatformBulkSmsService.send_sms(phone_number, message, account_id)
     SystemAdminSm.create!(
       user: phone_number, message: message,
