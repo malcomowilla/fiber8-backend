@@ -257,7 +257,7 @@ get  '/api/platform_sms_balance', to: 'platform_sms#balance'
 
 get  '/api/tenant_sms_wallet/balance',  to: 'tenant_sms_wallet#balance'
 post '/api/tenant_sms_wallet/purchase', to: 'tenant_sms_wallet#purchase'
-post '/api/tenant_sms_wallet/confirm',  to: 'tenant_sms_wallet#confirm_purchase'
+# post '/api/tenant_sms_wallet/confirm',  to: 'tenant_sms_wallet#confirm_purchase'
 
 post '/api/paystack_settings/test_connection', to: 'paystack_settings#test_connection'
 resource :paystack_settings, only: [:show, :update], controller: 'paystack_settings'
