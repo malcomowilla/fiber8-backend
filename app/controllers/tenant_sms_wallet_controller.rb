@@ -21,17 +21,17 @@ class TenantSmsWalletController < ApplicationController
 
     headroom = PlatformBulkSmsBalanceService.sellable_headroom
 
-    if headroom.nil?
-      return render json: {
-        error: 'SMS purchases are temporarily unavailable. Please contact your platform admin.'
-      }, status: :service_unavailable
-    end
+    # if headroom.nil?
+    #   return render json: {
+    #     error: 'SMS purchases are temporarily unavailable. Please contact your platform admin.'
+    #   }, status: :service_unavailable
+    # end
 
-    if quantity > headroom
-      return render json: {
-        error: 'SMS credits are temporarily unavailable. Please contact your platform admin.'
-      }, status: :unprocessable_entity
-    end
+    # if quantity > headroom
+    #   return render json: {
+    #     error: 'SMS credits are temporarily unavailable. Please contact your platform admin.'
+    #   }, status: :unprocessable_entity
+    # end
 
     amount = (quantity * SELL_PRICE_PER_SMS).round(2)
 
