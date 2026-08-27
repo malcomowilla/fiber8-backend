@@ -15,6 +15,20 @@ class PlatformBulkSmsBalanceService
     live - outstanding
   end
 
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
   def self.fetch_live_balance
     uri = URI("https://sms.textsms.co.ke/api/services/getbalance")
     uri.query = URI.encode_www_form(
