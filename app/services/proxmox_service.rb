@@ -61,6 +61,7 @@ class ProxmoxService
 
   Rails.logger.info "Proxmox GET #{path} -> #{response.code}"
   Rails.logger.info "Proxmox body: #{response.body}" unless response.code.to_i == 200
+Rails.logger.info "Proxmox body: #{response.body}"   
 
   data = JSON.parse(response.body)
   data["data"]
