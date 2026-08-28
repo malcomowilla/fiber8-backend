@@ -48,7 +48,7 @@ class SendSmsHotspotService
 
 
       when 'Owitech Bulk SMS'
-        TenantWalletSenderService.send_sms(voucher.phone, message, tenant.id, current_user: nil)
+        TenantPaymentSenderService.send_sms(voucher.phone, message, tenant.id, current_user: nil)
 
       when "SMS leopard"
         send_voucher_sms_leopard(voucher, tenant, message)
