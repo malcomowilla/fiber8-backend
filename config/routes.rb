@@ -251,6 +251,12 @@ resource :tuma_settings, only: [:show, :update]
 resources :hotspot_sms_templates, only: [:index, :update]
 
 
+get '/api/proxmox/nodes', to: 'proxmox#nodes'
+  get '/api/proxmox/dashboard', to: 'proxmox#dashboard'
+  get '/api/proxmox/nodes/:node/status', to: 'proxmox#node_status'
+  get '/api/proxmox/nodes/:node/vms', to: 'proxmox#vms'
+  get '/api/proxmox/nodes/:node/containers', to: 'proxmox#containers'
+
 
 get  '/api/tenant_sms_wallet/stats',   to: 'tenant_sms_wallet#stats'
 post '/api/tenant_sms_wallet/confirm', to: 'tenant_sms_wallet#confirm'
