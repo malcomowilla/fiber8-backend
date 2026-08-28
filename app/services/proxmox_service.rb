@@ -48,21 +48,24 @@ class ProxmoxService
   private
 
   def get(path)
-    uri = URI("#{BASE_URL}#{path}")
-    http = Net::HTTP.new(uri.host, uri.port)
-    http.use_ssl = true
-    http.verify_mode = OpenSSL::SSL::VERIFY_NONE 
+  uri = URI("#{BASE_URL}#{path}")
+  http = Net::HTTP.new(uri.host, uri.port)
+  http.use_ssl = true
+  http.verify_mode = OpenSSL::SSL::VERIFY_NONE
 
-    request = Net::HTTP::Get.new(uri)
-    request["Authorization"] = "PVEAPIToken=#{@token_id}=#{@token_secret}"
-    request["Content-Type"] = "application/json"
+  request = Net::HTTP::Get.new(uri)
+  request["Authorization"] = "PVEAPIToken=#{@token_id}=#{@token_secret}"
+  request["Content-Type"] = "application/json"
 
-    response = http.request(request)
-    data = JSON.parse(response.body)
+  response = http.request(request)
 
-    data["data"]
-  rescue => e
-    Rails.logger.error "Proxmox API error: #{e.message}"
-    nil
-  end
+  Rails.logger.info "Proxmox GET #{path} -> #{response.code}"
+  Rails.logger.info "Proxmox body: #{response.body}" unless response.code.to_i == 200
+
+  data = JSON.parse(response.body)
+  data["data"]
+rescue => e
+  Rails.logger.error "Proxmox API error (#{path}): #{e.class} #{e.message}"
+  nil
+end
 end
