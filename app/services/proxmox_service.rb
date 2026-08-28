@@ -3,9 +3,8 @@
 class ProxmoxService
   BASE_URL = "https://#{ENV['PROXMOX_HOST']}:8006/api2/json"
 
-  def initialize(account = nil)
-    @account = account
-    @token_id = ENV['PROXMOX_TOKEN_ID']   
+  def initialize
+    @token_id = ENV['PROXMOX_TOKEN_ID']
     @token_secret = ENV['PROXMOX_TOKEN_SECRET']
   end
 

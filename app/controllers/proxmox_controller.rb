@@ -1,10 +1,10 @@
+# app/controllers/proxmox_controller.rb
 
 class ProxmoxController < ApplicationController
 
- 
   # GET /api/proxmox/nodes
   def nodes
-    service = ProxmoxService.new(@account)
+    service = ProxmoxService.new
     nodes = service.nodes
 
     render json: { nodes: nodes }
@@ -12,7 +12,7 @@ class ProxmoxController < ApplicationController
 
   # GET /api/proxmox/nodes/:node/status
   def node_status
-    service = ProxmoxService.new(@account)
+    service = ProxmoxService.new
     status = service.node_status(params[:node])
 
     render json: { status: status }
@@ -20,7 +20,7 @@ class ProxmoxController < ApplicationController
 
   # GET /api/proxmox/nodes/:node/vms
   def vms
-    service = ProxmoxService.new(@account)
+    service = ProxmoxService.new
     vms = service.vms(params[:node])
 
     render json: { vms: vms }
@@ -28,7 +28,7 @@ class ProxmoxController < ApplicationController
 
   # GET /api/proxmox/nodes/:node/containers
   def containers
-    service = ProxmoxService.new(@account)
+    service = ProxmoxService.new
     containers = service.containers(params[:node])
 
     render json: { containers: containers }
@@ -37,7 +37,7 @@ class ProxmoxController < ApplicationController
   # GET /api/proxmox/dashboard
   # Returns everything in one call
   def dashboard
-    service = ProxmoxService.new(@account)
+    service = ProxmoxService.new
     nodes = service.nodes || []
 
     dashboard_data = nodes.map do |node|
