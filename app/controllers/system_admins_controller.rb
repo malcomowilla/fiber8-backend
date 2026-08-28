@@ -133,6 +133,28 @@ end
 
 
 
+def sms_wallet_purchases
+  transactions = ActsAsTenant.without_tenant do
+    TenantSmsWalletTransaction.where(transaction_type: 'purchase').order(created_at: :desc).limit(500)
+  end
+
+  account_names = Account.where(id: transactions.map(&:account_id).uniq).index_by(&:id)
+
+  render json: transactions.map { |t|
+    {
+      id: t.id,
+      reference: t.reference,
+      checkout_request_id: t.checkout_request_id,
+      invoice_number: t.invoice_number,
+      quantity: t.quantity,
+      amount: t.amount,
+      status: t.status,
+      created_at: t.created_at,
+      company_name: account_names[t.account_id]&.subdomain,
+    }
+  }
+end
+
 
 def invoice_payments
   payments = ActsAsTenant.without_tenant do

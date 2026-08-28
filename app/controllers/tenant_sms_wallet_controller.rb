@@ -1,17 +1,44 @@
+# app/controllers/tenant_sms_wallet_controller.rb — full replacement
 class TenantSmsWalletController < ApplicationController
   set_current_tenant_through_filter
   before_action :set_tenant
 
-  # KES per credit — same "set this before going live" note as SHORT_CODE
-  # above. Move to ENV or a real settings row once you've decided which.
   SELL_PRICE_PER_SMS = ENV.fetch('SMS_WALLET_SELL_PRICE', '0.60').to_f
 
   def balance
-    wallet = TenantSmsWallet.find_or_create_by!(account_id: @account.id)
+    wallet = TenantSmsWallet.for_current_tenant
     render json: {
       balance: wallet.balance,
       sell_price_per_sms: SELL_PRICE_PER_SMS,
       enabled: PlatformBulkSmsService::ENABLED
+    }
+  end
+
+  # Powers the 4-card stats strip: balance, sent this month, total sent,
+  # total purchased — all derived from the transaction ledger, no
+  # separate counters to keep in sync.
+  def stats
+    wallet = TenantSmsWallet.for_current_tenant
+    month_range = Time.current.beginning_of_month..Time.current.end_of_month
+
+    sent_this_month = wallet.transactions
+                             .where(transaction_type: 'send', status: 'completed')
+                             .where(created_at: month_range)
+                             .sum(:quantity)
+
+    total_sent = wallet.transactions
+                        .where(transaction_type: 'send', status: 'completed')
+                        .sum(:quantity)
+
+    total_purchased = wallet.transactions
+                             .where(transaction_type: 'purchase', status: 'completed')
+                             .sum(:quantity)
+
+    render json: {
+      balance: wallet.balance,
+      sent_this_month: sent_this_month,
+      total_sent: total_sent,
+      total_purchased: total_purchased
     }
   end
 
@@ -35,12 +62,10 @@ class TenantSmsWalletController < ApplicationController
 
     amount = (quantity * SELL_PRICE_PER_SMS).round(2)
 
-    wallet = TenantSmsWallet.find_or_create_by!(account_id: @account.id)
-    txn = TenantSmsWalletTransaction.create!(
-      account_id: @account.id, tenant_sms_wallet_id: wallet.id,
-      transaction_type: 'purchase', quantity: quantity, amount: amount,
-      status: 'pending'
-    )
+    # This is the "always create a record" fix: the pending purchase row
+    # is created here, before payment even starts, and the M-Pesa
+    # callback completes THIS row rather than creating a second one.
+    _wallet, txn = TenantSmsWallet.initiate_purchase!(account_id: @account.id, quantity: quantity, amount: amount)
 
     account_reference = "smswallet_#{@account.id}_#{txn.id}"
 
@@ -58,11 +83,23 @@ class TenantSmsWalletController < ApplicationController
     end
   end
 
+  # Polled by the frontend after STK push. Just reads the transaction's
+  # current status — the M-Pesa confirmation callback (in
+  # HotspotVouchersController#check_payment_status) is what actually
+  # completes it.
+  def confirm
+    txn = TenantSmsWalletTransaction.find_by(account_id: @account.id, checkout_request_id: params[:checkout_request_id])
+    return render json: { status: 'not_found' }, status: :not_found unless txn
+
+    wallet = TenantSmsWallet.for_current_tenant
+    render json: { status: txn.status, balance: wallet.balance, quantity: txn.quantity }
+  end
+
   def purchase_status
     txn = TenantSmsWalletTransaction.find_by(account_id: @account.id, reference: params[:reference])
     return render json: { error: 'Not found' }, status: :not_found unless txn
 
-    render json: { status: txn.status, balance: TenantSmsWallet.find_by(account_id: @account.id)&.balance }
+    render json: { status: txn.status, balance: TenantSmsWallet.for_current_tenant.balance }
   end
 
   private

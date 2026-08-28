@@ -252,6 +252,10 @@ resources :hotspot_sms_templates, only: [:index, :update]
 
 
 
+get  '/api/tenant_sms_wallet/stats',   to: 'tenant_sms_wallet#stats'
+post '/api/tenant_sms_wallet/confirm', to: 'tenant_sms_wallet#confirm'
+get  '/api/system_admins/sms_wallet_purchases', to: 'system_admins#sms_wallet_purchases'
+
 
 get  '/api/platform_sms_balance', to: 'platform_sms#balance'
 

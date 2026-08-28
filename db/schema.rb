@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_08_27_133614) do
+ActiveRecord::Schema[7.2].define(version: 2026_08_28_110849) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -1675,6 +1675,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_08_27_133614) do
     t.string "checkout_request_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "invoice_number"
     t.index ["account_id"], name: "index_tenant_sms_wallet_transactions_on_account_id"
     t.index ["checkout_request_id"], name: "index_tenant_sms_wallet_transactions_on_checkout_request_id"
     t.index ["reference"], name: "index_tenant_sms_wallet_transactions_on_reference"
