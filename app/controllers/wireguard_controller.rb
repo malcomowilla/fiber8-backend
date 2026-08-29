@@ -576,6 +576,8 @@ class WireguardController < ApplicationController
     CONFIG
   end
 
+
+
   def generate_server_config(client_pubkey, ip)
     <<~CONFIG
       # Add this to your WireGuard server config (/etc/wireguard/wg0.conf)
