@@ -1,4 +1,4 @@
-	require "ipaddr"
+require "ipaddr"
 
 class WireguardPeersController < ApplicationController
   load_and_authorize_resource
@@ -7,6 +7,14 @@ class WireguardPeersController < ApplicationController
   before_action :update_last_activity
   before_action :set_tenant
   before_action :set_time_zone
+
+  # ---------------------------------------------------------------------------
+  # Pool of tunnel addresses auto-assigned as WireGuard peer IPs.
+  # These are shared across ALL tenants (one physical WireGuard interface),
+  # so uniqueness is checked tenant-wide, not per-tenant.
+  # Override with WIREGUARD_PEER_IP_POOL if 10.2.0.0/24 isn't right.
+  # ---------------------------------------------------------------------------
+  PEER_IP_POOL = ENV.fetch("WIREGUARD_PEER_IP_POOL", "10.2.0.0/24")
 
   # ---------------------------------------------------------------------------
   # Before actions
@@ -84,8 +92,9 @@ class WireguardPeersController < ApplicationController
   # ---------------------------------------------------------------------------
   # POST /wireguard_peers
   #
-  # private_ip:
-  #   ONE WireGuard peer IP, e.g. "10.2.0.154"
+  # The admin only supplies allowed_ips (the private network(s) that should
+  # become reachable through WireGuard). private_ip (the peer's own tunnel
+  # address) is NEVER accepted from the client — it is auto-assigned here.
   #
   # allowed_ips:
   #   MANY networks. Accepted as an array:
@@ -97,18 +106,6 @@ class WireguardPeersController < ApplicationController
   def create
     params_data = wireguard_peer_params
 
-    private_ip = clean_private_ip(
-      params_data[:private_ip]
-    )
-
-    if private_ip.blank?
-      render json: {
-        error: "Private IP cannot be blank or invalid"
-      }, status: :unprocessable_entity
-
-      return
-    end
-
     begin
       allowed_ips = clean_allowed_ips(
         params_data[:allowed_ips]
@@ -117,6 +114,16 @@ class WireguardPeersController < ApplicationController
     rescue ArgumentError => e
       render json: {
         error: e.message
+      }, status: :unprocessable_entity
+
+      return
+    end
+
+    private_ip = assign_private_ip!
+
+    if private_ip.blank?
+      render json: {
+        error: "No available WireGuard peer IPs left in #{PEER_IP_POOL}"
       }, status: :unprocessable_entity
 
       return
@@ -201,6 +208,7 @@ class WireguardPeersController < ApplicationController
   # ---------------------------------------------------------------------------
   # PATCH/PUT /wireguard_peers/:id
   #
+  # private_ip is immutable once assigned — only allowed_ips can be edited.
   # Diffs old vs new allowed_ips and only touches routes that actually
   # changed (adds new networks, removes dropped ones).
   # ---------------------------------------------------------------------------
@@ -208,23 +216,9 @@ class WireguardPeersController < ApplicationController
   def update
     @wireguard_peer = WireguardPeer.find(params[:id])
 
-    old_private_ip = @wireguard_peer.private_ip
-
     old_allowed_ips = clean_allowed_ips(
       @wireguard_peer.allowed_ips
     )
-
-    new_private_ip = clean_private_ip(
-      params.dig(:wireguard_peer, :private_ip)
-    )
-
-    if new_private_ip.blank?
-      render json: {
-        error: "Private IP cannot be blank or invalid"
-      }, status: :unprocessable_entity
-
-      return
-    end
 
     begin
       new_allowed_ips = clean_allowed_ips(
@@ -270,13 +264,11 @@ class WireguardPeersController < ApplicationController
       end
 
       # ---------------------------------------------------------
-      # Update database
+      # Update database (private_ip is untouched — it's fixed at
+      # creation time)
       # ---------------------------------------------------------
 
-      @wireguard_peer.assign_attributes(
-        private_ip: new_private_ip,
-        allowed_ips: new_allowed_ips.join(",")
-      )
+      @wireguard_peer.allowed_ips = new_allowed_ips.join(",")
 
       unless @wireguard_peer.save
         raise @wireguard_peer.errors.full_messages.join(", ")
@@ -324,7 +316,6 @@ class WireguardPeersController < ApplicationController
       end
 
       # Restore object attributes
-      @wireguard_peer.private_ip = old_private_ip
       @wireguard_peer.allowed_ips =
         old_allowed_ips.join(",")
 
@@ -385,30 +376,30 @@ class WireguardPeersController < ApplicationController
   private
 
   # ---------------------------------------------------------------------------
-  # Clean and validate ONE WireGuard peer IP
+  # Auto-assign the next free tunnel IP from PEER_IP_POOL.
+  #
+  # Uniqueness is checked ACROSS ALL TENANTS (ActsAsTenant.without_tenant)
+  # because every peer shares the same physical WireGuard interface/routes.
+  # Returns nil if the pool is exhausted.
   # ---------------------------------------------------------------------------
 
-  def clean_private_ip(value)
-    ip = value.to_s.strip
+  def assign_private_ip!
+    pool = IPAddr.new(PEER_IP_POOL)
+    range = pool.to_range.to_a
 
-    return nil if ip.blank?
+    # Skip network + broadcast addresses for normal subnets.
+    usable = range.length > 2 ? range[1..-2] : range
 
-    # private_ip must be one IP, not a list
-    return nil if ip.match?(/[,\s]/)
-
-    # CIDR is not allowed here
-    return nil if ip.include?("/")
-
-    begin
-      addr = IPAddr.new(ip)
-
-      return nil unless addr.ipv4?
-
-      ip
-
-    rescue IPAddr::InvalidAddressError
-      nil
+    used_ips = ActsAsTenant.without_tenant do
+      WireguardPeer.pluck(:private_ip).compact.to_set
     end
+
+    usable.each do |addr|
+      ip = addr.to_s
+      return ip unless used_ips.include?(ip)
+    end
+
+    nil
   end
 
   # ---------------------------------------------------------------------------
@@ -561,9 +552,9 @@ class WireguardPeersController < ApplicationController
   # ---------------------------------------------------------------------------
   # Strong parameters
   #
+  # private_ip is intentionally NOT permitted — it is server-assigned only.
   # allowed_ips is permitted BOTH as a scalar string ("10.5.0.0/16,...")
-  # and as an array (["10.5.0.0/16", ...]) so the array the frontend now
-  # sends actually survives strong-params filtering.
+  # and as an array (["10.5.0.0/16", ...]).
   # ---------------------------------------------------------------------------
 
   def wireguard_peer_params
@@ -571,7 +562,6 @@ class WireguardPeersController < ApplicationController
       :public_key,
       :allowed_ips,
       :persistent_keepalive,
-      :private_ip,
       allowed_ips: []
     )
   end
