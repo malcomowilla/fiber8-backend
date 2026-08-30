@@ -225,6 +225,7 @@
 # end
 
 
+require "ipaddr"
 
 class WireguardPeersController < ApplicationController
   load_and_authorize_resource
@@ -282,35 +283,42 @@ class WireguardPeersController < ApplicationController
   def edit
   end
 
-  def create
-    @wireguard_peer = WireguardPeer.new(
-      wireguard_peer_params
+def create
+  @wireguard_peer = WireguardPeer.new(wireguard_peer_params)
+
+  unless @wireguard_peer.valid?
+    render json: @wireguard_peer.errors,
+           status: :unprocessable_entity
+    return
+  end
+
+  begin
+    @wireguard_peer.save!
+
+    add_route(@wireguard_peer.private_ip)
+
+    log_activity("create")
+
+    render json: @wireguard_peer, status: :created
+  rescue => e
+    Rails.logger.error(
+      "Failed to create WireGuard peer: #{e.class}: #{e.message}"
     )
 
-    if @wireguard_peer.save
-      begin
-        add_route(@wireguard_peer.private_ip)
-      rescue => e
-        @wireguard_peer.destroy
-        Rails.logger.error(
-          "Failed to add WireGuard route: #{e.message}"
-        )
-
-        render json: {
-          error: "Failed to configure WireGuard route"
-        }, status: :unprocessable_entity
-
-        return
-      end
-
-      log_ activity("create")
-
-      render json: @wireguard_peer, status: :created
-    else
-      render json: @wireguard_peer.errors,
-             status: :unprocessable_entity
+    begin
+      delete_route(@wireguard_peer.private_ip)
+    rescue
+      nil
     end
+
+    @wireguard_peer.destroy if @wireguard_peer.persisted?
+
+    render json: {
+      error: "Failed to configure WireGuard route"
+    }, status: :unprocessable_entity
   end
+end
+
 
   def testing
     render json: { message: "testing" }, status: :ok
@@ -445,29 +453,32 @@ class WireguardPeersController < ApplicationController
     run_route_command("del", ip)
   end
 
-  def run_route_command(action, ip)
-    # Validate before passing anything to sudo.
-    unless ip.to_s.match?(
-      /\A(?:\d{1,3}\.){3}\d{1,3}(?:\/32)?\z/
-    )
-      raise ArgumentError, "Invalid IP address"
-    end
+  
+def run_route_command(action, ip)
+  address = clean_private_ip(ip)
 
-    command = [
-      "sudo",
-      "/usr/local/sbin/wireguard-route",
-      action,
-      ip.to_s.sub(%r{/32\z}, "")
-    ]
-
-    success = system(*command)
-
-    unless success
-      raise "WireGuard route command failed"
-    end
-
-    true
+  unless address.present?
+    raise ArgumentError, "Invalid IPv4 address: #{ip.inspect}"
   end
+
+  command = [
+    "sudo",
+    "/usr/local/sbin/wireguard-route",
+    action,
+    address
+  ]
+
+  Rails.logger.info(
+    "Executing WireGuard route command: #{command.join(' ')}"
+  )
+
+  unless system(*command)
+    raise "WireGuard route command failed"
+  end
+
+  true
+end
+
 
   def log_activity(action)
     ActivtyLog.create(
