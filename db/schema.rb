@@ -507,10 +507,6 @@ ActiveRecord::Schema[7.2].define(version: 2026_08_28_110849) do
     t.boolean "enable_compensation"
     t.string "compensation_minutes"
     t.string "compensation_hours"
-    t.boolean "enable_free_trial", default: false
-    t.integer "free_trial_duration_minutes", default: 5
-    t.integer "free_trial_download_limit", default: 2
-    t.integer "free_trial_upload_limit", default: 1
     t.integer "max_customer_bypass_devices", default: 1
     t.boolean "allow_device_self_service", default: false
   end
@@ -1453,7 +1449,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_08_28_110849) do
     t.string "node"
     t.string "status"
     t.string "nas_router"
-    t.index ["ref_no"], name: "index_subscribers_on_ref_no"
+    t.index ["ref_no"], name: "index_subscribers_on_ref_no", unique: true
   end
 
   create_table "subscriptions", force: :cascade do |t|
@@ -1570,6 +1566,8 @@ ActiveRecord::Schema[7.2].define(version: 2026_08_28_110849) do
     t.boolean "login_with_passkey", default: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "phone_number_verified"
+    t.string "phone_number"
     t.boolean "system_admin_phone_number_verified", default: false
     t.string "system_admin_phone_number"
     t.string "otp"
@@ -1740,9 +1738,9 @@ ActiveRecord::Schema[7.2].define(version: 2026_08_28_110849) do
 
   create_table "users", force: :cascade do |t|
     t.string "email"
-    t.string "password_digest"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "password_digest"
     t.string "username"
     t.integer "account_id"
     t.string "phone_number"
