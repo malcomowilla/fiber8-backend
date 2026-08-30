@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_08_28_110849) do
+ActiveRecord::Schema[7.2].define(version: 2026_08_30_174209) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -39,6 +39,28 @@ ActiveRecord::Schema[7.2].define(version: 2026_08_28_110849) do
     t.string "latitude"
     t.string "longitude"
     t.string "last_status"
+    t.string "model"
+    t.string "brand"
+    t.string "static_ip"
+    t.string "mac_address"
+    t.string "location"
+    t.text "notes"
+    t.bigint "nas_router_id"
+    t.boolean "hotspot_binding_done", default: false
+    t.boolean "snmp_enabled", default: false
+    t.string "snmp_community", default: "public"
+    t.string "snmp_version", default: "2c"
+    t.string "uptime"
+    t.integer "signal_strength"
+    t.integer "connected_clients", default: 0
+    t.datetime "last_seen_at"
+    t.string "firmware_version"
+    t.float "ping_latency_ms"
+    t.string "setup_status", default: "pending"
+    t.index ["account_id"], name: "index_access_points_on_account_id"
+    t.index ["nas_router_id"], name: "index_access_points_on_nas_router_id"
+    t.index ["reachable"], name: "index_access_points_on_reachable"
+    t.index ["setup_status"], name: "index_access_points_on_setup_status"
   end
 
   create_table "accounts", force: :cascade do |t|

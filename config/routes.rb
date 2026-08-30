@@ -251,6 +251,14 @@ resource :tuma_settings, only: [:show, :update]
 resources :hotspot_sms_templates, only: [:index, :update]
 
 
+ get '/api/access_points', to: 'access_points#index'
+post '/api/access_points', to: 'access_points#create'
+patch '/api/access_points/:id', to: 'access_points#update'
+delete '/api/access_points/:id', to: 'access_points#destroy'
+patch '/api/access_points/:id/update_setup_status', to: 'access_points#update_setup_status'
+get '/api/access_points/analytics', to: 'access_points#analytics'
+get '/api/access_points/setup_instructions', to: 'access_points#setup_instructions'
+
 get '/api/proxmox/nodes', to: 'proxmox#nodes'
   get '/api/proxmox/dashboard', to: 'proxmox#dashboard'
   get '/api/proxmox/nodes/:node/status', to: 'proxmox#node_status'

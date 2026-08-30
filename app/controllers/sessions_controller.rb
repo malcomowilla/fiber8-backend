@@ -1016,6 +1016,8 @@ def send_otp_sms(phone_number, otp, tenant)
       tenant
     )
 
+    
+
   when 'Owitech Bulk SMS'
     TenantWalletSenderService.send_sms(
       phone_number,
