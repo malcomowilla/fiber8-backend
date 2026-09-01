@@ -1,8 +1,11 @@
 class Rack::Attack
   ### Configure Cache ###
- Rack::Attack.cache.store = ActiveSupport::Cache::RedisCacheStore.new(
-    url: ENV.fetch("REDIS_URL")
-  )
+#  Rack::Attack.cache.store = ActiveSupport::Cache::RedisCacheStore.new(
+#     url: ENV.fetch("REDIS_URL")
+#   )
+
+
+  Rack::Attack.cache.store = ActiveSupport::Cache::MemoryStore.new
   ## Throttle Login Attempts Per IP ###
   throttle('logins/ip', limit: 15, period: 1.minute) do |req|
     Rails.logger.warn "[Rack::Attack] Checking login attempt from IP: #{req.ip}" if req.path == '/api/sign_in' && req.post?
@@ -121,7 +124,7 @@ end
     req.user_agent =~ /(nikto|sqlmap|nmap|masscan|dirbuster)/i
   end
 
-  
+
   throttle('api/ip', limit: 600, period: 1.minute) do |req|
   req.ip if req.path.start_with?('/api/')
 end
