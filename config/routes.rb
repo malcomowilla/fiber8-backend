@@ -250,7 +250,8 @@ resource :tuma_settings, only: [:show, :update]
 
 resources :hotspot_sms_templates, only: [:index, :update]
 
-
+get   '/api/technician/tickets/:token', to: 'technician_tickets#show'
+patch '/api/technician/tickets/:token', to: 'technician_tickets#update'
  get '/api/access_points', to: 'access_points#index'
 post '/api/access_points', to: 'access_points#create'
 patch '/api/access_points/:id', to: 'access_points#update'

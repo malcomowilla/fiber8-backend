@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_08_30_174209) do
+ActiveRecord::Schema[7.2].define(version: 2026_09_01_163320) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -1529,6 +1529,9 @@ ActiveRecord::Schema[7.2].define(version: 2026_08_30_174209) do
     t.datetime "updated_at", null: false
     t.serial "sequence_number"
     t.integer "subscriber_id"
+    t.string "access_token"
+    t.datetime "technician_updated_at"
+    t.index ["access_token"], name: "index_support_tickets_on_access_token", unique: true
   end
 
   create_table "system_admin_email_settings", force: :cascade do |t|
@@ -1716,6 +1719,18 @@ ActiveRecord::Schema[7.2].define(version: 2026_08_30_174209) do
     t.integer "account_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+  end
+
+  create_table "ticket_updates", force: :cascade do |t|
+    t.bigint "support_ticket_id", null: false
+    t.string "status"
+    t.text "remark"
+    t.string "updated_by"
+    t.string "source", default: "admin"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.integer "account_id"
+    t.index ["support_ticket_id"], name: "index_ticket_updates_on_support_ticket_id"
   end
 
   create_table "tuma_settings", force: :cascade do |t|
@@ -1931,6 +1946,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_08_30_174209) do
   add_foreign_key "paystack_settings", "accounts"
   add_foreign_key "promotional_plans", "hotspot_packages"
   add_foreign_key "temporary_sessions", "tv_plans"
+  add_foreign_key "ticket_updates", "support_tickets"
   add_foreign_key "tv_plans", "accounts"
   add_foreign_key "tv_plans", "nas_routers", on_delete: :nullify
   add_foreign_key "withdrawals", "accounts"
