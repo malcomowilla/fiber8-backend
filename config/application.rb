@@ -30,7 +30,6 @@ module Fiber8backend
   class Application < Rails::Application
     # config.session_store :cookie_store, key: '_hue_session', domain: :all
     # puts("Loading cookies session store KEY")
-    config.middleware.use Rack::Attack
     config.middleware.use BlockedUser
     # 
 
