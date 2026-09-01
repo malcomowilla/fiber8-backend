@@ -1,5 +1,7 @@
 class TechniciansController < ApplicationController
   before_action :set_technician, only: %i[ show edit update destroy ]
+    set_current_tenant_through_filter
+
   before_action :set_tenant
 
   # GET /technicians or /technicians.json
