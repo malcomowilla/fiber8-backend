@@ -33,7 +33,6 @@ class PlatformSendSmsService
       data = JSON.parse(response.body)
       status = data.dig('responses', 0, 'response-description')
       wallet.debit!(1, reference: data.dig('responses', 0, 'messageid'))
-         voucher.update(sms_sent: true)
 
       { success: true, status: status }
 
