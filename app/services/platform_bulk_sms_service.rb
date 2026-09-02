@@ -26,7 +26,6 @@ class PlatformBulkSmsService
     http.use_ssl = uri.scheme == 'https'
     http.open_timeout = 5
     http.read_timeout = 8
-
     response = http.get(uri.request_uri)
 
     if response.is_a?(Net::HTTPSuccess)

@@ -502,9 +502,9 @@ class HotspotExpirationJob
  message = render_expiration_message(tenant, voucher)
     case provider
     when 'Owitech Bulk SMS'
-     
         # TenantWalletSenderService.send_sms(voucher.phone, message, tenant.id, current_user: nil)
-        TenantPaymentSenderService.send_sms(voucher.phone, message, tenant.id,current_user: nil)
+        TenantPaymentSenderService.send_sms(voucher.phone, message, 
+        tenant.id, current_user: nil)
     when 'TextSms'
       send_expiration_text_sms(voucher.phone, voucher, tenant)
     when 'SMS leopard'

@@ -6,7 +6,12 @@ class TenantSmsSenderService
     SmsSetting.find_by(account_id: account_id)&.sms_provider == PLATFORM_PROVIDER
   end
 
-  def self.send_sms(phone_number, message, account_id, voucher, current_user: nil)
+
+# TenantSmsSenderService.send_sms(params[:phone], message, 
+# ActsAsTenant.current_tenant.id, voucher, 
+# current_user: current_user)
+
+  def self.send_sms(phone_number, message, account_id, voucher, current_user)
     wallet = TenantSmsWallet.find_or_create_by!(account_id: account_id)
 
     if wallet.balance < 1
