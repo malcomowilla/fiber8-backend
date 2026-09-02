@@ -11,7 +11,8 @@ class TenantSmsSenderService
 # ActsAsTenant.current_tenant.id, voucher, 
 # current_user: current_user)
 
-  def self.send_sms(phone_number, message, account_id, voucher, current_user)
+  def self.send_sms(phone_number, message, account_id, voucher, current_user: current_user)
+    
     wallet = TenantSmsWallet.find_or_create_by!(account_id: account_id)
 
     if wallet.balance < 1
