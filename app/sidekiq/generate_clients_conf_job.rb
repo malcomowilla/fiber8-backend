@@ -68,35 +68,39 @@
 
 
 
-class GenerateClientsConfJob
-  include Sidekiq::Job
 
-  CLIENTS_CONF = "/etc/freeradius/3.0/clients.conf".freeze
 
-  queue_as :client_conf
 
-  def perform
-    Rails.logger.info "Generating clients.conf"
 
-    File.open(CLIENTS_CONF, "w") do |f|
-      Na.find_each do |nas|
-        next if nas.nasname.blank? || nas.secret.blank?
+# class GenerateClientsConfJob
+#   include Sidekiq::Job
 
-        f.puts <<~CLIENT
-          client #{nas.shortname.presence || "client_#{nas.id}"} {
-            ipaddr     = #{nas.nasname}
-            secret     = #{nas.secret}
-            require_message_authenticator = no
-          }
-        CLIENT
-      end
-    end
+#   CLIENTS_CONF = "/etc/freeradius/3.0/clients.conf".freeze
 
-    File.chmod(0640, CLIENTS_CONF)
+#   queue_as :client_conf
 
-    FileUtils.touch("/etc/freeradius/3.0/.reload_trigger") rescue nil
-  end
-end
+#   def perform
+#     Rails.logger.info "Generating clients.conf"
+
+#     File.open(CLIENTS_CONF, "w") do |f|
+#       Na.find_each do |nas|
+#         next if nas.nasname.blank? || nas.secret.blank?
+
+#         f.puts <<~CLIENT
+#           client #{nas.shortname.presence || "client_#{nas.id}"} {
+#             ipaddr     = #{nas.nasname}
+#             secret     = #{nas.secret}
+#             require_message_authenticator = no
+#           }
+#         CLIENT
+#       end
+#     end
+
+#     File.chmod(0640, CLIENTS_CONF)
+
+#     FileUtils.touch("/etc/freeradius/3.0/.reload_trigger") rescue nil
+#   end
+# end
 
 
 
