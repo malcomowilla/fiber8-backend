@@ -701,28 +701,91 @@ end
 
 
 
+# def delete_package_natively(pkg)
+#   nas = NasRouter.find_by(name: pkg.nas_router)
+#   return { success: false, error: 'No router assigned to this package' } unless nas
+
+#   begin
+#     RestClient::Request.execute(
+#       method: :delete,
+#       url: "http://#{nas.ip_address}/rest/ip/hotspot/user/profile/#{pkg.name}",
+#       user: nas.username.to_s, password: nas.password.to_s,
+#       headers: { content_type: :json },
+#       timeout: 10
+#     )
+#     { success: true }
+#   rescue RestClient::NotFound
+#     { success: true }
+#   rescue => e
+#     { success: false, error: e.message }
+#   end
+# end
+
+
+
 def delete_package_natively(pkg)
   nas = NasRouter.find_by(name: pkg.nas_router)
-  return { success: false, error: 'No router assigned to this package' } unless nas
+
+  return {
+    success: false,
+    error: 'No router assigned to this package'
+  } unless nas
 
   begin
+    encoded_name = URI.encode_www_form_component(pkg.name.to_s)
+
+    url = "http://#{nas.ip_address}/rest/ip/hotspot/user/profile/#{encoded_name}"
+
+    Rails.logger.info "Deleting MikroTik hotspot profile: #{url}"
+
     RestClient::Request.execute(
       method: :delete,
-      url: "http://#{nas.ip_address}/rest/ip/hotspot/user/profile/#{pkg.name}",
-      user: nas.username.to_s, password: nas.password.to_s,
+      url: url,
+      user: nas.username.to_s,
+      password: nas.password.to_s,
       headers: { content_type: :json },
-      timeout: 10
+      timeout: 10,
+      open_timeout: 5
     )
-    { success: true }
+
+    {
+      success: true
+    }
+
   rescue RestClient::NotFound
-    { success: true }
+    # Already gone from MikroTik, so deletion is effectively successful.
+    {
+      success: true
+    }
+
+  rescue RestClient::ExceptionWithResponse => e
+    {
+      success: false,
+      error: mikrotik_error_message(e)
+    }
+
+  rescue RestClient::Exceptions::Timeout,
+         Errno::ETIMEDOUT => e
+    {
+      success: false,
+      error: "Router #{nas.ip_address} timed out"
+    }
+
+  rescue Errno::ECONNREFUSED,
+         Errno::EHOSTUNREACH,
+         SocketError => e
+    {
+      success: false,
+      error: "Router unreachable: #{e.message}"
+    }
+
   rescue => e
-    { success: false, error: e.message }
+    {
+      success: false,
+      error: e.message
+    }
   end
 end
-
-
-
 
 
 

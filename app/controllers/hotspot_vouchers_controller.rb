@@ -2989,14 +2989,16 @@ def delete_voucher_natively(voucher)
 
     if active_sessions.present?
       active_sessions.each do |session|
-        session_id = session[".id"]  
+        session_id = session[".id"]
         next unless session_id
+
+        encoded_session_id = URI::DEFAULT_PARSER.escape(session_id.to_s)
 
         RestClient::Request.execute(
           method: :delete,
-          url: "http://#{nas.ip_address}/rest/ip/hotspot/active/#{session_id}",
-          user: nas.username,
-          password: nas.password,
+          url: "http://#{nas.ip_address}/rest/ip/hotspot/active/#{encoded_session_id}",
+          user: nas.username.to_s,
+          password: nas.password.to_s,
           timeout: 5,
           open_timeout: 3
         )
@@ -3004,11 +3006,13 @@ def delete_voucher_natively(voucher)
     end
 
     # Now delete the hotspot user
+    encoded_voucher = URI::DEFAULT_PARSER.escape(voucher.voucher.to_s)
+
     RestClient::Request.execute(
       method: :delete,
-      url: "http://#{nas.ip_address}/rest/ip/hotspot/user/#{voucher.voucher}",
-      user: nas.username,
-      password: nas.password,
+      url: "http://#{nas.ip_address}/rest/ip/hotspot/user/#{encoded_voucher}",
+      user: nas.username.to_s,
+      password: nas.password.to_s,
       timeout: 5,
       open_timeout: 3
     )
@@ -3016,18 +3020,34 @@ def delete_voucher_natively(voucher)
     { success: true }
 
   rescue RestClient::NotFound
+    # Already gone from MikroTik, so treat deletion as successful
     { success: true }
+
   rescue RestClient::Exceptions::Timeout, Errno::ETIMEDOUT
-    { success: false, error: "Router #{nas.ip_address} timed out" }
+    {
+      success: false,
+      error: "Router #{nas.ip_address} timed out"
+    }
+
   rescue Errno::ECONNREFUSED, Errno::EHOSTUNREACH, SocketError => e
-    { success: false, error: "Router #{nas.ip_address} unreachable: #{e.message}" }
+    {
+      success: false,
+      error: "Router #{nas.ip_address} unreachable: #{e.message}"
+    }
+
+  rescue RestClient::ExceptionWithResponse => e
+    {
+      success: false,
+      error: e.response&.body.presence || e.message
+    }
+
   rescue => e
-    { success: false, error: e.response&.body || e.message }
+    {
+      success: false,
+      error: e.message
+    }
   end
 end
-
-
-
 
 def router_uses_radius?
   return true unless ActsAsTenant.current_tenant
