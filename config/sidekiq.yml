@@ -184,9 +184,6 @@ development:
         cron: "*/5 * * * *"
 
 
-    access_point_ping_job:
-      class: AccessPointPingJob
-      cron: "*/5 * * * *"
    
     subscription_expiry_reminder_job:
         class: SubscriptionExpiryReminderJob
