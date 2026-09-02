@@ -24,7 +24,7 @@ class TenantSmsSenderService
       return { success: false, error: 'Insufficient SMS balance. Please top up to continue sending.' }
     end
 
-    result = PlatformBulkSmsService.send_sms(phone_number, message, account_id, voucher, current_user)
+    result = PlatformBulkSmsService.send_sms(phone_number, message, account_id, voucher)
 
     # Only charge for sends that actually went out — a failed send
     # shouldn't cost the tenant a credit.
