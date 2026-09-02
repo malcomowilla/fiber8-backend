@@ -732,15 +732,53 @@ def delete_package_natively(pkg)
   } unless nas
 
   begin
-    encoded_name = URI.encode_www_form_component(pkg.name.to_s)
+    base_url = "http://#{nas.ip_address}/rest/ip/hotspot/user/profile"
 
-    url = "http://#{nas.ip_address}/rest/ip/hotspot/user/profile/#{encoded_name}"
+    # Find the profile by its actual name
+    response = RestClient::Request.execute(
+      method: :get,
+      url: base_url,
+      user: nas.username.to_s,
+      password: nas.password.to_s,
+      headers: { accept: :json },
+      timeout: 10,
+      open_timeout: 5
+    )
 
-    Rails.logger.info "Deleting MikroTik hotspot profile: #{url}"
+    profiles = JSON.parse(response.body)
 
+    profile = profiles.find do |item|
+      item["name"].to_s == pkg.name.to_s
+    end
+
+    unless profile
+      Rails.logger.warn(
+        "MikroTik hotspot profile not found: #{pkg.name}"
+      )
+
+      # It is already absent, so consider cleanup successful
+      return {
+        success: true
+      }
+    end
+
+    profile_id = profile[".id"]
+
+    unless profile_id.present?
+      return {
+        success: false,
+        error: "MikroTik profile found but has no .id"
+      }
+    end
+
+    Rails.logger.info(
+      "Deleting MikroTik hotspot profile '#{pkg.name}' with .id=#{profile_id}"
+    )
+
+    # Delete using the MikroTik internal resource ID
     RestClient::Request.execute(
       method: :delete,
-      url: url,
+      url: "#{base_url}/#{URI::DEFAULT_PARSER.escape(profile_id.to_s)}",
       user: nas.username.to_s,
       password: nas.password.to_s,
       headers: { content_type: :json },
@@ -753,7 +791,6 @@ def delete_package_natively(pkg)
     }
 
   rescue RestClient::NotFound
-    # Already gone from MikroTik, so deletion is effectively successful.
     {
       success: true
     }
@@ -765,7 +802,7 @@ def delete_package_natively(pkg)
     }
 
   rescue RestClient::Exceptions::Timeout,
-         Errno::ETIMEDOUT => e
+         Errno::ETIMEDOUT
     {
       success: false,
       error: "Router #{nas.ip_address} timed out"
@@ -776,7 +813,7 @@ def delete_package_natively(pkg)
          SocketError => e
     {
       success: false,
-      error: "Router unreachable: #{e.message}"
+      error: "Router #{nas.ip_address} unreachable: #{e.message}"
     }
 
   rescue => e

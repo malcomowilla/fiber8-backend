@@ -2981,38 +2981,94 @@ def delete_voucher_natively(voucher)
   )
 
   nas = NasRouter.find_by(name: package&.nas_router)
-  return { success: false, error: "No router specified or router not found" } unless nas
+
+  return {
+    success: false,
+    error: "No router specified or router not found"
+  } unless nas
 
   begin
-    # Disconnect active session first
+    base_url = "http://#{nas.ip_address}/rest/ip/hotspot/user"
+
+    # ---------------------------------------------------------
+    # 1. Disconnect active session first
+    # ---------------------------------------------------------
     active_sessions = get_active_sessions(voucher.voucher)
 
-    if active_sessions.present?
-      active_sessions.each do |session|
-        session_id = session[".id"]
-        next unless session_id
+    active_sessions.to_a.each do |session|
+      session_id = session[".id"]
+      next unless session_id.present?
 
-        encoded_session_id = URI::DEFAULT_PARSER.escape(session_id.to_s)
+      encoded_session_id =
+        URI::DEFAULT_PARSER.escape(session_id.to_s)
 
-        RestClient::Request.execute(
-          method: :delete,
-          url: "http://#{nas.ip_address}/rest/ip/hotspot/active/#{encoded_session_id}",
-          user: nas.username.to_s,
-          password: nas.password.to_s,
-          timeout: 5,
-          open_timeout: 3
-        )
-      end
+      RestClient::Request.execute(
+        method: :delete,
+        url: "http://#{nas.ip_address}/rest/ip/hotspot/active/#{encoded_session_id}",
+        user: nas.username.to_s,
+        password: nas.password.to_s,
+        timeout: 5,
+        open_timeout: 3
+      )
     end
 
-    # Now delete the hotspot user
-    encoded_voucher = URI::DEFAULT_PARSER.escape(voucher.voucher.to_s)
+    # ---------------------------------------------------------
+    # 2. Get all hotspot users
+    # ---------------------------------------------------------
+    response = RestClient::Request.execute(
+      method: :get,
+      url: base_url,
+      user: nas.username.to_s,
+      password: nas.password.to_s,
+      headers: {
+        accept: :json
+      },
+      timeout: 10,
+      open_timeout: 5
+    )
+
+    users = JSON.parse(response.body)
+
+    # ---------------------------------------------------------
+    # 3. Find the MikroTik user by voucher name
+    # ---------------------------------------------------------
+    hotspot_user = users.find do |user|
+      user["name"].to_s == voucher.voucher.to_s
+    end
+
+    # User doesn't exist on MikroTik anymore
+    return { success: true } unless hotspot_user
+
+    # ---------------------------------------------------------
+    # 4. Get MikroTik internal resource ID
+    # ---------------------------------------------------------
+    user_id = hotspot_user[".id"]
+
+    unless user_id.present?
+      return {
+        success: false,
+        error: "MikroTik hotspot user found but has no .id"
+      }
+    end
+
+    Rails.logger.info(
+      "Deleting MikroTik hotspot user '#{voucher.voucher}' with .id=#{user_id}"
+    )
+
+    # ---------------------------------------------------------
+    # 5. Delete using MikroTik .id
+    # ---------------------------------------------------------
+    encoded_user_id =
+      URI::DEFAULT_PARSER.escape(user_id.to_s)
 
     RestClient::Request.execute(
       method: :delete,
-      url: "http://#{nas.ip_address}/rest/ip/hotspot/user/#{encoded_voucher}",
+      url: "#{base_url}/#{encoded_user_id}",
       user: nas.username.to_s,
       password: nas.password.to_s,
+      headers: {
+        content_type: :json
+      },
       timeout: 5,
       open_timeout: 3
     )
@@ -3020,7 +3076,7 @@ def delete_voucher_natively(voucher)
     { success: true }
 
   rescue RestClient::NotFound
-    # Already gone from MikroTik, so treat deletion as successful
+    # Already deleted from MikroTik
     { success: true }
 
   rescue RestClient::Exceptions::Timeout, Errno::ETIMEDOUT
@@ -3029,7 +3085,9 @@ def delete_voucher_natively(voucher)
       error: "Router #{nas.ip_address} timed out"
     }
 
-  rescue Errno::ECONNREFUSED, Errno::EHOSTUNREACH, SocketError => e
+  rescue Errno::ECONNREFUSED,
+         Errno::EHOSTUNREACH,
+         SocketError => e
     {
       success: false,
       error: "Router #{nas.ip_address} unreachable: #{e.message}"
