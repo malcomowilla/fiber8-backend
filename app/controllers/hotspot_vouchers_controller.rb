@@ -1,5 +1,6 @@
 class HotspotVouchersController < ApplicationController
-# :transaction_status_result,
+  include BroadcastsHotspotPayments
+
 load_and_authorize_resource except: [:login_with_hotspot_voucher,
  :make_payment, :check_payment_status, :payment_and_conected_status,
  :login_with_receipt_number, :calculate_expiration_login_with_voucher,
@@ -264,6 +265,19 @@ unless HotspotMpesaRevenue.exists?(reference: receipt_no)
     name: customer_name,
     account_id: active_session.account_id,
     hotspot_voucher_id: active_session.hotspot_voucher_id
+  )
+
+
+
+   broadcast_hotspot_payment(
+    account_id: active_session.account_id,
+    kind: 'voucher',
+    amount: amount,
+    package: active_session.hotspot_package,
+    name: customer_name,
+    phone: customer_phone_number,
+    payment_method: 'Mpesa',
+    reference: receipt_no
   )
 end
 
@@ -751,7 +765,16 @@ if session&.payment_type == 'device_binding'
   )
 
 
-
+broadcast_hotspot_payment(
+    account_id: session.account_id,
+    kind: 'tv_plan',
+    amount: data["TransAmount"],
+    package: tv_plan&.name,
+    name: data["FirstName"],
+    phone: session.phone_number,
+    payment_method: 'Mpesa',
+    reference: data["TransID"]
+  )
 
 
   if nas_router_tv_package
@@ -841,6 +864,17 @@ end
 SendSmsHotspotService.send_sms(voucher.voucher, data, session.checkout_request_id,
 )
 
+
+broadcast_hotspot_payment(
+  account_id: session.account_id,
+  kind: 'voucher',
+  amount: data["TransAmount"],
+  package: session.hotspot_package,
+  name: data["FirstName"],
+  phone: session.phone_number,
+  payment_method: 'Mpesa',
+  reference: data["TransID"]
+)
   if nas_router
   begin
     response = RestClient::Request.execute(

@@ -1,4 +1,5 @@
 class HotspotMpesaRevenuesController < ApplicationController
+  include BroadcastsHotspotPayments
 
 
   set_current_tenant_through_filter
