@@ -54,17 +54,21 @@ def free_trial_devices
   }
 end
 
-# DELETE /hotspot_sessions/free_trial_devices/:id
+
+
 def destroy_free_trial_device
   device = FreeTrialDevice.find_by!(id: params[:id], account_id: @account.id)
+
+  if router_uses_radius?
+    RadUserGroup.where(username: device.mac_address).destroy_all
+    RadCheck.where(username: device.mac_address, account_id: @account.id).destroy_all
+  else
+    hotspot_package = HotspotPackage.find_by(name: device.package, account_id: @account.id)
+    delete_free_trial_native_user(device.mac_address, hotspot_package) if hotspot_package
+  end
+
   device.destroy!
-
-  # Also remove the RADIUS entries so the MAC cannot re-auth on the old group
-  RadUserGroup.where(username: device.mac_address).destroy_all
-  RadCheck.where(username: device.mac_address, account_id: @account.id).destroy_all
-
   render json: { message: 'Device record deleted' }, status: :ok
-
 rescue ActiveRecord::RecordNotFound
   render json: { error: 'Device not found' }, status: :not_found
 end
@@ -170,7 +174,12 @@ def grant_free_trial
   if router_uses_radius?
     free_trial_radius(mac, package, @account.id, free_trial_duration_minutes)
   else
-    free_trial_native(mac, hotspot_package, @account.id, free_trial_duration_minutes)
+    # free_trial_native(mac, hotspot_package, @account.id, free_trial_duration_minutes)
+    free_trial_native(mac, hotspot_package, @account.id, free_trial_duration_minutes,
+                   params[:free_trial_upload_limit] || hotspot_package.free_trial_upload_limit,
+                   params[:free_trial_download_limit] || hotspot_package.free_trial_download_limit)
+
+
   end
 
   FreeTrialDevice.create!(
@@ -261,8 +270,9 @@ end
 # router itself, keyed by MAC, with limit-uptime capped to the trial
 # duration so it auto-expires on the router side too. Same request
 # shape as sync_voucher_natively.
-def free_trial_native(mac, hotspot_package, account_id, free_trial_duration_minutes)
-  nas = NasRouter.find_by(name: hotspot_package.nas_router, account_id: account_id) 
+def free_trial_native(mac, hotspot_package, account_id, free_trial_duration_minutes,
+                       free_trial_upload_limit, free_trial_download_limit)
+  nas = NasRouter.find_by(name: hotspot_package.nas_router, account_id: account_id)
 
   unless nas
     Rails.logger.info "free_trial_native: no router found for account #{account_id}"
@@ -272,6 +282,8 @@ def free_trial_native(mac, hotspot_package, account_id, free_trial_duration_minu
   macupcase = mac.upcase
   minutes = free_trial_duration_minutes.to_i
   minutes = 1 if minutes < 1
+
+  rate_limit = "#{free_trial_upload_limit}M/#{free_trial_download_limit}M"
 
   begin
     RestClient::Request.execute(
@@ -283,6 +295,7 @@ def free_trial_native(mac, hotspot_package, account_id, free_trial_duration_minu
         name: macupcase,
         password: macupcase,
         profile: hotspot_package.name,
+        "rate-limit": rate_limit,          # per-user override wins over the profile's rate-limit
         "limit-uptime": "#{minutes}m",
         comment: "free_trial"
       }.to_json,
@@ -298,13 +311,33 @@ def free_trial_native(mac, hotspot_package, account_id, free_trial_duration_minu
   end
 end
 
-
-
 private
 
 def router_uses_radius?
   setting = NasSetting.find_by(account_id: ActsAsTenant.current_tenant.id)
   setting ? ActiveModel::Type::Boolean.new.cast(setting.use_radius) : true
+end
+
+
+
+
+
+
+def delete_free_trial_native_user(mac, hotspot_package)
+  nas = NasRouter.find_by(name: hotspot_package.nas_router, account_id: @account.id)
+  return unless nas
+
+  RestClient::Request.execute(
+    method: :delete,
+    url: "http://#{nas.ip_address}/rest/ip/hotspot/user/#{mac.upcase}",
+    user: nas.username.to_s,
+    password: nas.password.to_s,
+    timeout: 10
+  )
+rescue RestClient::NotFound
+  # already gone, fine
+rescue StandardError => e
+  Rails.logger.info "delete_free_trial_native_user: REST error on #{nas.ip_address}: #{e.message}"
 end
 
 end
