@@ -29,7 +29,7 @@ class TenantPaymentSenderService
     SmsSetting.find_by(account_id: account_id)&.sms_provider == PLATFORM_PROVIDER
   end
 
-  def self.send_sms(phone_number, message, account_id, current_user)
+  def self.send_sms(phone_number, message, account_id)
     begin
       result = PlatformSendSmsService.send_sms(
         phone_number,
@@ -42,7 +42,7 @@ class TenantPaymentSenderService
         message: message,
         status: result[:success] ? (result[:status] || 'Sent') : result[:error],
         date: Time.now.strftime("%B %d, %Y at %I:%M %p"),
-        system_user: current_user&.username || current_user&.email || 'system',
+        system_user:  'system',
         sms_provider: PLATFORM_PROVIDER,
         account_id: account_id
       )
