@@ -3,7 +3,11 @@ class RouterTroubleshootingAiService
 
   DEFAULT_MODEL  = "workers-ai/@cf/openai/gpt-oss-120b"
   FALLBACK_MODEL = "google-ai-studio/gemini-3.6-flash"
-.
+
+  # Read-only tools only. Nothing here writes to the router — no config
+  # changes, no user creation, no firewall edits. If you ever add a
+  # write tool, it needs its own explicit confirmation step in the UI
+  # before the AI can trigger it; never let the model call it directly.
   TOOLS = [
     {
       type: "function",
