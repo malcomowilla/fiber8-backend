@@ -1,4 +1,3 @@
-# app/services/tuma_service.rb
 
 class TumaService
   BASE_URL = "https://api.tuma.co.ke"

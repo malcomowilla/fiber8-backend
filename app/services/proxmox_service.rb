@@ -1,4 +1,3 @@
-# app/services/proxmox_service.rb
 
 class ProxmoxService
   BASE_URL = "https://#{ENV['PROXMOX_HOST']}:8006/api2/json"

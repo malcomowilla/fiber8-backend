@@ -1,9 +1,5 @@
 class PlatformSendSmsService
-  # Sends via the PLATFORM's TextSMS account (your creds), debits the
-  # tenant's wallet. Tenant-facing error messages never mention TextSMS.
-  #
-  # Pricing/short_code have no ENV equivalent yet — set these two before
-  # this goes live, or tell me where you'd rather they come from.
+ 
   SHORT_CODE = "TextSms"
   ENABLED  = ENV.fetch('PLATFORM_BULK_SMS_ENABLED', 'true') == 'true'
 

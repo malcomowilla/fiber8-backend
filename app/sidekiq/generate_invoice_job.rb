@@ -491,16 +491,21 @@ class GenerateInvoiceJob
     [pppoe_clients, pppoe_charge]
   end
 
-  # --------------------------
-  # SMS helpers (with nil safety)
-  # --------------------------
-  def send_invoice_sms(phone_number, due_date, invoice_number, username, plan_name, tenant)
+  def send_invoice_sms(phone_number, due_date, invoice_number, username, 
+    plan_name, tenant)
+
     sms_setting = ActsAsTenant.current_tenant.sms_provider_setting
     return unless sms_setting&.sms_provider.present?
-
+    
     case sms_setting.sms_provider
+
+    when 'Owitech Bulk SMS'
+      message = "Hello #{username}, your platform license invoice #{invoice_number} for #{plan_name} is now available and is due on #{due_date.strftime('%B %d, %Y at %I:%M %p')}. Please settle the license fee by the due date to ensure uninterrupted access to your network management platform."
+
+    TenantSidekiqService.send_sms(phone_number, message, tenant.id)
     when 'TextSms'
-      send_expiration_text_sms(phone_number, due_date, invoice_number, username, plan_name, tenant)
+      send_expiration_text_sms(phone_number, due_date, invoice_number,
+       username, plan_name, tenant)
     when 'SMS leopard'
       send_expiration_sms_leopard(phone_number, due_date, invoice_number, username, plan_name, tenant)
     when "Talk Sasa"
@@ -518,7 +523,7 @@ class GenerateInvoiceJob
     api_key  = sms_setting&.api_key
     sender_id = sms_setting&.sender_id
 
-    original_message = "Hello #{username}, your invoice #{invoice_number} for #{plan_name} has been generated and is due on #{due_date.strftime('%B %d, %Y at %I:%M %p')}. Please renew your subscription to admin your network."
+original_message = "Hello #{username}, your platform license invoice #{invoice_number} for #{plan_name} is now available and is due on #{due_date.strftime('%B %d, %Y at %I:%M %p')}. Please settle the license fee by the due date to ensure uninterrupted access to your network management platform."
 
     uri = URI.parse("https://bulksms.talksasa.com/api/v3/sms/send")
 
@@ -568,8 +573,7 @@ class GenerateInvoiceJob
     api_secret = SmsSetting.find_by(sms_provider: 'SMS leopard')&.api_secret
     return unless api_key && api_secret
 
-    message = "Hello #{username}, your invoice #{invoice_number} for #{plan_name} has been generated and is due on #{due_date.strftime('%B %d, %Y at %I:%M %p')}. Please renew your subscription to admin your network."
-
+message = "Hello #{username}, your platform license invoice #{invoice_number} for #{plan_name} is now available and is due on #{due_date.strftime('%B %d, %Y at %I:%M %p')}. Please settle the license fee by the due date to ensure uninterrupted access to your network management platform."
     uri = URI("https://api.smsleopard.com/v1/sms/send")
     params = {
       username: api_key,
@@ -589,8 +593,8 @@ class GenerateInvoiceJob
     shortcode = SmsSetting.find_by(sms_provider: 'TextSms')&.sender_id
     return unless api_key && partner_id && shortcode
 
-    message = "Hello #{username}, your invoice #{invoice_number} for #{plan_name} has been generated and is due on #{due_date.strftime('%B %d, %Y at %I:%M %p')}. Please renew your subscription to admin your network."
-
+message = "Hello #{username}, your platform license invoice #{invoice_number} for #{plan_name} is now available and is due on #{due_date.strftime('%B %d, %Y at %I:%M %p')}. Please settle the license fee by the due date 
+to ensure uninterrupted access to your network management platform."
     uri = URI("https://sms.textsms.co.ke/api/services/sendsms")
     params = {
       apikey: api_key,

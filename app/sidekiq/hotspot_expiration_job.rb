@@ -688,7 +688,8 @@ class HotspotExpirationJob
   end
 
   def render_expiration_message(tenant, voucher)
-    template = HotspotSmsTemplate.find_by(account_id: tenant.id, category: 'expiration', active: true)
+    template = HotspotSmsTemplate.find_by(account_id: tenant.id, 
+    category: 'expiration', active: true)
     data = {
       customer_phone: voucher.phone,
       voucher_code: voucher.voucher,

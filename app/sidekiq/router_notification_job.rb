@@ -35,7 +35,6 @@ class RouterNotificationJob
     routers = NasRouter.where(account_id: tenant.id).to_a
     return if routers.empty?
 
-    # ✅ Parallel TCP checks instead of serial — this is the main slowness fix
     results = batch_tcp_check(routers)
 
     routers.each do |nas_router|
@@ -150,6 +149,8 @@ class RouterNotificationJob
 
   def send_sms(provider, phone_number, tenant, message)
     case provider
+     when 'Owitech Bulk SMS'
+    TenantSidekiqService.send_sms(phone_number, message, tenant.id)
     when 'TextSms'
       send_text_sms(phone_number, tenant, message)
     when 'SMS leopard'

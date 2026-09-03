@@ -38,7 +38,7 @@ class TenantSidekiqService
         message: message,
         status: "Failed: #{e.message}",
         date: Time.now.strftime("%B %d, %Y at %I:%M %p"),
-        system_user: current_user&.username || current_user&.email || 'system',
+        system_user:  'system',
         sms_provider: PLATFORM_PROVIDER,
         account_id: account_id
       )
