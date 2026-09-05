@@ -6568,25 +6568,33 @@ def sync_voucher_natively(voucher)
   nas = NasRouter.find_by(name: package.nas_router, account_id: voucher.account_id)
   return voucher.update(sync_status: 'failed', sync_error: 'No router specified or router not found') unless nas
 
-  RestClient::Request.execute(
-    method: :put,
-    url: "http://#{nas.ip_address}/rest/ip/hotspot/user",
-    user: nas.username.to_s, password: nas.password.to_s,
-    payload: { name: voucher.voucher, password: voucher.voucher, profile: package.name }.to_json,
-    headers: { content_type: :json },
-    timeout: 15,
-    open_timeout: 5
-  )
-  voucher.update(sync_status: 'synced', synced_at: Time.current, sync_error: nil)
+  client = RouterosApiClient.new(nas.ip_address, nas.username.to_s, nas.password.to_s, timeout: 10)
+  client.connect
 
-rescue RestClient::ExceptionWithResponse => e
-  voucher.update(sync_status: 'failed', sync_error: mikrotik_error_message(e))
-rescue RestClient::Exceptions::Timeout, Errno::ETIMEDOUT
+  reply = client.talk([
+    '/ip/hotspot/user/add',
+    "=name=#{voucher.voucher}",
+    "=password=#{voucher.voucher}",
+    "=profile=#{package.name}"
+  ])
+
+  if reply.last.first == '!trap'
+    error_message = reply.last.find { |w| w.start_with?('=message=') }&.sub('=message=', '') || 'Unknown MikroTik error'
+    voucher.update(sync_status: 'failed', sync_error: error_message)
+  else
+    voucher.update(sync_status: 'synced', synced_at: Time.current, sync_error: nil)
+  end
+
+rescue RouterosApiClient::ApiError => e
+  voucher.update(sync_status: 'failed', sync_error: e.message)
+rescue Errno::ETIMEDOUT, IO::TimeoutError
   voucher.update(sync_status: 'failed', sync_error: "Router #{nas.ip_address} timed out")
 rescue Errno::ECONNREFUSED, Errno::EHOSTUNREACH, SocketError => e
   voucher.update(sync_status: 'failed', sync_error: "Router unreachable: #{e.message}")
 rescue => e
   voucher.update(sync_status: 'failed', sync_error: e.message)
+ensure
+  client&.close
 end
 
 def sync_voucher_natively_realtime_expiration(voucher)
@@ -6596,27 +6604,36 @@ def sync_voucher_natively_realtime_expiration(voucher)
   nas = NasRouter.find_by(name: package.nas_router)
   return voucher.update(sync_status: 'failed', sync_error: 'No router specified or router not found') unless nas
 
-  RestClient::Request.execute(
-    method: :put,
-    url: "http://#{nas.ip_address}/rest/ip/hotspot/user",
-    user: nas.username.to_s, password: nas.password.to_s,
-    payload: { name: voucher.voucher, password: voucher.voucher,
-      profile: package.name, "limit-uptime": validity_for_mikrotik(package) }.to_json,
-    headers: { content_type: :json },
-    timeout: 15,
-    open_timeout: 5
-  )
-  voucher.update(sync_status: 'synced', synced_at: Time.current, sync_error: nil)
+  client = RouterosApiClient.new(nas.ip_address, nas.username.to_s, nas.password.to_s, timeout: 10)
+  client.connect
 
-rescue RestClient::ExceptionWithResponse => e
-  voucher.update(sync_status: 'failed', sync_error: mikrotik_error_message(e))
-rescue RestClient::Exceptions::Timeout, Errno::ETIMEDOUT
+  reply = client.talk([
+    '/ip/hotspot/user/add',
+    "=name=#{voucher.voucher}",
+    "=password=#{voucher.voucher}",
+    "=profile=#{package.name}",
+    "=limit-uptime=#{validity_for_mikrotik(package)}"
+  ])
+
+  if reply.last.first == '!trap'
+    error_message = reply.last.find { |w| w.start_with?('=message=') }&.sub('=message=', '') || 'Unknown MikroTik error'
+    voucher.update(sync_status: 'failed', sync_error: error_message)
+  else
+    voucher.update(sync_status: 'synced', synced_at: Time.current, sync_error: nil)
+  end
+
+rescue RouterosApiClient::ApiError => e
+  voucher.update(sync_status: 'failed', sync_error: e.message)
+rescue Errno::ETIMEDOUT, IO::TimeoutError
   voucher.update(sync_status: 'failed', sync_error: "Router #{nas.ip_address} timed out")
 rescue Errno::ECONNREFUSED, Errno::EHOSTUNREACH, SocketError => e
   voucher.update(sync_status: 'failed', sync_error: "Router unreachable: #{e.message}")
 rescue => e
   voucher.update(sync_status: 'failed', sync_error: e.message)
+ensure
+  client&.close
 end
+
 
 def mikrotik_error_message(e)
   return e.message unless e.response
