@@ -263,13 +263,53 @@ radcheck.update!(op: ':=', value: macupcase)
 end
 
 
+# def free_trial_native(mac, hotspot_package, account_id, free_trial_duration_minutes,
+#                        free_trial_upload_limit, free_trial_download_limit)
+#   nas = NasRouter.find_by(name: hotspot_package.nas_router, account_id: account_id)
 
-# ── Native MikroTik equivalent of free_trial_radius. Instead of writing
-# RadCheck/RadUserGroup rows (which only get consulted by a RADIUS
-# server), this pushes a temporary hotspot user straight onto the
-# router itself, keyed by MAC, with limit-uptime capped to the trial
-# duration so it auto-expires on the router side too. Same request
-# shape as sync_voucher_natively.
+#   unless nas
+#     Rails.logger.info "free_trial_native: no router found for account #{account_id}"
+#     return
+#   end
+
+#   macupcase = mac.upcase
+#   minutes = free_trial_duration_minutes.to_i
+#   minutes = 1 if minutes < 1
+
+#   rate_limit = "#{free_trial_upload_limit}M/#{free_trial_download_limit}M"
+#   begin
+#     RestClient::Request.execute(
+#       method: :put,
+#       url: "http://#{nas.ip_address}/rest/ip/hotspot/user",
+#       user: nas.username.to_s,
+#       password: nas.password.to_s,
+#       payload: {
+#         name: macupcase,
+#         password: macupcase,
+#         profile: hotspot_package.name,
+#         "rate-limit": rate_limit,          # per-user override wins over the profile's rate-limit
+#         "limit-uptime": "#{minutes}m",
+#         comment: "free_trial"
+#       }.to_json,
+#       headers: { content_type: :json },
+#       timeout: 10
+#     )
+#   rescue RestClient::Unauthorized
+#     Rails.logger.info "free_trial_native: REST auth failed for router #{nas.ip_address}"
+#   rescue RestClient::ExceptionWithResponse => e
+#     Rails.logger.info "free_trial_native: MikroTik REST error on #{nas.ip_address}: #{e.response}"
+#   rescue StandardError => e
+#     Rails.logger.info "free_trial_native: REST error on #{nas.ip_address}: #{e.message}"
+#   end
+# end
+
+
+
+
+
+
+
+
 def free_trial_native(mac, hotspot_package, account_id, free_trial_duration_minutes,
                        free_trial_upload_limit, free_trial_download_limit)
   nas = NasRouter.find_by(name: hotspot_package.nas_router, account_id: account_id)
@@ -284,32 +324,39 @@ def free_trial_native(mac, hotspot_package, account_id, free_trial_duration_minu
   minutes = 1 if minutes < 1
 
   rate_limit = "#{free_trial_upload_limit}M/#{free_trial_download_limit}M"
+
+  client = nil
   begin
-    RestClient::Request.execute(
-      method: :put,
-      url: "http://#{nas.ip_address}/rest/ip/hotspot/user",
-      user: nas.username.to_s,
-      password: nas.password.to_s,
-      payload: {
-        name: macupcase,
-        password: macupcase,
-        profile: hotspot_package.name,
-        "rate-limit": rate_limit,          # per-user override wins over the profile's rate-limit
-        "limit-uptime": "#{minutes}m",
-        comment: "free_trial"
-      }.to_json,
-      headers: { content_type: :json },
-      timeout: 10
-    )
-  rescue RestClient::Unauthorized
-    Rails.logger.info "free_trial_native: REST auth failed for router #{nas.ip_address}"
-  rescue RestClient::ExceptionWithResponse => e
-    Rails.logger.info "free_trial_native: MikroTik REST error on #{nas.ip_address}: #{e.response}"
+    client = RouterosApiClient.new(nas.ip_address, nas.username.to_s, nas.password.to_s, timeout: 10)
+    client.connect
+
+    reply = client.talk([
+      '/ip/hotspot/user/add',
+      "=name=#{macupcase}",
+      "=password=#{macupcase}",
+      "=profile=#{hotspot_package.name}",
+      "=rate-limit=#{rate_limit}",
+      "=limit-uptime=#{minutes}m",
+      "=comment=free_trial"
+    ])
+
+    if reply.last.first == '!trap'
+      error_message = reply.last.find { |w| w.start_with?('=message=') }&.sub('=message=', '') || 'Unknown MikroTik error'
+      Rails.logger.info "free_trial_native: MikroTik API error on #{nas.ip_address}: #{error_message}"
+    end
+
+  rescue RouterosApiClient::ApiError => e
+    Rails.logger.info "free_trial_native: RouterOS API error on #{nas.ip_address}: #{e.message}"
+  rescue Errno::ETIMEDOUT, IO::TimeoutError
+    Rails.logger.info "free_trial_native: Router #{nas.ip_address} timed out"
+  rescue Errno::ECONNREFUSED, Errno::EHOSTUNREACH, SocketError => e
+    Rails.logger.info "free_trial_native: Router #{nas.ip_address} unreachable: #{e.message}"
   rescue StandardError => e
-    Rails.logger.info "free_trial_native: REST error on #{nas.ip_address}: #{e.message}"
+    Rails.logger.info "free_trial_native: RouterOS API error on #{nas.ip_address}: #{e.message}"
+  ensure
+    client&.close
   end
 end
-
 private
 
 def router_uses_radius?
@@ -322,21 +369,78 @@ end
 
 
 
+# def delete_free_trial_native_user(mac, hotspot_package)
+#   nas = NasRouter.find_by(name: hotspot_package.nas_router, account_id: @account.id)
+#   return unless nas
+
+#   RestClient::Request.execute(
+#     method: :delete,
+#     url: "http://#{nas.ip_address}/rest/ip/hotspot/user/#{mac.upcase}",
+#     user: nas.username.to_s,
+#     password: nas.password.to_s,
+#     timeout: 10
+#   )
+# rescue RestClient::NotFound
+#   # already gone, fine
+# rescue StandardError => e
+#   Rails.logger.info "delete_free_trial_native_user: REST error on #{nas.ip_address}: #{e.message}"
+# end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 def delete_free_trial_native_user(mac, hotspot_package)
   nas = NasRouter.find_by(name: hotspot_package.nas_router, account_id: @account.id)
   return unless nas
 
-  RestClient::Request.execute(
-    method: :delete,
-    url: "http://#{nas.ip_address}/rest/ip/hotspot/user/#{mac.upcase}",
-    user: nas.username.to_s,
-    password: nas.password.to_s,
-    timeout: 10
-  )
-rescue RestClient::NotFound
-  # already gone, fine
-rescue StandardError => e
-  Rails.logger.info "delete_free_trial_native_user: REST error on #{nas.ip_address}: #{e.message}"
-end
+  macupcase = mac.upcase
+  client = nil
+  begin
+    client = RouterosApiClient.new(nas.ip_address, nas.username.to_s, nas.password.to_s, timeout: 10)
+    client.connect
 
+    # RouterOS 'remove' needs the real .id, not the name — look it up first.
+    reply = client.talk(['/ip/hotspot/user/print', "?name=#{macupcase}"])
+    user_sentence = reply.find { |s| s.first == '!re' }
+
+    return unless user_sentence # already gone, fine — matches old NotFound handling
+
+    user_id = user_sentence.find { |w| w.start_with?('=.id=') }&.sub('=.id=', '')
+    return unless user_id.present?
+
+    remove_reply = client.talk(['/ip/hotspot/user/remove', "=.id=#{user_id}"])
+
+    if remove_reply.last.first == '!trap'
+      error_message = remove_reply.last.find { |w| w.start_with?('=message=') }&.sub('=message=', '') || 'Unknown MikroTik error'
+      Rails.logger.info "delete_free_trial_native_user: MikroTik API error on #{nas.ip_address}: #{error_message}"
+    end
+
+  rescue RouterosApiClient::ApiError => e
+    Rails.logger.info "delete_free_trial_native_user: RouterOS API error on #{nas.ip_address}: #{e.message}"
+  rescue Errno::ETIMEDOUT, IO::TimeoutError
+    Rails.logger.info "delete_free_trial_native_user: Router #{nas.ip_address} timed out"
+  rescue Errno::ECONNREFUSED, Errno::EHOSTUNREACH, SocketError => e
+    Rails.logger.info "delete_free_trial_native_user: Router #{nas.ip_address} unreachable: #{e.message}"
+  rescue StandardError => e
+    Rails.logger.info "delete_free_trial_native_user: RouterOS API error on #{nas.ip_address}: #{e.message}"
+  ensure
+    client&.close
+  end
+end
 end

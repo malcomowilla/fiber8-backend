@@ -247,66 +247,105 @@ end
     max_session.update!(op: ':=', value: seconds)
   end
 
-  # Same as HotspotVouchersController#sync_voucher_natively — PUTs the
-  # voucher as a local hotspot user on the router so /active/login has
-  # something to authenticate against.
+
+
+
+
+
   def sync_voucher_natively(voucher)
-    package = HotspotPackage.find_by(name: voucher.package, account_id: voucher.account_id)
-    return voucher.update(sync_status: 'failed', sync_error: 'Package not found') unless package
+  package = HotspotPackage.find_by(name: voucher.package, account_id: voucher.account_id)
+  return voucher.update(sync_status: 'failed', sync_error: 'Package not found') unless package
 
-    nas = NasRouter.find_by(name: package.nas_router, account_id: voucher.account_id)
-    return voucher.update(sync_status: 'failed', sync_error: 'No router specified or router not found') unless nas
+  nas = NasRouter.find_by(name: package.nas_router, account_id: voucher.account_id)
+  return voucher.update(sync_status: 'failed', sync_error: 'No router specified or router not found') unless nas
 
-    RestClient::Request.execute(
-      method: :put,
-      url: "http://#{nas.ip_address}/rest/ip/hotspot/user",
-      user: nas.username.to_s, password: nas.password.to_s,
-      payload: { name: voucher.voucher, password: voucher.voucher, profile: package.name }.to_json,
-      headers: { content_type: :json },
-      timeout: 10,
-      open_timeout: 5
-    )
+  client = RouterosApiClient.new(nas.ip_address, nas.username.to_s, nas.password.to_s, timeout: 10)
+  client.connect
+
+  existing = client.talk(['/ip/hotspot/user/print', "?name=#{voucher.voucher}"])
+  existing_sentence = existing.find { |s| s.first == '!re' }
+  existing_id = existing_sentence&.find { |w| w.start_with?('=.id=') }&.sub('=.id=', '')
+
+  attrs = [
+    "=name=#{voucher.voucher}",
+    "=password=#{voucher.voucher}",
+    "=profile=#{package.name}"
+  ]
+
+  reply =
+    if existing_id
+      client.talk(['/ip/hotspot/user/set', "=.id=#{existing_id}"] + attrs)
+    else
+      client.talk(['/ip/hotspot/user/add'] + attrs)
+    end
+
+  if reply.last.first == '!trap'
+    error_message = reply.last.find { |w| w.start_with?('=message=') }&.sub('=message=', '') || 'Unknown MikroTik error'
+    voucher.update(sync_status: 'failed', sync_error: error_message)
+  else
     voucher.update(sync_status: 'synced', synced_at: Time.current, sync_error: nil)
-
-  rescue RestClient::ExceptionWithResponse => e
-    voucher.update(sync_status: 'failed', sync_error: mikrotik_error_message(e))
-  rescue RestClient::Exceptions::Timeout, Errno::ETIMEDOUT
-    voucher.update(sync_status: 'failed', sync_error: "Router #{nas.ip_address} timed out")
-  rescue Errno::ECONNREFUSED, Errno::EHOSTUNREACH, SocketError => e
-    voucher.update(sync_status: 'failed', sync_error: "Router unreachable: #{e.message}")
-  rescue => e
-    voucher.update(sync_status: 'failed', sync_error: e.message)
   end
 
-  def sync_voucher_natively_realtime_expiration(voucher)
-    package = HotspotPackage.find_by(name: voucher.package, account_id: voucher.account_id)
-    return voucher.update(sync_status: 'failed', sync_error: 'Package not found') unless package
+rescue RouterosApiClient::ApiError => e
+  voucher.update(sync_status: 'failed', sync_error: e.message)
+rescue Errno::ETIMEDOUT, IO::TimeoutError
+  voucher.update(sync_status: 'failed', sync_error: "Router #{nas.ip_address} timed out")
+rescue Errno::ECONNREFUSED, Errno::EHOSTUNREACH, SocketError => e
+  voucher.update(sync_status: 'failed', sync_error: "Router unreachable: #{e.message}")
+rescue => e
+  voucher.update(sync_status: 'failed', sync_error: e.message)
+ensure
+  client&.close
+end
 
-    nas = NasRouter.find_by(name: package.nas_router, account_id: voucher.account_id)
-    return voucher.update(sync_status: 'failed', sync_error: 'No router specified or router not found') unless nas
+def sync_voucher_natively_realtime_expiration(voucher)
+  package = HotspotPackage.find_by(name: voucher.package, account_id: voucher.account_id)
+  return voucher.update(sync_status: 'failed', sync_error: 'Package not found') unless package
 
-    RestClient::Request.execute(
-      method: :put,
-      url: "http://#{nas.ip_address}/rest/ip/hotspot/user",
-      user: nas.username.to_s, password: nas.password.to_s,
-      payload: { name: voucher.voucher, password: voucher.voucher,
-        profile: package.name, "limit-uptime": validity_for_mikrotik(package) }.to_json,
-      headers: { content_type: :json },
-      timeout: 10,
-      open_timeout: 5
-    )
+  nas = NasRouter.find_by(name: package.nas_router, account_id: voucher.account_id)
+  return voucher.update(sync_status: 'failed', sync_error: 'No router specified or router not found') unless nas
+
+  client = RouterosApiClient.new(nas.ip_address, nas.username.to_s, nas.password.to_s, timeout: 10)
+  client.connect
+
+  existing = client.talk(['/ip/hotspot/user/print', "?name=#{voucher.voucher}"])
+  existing_sentence = existing.find { |s| s.first == '!re' }
+  existing_id = existing_sentence&.find { |w| w.start_with?('=.id=') }&.sub('=.id=', '')
+
+  attrs = [
+    "=name=#{voucher.voucher}",
+    "=password=#{voucher.voucher}",
+    "=profile=#{package.name}",
+    "=limit-uptime=#{validity_for_mikrotik(package)}"
+  ]
+
+  reply =
+    if existing_id
+      client.talk(['/ip/hotspot/user/set', "=.id=#{existing_id}"] + attrs)
+    else
+      client.talk(['/ip/hotspot/user/add'] + attrs)
+    end
+
+  if reply.last.first == '!trap'
+    error_message = reply.last.find { |w| w.start_with?('=message=') }&.sub('=message=', '') || 'Unknown MikroTik error'
+    voucher.update(sync_status: 'failed', sync_error: error_message)
+  else
     voucher.update(sync_status: 'synced', synced_at: Time.current, sync_error: nil)
-
-  rescue RestClient::ExceptionWithResponse => e
-    voucher.update(sync_status: 'failed', sync_error: mikrotik_error_message(e))
-  rescue RestClient::Exceptions::Timeout, Errno::ETIMEDOUT
-    voucher.update(sync_status: 'failed', sync_error: "Router #{nas.ip_address} timed out")
-  rescue Errno::ECONNREFUSED, Errno::EHOSTUNREACH, SocketError => e
-    voucher.update(sync_status: 'failed', sync_error: "Router unreachable: #{e.message}")
-  rescue => e
-    voucher.update(sync_status: 'failed', sync_error: e.message)
   end
 
+rescue RouterosApiClient::ApiError => e
+  voucher.update(sync_status: 'failed', sync_error: e.message)
+rescue Errno::ETIMEDOUT, IO::TimeoutError
+  voucher.update(sync_status: 'failed', sync_error: "Router #{nas.ip_address} timed out")
+rescue Errno::ECONNREFUSED, Errno::EHOSTUNREACH, SocketError => e
+  voucher.update(sync_status: 'failed', sync_error: "Router unreachable: #{e.message}")
+rescue => e
+  voucher.update(sync_status: 'failed', sync_error: e.message)
+ensure
+  client&.close
+end
+
+  
   def validity_for_mikrotik(pkg)
     case pkg.validity_period_units
     when "minutes" then "#{pkg.validity}m"
@@ -331,32 +370,47 @@ end
   end
 
   def login_on_router(hotspot_package, voucher, session)
-    nas_router = NasRouter.find_by(name: hotspot_package.nas_router, account_id: session.account_id)
-    unless nas_router
-      Rails.logger.warn "Paystack success: no router found for account #{session.account_id}"
-      return
-    end
+  nas_router = NasRouter.find_by(name: hotspot_package.nas_router, account_id: session.account_id)
+  unless nas_router
+    Rails.logger.warn "Paystack success: no router found for account #{session.account_id}"
+    return
+  end
 
-    response = RestClient::Request.execute(
-      method: :post, url: "http://#{nas_router.ip_address}/rest/ip/hotspot/active/login",
-      user: nas_router.username, password: nas_router.password,
-      payload: { ip: session.ip, user: voucher.voucher, password: voucher.voucher }.to_json,
-      headers: { content_type: :json, accept: :json }, timeout: 5, open_timeout: 3
-    )
+  client = nil
+  begin
+    client = RouterosApiClient.new(nas_router.ip_address, nas_router.username.to_s, nas_router.password.to_s, timeout: 5)
+    client.connect
 
-    if response.code == 200
+    reply = client.talk([
+      '/ip/hotspot/active/login',
+      "=ip=#{session.ip}",
+      "=user=#{voucher.voucher}",
+      "=password=#{voucher.voucher}"
+    ])
+
+    if reply.last.first == '!trap'
+      error_message = reply.last.find { |w| w.start_with?('=message=') }&.sub('=message=', '') || 'Unknown MikroTik error'
+      Rails.logger.warn "Paystack success: MikroTik API error: #{error_message}"
+    else
       session.update!(connected: true, status: 'used', paid: true)
       voucher.update!(status: 'used', last_logged_in: Time.current, used_voucher: true, login_by: 'Paystack')
     end
-  rescue RestClient::Exceptions::Timeout, Errno::ETIMEDOUT
-    Rails.logger.warn "Paystack success: router #{nas_router&.ip_address} timed out"
-  rescue RestClient::Unauthorized
-    Rails.logger.warn "Paystack success: REST auth failed for router #{nas_router&.ip_address}"
-  rescue RestClient::ExceptionWithResponse => e
-    Rails.logger.warn "Paystack success: MikroTik REST error: #{e.response}"
+
+  rescue RouterosApiClient::ApiError => e
+    Rails.logger.warn "Paystack success: RouterOS API error: #{e.message}"
+  rescue Errno::ETIMEDOUT, IO::TimeoutError
+    Rails.logger.warn "Paystack success: router #{nas_router.ip_address} timed out"
   rescue Errno::ECONNREFUSED, Errno::EHOSTUNREACH, SocketError => e
     Rails.logger.warn "Paystack success: router unreachable: #{e.message}"
   rescue => e
     Rails.logger.warn "Paystack success: router login failed: #{e.message}"
+  ensure
+    client&.close
   end
+end
+
+
+
+
+
 end

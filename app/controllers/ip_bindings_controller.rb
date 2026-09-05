@@ -370,30 +370,66 @@ def normalize_mac(mac)
   mac.to_s.upcase.gsub('-', ':')
 end
 
-# Queries every NAS router's live active-user list and returns a Set of
-# normalized MAC addresses currently connected. Cached 10s to avoid
-# hammering routers on every page load; tolerant of offline/slow routers.
+# def live_online_macs(account_id)
+#   Rails.cache.fetch("ip_bindings_online_macs_#{account_id}", expires_in: 10.seconds) do
+#     macs = Set.new
+#     NasRouter.where(account_id: account_id).each do |nas|
+#       begin
+#         response = RestClient::Request.execute(
+#           method: :get,
+#           url: "http://#{nas.ip_address}/rest/ip/hotspot/active",
+#           user: nas.username,
+#           password: nas.password,
+#           timeout: 4,
+#           open_timeout: 2
+#         )
+#         users = JSON.parse(response.body)
+#         next unless users.is_a?(Array)
+
+#         users.each do |u|
+#           mac = u['mac-address']
+#           macs << normalize_mac(mac) if mac.present?
+#         end
+#       rescue RestClient::Exceptions::Timeout, Errno::ETIMEDOUT
+#         Rails.logger.warn "live_online_macs: router #{nas.ip_address} timed out"
+#         next
+#       rescue Errno::ECONNREFUSED, Errno::EHOSTUNREACH, SocketError => e
+#         Rails.logger.warn "live_online_macs: router #{nas.ip_address} unreachable: #{e.message}"
+#         next
+#       rescue => e
+#         Rails.logger.warn "live_online_macs: router #{nas.ip_address} error: #{e.message}"
+#         next
+#       end
+#     end
+#     macs.to_a
+#   end.to_set
+# end
+
+
+
+
 def live_online_macs(account_id)
   Rails.cache.fetch("ip_bindings_online_macs_#{account_id}", expires_in: 10.seconds) do
     macs = Set.new
     NasRouter.where(account_id: account_id).each do |nas|
+      client = nil
       begin
-        response = RestClient::Request.execute(
-          method: :get,
-          url: "http://#{nas.ip_address}/rest/ip/hotspot/active",
-          user: nas.username,
-          password: nas.password,
-          timeout: 4,
-          open_timeout: 2
-        )
-        users = JSON.parse(response.body)
-        next unless users.is_a?(Array)
+        client = RouterosApiClient.new(nas.ip_address, nas.username.to_s, nas.password.to_s, timeout: 4)
+        client.connect
 
-        users.each do |u|
-          mac = u['mac-address']
+        reply = client.talk(['/ip/hotspot/active/print'])
+        user_sentences = reply.select { |s| s.first == '!re' }
+
+        user_sentences.each do |sentence|
+          user = sentence_to_hash(sentence)
+          mac = user['mac-address']
           macs << normalize_mac(mac) if mac.present?
         end
-      rescue RestClient::Exceptions::Timeout, Errno::ETIMEDOUT
+
+      rescue RouterosApiClient::ApiError => e
+        Rails.logger.warn "live_online_macs: router #{nas.ip_address} API error: #{e.message}"
+        next
+      rescue Errno::ETIMEDOUT, IO::TimeoutError
         Rails.logger.warn "live_online_macs: router #{nas.ip_address} timed out"
         next
       rescue Errno::ECONNREFUSED, Errno::EHOSTUNREACH, SocketError => e
@@ -402,16 +438,13 @@ def live_online_macs(account_id)
       rescue => e
         Rails.logger.warn "live_online_macs: router #{nas.ip_address} error: #{e.message}"
         next
+      ensure
+        client&.close
       end
     end
     macs.to_a
   end.to_set
 end
-
-
-
-
-
 
 
 def mikrotik_add_queue_for_tv_plan(binding, tv_plan, nas)
