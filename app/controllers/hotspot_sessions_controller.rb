@@ -284,7 +284,6 @@ def free_trial_native(mac, hotspot_package, account_id, free_trial_duration_minu
   minutes = 1 if minutes < 1
 
   rate_limit = "#{free_trial_upload_limit}M/#{free_trial_download_limit}M"
-siandaMaduong12&5
   begin
     RestClient::Request.execute(
       method: :put,
