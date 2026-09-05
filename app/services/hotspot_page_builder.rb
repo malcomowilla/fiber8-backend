@@ -74,15 +74,10 @@ class HotspotPageBuilder
       features: features,
       header: header,
       footer: footer_cfg,
-      # When true (only ever set from preview_page_design), the compiled page
-      # a customer will actually see, but suppresses tracking + reward side
-      # effects so previewing never pollutes real ad analytics. It ALSO
-      # unlocks sample/mock fallback content (see loadPackages/loadAds/
-      # loadPromotions below) whenever the real API returns nothing yet —
-      # this NEVER happens on the published page, only in the designer.
       preview: !!@preview,
         mikrotik_mac: "$(mac)",
     mikrotik_ip: "$(ip)",
+    mikrotik_link_orig: "$(link-orig)",
     }.to_json
   end
 
@@ -265,7 +260,8 @@ const rawMac = cfg.mikrotik_mac;
 const rawIp  = cfg.mikrotik_ip;
 const macSubstituted = rawMac && !rawMac.includes('$(');
 const ipSubstituted  = rawIp  && !rawIp.includes('$(');
-
+const rawLinkOrig = cfg.mikrotik_link_orig;
+const linkOrigSubstituted = rawLinkOrig && !rawLinkOrig.includes('$(');
 const mac = macSubstituted ? rawMac : (qs.get('mac') || localStorage.getItem('hotspot_mac'));
 const ip  = ipSubstituted  ? rawIp  : (qs.get('ip')  || localStorage.getItem('hotspot_ip'));
 
@@ -1533,7 +1529,29 @@ loadSystemAd();
 
 
 
+function tryQrVoucherLogin() {
+  if (cfg.preview) return;
+  if (!linkOrigSubstituted) {
+    console.info('[qr-login] link-orig not substituted — page not served via router redirect, skipping');
+    return;
+  }
 
+  let voucherFromQr = null;
+  try {
+    const decoded = decodeURIComponent(rawLinkOrig);
+    const match = decoded.match(/[?&]voucher=([^&]+)/i);
+    if (match) voucherFromQr = decodeURIComponent(match[1]);
+  } catch (e) {
+    console.error('[qr-login] failed to parse original destination:', e);
+  }
+
+  if (!voucherFromQr) return;
+
+  console.info('[qr-login] voucher found in QR redirect, auto-connecting:', voucherFromQr);
+  if (cfg.features.show_voucher !== false) state.tab = 'voucher';
+  render();
+  connectVoucher(voucherFromQr);
+}
 
 
 
@@ -1924,6 +1942,7 @@ document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && expanded
 
         render();
         tryAutoLogin();
+        tryQrVoucherLogin();
       })();
     JS
   end
