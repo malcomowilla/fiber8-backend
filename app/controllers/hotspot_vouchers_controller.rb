@@ -6574,7 +6574,7 @@ def sync_voucher_natively(voucher)
     user: nas.username.to_s, password: nas.password.to_s,
     payload: { name: voucher.voucher, password: voucher.voucher, profile: package.name }.to_json,
     headers: { content_type: :json },
-    timeout: 10,
+    timeout: 15,
     open_timeout: 5
   )
   voucher.update(sync_status: 'synced', synced_at: Time.current, sync_error: nil)
@@ -6603,7 +6603,7 @@ def sync_voucher_natively_realtime_expiration(voucher)
     payload: { name: voucher.voucher, password: voucher.voucher,
       profile: package.name, "limit-uptime": validity_for_mikrotik(package) }.to_json,
     headers: { content_type: :json },
-    timeout: 10,
+    timeout: 15,
     open_timeout: 5
   )
   voucher.update(sync_status: 'synced', synced_at: Time.current, sync_error: nil)
