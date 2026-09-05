@@ -6569,7 +6569,7 @@ def sync_voucher_natively(voucher)
   return voucher.update(sync_status: 'failed', sync_error: 'No router specified or router not found') unless nas
 
   RestClient::Request.execute(
-    method: :post,
+    method: :put,
     url: "http://#{nas.ip_address}/rest/ip/hotspot/user",
     user: nas.username.to_s, password: nas.password.to_s,
     payload: { name: voucher.voucher, password: voucher.voucher, profile: package.name }.to_json,
@@ -6597,7 +6597,7 @@ def sync_voucher_natively_realtime_expiration(voucher)
   return voucher.update(sync_status: 'failed', sync_error: 'No router specified or router not found') unless nas
 
   RestClient::Request.execute(
-    method: :post,
+    method: :put,
     url: "http://#{nas.ip_address}/rest/ip/hotspot/user",
     user: nas.username.to_s, password: nas.password.to_s,
     payload: { name: voucher.voucher, password: voucher.voucher,
