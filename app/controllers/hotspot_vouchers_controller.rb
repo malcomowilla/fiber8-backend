@@ -6006,8 +6006,6 @@ def login_with_hotspot_voucher
 
   shared_users = package&.shared_users.to_i
 
-  # no more .select { |s| s.include?(...) } needed — get_active_sessions
-  # already returns only sessions matching this voucher
   if active_sessions.count >= shared_users
     return render json: {
       error: "Voucher already used. Max devices allowed: #{shared_users}"
@@ -6017,61 +6015,55 @@ def login_with_hotspot_voucher
   nas_routers = NasRouter.where(account_id: @hotspot_voucher.account_id)
 
   nas_routers.each do |router|
+    client = nil
     begin
-      response = RestClient::Request.execute(
-        method: :post,
-        url: "http://#{router.ip_address}/rest/ip/hotspot/active/login",
-        user: router.username,
-        password: router.password,
-        payload: {
-          ip: params[:ip],
-          user: params[:voucher],
-          password: params[:voucher]
-        }.to_json,
-        headers: {
-          content_type: :json,
-          accept: :json
-        },
-        timeout: 5,       # ← added: stop hanging on a slow/dead router
-        open_timeout: 3   # ← added: stop hanging on an unreachable router
-      )
+      client = RouterosApiClient.new(router.ip_address, router.username.to_s, router.password.to_s, timeout: 5)
+      client.connect
 
-      if response.code == 200
-        @hotspot_voucher.update!(status: 'used', last_logged_in: Time.now,
-          ip: params[:ip], mac: params[:mac], used_voucher: true,
-          login_by: 'Voucher Code'
-        )
+      reply = client.talk([
+        '/ip/hotspot/active/login',
+        "=ip=#{params[:ip]}",
+        "=user=#{params[:voucher]}",
+        "=password=#{params[:voucher]}"
+      ])
 
-        if @hotspot_voucher.expiration.nil?
-          if enable_compensation
-            calculate_expiration_login_with_voucher_compensation(package, @hotspot_voucher,
-              @hotspot_voucher.account_id)
-          end
-        end
-
-        if @hotspot_voucher.expiration.nil?
-          calculate_expiration_login_with_voucher(package, @hotspot_voucher,
-            @hotspot_voucher.account_id)
-        end
-
-        return render json: {
-          message: 'Connected successfully',
-          device_ip: params[:ip],
-          username: @hotspot_voucher.voucher,
-          expiration: @hotspot_voucher.expiration&.strftime("%B %d, %Y at %I:%M %p"),
-          package: @hotspot_voucher.package
-        }, status: :ok
+      if reply.last.first == '!trap'
+        error_message = reply.last.find { |w| w.start_with?('=message=') }&.sub('=message=', '') || 'Unknown MikroTik error'
+        Rails.logger.info "MikroTik API error (#{router.ip_address}): #{error_message}"
+        next
       end
 
-    rescue RestClient::Unauthorized
-      Rails.logger.info "REST auth failed for router #{router.ip_address}"
+      # Success — !done with no trap means the login command was accepted
+      @hotspot_voucher.update!(status: 'used', last_logged_in: Time.now,
+        ip: params[:ip], mac: params[:mac], used_voucher: true,
+        login_by: 'Voucher Code'
+      )
+
+      if @hotspot_voucher.expiration.nil?
+        if enable_compensation
+          calculate_expiration_login_with_voucher_compensation(package, @hotspot_voucher,
+            @hotspot_voucher.account_id)
+        end
+      end
+
+      if @hotspot_voucher.expiration.nil?
+        calculate_expiration_login_with_voucher(package, @hotspot_voucher,
+          @hotspot_voucher.account_id)
+      end
+
+      return render json: {
+        message: 'Connected successfully',
+        device_ip: params[:ip],
+        username: @hotspot_voucher.voucher,
+        expiration: @hotspot_voucher.expiration&.strftime("%B %d, %Y at %I:%M %p"),
+        package: @hotspot_voucher.package
+      }, status: :ok
+
+    rescue RouterosApiClient::ApiError => e
+      Rails.logger.info "RouterOS API error (#{router.ip_address}): #{e.message}"
       next
 
-    rescue RestClient::ExceptionWithResponse => e
-      Rails.logger.info "MikroTik REST error (#{router.ip_address}): #{e.response}"
-      next
-
-    rescue RestClient::Exceptions::Timeout, Errno::ETIMEDOUT
+    rescue Errno::ETIMEDOUT, IO::TimeoutError
       Rails.logger.info "Router #{router.ip_address} timed out during login"
       next
 
@@ -6080,15 +6072,16 @@ def login_with_hotspot_voucher
       next
 
     rescue StandardError => e
-      Rails.logger.info "REST login error: #{e.message}"
+      Rails.logger.info "RouterOS API login error: #{e.message}"
       next
+
+    ensure
+      client&.close
     end
   end
 
   return render json: { error: 'Failed to connect please try again' }, status: :unprocessable_entity
 end
-
-
 
 
 
@@ -7258,33 +7251,25 @@ def get_active_sessions(voucher)
   all_matching_sessions = []
 
   nas_routers.each do |nas_router|
+    client = nil
     begin
-      response = RestClient::Request.execute(
-        method: :get,
-        url: "http://#{nas_router.ip_address}/rest/ip/hotspot/active",
-        user: nas_router.username,
-        password: nas_router.password,
-        timeout: 5,       # read timeout - how long to wait for a response
-        open_timeout: 3   # connection timeout - how long to wait to even connect
-      )
+      client = RouterosApiClient.new(nas_router.ip_address, nas_router.username.to_s, nas_router.password.to_s, timeout: 5)
+      client.connect
 
-      users = JSON.parse(response.body)
-      matching = users.select { |u| u["user"] == voucher }
+      reply = client.talk(['/ip/hotspot/active/print', "?user=#{voucher}"])
+      matching_sentences = reply.select { |s| s.first == '!re' }
 
-      if matching.any?
+      if matching_sentences.any?
+        matching = matching_sentences.map { |sentence| sentence_to_hash(sentence) }
         Rails.logger.info "Found #{matching.count} active session(s) for voucher #{voucher} on router #{nas_router.ip_address}"
         all_matching_sessions.concat(matching)
       end
 
-    rescue RestClient::Unauthorized
-      Rails.logger.error "REST auth failed for router #{nas_router.ip_address}"
+    rescue RouterosApiClient::ApiError => e
+      Rails.logger.error "RouterOS API error on #{nas_router.ip_address}: #{e.message}"
       next
 
-    rescue RestClient::ExceptionWithResponse => e
-      Rails.logger.error "MikroTik REST error on #{nas_router.ip_address}: #{e.response}"
-      next
-
-    rescue RestClient::Exceptions::Timeout, Errno::ETIMEDOUT
+    rescue Errno::ETIMEDOUT, IO::TimeoutError
       Rails.logger.error "Timed out reaching router #{nas_router.ip_address} for active sessions"
       next
 
@@ -7295,14 +7280,22 @@ def get_active_sessions(voucher)
     rescue StandardError => e
       Rails.logger.error "Failed to get active sessions from #{nas_router.ip_address}: #{e.message}"
       next
+
+    ensure
+      client&.close
     end
   end
 
   all_matching_sessions
 end
 
-
-
+def sentence_to_hash(sentence)
+  sentence.each_with_object({}) do |word, hash|
+    next unless word.start_with?('=')
+    key, value = word[1..].split('=', 2)
+    hash[key] = value
+  end
+end
 
 
 
