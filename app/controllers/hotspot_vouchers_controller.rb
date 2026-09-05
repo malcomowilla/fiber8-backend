@@ -4524,27 +4524,23 @@ broadcast_hotspot_payment(
   payment_method: 'Mpesa',
   reference: data["TransID"]
 )
-  if nas_router
+if nas_router
+  client = nil
   begin
-    response = RestClient::Request.execute(
-      method: :post,
-      url: "http://#{nas_router.ip_address}/rest/ip/hotspot/active/login",
-      user: nas_router.username,
-      password: nas_router.password,
-      payload: {
-        ip: session.ip,
-        user: voucher_code,
-        password: voucher_code
-      }.to_json,
-      headers: {
-        content_type: :json,
-        accept: :json
-      },
-      timeout: 5,
-      open_timeout: 3
-    )
+    client = RouterosApiClient.new(nas_router.ip_address, nas_router.username.to_s, nas_router.password.to_s, timeout: 5)
+    client.connect
 
-    if response.code == 200
+    reply = client.talk([
+      '/ip/hotspot/active/login',
+      "=ip=#{session.ip}",
+      "=user=#{voucher_code}",
+      "=password=#{voucher_code}"
+    ])
+
+    if reply.last.first == '!trap'
+      error_message = reply.last.find { |w| w.start_with?('=message=') }&.sub('=message=', '') || 'Unknown MikroTik error'
+      Rails.logger.info "MikroTik API error on #{nas_router.ip_address}: #{error_message}"
+    else
       session.update!(connected: true, status: "used", paid: true)
 
       voucher.update!(
@@ -4555,21 +4551,26 @@ broadcast_hotspot_payment(
       )
     end
 
-  rescue RestClient::Exceptions::Timeout, Errno::ETIMEDOUT
+  rescue RouterosApiClient::ApiError => e
+    Rails.logger.info "RouterOS API error on #{nas_router.ip_address}: #{e.message}"
+
+  rescue Errno::ETIMEDOUT, IO::TimeoutError
     Rails.logger.info "Router #{nas_router.ip_address} timed out during login"
 
-  rescue RestClient::Unauthorized
-    Rails.logger.info "REST auth failed for router #{nas_router.ip_address}"
-
-  rescue RestClient::ExceptionWithResponse => e
-    Rails.logger.info "MikroTik REST error on #{nas_router.ip_address}: #{e.response}"
+  rescue Errno::ECONNREFUSED, Errno::EHOSTUNREACH, SocketError => e
+    Rails.logger.info "Router #{nas_router.ip_address} unreachable: #{e.message}"
 
   rescue StandardError => e
-    Rails.logger.info "REST error logging in device #{session.ip}: #{e.message}"
+    Rails.logger.info "RouterOS API error logging in device #{session.ip}: #{e.message}"
+
+  ensure
+    client&.close
   end
 else
   Rails.logger.warn "No router found for account #{session.account_id}"
 end
+
+
 
 elsif bill_ref.start_with?("smswallet_")
   # bill_ref = "smswallet_<account_id>_<txn_id>"
