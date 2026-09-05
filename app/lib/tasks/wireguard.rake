@@ -3,9 +3,13 @@ namespace :wireguard do
   task reconcile_routes: :environment do
     require "ipaddr"
 
+    # private_ip holds the LAN network(s) reachable through each peer —
+    # that's what needs a Linux route. The peer's own tunnel address
+    # (allowed_ips, e.g. 10.2.0.154/32) is already on-link via wg0's
+    # own subnet route and needs no separate route.
     networks = ActsAsTenant.without_tenant do
-      WireguardPeer.pluck(:allowed_ips)
-    end.compact.flat_map { |s| s.split(",") }.map(&:strip).uniq
+      WireguardPeer.pluck(:private_ip)
+    end.compact.reject(&:blank?).flat_map { |s| s.split(",") }.map(&:strip).uniq
 
     networks.each do |network|
       begin
