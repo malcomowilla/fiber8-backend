@@ -6674,6 +6674,143 @@ def validity_for_mikrotik(pkg)
 end
 
 
+# def delete_voucher_natively(voucher)
+#   package = HotspotPackage.find_by(
+#     name: voucher.package,
+#     account_id: voucher.account_id
+#   )
+
+#   nas = NasRouter.find_by(name: package&.nas_router)
+
+#   return {
+#     success: false,
+#     error: "No router specified or router not found"
+#   } unless nas
+
+#   begin
+#     base_url = "http://#{nas.ip_address}/rest/ip/hotspot/user"
+
+#     # ---------------------------------------------------------
+#     # 1. Disconnect active session first
+#     # ---------------------------------------------------------
+#     active_sessions = get_active_sessions(voucher.voucher)
+
+#     active_sessions.to_a.each do |session|
+#       session_id = session[".id"]
+#       next unless session_id.present?
+
+#       encoded_session_id =
+#         URI::DEFAULT_PARSER.escape(session_id.to_s)
+
+#       RestClient::Request.execute(
+#         method: :delete,
+#         url: "http://#{nas.ip_address}/rest/ip/hotspot/active/#{encoded_session_id}",
+#         user: nas.username.to_s,
+#         password: nas.password.to_s,
+#         timeout: 5,
+#         open_timeout: 3
+#       )
+#     end
+
+#     # ---------------------------------------------------------
+#     # 2. Get all hotspot users
+#     # ---------------------------------------------------------
+#     response = RestClient::Request.execute(
+#       method: :get,
+#       url: base_url,
+#       user: nas.username.to_s,
+#       password: nas.password.to_s,
+#       headers: {
+#         accept: :json
+#       },
+#       timeout: 10,
+#       open_timeout: 5
+#     )
+
+#     users = JSON.parse(response.body)
+
+#     # ---------------------------------------------------------
+#     # 3. Find the MikroTik user by voucher name
+#     # ---------------------------------------------------------
+#     hotspot_user = users.find do |user|
+#       user["name"].to_s == voucher.voucher.to_s
+#     end
+
+#     # User doesn't exist on MikroTik anymore
+#     return { success: true } unless hotspot_user
+
+#     # ---------------------------------------------------------
+#     # 4. Get MikroTik internal resource ID
+#     # ---------------------------------------------------------
+#     user_id = hotspot_user[".id"]
+
+#     unless user_id.present?
+#       return {
+#         success: false,
+#         error: "MikroTik hotspot user found but has no .id"
+#       }
+#     end
+
+#     Rails.logger.info(
+#       "Deleting MikroTik hotspot user '#{voucher.voucher}' with .id=#{user_id}"
+#     )
+
+#     # ---------------------------------------------------------
+#     # 5. Delete using MikroTik .id
+#     # ---------------------------------------------------------
+#     encoded_user_id =
+#       URI::DEFAULT_PARSER.escape(user_id.to_s)
+
+#     RestClient::Request.execute(
+#       method: :delete,
+#       url: "#{base_url}/#{encoded_user_id}",
+#       user: nas.username.to_s,
+#       password: nas.password.to_s,
+#       headers: {
+#         content_type: :json
+#       },
+#       timeout: 5,
+#       open_timeout: 3
+#     )
+
+#     { success: true }
+
+#   rescue RestClient::NotFound
+#     # Already deleted from MikroTik
+#     { success: true }
+
+#   rescue RestClient::Exceptions::Timeout, Errno::ETIMEDOUT
+#     {
+#       success: false,
+#       error: "Router #{nas.ip_address} timed out"
+#     }
+
+#   rescue Errno::ECONNREFUSED,
+#          Errno::EHOSTUNREACH,
+#          SocketError => e
+#     {
+#       success: false,
+#       error: "Router #{nas.ip_address} unreachable: #{e.message}"
+#     }
+
+#   rescue RestClient::ExceptionWithResponse => e
+#     {
+#       success: false,
+#       error: e.response&.body.presence || e.message
+#     }
+
+#   rescue => e
+#     {
+#       success: false,
+#       error: e.message
+#     }
+#   end
+# end
+
+
+
+
+
 def delete_voucher_natively(voucher)
   package = HotspotPackage.find_by(
     name: voucher.package,
@@ -6687,125 +6824,71 @@ def delete_voucher_natively(voucher)
     error: "No router specified or router not found"
   } unless nas
 
-  begin
-    base_url = "http://#{nas.ip_address}/rest/ip/hotspot/user"
+  client = RouterosApiClient.new(nas.ip_address, nas.username.to_s, nas.password.to_s, timeout: 10)
+  client.connect
 
-    # ---------------------------------------------------------
-    # 1. Disconnect active session first
-    # ---------------------------------------------------------
-    active_sessions = get_active_sessions(voucher.voucher)
+  # ---------------------------------------------------------
+  # 1. Disconnect active session(s) first
+  # ---------------------------------------------------------
+  active_sessions = get_active_sessions(voucher.voucher)
 
-    active_sessions.to_a.each do |session|
-      session_id = session[".id"]
-      next unless session_id.present?
+  active_sessions.to_a.each do |session|
+    session_id = session[".id"]
+    next unless session_id.present?
 
-      encoded_session_id =
-        URI::DEFAULT_PARSER.escape(session_id.to_s)
+    client.talk(['/ip/hotspot/active/remove', "=.id=#{session_id}"])
+  end
 
-      RestClient::Request.execute(
-        method: :delete,
-        url: "http://#{nas.ip_address}/rest/ip/hotspot/active/#{encoded_session_id}",
-        user: nas.username.to_s,
-        password: nas.password.to_s,
-        timeout: 5,
-        open_timeout: 3
-      )
-    end
+  # ---------------------------------------------------------
+  # 2. Find the MikroTik user by voucher name
+  # ---------------------------------------------------------
+  reply = client.talk(['/ip/hotspot/user/print', "?name=#{voucher.voucher}"])
+  user_sentence = reply.find { |s| s.first == '!re' }
 
-    # ---------------------------------------------------------
-    # 2. Get all hotspot users
-    # ---------------------------------------------------------
-    response = RestClient::Request.execute(
-      method: :get,
-      url: base_url,
-      user: nas.username.to_s,
-      password: nas.password.to_s,
-      headers: {
-        accept: :json
-      },
-      timeout: 10,
-      open_timeout: 5
-    )
+  # User doesn't exist on MikroTik anymore
+  unless user_sentence
+    return { success: true }
+  end
 
-    users = JSON.parse(response.body)
+  user_id = user_sentence.find { |w| w.start_with?('=.id=') }&.sub('=.id=', '')
 
-    # ---------------------------------------------------------
-    # 3. Find the MikroTik user by voucher name
-    # ---------------------------------------------------------
-    hotspot_user = users.find do |user|
-      user["name"].to_s == voucher.voucher.to_s
-    end
-
-    # User doesn't exist on MikroTik anymore
-    return { success: true } unless hotspot_user
-
-    # ---------------------------------------------------------
-    # 4. Get MikroTik internal resource ID
-    # ---------------------------------------------------------
-    user_id = hotspot_user[".id"]
-
-    unless user_id.present?
-      return {
-        success: false,
-        error: "MikroTik hotspot user found but has no .id"
-      }
-    end
-
-    Rails.logger.info(
-      "Deleting MikroTik hotspot user '#{voucher.voucher}' with .id=#{user_id}"
-    )
-
-    # ---------------------------------------------------------
-    # 5. Delete using MikroTik .id
-    # ---------------------------------------------------------
-    encoded_user_id =
-      URI::DEFAULT_PARSER.escape(user_id.to_s)
-
-    RestClient::Request.execute(
-      method: :delete,
-      url: "#{base_url}/#{encoded_user_id}",
-      user: nas.username.to_s,
-      password: nas.password.to_s,
-      headers: {
-        content_type: :json
-      },
-      timeout: 5,
-      open_timeout: 3
-    )
-
-    { success: true }
-
-  rescue RestClient::NotFound
-    # Already deleted from MikroTik
-    { success: true }
-
-  rescue RestClient::Exceptions::Timeout, Errno::ETIMEDOUT
-    {
+  unless user_id.present?
+    return {
       success: false,
-      error: "Router #{nas.ip_address} timed out"
-    }
-
-  rescue Errno::ECONNREFUSED,
-         Errno::EHOSTUNREACH,
-         SocketError => e
-    {
-      success: false,
-      error: "Router #{nas.ip_address} unreachable: #{e.message}"
-    }
-
-  rescue RestClient::ExceptionWithResponse => e
-    {
-      success: false,
-      error: e.response&.body.presence || e.message
-    }
-
-  rescue => e
-    {
-      success: false,
-      error: e.message
+      error: "MikroTik hotspot user found but has no .id"
     }
   end
+
+  Rails.logger.info(
+    "Deleting MikroTik hotspot user '#{voucher.voucher}' with .id=#{user_id}"
+  )
+
+  # ---------------------------------------------------------
+  # 3. Delete using MikroTik .id
+  # ---------------------------------------------------------
+  remove_reply = client.talk(['/ip/hotspot/user/remove', "=.id=#{user_id}"])
+
+  if remove_reply.last.first == '!trap'
+    error_message = remove_reply.last.find { |w| w.start_with?('=message=') }&.sub('=message=', '') || 'Unknown MikroTik error'
+    { success: false, error: error_message }
+  else
+    { success: true }
+  end
+
+rescue RouterosApiClient::ApiError => e
+  { success: false, error: e.message }
+rescue Errno::ETIMEDOUT, IO::TimeoutError
+  { success: false, error: "Router #{nas.ip_address} timed out" }
+rescue Errno::ECONNREFUSED, Errno::EHOSTUNREACH, SocketError => e
+  { success: false, error: "Router #{nas.ip_address} unreachable: #{e.message}" }
+rescue => e
+  { success: false, error: e.message }
+ensure
+  client&.close
 end
+
+
+
 
 def router_uses_radius?
   return true unless ActsAsTenant.current_tenant

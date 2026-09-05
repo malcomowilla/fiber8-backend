@@ -655,40 +655,97 @@ end
 
 
 
+# def sync_package_natively(pkg)
+#   router_name = pkg.nas_router
+#   nas = NasRouter.find_by(name: router_name)
+#   return pkg.update(sync_status: 'failed', sync_error: 'No router assigned') unless nas
+
+#   session_timeout = validity_in_seconds(pkg)
+#   rate_limit = "#{pkg.upload_limit}M/#{pkg.download_limit}M"
+
+#   RestClient::Request.execute(
+#     method: :put,
+#     url: "http://#{nas.ip_address}/rest/ip/hotspot/user/profile",
+#     user: nas.username, password: nas.password,
+#     payload: {
+#       name: pkg.name,
+#       "rate-limit": rate_limit,
+#       "session-timeout": session_timeout.to_s,
+#       "shared-users": pkg.shared_users.to_s
+#     }.to_json,
+#     headers: { content_type: :json },
+#     timeout: 10,
+#     open_timeout: 5
+#   )
+
+#   pkg.update(sync_status: 'synced', synced_at: Time.current, sync_error: nil, nas_router: router_name)
+
+# rescue RestClient::ExceptionWithResponse => e
+#   pkg.update(sync_status: 'failed', sync_error: mikrotik_error_message(e))
+# rescue RestClient::Exceptions::Timeout, Errno::ETIMEDOUT
+#   pkg.update(sync_status: 'failed', sync_error: "Router #{nas.ip_address} timed out")
+# rescue Errno::ECONNREFUSED, Errno::EHOSTUNREACH, SocketError => e
+#   pkg.update(sync_status: 'failed', sync_error: "Router unreachable: #{e.message}")
+# rescue => e
+#   pkg.update(sync_status: 'failed', sync_error: e.message)
+# end
+
+
+
+
+
 def sync_package_natively(pkg)
-  router_name = pkg.nas_router
-  nas = NasRouter.find_by(name: router_name)
+  nas = NasRouter.find_by(name: pkg.nas_router)
   return pkg.update(sync_status: 'failed', sync_error: 'No router assigned') unless nas
 
   session_timeout = validity_in_seconds(pkg)
   rate_limit = "#{pkg.upload_limit}M/#{pkg.download_limit}M"
 
-  RestClient::Request.execute(
-    method: :put,
-    url: "http://#{nas.ip_address}/rest/ip/hotspot/user/profile",
-    user: nas.username, password: nas.password,
-    payload: {
-      name: pkg.name,
-      "rate-limit": rate_limit,
-      "session-timeout": session_timeout.to_s,
-      "shared-users": pkg.shared_users.to_s
-    }.to_json,
-    headers: { content_type: :json },
-    timeout: 10,
-    open_timeout: 5
-  )
+  client = RouterosApiClient.new(nas.ip_address, nas.username.to_s, nas.password.to_s, timeout: 10)
+  client.connect
 
-  pkg.update(sync_status: 'synced', synced_at: Time.current, sync_error: nil, nas_router: router_name)
+  # RouterOS 'add' fails with "already have such entry" if a profile with
+  # this name exists — so look it up first and 'set' it instead when found,
+  # rather than blindly adding every time (which the old REST PUT call
+  # happened to tolerate but the binary API's 'add' command will not).
+  existing = client.talk(['/ip/hotspot/user/profile/print', "?name=#{pkg.name}"])
+  existing_sentence = existing.find { |s| s.first == '!re' }
+  existing_id = existing_sentence&.find { |w| w.start_with?('=.id=') }&.sub('=.id=', '')
 
-rescue RestClient::ExceptionWithResponse => e
-  pkg.update(sync_status: 'failed', sync_error: mikrotik_error_message(e))
-rescue RestClient::Exceptions::Timeout, Errno::ETIMEDOUT
+  attrs = [
+    "=name=#{pkg.name}",
+    "=rate-limit=#{rate_limit}",
+    "=session-timeout=#{session_timeout}",
+    "=shared-users=#{pkg.shared_users}"
+  ]
+
+  reply =
+    if existing_id
+      client.talk(['/ip/hotspot/user/profile/set', "=.id=#{existing_id}"] + attrs)
+    else
+      client.talk(['/ip/hotspot/user/profile/add'] + attrs)
+    end
+
+  if reply.last.first == '!trap'
+    error_message = reply.last.find { |w| w.start_with?('=message=') }&.sub('=message=', '') || 'Unknown MikroTik error'
+    pkg.update(sync_status: 'failed', sync_error: error_message)
+  else
+    pkg.update(sync_status: 'synced', synced_at: Time.current, sync_error: nil, nas_router: pkg.nas_router)
+  end
+
+rescue RouterosApiClient::ApiError => e
+  pkg.update(sync_status: 'failed', sync_error: e.message)
+rescue Errno::ETIMEDOUT, IO::TimeoutError
   pkg.update(sync_status: 'failed', sync_error: "Router #{nas.ip_address} timed out")
 rescue Errno::ECONNREFUSED, Errno::EHOSTUNREACH, SocketError => e
   pkg.update(sync_status: 'failed', sync_error: "Router unreachable: #{e.message}")
 rescue => e
   pkg.update(sync_status: 'failed', sync_error: e.message)
+ensure
+  client&.close
 end
+
+
 
 def mikrotik_error_message(e)
   return e.message unless e.response
@@ -700,130 +757,150 @@ end
 
 
 
-
 # def delete_package_natively(pkg)
 #   nas = NasRouter.find_by(name: pkg.nas_router)
-#   return { success: false, error: 'No router assigned to this package' } unless nas
+
+#   return {
+#     success: false,
+#     error: 'No router assigned to this package'
+#   } unless nas
 
 #   begin
+#     base_url = "http://#{nas.ip_address}/rest/ip/hotspot/user/profile"
+
+#     # Find the profile by its actual name
+#     response = RestClient::Request.execute(
+#       method: :get,
+#       url: base_url,
+#       user: nas.username.to_s,
+#       password: nas.password.to_s,
+#       headers: { accept: :json },
+#       timeout: 10,
+#       open_timeout: 5
+#     )
+
+#     profiles = JSON.parse(response.body)
+
+#     profile = profiles.find do |item|
+#       item["name"].to_s == pkg.name.to_s
+#     end
+
+#     unless profile
+#       Rails.logger.warn(
+#         "MikroTik hotspot profile not found: #{pkg.name}"
+#       )
+
+#       # It is already absent, so consider cleanup successful
+#       return {
+#         success: true
+#       }
+#     end
+
+#     profile_id = profile[".id"]
+
+#     unless profile_id.present?
+#       return {
+#         success: false,
+#         error: "MikroTik profile found but has no .id"
+#       }
+#     end
+
+#     Rails.logger.info(
+#       "Deleting MikroTik hotspot profile '#{pkg.name}' with .id=#{profile_id}"
+#     )
+
+#     # Delete using the MikroTik internal resource ID
 #     RestClient::Request.execute(
 #       method: :delete,
-#       url: "http://#{nas.ip_address}/rest/ip/hotspot/user/profile/#{pkg.name}",
-#       user: nas.username.to_s, password: nas.password.to_s,
+#       url: "#{base_url}/#{URI::DEFAULT_PARSER.escape(profile_id.to_s)}",
+#       user: nas.username.to_s,
+#       password: nas.password.to_s,
 #       headers: { content_type: :json },
-#       timeout: 10
+#       timeout: 10,
+#       open_timeout: 5
 #     )
-#     { success: true }
+
+#     {
+#       success: true
+#     }
+
 #   rescue RestClient::NotFound
-#     { success: true }
+#     {
+#       success: true
+#     }
+
+#   rescue RestClient::ExceptionWithResponse => e
+#     {
+#       success: false,
+#       error: mikrotik_error_message(e)
+#     }
+
+#   rescue RestClient::Exceptions::Timeout,
+#          Errno::ETIMEDOUT
+#     {
+#       success: false,
+#       error: "Router #{nas.ip_address} timed out"
+#     }
+
+#   rescue Errno::ECONNREFUSED,
+#          Errno::EHOSTUNREACH,
+#          SocketError => e
+#     {
+#       success: false,
+#       error: "Router #{nas.ip_address} unreachable: #{e.message}"
+#     }
+
 #   rescue => e
-#     { success: false, error: e.message }
+#     {
+#       success: false,
+#       error: e.message
+#     }
 #   end
 # end
 
-
-
 def delete_package_natively(pkg)
   nas = NasRouter.find_by(name: pkg.nas_router)
+  return { success: false, error: 'No router assigned to this package' } unless nas
 
-  return {
-    success: false,
-    error: 'No router assigned to this package'
-  } unless nas
+  client = RouterosApiClient.new(nas.ip_address, nas.username.to_s, nas.password.to_s, timeout: 10)
+  client.connect
 
-  begin
-    base_url = "http://#{nas.ip_address}/rest/ip/hotspot/user/profile"
+  reply = client.talk(['/ip/hotspot/user/profile/print', "?name=#{pkg.name}"])
+  profile_sentence = reply.find { |s| s.first == '!re' }
 
-    # Find the profile by its actual name
-    response = RestClient::Request.execute(
-      method: :get,
-      url: base_url,
-      user: nas.username.to_s,
-      password: nas.password.to_s,
-      headers: { accept: :json },
-      timeout: 10,
-      open_timeout: 5
-    )
-
-    profiles = JSON.parse(response.body)
-
-    profile = profiles.find do |item|
-      item["name"].to_s == pkg.name.to_s
-    end
-
-    unless profile
-      Rails.logger.warn(
-        "MikroTik hotspot profile not found: #{pkg.name}"
-      )
-
-      # It is already absent, so consider cleanup successful
-      return {
-        success: true
-      }
-    end
-
-    profile_id = profile[".id"]
-
-    unless profile_id.present?
-      return {
-        success: false,
-        error: "MikroTik profile found but has no .id"
-      }
-    end
-
-    Rails.logger.info(
-      "Deleting MikroTik hotspot profile '#{pkg.name}' with .id=#{profile_id}"
-    )
-
-    # Delete using the MikroTik internal resource ID
-    RestClient::Request.execute(
-      method: :delete,
-      url: "#{base_url}/#{URI::DEFAULT_PARSER.escape(profile_id.to_s)}",
-      user: nas.username.to_s,
-      password: nas.password.to_s,
-      headers: { content_type: :json },
-      timeout: 10,
-      open_timeout: 5
-    )
-
-    {
-      success: true
-    }
-
-  rescue RestClient::NotFound
-    {
-      success: true
-    }
-
-  rescue RestClient::ExceptionWithResponse => e
-    {
-      success: false,
-      error: mikrotik_error_message(e)
-    }
-
-  rescue RestClient::Exceptions::Timeout,
-         Errno::ETIMEDOUT
-    {
-      success: false,
-      error: "Router #{nas.ip_address} timed out"
-    }
-
-  rescue Errno::ECONNREFUSED,
-         Errno::EHOSTUNREACH,
-         SocketError => e
-    {
-      success: false,
-      error: "Router #{nas.ip_address} unreachable: #{e.message}"
-    }
-
-  rescue => e
-    {
-      success: false,
-      error: e.message
-    }
+  unless profile_sentence
+    Rails.logger.warn "MikroTik hotspot profile not found: #{pkg.name}"
+    return { success: true } # already absent, treat as successful cleanup
   end
-end
 
+  profile_id = profile_sentence.find { |w| w.start_with?('=.id=') }&.sub('=.id=', '')
+
+  unless profile_id
+    return { success: false, error: "MikroTik profile found but has no .id" }
+  end
+
+  Rails.logger.info "Deleting MikroTik hotspot profile '#{pkg.name}' with .id=#{profile_id}"
+
+  remove_reply = client.talk(['/ip/hotspot/user/profile/remove', "=.id=#{profile_id}"])
+
+  if remove_reply.last.first == '!trap'
+    error_message = remove_reply.last.find { |w| w.start_with?('=message=') }&.sub('=message=', '') || 'Unknown MikroTik error'
+    { success: false, error: error_message }
+  else
+    { success: true }
+  end
+
+rescue RouterosApiClient::ApiError => e
+  { success: false, error: e.message }
+rescue Errno::ETIMEDOUT, IO::TimeoutError
+  { success: false, error: "Router #{nas.ip_address} timed out" }
+rescue Errno::ECONNREFUSED, Errno::EHOSTUNREACH, SocketError => e
+  { success: false, error: "Router #{nas.ip_address} unreachable: #{e.message}" }
+rescue => e
+  { success: false, error: e.message }
+ensure
+  client&.close
+end
 
 
 def validity_in_seconds(pkg)
