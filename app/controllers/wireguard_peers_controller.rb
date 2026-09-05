@@ -421,29 +421,19 @@ end
   # ---------------------------------------------------------------------------
 
   def run_route_command(action, network)
-    address = validate_ipv4_network!(network)
+  address = validate_ipv4_network!(network)
 
-    command = [
-      "sudo",
-      "/usr/local/sbin/wireguard-route",
-      action,
-      address
-    ]
+  command = ["sudo", "/usr/local/sbin/wireguard-route", action, address]
+  Rails.logger.info("Executing WireGuard route command: #{command.join(' ')}")
 
-    Rails.logger.info(
-      "Executing WireGuard route command: #{command.join(' ')}"
-    )
+  stdout, stderr, status = Open3.capture3(*command)
 
-    success = system(*command)
-
-    unless success
-      raise(
-        "WireGuard route command failed for #{action} #{address}"
-      )
-    end
-
-    true
+  unless status.success?
+    raise "wireguard-route #{action} #{address} failed: #{stderr.presence || stdout}"
   end
+
+  true
+end
 
   # ---------------------------------------------------------------------------
   # Activity logging
