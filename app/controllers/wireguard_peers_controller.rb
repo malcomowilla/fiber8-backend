@@ -103,101 +103,66 @@ class WireguardPeersController < ApplicationController
   #     "10.5.0.0/16,172.18.8.0/24"
   # ---------------------------------------------------------------------------
 
-  def create
-    params_data = wireguard_peer_params
-
-    begin
-      allowed_ips = clean_allowed_ips(
-        params_data[:allowed_ips]
-      )
-
-    rescue ArgumentError => e
-      render json: {
-        error: e.message
-      }, status: :unprocessable_entity
-
-      return
-    end
-
-    private_ip = assign_private_ip!
-
-    if private_ip.blank?
-      render json: {
-        error: "No available WireGuard peer IPs left in #{PEER_IP_POOL}"
-      }, status: :unprocessable_entity
-
-      return
-    end
-
-    @wireguard_peer = WireguardPeer.new(
-      params_data.except(:allowed_ips).merge(
-        private_ip: private_ip,
-        allowed_ips: allowed_ips.join(",")
-      )
-    )
-
-    unless @wireguard_peer.valid?
-      render json: @wireguard_peer.errors,
-             status: :unprocessable_entity
-
-      return
-    end
-
-    added_routes = []
-
-    begin
-      # Save peer first
-      @wireguard_peer.save!
-
-      # Add every network route
-      allowed_ips.each do |network|
-        add_route(network)
-        added_routes << network
-      end
-
-      log_activity("create")
-
-      render json: @wireguard_peer,
-             status: :created
-
-    rescue => e
-      Rails.logger.error(
-        "Failed to create WireGuard peer: " \
-        "#{e.class}: #{e.message}"
-      )
-
-      # Remove any routes that were successfully added
-      added_routes.each do |network|
-        begin
-          delete_route(network)
-        rescue => route_error
-          Rails.logger.error(
-            "Failed to rollback route #{network}: " \
-            "#{route_error.message}"
-          )
-        end
-      end
-
-      # Remove database record
-      begin
-        @wireguard_peer.destroy if @wireguard_peer.persisted?
-      rescue => destroy_error
-        Rails.logger.error(
-          "Failed to rollback WireGuard peer: " \
-          "#{destroy_error.message}"
-        )
-      end
-
-      render json: {
-        error: "Failed to configure WireGuard routes",
-        details: e.message
-      }, status: :unprocessable_entity
-    end
-  end
-
+  
   # ---------------------------------------------------------------------------
   # GET /wireguard_peers/testing
   # ---------------------------------------------------------------------------
+
+
+def create
+  params_data = wireguard_peer_params
+
+  begin
+    private_networks = clean_allowed_ips(params_data[:private_ip])
+  rescue ArgumentError => e
+    render json: { error: e.message }, status: :unprocessable_entity
+    return
+  end
+
+  peer_ip = assign_peer_ip!
+
+  if peer_ip.blank?
+    render json: { error: "No available WireGuard peer IPs left in #{PEER_IP_POOL}" },
+           status: :unprocessable_entity
+    return
+  end
+
+  @wireguard_peer = WireguardPeer.new(
+    params_data.except(:private_ip).merge(
+      allowed_ips: peer_ip,
+      private_ip: private_networks.join(",")
+    )
+  )
+
+  unless @wireguard_peer.valid?
+    render json: @wireguard_peer.errors, status: :unprocessable_entity
+    return
+  end
+
+  added_routes = []
+
+  begin
+    @wireguard_peer.save!
+
+    # Only the LAN network(s) need a route — the peer's own tunnel
+    # address is already on-link via wg0's subnet route.
+    private_networks.each do |network|
+      add_route(network)
+      added_routes << network
+    end
+
+    log_activity("create")
+    render json: @wireguard_peer, status: :created
+  rescue => e
+    Rails.logger.error("Failed to create WireGuard peer: #{e.class}: #{e.message}")
+    added_routes.each { |n| delete_route(n) rescue nil }
+    @wireguard_peer.destroy if @wireguard_peer.persisted?
+    render json: { error: "Failed to configure WireGuard routes", details: e.message },
+           status: :unprocessable_entity
+  end
+end
+
+
 
   def testing
     render json: {
@@ -214,117 +179,41 @@ class WireguardPeersController < ApplicationController
   # ---------------------------------------------------------------------------
 
   def update
-    @wireguard_peer = WireguardPeer.find(params[:id])
+  @wireguard_peer = WireguardPeer.find(params[:id])
 
-    old_allowed_ips = clean_allowed_ips(
-      @wireguard_peer.allowed_ips
-    )
+  old_networks = clean_allowed_ips(@wireguard_peer.private_ip)
 
-    begin
-      new_allowed_ips = clean_allowed_ips(
-        params.dig(:wireguard_peer, :allowed_ips)
-      )
-
-    rescue ArgumentError => e
-      render json: {
-        error: e.message
-      }, status: :unprocessable_entity
-
-      return
-    end
-
-    # Networks that need to be removed
-    routes_to_remove =
-      old_allowed_ips - new_allowed_ips
-
-    # Networks that need to be added
-    routes_to_add =
-      new_allowed_ips - old_allowed_ips
-
-    removed_routes = []
-    added_routes = []
-
-    begin
-      # ---------------------------------------------------------
-      # Remove networks no longer assigned to this peer
-      # ---------------------------------------------------------
-
-      routes_to_remove.each do |network|
-        delete_route(network)
-        removed_routes << network
-      end
-
-      # ---------------------------------------------------------
-      # Add newly assigned networks
-      # ---------------------------------------------------------
-
-      routes_to_add.each do |network|
-        add_route(network)
-        added_routes << network
-      end
-
-      # ---------------------------------------------------------
-      # Update database (private_ip is untouched — it's fixed at
-      # creation time)
-      # ---------------------------------------------------------
-
-      @wireguard_peer.allowed_ips = new_allowed_ips.join(",")
-
-      unless @wireguard_peer.save
-        raise @wireguard_peer.errors.full_messages.join(", ")
-      end
-
-      log_activity("update")
-
-      render json: @wireguard_peer,
-             status: :ok
-
-    rescue => e
-      Rails.logger.error(
-        "WireGuard peer update failed: " \
-        "#{e.class}: #{e.message}"
-      )
-
-      # ---------------------------------------------------------
-      # Rollback newly added routes
-      # ---------------------------------------------------------
-
-      added_routes.each do |network|
-        begin
-          delete_route(network)
-        rescue => rollback_error
-          Rails.logger.error(
-            "Failed to rollback added route #{network}: " \
-            "#{rollback_error.message}"
-          )
-        end
-      end
-
-      # ---------------------------------------------------------
-      # Restore routes that were removed
-      # ---------------------------------------------------------
-
-      removed_routes.each do |network|
-        begin
-          add_route(network)
-        rescue => rollback_error
-          Rails.logger.error(
-            "Failed to restore removed route #{network}: " \
-            "#{rollback_error.message}"
-          )
-        end
-      end
-
-      # Restore object attributes
-      @wireguard_peer.allowed_ips =
-        old_allowed_ips.join(",")
-
-      render json: {
-        error: "Failed to update WireGuard routes",
-        details: e.message
-      }, status: :unprocessable_entity
-    end
+  begin
+    new_networks = clean_allowed_ips(params.dig(:wireguard_peer, :private_ip))
+  rescue ArgumentError => e
+    render json: { error: e.message }, status: :unprocessable_entity
+    return
   end
+
+  routes_to_remove = old_networks - new_networks
+  routes_to_add = new_networks - old_networks
+
+  removed_routes = []
+  added_routes = []
+
+  begin
+    routes_to_remove.each { |n| delete_route(n); removed_routes << n }
+    routes_to_add.each { |n| add_route(n); added_routes << n }
+
+    @wireguard_peer.private_ip = new_networks.join(",")
+    raise @wireguard_peer.errors.full_messages.join(", ") unless @wireguard_peer.save
+
+    log_activity("update")
+    render json: @wireguard_peer, status: :ok
+  rescue => e
+    Rails.logger.error("WireGuard peer update failed: #{e.class}: #{e.message}")
+    added_routes.each { |n| delete_route(n) rescue nil }
+    removed_routes.each { |n| add_route(n) rescue nil }
+    @wireguard_peer.private_ip = old_networks.join(",")
+    render json: { error: "Failed to update WireGuard routes", details: e.message },
+           status: :unprocessable_entity
+  end
+end
 
   # ---------------------------------------------------------------------------
   # DELETE /wireguard_peers/:id
@@ -332,10 +221,9 @@ class WireguardPeersController < ApplicationController
 
   def destroy
     @wireguard_peer = WireguardPeer.find(params[:id])
-
-    networks = clean_allowed_ips(
-      @wireguard_peer.allowed_ips
-    )
+networks = clean_allowed_ips(
+  @wireguard_peer.private_ip
+)
 
     begin
       # Remove every route belonging to this peer
@@ -381,7 +269,36 @@ class WireguardPeersController < ApplicationController
   # Uniqueness is checked ACROSS ALL TENANTS (ActsAsTenant.without_tenant)
   # because every peer shares the same physical WireGuard interface/routes.
   # Returns nil if the pool is exhausted.
-  # ---------------------------------------------------------------------------
+  # 
+  #
+  #---------------------------------------------------------------------------
+
+
+
+
+
+def assign_peer_ip!
+  pool = IPAddr.new(PEER_IP_POOL)
+  range = pool.to_range.to_a
+  usable = range.length > 2 ? range[1..-2] : range
+
+  used_ips = ActsAsTenant.without_tenant do
+    WireguardPeer.pluck(:allowed_ips).compact.to_set
+  end
+
+  usable.each do |addr|
+    ip = "#{addr}/32"
+    return ip unless used_ips.include?(ip)
+  end
+
+  nil
+end
+
+
+
+
+
+
 
   def assign_private_ip!
     pool = IPAddr.new(PEER_IP_POOL)
@@ -558,11 +475,12 @@ class WireguardPeersController < ApplicationController
   # ---------------------------------------------------------------------------
 
   def wireguard_peer_params
-    params.require(:wireguard_peer).permit(
-      :public_key,
-      :allowed_ips,
-      :persistent_keepalive,
-      allowed_ips: []
-    )
-  end
+  params.require(:wireguard_peer).permit(
+    :public_key,
+    :private_ip,
+    :persistent_keepalive,
+    private_ip: []
+  )
+end
+
 end
