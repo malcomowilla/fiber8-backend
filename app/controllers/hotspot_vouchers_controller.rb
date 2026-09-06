@@ -3886,11 +3886,6 @@ def transaction_status_result
   customer_name = params_hash["DebitPartyName"].split(' - ')[1]
   
 
-#   active_status = HotspotVoucher.find_by(phone: customer_phone_number,
-#    status: 'active')
-#   #  receipt_no = HotspotVoucher.find_by(phone: customer_phone_number).hotspot_mpesa_revenue.reference
-# voucher_code = HotspotVoucher.find_by(phone: customer_phone_number,
-#    status: 'active').voucher
 
 customer_phone = normalize_phone_number(customer_phone_number)
 
