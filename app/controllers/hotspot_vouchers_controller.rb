@@ -3892,8 +3892,10 @@ def transaction_status_result
 # voucher_code = HotspotVoucher.find_by(phone: customer_phone_number,
 #    status: 'active').voucher
 
+customer_phone = normalize_phone_number(customer_phone_number)
+
    active_session = TemporarySession.find_by(
-phone_number: customer_phone_number,
+phone_number: customer_phone,
    )
 hotspot_package = HotspotPackage.find_by(name: active_session.hotspot_package,
 account_id: active_session.account_id
@@ -4064,6 +4066,19 @@ end
 end
 
 
+def normalize_phone_number(phone)
+  return phone if phone.blank?
+
+  phone = phone.to_s.strip
+
+  if phone.start_with?('254')
+    '0' + phone[3..]
+  elsif phone.start_with?('+254')
+    '0' + phone[4..]
+  else
+    phone
+  end
+end
 
 
 
