@@ -1,10 +1,4 @@
-# app/controllers/ip_bindings_controller.rb
-#
-# Manages hotspot IP bindings (MAC bypass) — syncs with MikroTik via SSH.
-#
-# On create → adds   /ip hotspot ip-binding type=bypassed to MikroTik
-# On update → finds old entry by MAC and replaces it
-# On destroy → removes the binding from MikroTik then deletes the DB record
+
 
 class IpBindingsController < ApplicationController
   before_action :set_ip_binding, only: %i[show edit update destroy]

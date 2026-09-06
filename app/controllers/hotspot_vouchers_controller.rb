@@ -4067,12 +4067,20 @@ end
 
 def login_with_receipt_number
 
-  shortcode = ActsAsTenant.current_tenant&.hotspot_mpesa_setting.short_code
-passkey = ActsAsTenant.current_tenant&.hotspot_mpesa_setting.passkey
-consumer_key = ActsAsTenant.current_tenant&.hotspot_mpesa_setting.consumer_key
-consumer_secret = ActsAsTenant.current_tenant&.hotspot_mpesa_setting.consumer_secret
-initiator = ActsAsTenant.current_tenant&.hotspot_mpesa_setting.api_initiator_username
-security_credentials = ActsAsTenant.current_tenant&.hotspot_mpesa_setting.api_initiator_password
+  shortcode = ActsAsTenant.current_tenant&.hotspot_mpesa_setting.short_code.presence || ENV['B2C_SHORTCODE']
+
+  
+passkey = ActsAsTenant.current_tenant&.hotspot_mpesa_setting&.passkey.presence || ENV['PASSKEY']
+consumer_key = ActsAsTenant.current_tenant&.hotspot_mpesa_setting&.consumer_key.presence || ENV['CONSUMER_KEY']
+consumer_secret = ActsAsTenant.current_tenant&.hotspot_mpesa_setting&.consumer_secret.presence || ENV['CONSUMER_SECRET']
+
+initiator = ActsAsTenant.current_tenant&.hotspot_mpesa_setting.api_initiator_username || ENV['API_INITIATOR_USERNAME']
+security_credentials = ActsAsTenant.current_tenant&.hotspot_mpesa_setting.api_initiator_password || ENV['B2C_API_INITIATOR_PASSWORD']
+
+
+
+
+
 host = request.headers['X-Subdomain']
 ip = params[:ip]
 mac = params[:mac]

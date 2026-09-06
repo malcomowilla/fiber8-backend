@@ -86,9 +86,6 @@ class WithdrawWalletController < ApplicationController
     end
   end
 
-  # GET /api/admin/transactions
-  # Returns the withdrawal log for the current tenant, shaped for the
-  # frontend's transaction history panel.
   def transactions
     host = request.headers['X-Subdomain']
     @account = Account.find_by(subdomain: host)
