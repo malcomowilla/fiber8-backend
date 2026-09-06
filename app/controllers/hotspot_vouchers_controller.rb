@@ -3906,12 +3906,12 @@ account_id: active_session.account_id
 unless HotspotMpesaRevenue.exists?(reference: receipt_no)
   found_revenue = HotspotMpesaRevenue.find_by(
     reference: receipt_no,
-    amount: amount,
-    voucher: active_session.voucher_code,
+    # amount: amount,
+    # voucher: active_session.voucher_code,
     payment_method: "Mpesa",
     # time_paid: finalised_time,
     # name: customer_name,
-    account_id: active_session.account_id,
+    # account_id: active_session.account_id,
     hotspot_voucher_id: active_session.hotspot_voucher_id
   )
 
@@ -3931,7 +3931,7 @@ end
 
 
 
-if_expired = found_revenue.hotspot_voucher.expiration < Time.current
+if_expired = found_revenue&.hotspot_voucher&.expiration < Time.current
 
 if if_expired
   Rails.logger.info "Voucher expired"
