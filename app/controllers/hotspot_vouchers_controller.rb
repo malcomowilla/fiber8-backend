@@ -3869,7 +3869,6 @@ def transaction_status_result
   # Extract ResultParameters array safely
   params_array = result.dig("ResultParameters", "ResultParameter") || []
 
-  # Convert array to hash
   params_hash = params_array.each_with_object({}) do |item, hash|
     hash[item["Key"]] = item["Value"]
   end
@@ -3955,7 +3954,7 @@ def transaction_status_result
 
   found_revenue&.update(hotspot_voucher_id: voucher.id)
 
-  nas_router = NasRouter.find_by(account_id: active_session.account_id)
+  nas_router = NasRouter.find_by(account_id: active_session.account_id, name: hotspot_package.nas_router)
   return render json: { error: 'Router not found' }, status: :unprocessable_entity unless nas_router
 
   client = nil
