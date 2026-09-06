@@ -3909,13 +3909,13 @@ account_id: active_session.account_id
     #  )
 
 unless HotspotMpesaRevenue.exists?(reference: receipt_no)
-  found_revenue = HotspotMpesaRevenue.find_or_create_by(
+  found_revenue = HotspotMpesaRevenue.find_by(
     reference: receipt_no,
     amount: amount,
     voucher: active_session.voucher_code,
     payment_method: "Mpesa",
-    time_paid: finalised_time,
-    name: customer_name,
+    # time_paid: finalised_time,
+    # name: customer_name,
     account_id: active_session.account_id,
     hotspot_voucher_id: active_session.hotspot_voucher_id
   )
