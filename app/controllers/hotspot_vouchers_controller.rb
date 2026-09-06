@@ -3855,8 +3855,6 @@ end
 
 
 def transaction_status_result
-
-
   raw_body = request.body.read
   Rails.logger.info "MPESA STATUS CALLBACK: #{raw_body}"
 
@@ -3878,186 +3876,131 @@ def transaction_status_result
 
   receipt_no = params_hash["ReceiptNo"]
   amount = params_hash["Amount"]
-  # phone_and_name = params_hash["DebitPartyName"]
   transaction_status = params_hash["TransactionStatus"]
   finalised_time = params_hash["FinalisedTime"]
 
   customer_phone_number = params_hash["DebitPartyName"].split(' - ')[0]
   customer_name = params_hash["DebitPartyName"].split(' - ')[1]
-  
 
+  customer_phone = normalize_phone_number(customer_phone_number)
 
-customer_phone = normalize_phone_number(customer_phone_number)
+  active_session = TemporarySession.find_by(phone_number: customer_phone)
+  return render json: { error: 'Session not found' }, status: :not_found unless active_session
 
-   active_session = TemporarySession.find_by(
-phone_number: customer_phone,
-   )
-hotspot_package = HotspotPackage.find_by(name: active_session.hotspot_package,
-account_id: active_session.account_id
-)
-  # active_status = HotspotVoucher.find_or_create_by(phone: customer_phone_number,
-  #  status: 'active')
-  #  
-  
-    #   hotspot_mpesa_revenue = HotspotMpesaRevenue.find_by(
-    #           reference: receipt_no,
-    #  )
-
-unless HotspotMpesaRevenue.exists?(reference: receipt_no)
-  found_revenue = HotspotMpesaRevenue.find_by(
-    reference: receipt_no,
-    # amount: amount,
-    # voucher: active_session.voucher_code,
-    payment_method: "Mpesa",
-    # time_paid: finalised_time,
-    # name: customer_name,
-    # account_id: active_session.account_id,
-    hotspot_voucher_id: active_session.hotspot_voucher_id
+  hotspot_package = HotspotPackage.find_by(
+    name: active_session.hotspot_package,
+    account_id: active_session.account_id
   )
 
+  found_revenue = HotspotMpesaRevenue.find_by(reference: receipt_no)
 
-
-   broadcast_hotspot_payment(
-    account_id: active_session.account_id,
-    kind: 'voucher',
-    amount: amount,
-    package: active_session.hotspot_package,
-    name: customer_name,
-    phone: customer_phone_number,
-    payment_method: 'Mpesa',
-    reference: receipt_no
-  )
-end
-
-
-
-if_expired = found_revenue&.hotspot_voucher&.expiration < Time.current
-
-if if_expired
-  Rails.logger.info "Voucher expired"
-  return render json: { error: 'Voucher expired' }, status: :unprocessable_entity
-  
-end
-
-    
-
-
-  voucher = HotspotVoucher.find_or_create_by(
-      voucher: active_session.voucher_code,
-
-)
-
-voucher.update(
-  package: active_session.hotspot_package,
-  phone: active_session.phone_number,
-  
-  ip: active_session.ip,
-  hotspot_package_id: hotspot_package.id,
-account_id: active_session.account_id)
-voucher.save!
-
-
-# voucher_expiration = HotspotSetting.find_by(account_id: active_session.account_id).voucher_expiration
-
-
-voucher_expiration = HotspotSetting.find_by(account_id: active_session.account_id)&.voucher_expiration
- use_radius = router_uses_radius?
-
-
-
-
- if use_radius
-   
-if voucher_expiration == 'Real-time expiration'
-#  calculate_expiration_login_with_voucher(hotspot_package, voucher, session.account_id)
-
-  calculate_expiration(active_session.hotspot_package, voucher,
- active_session.account_id)
-create_voucher_radcheck(active_session.voucher_code,
-      active_session.hotspot_package, 
-active_session.account_id)
-
-else
-
-  calculate_expiration(active_session.hotspot_package, voucher,
- active_session.account_id)
-
- 
-  create_voucher_radcheck_accumulated_sessions(active_session.voucher_code,
-      active_session.hotspot_package, 
-active_session.account_id)
-end
- else
-   calculate_expiration(active_session.hotspot_package, voucher,
- active_session.account_id)
-
-if voucher_expiration == 'Real-time expiration'
-  
-   sync_voucher_natively(voucher)
-else
-sync_voucher_natively_realtime_expiration(voucher)  
-end
- end
-
-
-#      create_voucher_radcheck(active_session.voucher_code,
-#       active_session.hotspot_package, 
-# active_session.account_id)
-
-
-
-
-found_revenue.update(hotspot_voucher_id: voucher.id)
-
-nas_routers = NasRouter.where(account_id: active_session.account_id, 
-)
-nas_routers.each do |nas|
-  begin
-    response = RestClient::Request.execute(
-      method: :post,
-      url: "http://#{nas.ip_address}/rest/ip/hotspot/active/login",
-      user: nas.username,
-      password: nas.password,
-      payload: {
-        ip: active_session.ip,
-        user: active_session.voucher_code,
-        password: active_session.voucher_code
-      }.to_json,
-      headers: {
-        content_type: :json,
-        accept: :json
-      }
+  unless found_revenue
+    found_revenue = HotspotMpesaRevenue.find_by(
+      reference: receipt_no,
+      payment_method: "Mpesa",
+      hotspot_voucher_id: active_session.hotspot_voucher_id
     )
 
+    broadcast_hotspot_payment(
+      account_id: active_session.account_id,
+      kind: 'voucher',
+      amount: amount,
+      package: active_session.hotspot_package,
+      name: customer_name,
+      phone: customer_phone_number,
+      payment_method: 'Mpesa',
+      reference: receipt_no
+    )
+  end
 
+  voucher_expiration_date = found_revenue&.hotspot_voucher&.expiration
+  if_expired = voucher_expiration_date.present? && voucher_expiration_date < Time.current
 
-       
-    if response.code == 200
- 
-      
-       
+  if if_expired
+    Rails.logger.info "Voucher expired"
+    return render json: { error: 'Voucher expired' }, status: :unprocessable_entity
+  end
 
+  voucher = HotspotVoucher.find_or_create_by(voucher: active_session.voucher_code)
 
-voucher.update(status: 'used', login_by: 'Transaction Code')
-       active_session.update(
-        paid: true, connected: true,
-        status: 'used'
-       )
+  voucher.update(
+    package: active_session.hotspot_package,
+    phone: active_session.phone_number,
+    ip: active_session.ip,
+    hotspot_package_id: hotspot_package&.id,
+    account_id: active_session.account_id
+  )
+  voucher.save!
+
+  voucher_expiration = HotspotSetting.find_by(account_id: active_session.account_id)&.voucher_expiration
+  use_radius = router_uses_radius?
+
+  if use_radius
+    if voucher_expiration == 'Real-time expiration'
+      calculate_expiration(active_session.hotspot_package, voucher, active_session.account_id)
+      create_voucher_radcheck(active_session.voucher_code, active_session.hotspot_package, active_session.account_id)
+    else
+      calculate_expiration(active_session.hotspot_package, voucher, active_session.account_id)
+      create_voucher_radcheck_accumulated_sessions(active_session.voucher_code, active_session.hotspot_package, active_session.account_id)
+    end
+  else
+    calculate_expiration(active_session.hotspot_package, voucher, active_session.account_id)
+
+    if voucher_expiration == 'Real-time expiration'
+      sync_voucher_natively(voucher)
+    else
+      sync_voucher_natively_realtime_expiration(voucher)
+    end
+  end
+
+  found_revenue&.update(hotspot_voucher_id: voucher.id)
+
+  nas_router = NasRouter.find_by(account_id: active_session.account_id)
+  return render json: { error: 'Router not found' }, status: :unprocessable_entity unless nas_router
+
+  client = nil
+  begin
+    client = RouterosApiClient.new(nas_router.ip_address, nas_router.username.to_s, nas_router.password.to_s, timeout: 5)
+    client.connect
+
+    reply = client.talk([
+      '/ip/hotspot/active/login',
+      "=ip=#{active_session.ip}",
+      "=user=#{active_session.voucher_code}",
+      "=password=#{active_session.voucher_code}"
+    ])
+
+    if reply.last.first == '!trap'
+      error_message = reply.last.find { |w| w.start_with?('=message=') }&.sub('=message=', '') || 'Unknown MikroTik error'
+      Rails.logger.info "MikroTik API error (#{nas_router.ip_address}): #{error_message}"
+      return render json: { error: 'Failed to connect please try again' }, status: :unprocessable_entity
     end
 
-  rescue RestClient::Unauthorized
-    Rails.logger.info "REST auth failed for router #{nas.ip_address}"
+    # Success — !done with no trap means the login command was accepted
+    voucher.update(status: 'used', login_by: 'Transaction Code')
+    active_session.update(paid: true, connected: true, status: 'used')
 
-  rescue RestClient::ExceptionWithResponse => e
-    Rails.logger.info "MikroTik REST error on #{nas.ip_address}: #{e.response}"
+    render json: { message: 'Connected successfully' }, status: :ok
+
+  rescue RouterosApiClient::ApiError => e
+    Rails.logger.info "RouterOS API error (#{nas_router.ip_address}): #{e.message}"
+    render json: { error: 'Failed to connect please try again' }, status: :unprocessable_entity
+
+  rescue Errno::ETIMEDOUT, IO::TimeoutError
+    Rails.logger.info "Router #{nas_router.ip_address} timed out during login"
+    render json: { error: 'Failed to connect please try again' }, status: :unprocessable_entity
+
+  rescue Errno::ECONNREFUSED, Errno::EHOSTUNREACH, SocketError => e
+    Rails.logger.info "Router #{nas_router.ip_address} unreachable: #{e.message}"
+    render json: { error: 'Failed to connect please try again' }, status: :unprocessable_entity
 
   rescue StandardError => e
-    Rails.logger.info "REST error logging in device #{active_session.ip}: #{e.message} on router #{nas.ip_address}"
+    Rails.logger.info "RouterOS API login error: #{e.message} on router #{nas_router.ip_address}"
+    render json: { error: 'Failed to connect please try again' }, status: :unprocessable_entity
+
+  ensure
+    client&.close
   end
-end
-
-
-
 end
 
 
@@ -4074,6 +4017,8 @@ def normalize_phone_number(phone)
     phone
   end
 end
+
+
 
 
 
@@ -4197,10 +4142,6 @@ def login_with_receipt_number
     client&.close
   end
 end
-
-
-
-
 
 
   def hotspot_traffic
@@ -5993,6 +5934,8 @@ def login_with_hotspot_voucher
       @hotspot_voucher.account_id)
   end
 
+  # get_active_sessions now already filters to just this voucher's sessions,
+  # and returns an array of hashes, e.g. [{"user"=>"ABC123", ".id"=>"*1A", ...}]
   active_sessions = get_active_sessions(params[:voucher])
   package = HotspotPackage.find_by(name: @hotspot_voucher.package)
 
@@ -6004,73 +5947,77 @@ def login_with_hotspot_voucher
     }, status: :forbidden
   end
 
-  nas_router = NasRouter.find_by(name: package.nas_router)
-  return render json: { error: 'Router not found' }, status: :unprocessable_entity unless nas_router
+  nas_routers = NasRouter.where(account_id: @hotspot_voucher.account_id)
 
-  client = nil
-  begin
-    client = RouterosApiClient.new(nas_router.ip_address, nas_router.username.to_s, nas_router.password.to_s, timeout: 5)
-    client.connect
+  nas_routers.each do |router|
+    client = nil
+    begin
+      client = RouterosApiClient.new(router.ip_address, router.username.to_s, router.password.to_s, timeout: 5)
+      client.connect
 
-    reply = client.talk([
-      '/ip/hotspot/active/login',
-      "=ip=#{params[:ip]}",
-      "=user=#{params[:voucher]}",
-      "=password=#{params[:voucher]}"
-    ])
+      reply = client.talk([
+        '/ip/hotspot/active/login',
+        "=ip=#{params[:ip]}",
+        "=user=#{params[:voucher]}",
+        "=password=#{params[:voucher]}"
+      ])
 
-    if reply.last.first == '!trap'
-      error_message = reply.last.find { |w| w.start_with?('=message=') }&.sub('=message=', '') || 'Unknown MikroTik error'
-      Rails.logger.info "MikroTik API error (#{nas_router.ip_address}): #{error_message}"
-      return render json: { error: 'Failed to connect please try again' }, status: :unprocessable_entity
-    end
+      if reply.last.first == '!trap'
+        error_message = reply.last.find { |w| w.start_with?('=message=') }&.sub('=message=', '') || 'Unknown MikroTik error'
+        Rails.logger.info "MikroTik API error (#{router.ip_address}): #{error_message}"
+        next
+      end
 
-    # Success — !done with no trap means the login command was accepted
-    @hotspot_voucher.update!(status: 'used', last_logged_in: Time.now,
-      ip: params[:ip], mac: params[:mac], used_voucher: true,
-      login_by: 'Voucher Code'
-    )
+      # Success — !done with no trap means the login command was accepted
+      @hotspot_voucher.update!(status: 'used', last_logged_in: Time.now,
+        ip: params[:ip], mac: params[:mac], used_voucher: true,
+        login_by: 'Voucher Code'
+      )
 
-    if @hotspot_voucher.expiration.nil?
-      if enable_compensation
-        calculate_expiration_login_with_voucher_compensation(package, @hotspot_voucher,
+      if @hotspot_voucher.expiration.nil?
+        if enable_compensation
+          calculate_expiration_login_with_voucher_compensation(package, @hotspot_voucher,
+            @hotspot_voucher.account_id)
+        end
+      end
+
+      if @hotspot_voucher.expiration.nil?
+        calculate_expiration_login_with_voucher(package, @hotspot_voucher,
           @hotspot_voucher.account_id)
       end
+
+      return render json: {
+        message: 'Connected successfully',
+        device_ip: params[:ip],
+        username: @hotspot_voucher.voucher,
+        expiration: @hotspot_voucher.expiration&.strftime("%B %d, %Y at %I:%M %p"),
+        package: @hotspot_voucher.package
+      }, status: :ok
+
+    rescue RouterosApiClient::ApiError => e
+      Rails.logger.info "RouterOS API error (#{router.ip_address}): #{e.message}"
+      next
+
+    rescue Errno::ETIMEDOUT, IO::TimeoutError
+      Rails.logger.info "Router #{router.ip_address} timed out during login"
+      next
+
+    rescue Errno::ECONNREFUSED, Errno::EHOSTUNREACH, SocketError => e
+      Rails.logger.info "Router #{router.ip_address} unreachable: #{e.message}"
+      next
+
+    rescue StandardError => e
+      Rails.logger.info "RouterOS API login error: #{e.message}"
+      next
+
+    ensure
+      client&.close
     end
-
-    if @hotspot_voucher.expiration.nil?
-      calculate_expiration_login_with_voucher(package, @hotspot_voucher,
-        @hotspot_voucher.account_id)
-    end
-
-    render json: {
-      message: 'Connected successfully',
-      device_ip: params[:ip],
-      username: @hotspot_voucher.voucher,
-      expiration: @hotspot_voucher.expiration&.strftime("%B %d, %Y at %I:%M %p"),
-      package: @hotspot_voucher.package
-    }, status: :ok
-
-  rescue RouterosApiClient::ApiError => e
-    Rails.logger.info "RouterOS API error (#{nas_router.ip_address}): #{e.message}"
-    render json: { error: 'Failed to connect please try again' }, status: :unprocessable_entity
-
-  rescue Errno::ETIMEDOUT, IO::TimeoutError
-    Rails.logger.info "Router #{nas_router.ip_address} timed out during login"
-    render json: { error: 'Failed to connect please try again' }, status: :unprocessable_entity
-
-  rescue Errno::ECONNREFUSED, Errno::EHOSTUNREACH, SocketError => e
-    Rails.logger.info "Router #{nas_router.ip_address} unreachable: #{e.message}"
-    render json: { error: 'Failed to connect please try again' }, status: :unprocessable_entity
-
-  rescue StandardError => e
-    Rails.logger.info "RouterOS API login error: #{e.message}"
-    render json: { error: 'Failed to connect please try again' }, status: :unprocessable_entity
-
-  ensure
-    client&.close
   end
+
+  return render json: { error: 'Failed to connect please try again' }, status: :unprocessable_entity
 end
+
 
 
 
