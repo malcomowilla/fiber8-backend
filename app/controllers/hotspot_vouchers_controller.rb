@@ -3894,7 +3894,6 @@ def transaction_status_result
 
    active_session = TemporarySession.find_by(
 phone_number: customer_phone_number,
-status: 'pending'
    )
 hotspot_package = HotspotPackage.find_by(name: active_session.hotspot_package,
 account_id: active_session.account_id
