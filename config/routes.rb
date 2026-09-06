@@ -249,7 +249,8 @@ resource :tuma_settings, only: [:show, :update]
 
 
 resources :hotspot_sms_templates, only: [:index, :update]
-
+post 'hotspot_packages/:id/toggle_status', to: 'hotspot_packages#toggle_status'
+post '/api/hotspot_packages/:id/toggle_status', to: 'hotspot_packages#toggle_status'
 get   '/api/technician/tickets/:token', to: 'technician_tickets#show'
 patch '/api/technician/tickets/:token', to: 'technician_tickets#update'
  get '/api/access_points', to: 'access_points#index'

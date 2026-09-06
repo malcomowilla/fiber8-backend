@@ -254,10 +254,16 @@ end
   end
 
 
+  # Called by the compiled router-facing HotspotPageBuilder JS (via
+  # cfg.api_base + '/api/allow_get_hotspot_packages'). Only packages the
+  # admin has left enabled should ever reach a customer's device, so this
+  # is the one place the enabled flag is actually enforced end-to-end —
+  # everything else (index, edit form) still needs to see disabled
+  # packages so the admin can flip them back on.
   def allow_get_hotspot_packages
     # Rails.logger.info "Router IP: #{params.inspect}"
 
-    @hotspot_packages = HotspotPackage.all
+    @hotspot_packages = HotspotPackage.where(enabled: true)
     render json: @hotspot_packages
   end
   
@@ -447,6 +453,34 @@ def bulk_sync_to_mikrotik
 rescue => e
   Rails.logger.error "HotspotPackage bulk_sync_to_mikrotik failed: #{e.class} #{e.message}"
   render json: { error: "Bulk sync failed: #{e.message}" }, status: :unprocessable_entity
+end
+
+
+# Lightweight endpoint for just flipping visibility on the hotspot page.
+# Deliberately does NOT touch RADIUS group attributes or push anything to
+# the router — disabling a package only hides it from
+# allow_get_hotspot_packages; it doesn't need to (and shouldn't) alter the
+# MikroTik profile or FreeRADIUS group, since existing/active users on
+# that plan aren't affected by it being hidden from new signups.
+def toggle_status
+  @hotspot_package = HotspotPackage.find_by(id: params[:id])
+  return render json: { error: 'Package not found' }, status: :not_found unless @hotspot_package
+
+  new_status = ActiveModel::Type::Boolean.new.cast(params[:enabled])
+
+  if @hotspot_package.update(enabled: new_status)
+    ActivtyLog.create(action: 'update', ip: request.remote_ip,
+      description: "#{new_status ? 'Enabled' : 'Disabled'} hotspot package #{@hotspot_package.name} on the hotspot page",
+      user_agent: request.user_agent, user: current_user.username || current_user.email,
+      date: Time.current)
+
+    render json: @hotspot_package
+  else
+    render json: @hotspot_package.errors, status: :unprocessable_entity
+  end
+rescue => e
+  Rails.logger.error "HotspotPackage toggle_status failed: #{e.class} #{e.message}"
+  render json: { error: "Failed to update package status: #{e.message}" }, status: :unprocessable_entity
 end
 
 
@@ -655,45 +689,6 @@ end
 
 
 
-# def sync_package_natively(pkg)
-#   router_name = pkg.nas_router
-#   nas = NasRouter.find_by(name: router_name)
-#   return pkg.update(sync_status: 'failed', sync_error: 'No router assigned') unless nas
-
-#   session_timeout = validity_in_seconds(pkg)
-#   rate_limit = "#{pkg.upload_limit}M/#{pkg.download_limit}M"
-
-#   RestClient::Request.execute(
-#     method: :put,
-#     url: "http://#{nas.ip_address}/rest/ip/hotspot/user/profile",
-#     user: nas.username, password: nas.password,
-#     payload: {
-#       name: pkg.name,
-#       "rate-limit": rate_limit,
-#       "session-timeout": session_timeout.to_s,
-#       "shared-users": pkg.shared_users.to_s
-#     }.to_json,
-#     headers: { content_type: :json },
-#     timeout: 10,
-#     open_timeout: 5
-#   )
-
-#   pkg.update(sync_status: 'synced', synced_at: Time.current, sync_error: nil, nas_router: router_name)
-
-# rescue RestClient::ExceptionWithResponse => e
-#   pkg.update(sync_status: 'failed', sync_error: mikrotik_error_message(e))
-# rescue RestClient::Exceptions::Timeout, Errno::ETIMEDOUT
-#   pkg.update(sync_status: 'failed', sync_error: "Router #{nas.ip_address} timed out")
-# rescue Errno::ECONNREFUSED, Errno::EHOSTUNREACH, SocketError => e
-#   pkg.update(sync_status: 'failed', sync_error: "Router unreachable: #{e.message}")
-# rescue => e
-#   pkg.update(sync_status: 'failed', sync_error: e.message)
-# end
-
-
-
-
-
 def sync_package_natively(pkg)
   nas = NasRouter.find_by(name: pkg.nas_router)
   return pkg.update(sync_status: 'failed', sync_error: 'No router assigned') unless nas
@@ -756,107 +751,6 @@ def mikrotik_error_message(e)
 end
 
 
-
-# def delete_package_natively(pkg)
-#   nas = NasRouter.find_by(name: pkg.nas_router)
-
-#   return {
-#     success: false,
-#     error: 'No router assigned to this package'
-#   } unless nas
-
-#   begin
-#     base_url = "http://#{nas.ip_address}/rest/ip/hotspot/user/profile"
-
-#     # Find the profile by its actual name
-#     response = RestClient::Request.execute(
-#       method: :get,
-#       url: base_url,
-#       user: nas.username.to_s,
-#       password: nas.password.to_s,
-#       headers: { accept: :json },
-#       timeout: 10,
-#       open_timeout: 5
-#     )
-
-#     profiles = JSON.parse(response.body)
-
-#     profile = profiles.find do |item|
-#       item["name"].to_s == pkg.name.to_s
-#     end
-
-#     unless profile
-#       Rails.logger.warn(
-#         "MikroTik hotspot profile not found: #{pkg.name}"
-#       )
-
-#       # It is already absent, so consider cleanup successful
-#       return {
-#         success: true
-#       }
-#     end
-
-#     profile_id = profile[".id"]
-
-#     unless profile_id.present?
-#       return {
-#         success: false,
-#         error: "MikroTik profile found but has no .id"
-#       }
-#     end
-
-#     Rails.logger.info(
-#       "Deleting MikroTik hotspot profile '#{pkg.name}' with .id=#{profile_id}"
-#     )
-
-#     # Delete using the MikroTik internal resource ID
-#     RestClient::Request.execute(
-#       method: :delete,
-#       url: "#{base_url}/#{URI::DEFAULT_PARSER.escape(profile_id.to_s)}",
-#       user: nas.username.to_s,
-#       password: nas.password.to_s,
-#       headers: { content_type: :json },
-#       timeout: 10,
-#       open_timeout: 5
-#     )
-
-#     {
-#       success: true
-#     }
-
-#   rescue RestClient::NotFound
-#     {
-#       success: true
-#     }
-
-#   rescue RestClient::ExceptionWithResponse => e
-#     {
-#       success: false,
-#       error: mikrotik_error_message(e)
-#     }
-
-#   rescue RestClient::Exceptions::Timeout,
-#          Errno::ETIMEDOUT
-#     {
-#       success: false,
-#       error: "Router #{nas.ip_address} timed out"
-#     }
-
-#   rescue Errno::ECONNREFUSED,
-#          Errno::EHOSTUNREACH,
-#          SocketError => e
-#     {
-#       success: false,
-#       error: "Router #{nas.ip_address} unreachable: #{e.message}"
-#     }
-
-#   rescue => e
-#     {
-#       success: false,
-#       error: e.message
-#     }
-#   end
-# end
 
 def delete_package_natively(pkg)
   nas = NasRouter.find_by(name: pkg.nas_router)
@@ -966,7 +860,9 @@ end
     :burst_threshold_upload,
     :burst_time,
      :intended_device_type,    
-      :device_icon,      
+      :device_icon,
+      :enabled,
+
         weekdays: [],
 
 
