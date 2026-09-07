@@ -4059,8 +4059,7 @@ def login_with_receipt_number
   end
 
   voucher_code = hotspot_voucher.voucher
-  voucher_object_going_to_sync_natively = HotspotVoucher.find_by(voucher_code: voucher_code)
-
+voucher_object_going_to_sync_natively = HotspotVoucher.find_by(voucher: voucher_code)
   use_radius = router_uses_radius?
 
   if use_radius
