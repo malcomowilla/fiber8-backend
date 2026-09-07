@@ -4073,7 +4073,7 @@ voucher_object_going_to_sync_natively = HotspotVoucher.find_by(voucher: voucher_
         hotspot_voucher, mpesa_revenue.account_id)
     end
   else
-    sync_voucher_natively(voucher_object_going_to_sync_natively)
+    # sync_voucher_natively(voucher_object_going_to_sync_natively)
     if hotspot_voucher.expiration.nil?
       calculate_expiration_login_with_voucher(
         hotspot_voucher.hotspot_package,
