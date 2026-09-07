@@ -9,7 +9,8 @@ class PasswordMailer < ApplicationMailer
 @reset_domain = reset_domain
 
   mail(
-    from: tenant_sender_email,  # Replace with the actual sender email
+    # from: tenant_sender_email,  
+    from: 'support@owitech.co.ke',
     to: @admin.email,
     subject: 'Password Reset',
     category: 'Password Reset',
