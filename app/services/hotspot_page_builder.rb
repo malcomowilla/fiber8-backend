@@ -1346,17 +1346,21 @@ async function payPackage() {
           } catch (e) { console.error(e); setStatus('error', 'Network error. Check your connection and try again.'); }
         }
 
-        async function connectReceipt(code) {
+               async function connectReceipt(code) {
           setStatus('processing', 'Verifying your M-Pesa transaction…');
           try {
             const res = await fetch(api('/api/login_with_receipt_number'), {
               method: 'POST', headers, body: JSON.stringify({ receipt_number: code, mac, ip })
             });
+            const data = await res.json().catch(() => ({}));
             if (res.ok) {
-              setStatus('processing', 'Transaction found — activating your session…');
-              pollPaymentStatus();
+              // login_with_receipt_number already logs the device into the
+              // router synchronously and returns the connection details in
+              // this same response — show the same "Connected!" overlay used
+              // for voucher/M-Pesa-package success instead of a plain status
+              // line and a separate polling round-trip.
+              onConnected({ username: data.username, package: data.package, expiration: data.expiration });
             } else {
-              const data = await res.json().catch(() => ({}));
               setStatus('error', data.error || 'Transaction not found. Check the code and try again.');
             }
           } catch (e) { console.error(e); setStatus('error', 'Network error. Check your connection and try again.'); }
