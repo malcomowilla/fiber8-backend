@@ -5,7 +5,7 @@ class AdminOnboardingMailer < ApplicationMailer
     @login_url = login_url
 
     mail(
-      from: 'support@owitech.co.ke',
+      from: 'noreply@owitech.co.ke',
       to: @admin.email,
       subject: 'Welcome to Owitech ISP!',
       category: 'Admin Onboarding'
