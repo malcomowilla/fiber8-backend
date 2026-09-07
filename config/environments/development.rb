@@ -24,7 +24,6 @@ Rails.application.configure do
     port:                 587,
     user_name:            ENV['MAILTAP_API_USERNAME'],
     password:             ENV['MAILTAP_API_TOKENS'],
-    # domain:               'owitech.co.ke',
     authentication:       :plain,
     enable_starttls_auto: true
   }
