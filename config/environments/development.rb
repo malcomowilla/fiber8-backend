@@ -24,6 +24,7 @@ Rails.application.configure do
     port:                 587,
     user_name:            ENV['MAILTAP_API_USERNAME'],
     password:             ENV['MAILTAP_API_TOKENS'],
+    # domain:               'owitech.co.ke',
     authentication:       :plain,
     enable_starttls_auto: true
   }
@@ -47,16 +48,12 @@ config.active_record.async_query_executor = :global_thread_pool
 
 
   # Rails.application.routes.default_url_options[:host] = 'solving-choice-dutch-utah.trycloudflare.com'
-  # Rails.application.routes.default_url_options[:host] = 'localhost:5173'
+  # # Rails.application.routes.default_url_options[:host] = 'localhost:5173'
 
-#   Rails.application.routes.default_url_options = {
-#   host: '102.221.35.116',
-#   protocol: 'http'
-# }
-  config.action_mailer.delivery_method = :mailtrap
-    config.action_mailer.mailtrap_settings = {
-      api_key: ENV['MAILTRAP_API_KEY']
-    }
+  # config.action_mailer.delivery_method = :mailtrap
+  #   config.action_mailer.mailtrap_settings = {
+  #     api_key: ENV['MAILTRAP_API_KEY']
+  #   }
 
 # config.action_mailer.smtp_settings = {
 #   address:              'smtp.gmail.com',
