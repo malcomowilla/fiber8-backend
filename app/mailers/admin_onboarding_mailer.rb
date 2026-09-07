@@ -1,18 +1,14 @@
 class AdminOnboardingMailer < ApplicationMailer
-  
-
-  # smtp_host, smtp_username, sender_email, smtp_password, api_key, domain
-  def admin_onboarding(admin, password, subdomain
-   )
+  def admin_onboarding(admin, password, login_url)
     @admin = admin
-   
+    @password = password
+    @login_url = login_url
+
     mail(
-      from: 'support@owitech.co.ke',  # Replace with the actual sender email
+      from: 'support@owitech.co.ke',
       to: @admin.email,
       subject: 'Welcome to Owitech ISP!',
-      category: 'Admin Onboarding',
-      
+      category: 'Admin Onboarding'
     )
   end
 end
-
