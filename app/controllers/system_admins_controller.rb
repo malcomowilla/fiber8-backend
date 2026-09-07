@@ -1,13 +1,5 @@
 class SystemAdminsController < ApplicationController
-  # before_action :set_system_admin, only: %i[ show edit update destroy ]
-
   
-# before_action :set_system_admin_email_settings
-
-# set_current_tenant_through_filter
-
-# before_action :set_tenant
-
   def index
     @system_admins = SystemAdmin.all
     render json: @system_admins
@@ -15,59 +7,19 @@ class SystemAdminsController < ApplicationController
 
 
 
-  def current_plan
-      @current_plan = ActsAsTenant.current_tenant&.pp_poe_plan
-      render json: {current_plan: @current_plan&.name}
-  end
-
-
-
-  def current_hotspot_plan
-    
-    @current_hotspot_plan = ActsAsTenant.current_tenant&.hotspot_plan
-    render json: {current_hotspot_plan: @current_hotspot_plan&.name}
-end
-
-
-
-  # def set_tenant
-  #   host = request.headers['X-Subdomain']
-  #   @account = Account.find_by(subdomain: host)
-  #    ActsAsTenant.current_tenant = @account
-  #   EmailConfiguration.configure(@account, ENV['SYSTEM_ADMIN_EMAIL'])
-  #   # EmailSystemAdmin.configure(@current_account, current_system_admin)
-  
-  #   Rails.logger.info "set_current_tenant #{ActsAsTenant.current_tenant.inspect}"
-  #   # set_current_tenant(@account)
-  # rescue ActiveRecord::RecordNotFound
-  #   render json: { error: 'Invalid tenant' }, status: :not_found
-  
-    
-  # end
 
 
 
   
   def authenticate_webauthn_login_system_admin
-    # "id": ""AdVZRNnFYkuE-z2ExPy7YNCjTEbBPiGqJHJ0DSMW8d_3H63vtT5dcjFWa_QUp5bNTimc5J3_SSXIeFVuUeAbxTo",
-    # "5TR0TJqgdKRNuqsDhDQV6L7ccHct5B_xGUJ1HJWp0G4" =>  chalenge,
     admin = SystemAdmin.find_by(phone_number: params[:phone_number]) || SystemAdmin.find_by(email: params[:email])
   
   
     relying_party = WebAuthn::RelyingParty.new(
-     
-      #  # origin: "https://#{request.headers['X-Original-Host']}",
-      # # origin: "https://#{request.headers['X-Subdomain-Aitechs']}",
-      # origin: "https://#{request.headers['X-Subdomain']}",
-      # name: "#{request.headers['X-Subdomain']}",
-      # # id: request.headers['X-Original-Host']
-      # id: "#{request.headers['X-Subdomain']}"
-      # origin: "https://#{request.headers['X-Subdomain']}.aitechs.co.ke",
-      # name: "#{request.headers['X-Subdomain']}.aitechs.co.ke",
-      # id: "#{request.headers['X-Subdomain']}.aitechs.co.ke" 
-       origin: "https://aitechs.co.ke",
-      name: "aitechs.co.ke",
-      id: "aitechs.co.ke" 
+      
+       origin: "https://owitech.co.ke",
+      name: "owitech.co.ke",
+      id: "owitech.co.ke" 
 
 
 
@@ -499,99 +451,171 @@ end
 
 
 
-  def invite_company_super_admins
-    # validate_invite_super_admin
+#   def invite_company_super_admins
+#     # validate_invite_super_admin
   
-    # Initialize @my_admin with the provided parameters
-    @my_admin = User.find_or_create_by(
-      username: params[:username],
-      email: params[:email],
-      phone_number: params[:phone_number]
-    )
+#     # Initialize @my_admin with the provided parameters
+#     @my_admin = User.find_or_create_by(
+#       username: params[:username],
+#       email: params[:email],
+#       phone_number: params[:phone_number]
+#     )
   
 
-   account_id = Account.find_or_create_by(subdomain: params[:company_name])
+#    account_id = Account.find_or_create_by(subdomain: params[:company_name])
 
 
 
-    @my_admin.password = generate_secure_password(16)
-    # @my_admin.password_confirmation = generate_secure_password(16)
+#     @my_admin.password = generate_secure_password(16)
+#     # @my_admin.password_confirmation = generate_secure_password(16)
 
-    # @my_admin.update!(account_id: account_id.id)
-  ActsAsTenant.with_tenant(account_id) do
-  @my_admin = User.create!(
-    username: params[:username],
-    email: params[:email],
-    phone_number: params[:phone_number],
-    password: params[:password],
-    password_confirmation: params[:password]
+#     # @my_admin.update!(account_id: account_id.id)
+#   ActsAsTenant.with_tenant(account_id) do
+#   @my_admin = User.create!(
+#     username: params[:username],
+#     email: params[:email],
+#     phone_number: params[:phone_number],
+#     password: params[:password],
+#     password_confirmation: params[:password]
     
-  )
-end
-@my_admin.update!(password: params[:password],  password_confirmation: params[:password])
+#   )
+# end
+# @my_admin.update!(password: params[:password],  password_confirmation: params[:password])
 
 
 
-    @my_admin.role = 'super_administrator'
-    #  @my_admin.account = ActsAsTenant.current_tenant
-    @my_admin.update(date_registered: Time.now.strftime('%Y-%m-%d %I:%M:%S %p'))
+#     @my_admin.role = 'super_administrator'
+#     #  @my_admin.account = ActsAsTenant.current_tenant
+#     @my_admin.update(date_registered: Time.now.strftime('%Y-%m-%d %I:%M:%S %p'))
 
 
-    # if @my_admin.errors.empty?
-      if @my_admin.save
-        # AdminOnboardingMailer.admin_onboarding(@my_admin, 
+#     # if @my_admin.errors.empty?
+#       if @my_admin.save
+#         # AdminOnboardingMailer.admin_onboarding(@my_admin, 
        
-        #   ).deliver_now
+#         #   ).deliver_now
 
-        AdminOnboardingMailer.admin_onboarding(@my_admin).deliver_now
-        # BlockedUserMailer.notify_block(@my_admin).deliver_now
-        # send_password(@my_admin.phone_number, @my_admin.password, @my_admin.email)
-        # 
-        render json: @my_admin, status: :created
-      else
-        render json: { errors: @my_admin.errors }, status: :unprocessable_entity
-      end
-    # else
-    #   render json: { errors: @my_admin.errors }, status: :unprocessable_entity
-    # end
-  end
-
-
+#         AdminOnboardingMailer.admin_onboarding(@my_admin).deliver_now
+#         # BlockedUserMailer.notify_block(@my_admin).deliver_now
+#         # send_password(@my_admin.phone_number, @my_admin.password, @my_admin.email)
+#         # 
+#         render json: @my_admin, status: :created
+#       else
+#         render json: { errors: @my_admin.errors }, status: :unprocessable_entity
+#       end
+#     # else
+#     #   render json: { errors: @my_admin.errors }, status: :unprocessable_entity
+#     # end
+#   end
 
 
- def update_client
-  admin = User.find_by(id: params[:id])
+  def invite_company_super_admins
+    account = Account.find_or_create_by(subdomain: params[:company_name])
+    generated_password = generate_secure_password(16)
 
-  unless admin
-    return render json: { error: "Admin not found!" }, status: :unprocessable_entity
-  end
-
-  account = Account.find_by(subdomain: params[:company_name])
-
-  unless account
-    return render json: { error: "Account not found!" }, status: :unprocessable_entity
-  end
-
-  ActsAsTenant.with_tenant(account) do
-    update_data = {
-      username: params[:username],
-      email: params[:email],
-      phone_number: params[:phone_number],
-      wallet_admin: params[:wallet_admin]
-    }
-
-    if params[:password].present?
-      update_data[:password] = params[:password]
-      update_data[:password_confirmation] = params[:password]
+    admin = nil
+    ActsAsTenant.with_tenant(account) do
+      admin = User.create!(
+        username: params[:username],
+        email: params[:email],
+        phone_number: params[:phone_number],
+        password: generated_password,
+        password_confirmation: generated_password,
+        role: 'super_administrator',
+        date_registered: Time.now.strftime('%Y-%m-%d %I:%M:%S %p')
+      )
     end
 
-    admin.update!(update_data)
+    send_onboarding = params.key?(:onboarding) ? ActiveModel::Type::Boolean.new.cast(params[:onboarding]) : true
+
+    if send_onboarding
+      login_url = "https://#{account.subdomain}.owitech.co.ke"
+      AdminOnboardingMailer.admin_onboarding(admin, generated_password, login_url).deliver_now
+    end
+
+    render json: admin, status: :created
+  rescue ActiveRecord::RecordInvalid => e
+    render json: { errors: e.record.errors }, status: :unprocessable_entity
+  end
+
+
+  
+
+#  def update_client
+#   admin = User.find_by(id: params[:id])
+
+#   unless admin
+#     return render json: { error: "Admin not found!" }, status: :unprocessable_entity
+#   end
+
+#   account = Account.find_by(subdomain: params[:company_name])
+
+#   unless account
+#     return render json: { error: "Account not found!" }, status: :unprocessable_entity
+#   end
+
+#   ActsAsTenant.with_tenant(account) do
+#     update_data = {
+#       username: params[:username],
+#       email: params[:email],
+#       phone_number: params[:phone_number],
+#       wallet_admin: params[:wallet_admin]
+#     }
+
+#     if params[:password].present?
+#       update_data[:password] = params[:password]
+#       update_data[:password_confirmation] = params[:password]
+#     end
+
+#     admin.update!(update_data)
+
+#     render json: admin.reload, status: :ok
+#   end
+# end
+  
+  def update_client
+    admin = User.find_by(id: params[:id])
+    unless admin
+      return render json: { error: "Admin not found!" }, status: :unprocessable_entity
+    end
+
+    account = Account.find_by(subdomain: params[:company_name])
+    unless account
+      return render json: { error: "Account not found!" }, status: :unprocessable_entity
+    end
+
+    is_onboarding = ActiveModel::Type::Boolean.new.cast(params[:onboarding])
+    generated_password = nil
+
+    ActsAsTenant.with_tenant(account) do
+      update_data = {
+        username: params[:username],
+        email: params[:email],
+        phone_number: params[:phone_number],
+        wallet_admin: params[:wallet_admin]
+      }
+
+      if is_onboarding
+        # regenerate + resend credentials, don't trust a frontend-supplied password
+        generated_password = generate_secure_password(16)
+        update_data[:password] = generated_password
+        update_data[:password_confirmation] = generated_password
+      elsif params[:password].present?
+        # plain manual password change, no email
+        update_data[:password] = params[:password]
+        update_data[:password_confirmation] = params[:password]
+      end
+
+      admin.update!(update_data)
+    end
+
+    if is_onboarding
+      login_url = "https://#{account.subdomain}.owitech.co.ke"
+      AdminOnboardingMailer.admin_onboarding(admin, generated_password, login_url).deliver_now
+    end
 
     render json: admin.reload, status: :ok
   end
-end
-  
-
 
 
 def check_sms_already_verified

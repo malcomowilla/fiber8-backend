@@ -24,7 +24,7 @@ Rails.application.config.action_mailer.smtp_settings = {
   # ssl: true,
   # tls: true,
   # enable_starttls_auto: true,
-  ssl: true,                      # Enable SSL for port 465
+  ssl: true,                      
   tls: false 
 }
 

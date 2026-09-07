@@ -31,7 +31,7 @@ module Fiber8backend
     # config.session_store :cookie_store, key: '_hue_session', domain: :all
     # puts("Loading cookies session store KEY")
     config.middleware.use BlockedUser
-    # 
+    
 
 
 

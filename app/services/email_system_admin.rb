@@ -9,7 +9,7 @@ class EmailSystemAdmin
     elsif current_system_admin.present?
       Rails.application.config.action_mailer.delivery_method = :mailtrap
       Rails.application.config.action_mailer.mailtrap_settings = {
-        api_key: "d848f326f33a7aa8db359e399fd7c510"
+        api_key: ""
       }
       # configure_for_account(current_account, current_system_admin)
     end
@@ -51,7 +51,7 @@ class EmailSystemAdmin
   def self.set_fallback_settings
     Rails.application.config.action_mailer.delivery_method = :mailtrap
     Rails.application.config.action_mailer.mailtrap_settings = {
-      api_key: "d848f326f33a7aa8db359e399fd7c510"
+      api_key: ""
     }
   end
 end
