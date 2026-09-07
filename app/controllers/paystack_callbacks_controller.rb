@@ -32,17 +32,12 @@ class PaystackCallbacksController < ApplicationController
     head :ok
   rescue => e
     Rails.logger.error "Paystack webhook error: #{e.message}\n#{e.backtrace.take(10).join("\n")}"
-    # ack anyway once we've gotten this far — avoids Paystack retry-storming
-    # a webhook that failed on our side after signature already checked out
+    
     head :ok
   end
 
   private
 
-  # Paystack's webhook has no tenant header, so we resolve the account from
-  # the pending record HotspotVouchersController#make_payment already
-  # created for this reference — *before* we trust anything else about the
-  # request. unscoped because these lookups happen outside any tenant scope.
   def account_for_reference(reference)
     return nil if reference.blank?
     revenue = HotspotMpesaRevenue.unscoped.find_by(checkout_request_id: reference)
