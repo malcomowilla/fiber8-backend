@@ -4060,6 +4060,7 @@ def login_with_receipt_number
 
   voucher_code = hotspot_voucher.voucher
 voucher_object_going_to_sync_natively = HotspotVoucher.find_by(voucher: voucher_code)
+found_router = HotspotPackage.find_by(name: hotspot_voucher.package)&.nas_router
   use_radius = router_uses_radius?
 
   if use_radius
@@ -4081,7 +4082,7 @@ voucher_object_going_to_sync_natively = HotspotVoucher.find_by(voucher: voucher_
     end
   end
 
-  nas_router = NasRouter.find_by(account_id: mpesa_revenue.account_id)
+  nas_router = NasRouter.find_by(name: found_router)
   return render json: { error: 'Router not found' }, status: :unprocessable_entity unless nas_router
 
   client = nil
