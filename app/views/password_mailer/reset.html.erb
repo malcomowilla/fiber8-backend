@@ -2,9 +2,10 @@
 <html>
   <head>
     <meta content="text/html; charset=UTF-8" http-equiv="Content-Type" />
+    <link href="https://googleapis.com" rel="stylesheet">
     <style>
       body {
-        font-family: Arial, sans-serif;
+        font-family: 'IBM Plex Mono', monospace;
         background-color: #f9f9f9;
         margin: 0;
         padding: 0;
@@ -13,7 +14,7 @@
       .container {
         max-width: 600px;
         margin: 50px auto;
-        background: #fff;
+        background: #ffffff; 
         border: 1px solid #e0e0e0;
         border-radius: 8px;
         box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
@@ -21,7 +22,7 @@
       }
       h1 {
         font-size: 24px;
-        color: #4a90e2;
+        color: #9ACD32;
         text-align: center;
         margin-bottom: 20px;
       }
@@ -36,7 +37,7 @@
       }
       .btn {
         display: inline-block;
-        background-color: #4a90e2;
+        background-color: #9ACD32;
         color: #fff;
         padding: 12px 20px;
         text-decoration: none;
@@ -64,8 +65,7 @@
       <p>We received a request to reset your password. Click the button below to set a new password:</p>
 
       <p style="text-align: center;">
-        <a class="btn" href="https://<%= "#{@reset_domain}.owitech.co.ke" %>/confirm-reset-password?token=<%= @admin.password_reset_token %>
-">
+        <a class="btn" href="https://<%= "#{@reset_domain}.owitech.co.ke" %>/confirm-reset-password?token=<%= @admin.password_reset_token %>">
           Reset My Password
         </a>
       </p>

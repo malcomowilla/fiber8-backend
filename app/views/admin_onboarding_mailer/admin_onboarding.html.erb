@@ -1,11 +1,13 @@
-<div style="font-family: Arial, sans-serif; max-width: 520px; margin: 0 auto; color: #1a1a1a;">
-  <h2 style="color: #059669;">Welcome to Owitech ISP!</h2>
+<link href="https://googleapis.com" rel="stylesheet">
+
+<div style="font-family: 'IBM Plex Mono', monospace; max-width: 520px; margin: 0 auto; color: #1a1a1a;">
+  <h2 style="color: #059669; font-family: 'IBM Plex Mono', monospace;">Welcome to Owitech ISP!</h2>
 
   <p>Hi <%= @admin.username %>,</p>
 
   <p>Your admin account has been created. Here are your login credentials:</p>
 
-  <table style="width: 100%; border-collapse: collapse; margin: 16px 0;">
+  <table style="width: 100%; border-collapse: collapse; margin: 16px 0; font-family: 'IBM Plex Mono', monospace;">
     <tr>
       <td style="padding: 8px 0; font-weight: bold; width: 140px;">Username</td>
       <td style="padding: 8px 0;"><%= @admin.username %></td>
@@ -16,12 +18,12 @@
     </tr>
     <tr>
       <td style="padding: 8px 0; font-weight: bold;">Password</td>
-      <td style="padding: 8px 0;"><%= @password %></td>
+      <td style="padding: 8px 0; font-style: normal;"><%= @password %></td>
     </tr>
   </table>
 
   <p>
-    <a href="<%= @login_url %>" style="display: inline-block; background: #059669; color: #fff; padding: 10px 20px; border-radius: 8px; text-decoration: none;">
+    <a href="<%= @login_url %>" style="display: inline-block; background: #059669; color: #fff; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-family: 'IBM Plex Mono', monospace;">
       Log in to your dashboard
     </a>
   </p>
