@@ -249,6 +249,37 @@ resource :tuma_settings, only: [:show, :update]
 
 
 resources :hotspot_sms_templates, only: [:index, :update]
+
+
+
+
+
+
+
+get    '/api/referrals/my_code',       to: 'referrals#my_code'
+get    '/api/referrals/my_referrals',  to: 'referrals#my_referrals'
+get    '/api/referrals/my_earnings',   to: 'referrals#my_earnings'
+post   '/api/referrals/withdraw',      to: 'referrals#withdraw'
+get    '/api/referrals/terms',         to: 'referrals#terms'
+
+post   '/api/outside_referrers/sign_up',   to: 'outside_referrers#sign_up'
+post   '/api/outside_referrers/sign_in',   to: 'outside_referrers#sign_in'
+delete '/api/outside_referrers/sign_out',  to: 'outside_referrers#sign_out'
+get    '/api/outside_referrers/me',        to: 'outside_referrers#me'
+get    '/api/outside_referrers/dashboard', to: 'outside_referrers#dashboard'
+post   '/api/outside_referrers/withdraw',  to: 'outside_referrers#withdraw'
+get    '/api/outside_referrers/terms',     to: 'outside_referrers#terms'
+
+post '/referral_disburse_results',         to: 'referral_disbursements#results'
+post '/referral_disburse_results_timeout', to: 'referral_disbursements#timeout'
+
+
+post '/api/referral_disburse_results',         to: 'referral_disbursements#results'
+post '/api/referral_disburse_results_timeout', to: 'referral_disbursements#timeout'
+
+
+
+
 post 'hotspot_packages/:id/toggle_status', to: 'hotspot_packages#toggle_status'
 post '/api/hotspot_packages/:id/toggle_status', to: 'hotspot_packages#toggle_status'
 get   '/api/technician/tickets/:token', to: 'technician_tickets#show'

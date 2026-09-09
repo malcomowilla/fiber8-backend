@@ -41,6 +41,41 @@ class Account < ApplicationRecord
     has_one :nas_setting, dependent: :destroy
     has_one :access_point_setting, dependent: :destroy
     has_many :ip_bindings, dependent: :destroy
-    # validates :subdomain, presence: true
+    
+
+
+
+
+    has_many :referral_earnings, as: :referrer, dependent: :destroy
+has_many :referral_withdrawals, as: :referrer, dependent: :destroy
+belongs_to :referred_by_account, class_name: 'Account', optional: true
+belongs_to :referred_by_outside_referrer, class_name: 'OutsideReferrer', optional: true
+has_many :accounts_referred, class_name: 'Account', foreign_key: :referred_by_account_id
+
+
+before_validation :assign_referral_code, on: :create
+
+def available_referral_balance
+  referral_earnings.where(status: 'available', paid_out: false).sum(:amount)
+end
+
+def pending_referral_balance
+  referral_earnings.where(status: 'pending').sum(:amount)
+end
+
+
+private
+
+def assign_referral_code
+  return if referral_code.present?
+
+  loop do
+    code = "ISP#{SecureRandom.alphanumeric(6).upcase}"
+    next if Account.exists?(referral_code: code) || OutsideReferrer.exists?(referral_code: code)
+
+    self.referral_code = code
+    break
+  end
+end
     
 end

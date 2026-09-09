@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_09_06_065823) do
+ActiveRecord::Schema[7.2].define(version: 2026_09_09_104818) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -71,6 +71,13 @@ ActiveRecord::Schema[7.2].define(version: 2026_09_06_065823) do
     t.datetime "last_invoiced_at"
     t.datetime "last_billed_at"
     t.string "platform_domain", default: "aitechs.co.ke", null: false
+    t.string "referral_code"
+    t.bigint "referred_by_account_id"
+    t.bigint "referred_by_outside_referrer_id"
+    t.datetime "referral_qualified_at"
+    t.index ["referral_code"], name: "index_accounts_on_referral_code", unique: true
+    t.index ["referred_by_account_id"], name: "index_accounts_on_referred_by_account_id"
+    t.index ["referred_by_outside_referrer_id"], name: "index_accounts_on_referred_by_outside_referrer_id"
     t.index ["subdomain"], name: "index_accounts_on_subdomain", unique: true
   end
 
@@ -1054,6 +1061,20 @@ ActiveRecord::Schema[7.2].define(version: 2026_09_06_065823) do
     t.string "location"
   end
 
+  create_table "outside_referrers", force: :cascade do |t|
+    t.string "name", null: false
+    t.string "email", null: false
+    t.string "phone_number", null: false
+    t.string "password_digest", null: false
+    t.string "referral_code", null: false
+    t.string "status", default: "active"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["email"], name: "index_outside_referrers_on_email", unique: true
+    t.index ["phone_number"], name: "index_outside_referrers_on_phone_number", unique: true
+    t.index ["referral_code"], name: "index_outside_referrers_on_referral_code", unique: true
+  end
+
   create_table "p_poe_packages", id: false, force: :cascade do |t|
     t.string "name"
     t.string "price"
@@ -1280,6 +1301,38 @@ ActiveRecord::Schema[7.2].define(version: 2026_09_06_065823) do
     t.index ["account_id", "active"], name: "index_promotional_plans_on_account_id_and_active"
     t.index ["hotspot_package_id"], name: "index_promotional_plans_on_hotspot_package_id"
     t.index ["start_date", "end_date"], name: "index_promotional_plans_on_start_date_and_end_date"
+  end
+
+  create_table "referral_earnings", force: :cascade do |t|
+    t.string "referrer_type", null: false
+    t.bigint "referrer_id", null: false
+    t.bigint "referred_account_id", null: false
+    t.decimal "amount", precision: 10, scale: 2, null: false
+    t.string "status", default: "pending", null: false
+    t.string "reason"
+    t.boolean "paid_out", default: false
+    t.datetime "available_at"
+    t.datetime "paid_out_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["referred_account_id"], name: "index_referral_earnings_on_referred_account_id"
+    t.index ["referrer_type", "referrer_id"], name: "index_referral_earnings_on_referrer"
+    t.index ["status"], name: "index_referral_earnings_on_status"
+  end
+
+  create_table "referral_withdrawals", force: :cascade do |t|
+    t.string "referrer_type", null: false
+    t.bigint "referrer_id", null: false
+    t.decimal "amount", precision: 10, scale: 2, null: false
+    t.string "phone_number", null: false
+    t.string "status", default: "pending", null: false
+    t.string "idempotency_key", null: false
+    t.string "error_message"
+    t.datetime "paid_out_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["idempotency_key"], name: "index_referral_withdrawals_on_idempotency_key", unique: true
+    t.index ["referrer_type", "referrer_id"], name: "index_referral_withdrawals_on_referrer"
   end
 
   create_table "router_settings", force: :cascade do |t|

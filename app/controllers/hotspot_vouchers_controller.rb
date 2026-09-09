@@ -4578,6 +4578,8 @@ elsif data["BillRefNumber"].starts_with?("INV")
       expiry: (tenant.hotspot_and_dial_plan.expiry || Time.current) + 30.days,
       expiry_days: 30
     )
+      ReferralQualificationService.call(tenant) 
+
   end
 
 

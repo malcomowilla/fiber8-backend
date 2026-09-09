@@ -71,32 +71,9 @@ if current_user
 
   #
   # POST /invoices or /invoices.json
-  def create
-    @invoice = Invoice.new(invoice_params)
-
-    respond_to do |format|
-      if @invoice.save
-        format.html { redirect_to @invoice, notice: "Invoice was successfully created." }
-        format.json { render :show, status: :created, location: @invoice }
-      else
-        format.html { render :new, status: :unprocessable_entity }
-        format.json { render json: @invoice.errors, status: :unprocessable_entity }
-      end
-    end
-  end
-
+  
   # PATCH/PUT /invoices/1 or /invoices/1.json
-  def update
-    respond_to do |format|
-      if @invoice.update(invoice_params)
-        format.html { redirect_to @invoice, notice: "Invoice was successfully updated." }
-        format.json { render :show, status: :ok, location: @invoice }
-      else
-        format.html { render :edit, status: :unprocessable_entity }
-        format.json { render json: @invoice.errors, status: :unprocessable_entity }
-      end
-    end
-  end
+  
 
   # DELETE /invoices/1 or /invoices/1.json
   def destroy

@@ -240,6 +240,11 @@ development:
       class: SubscriptionExpirationJob
       cron: "*/5 * * * *"
 
+
+    referral_earnings_maturity_job:
+      class: ReferralEarningsMaturityJob
+      cron: "*/5 * * * *"
+
     inactivity_check_job:
       class: InactivityCheckJob
       cron: "*/5 * * * *"
