@@ -252,7 +252,8 @@ resources :hotspot_sms_templates, only: [:index, :update]
 
 
 
-
+get  '/api/referrals/current_invoice', to: 'referrals#current_invoice'
+post '/api/referrals/apply_credit',    to: 'referrals#apply_credit'
  get   '/api/hotspot_loyalty_setting', to: 'hotspot_loyalty_settings#show'
   patch '/api/hotspot_loyalty_setting', to: 'hotspot_loyalty_settings#update'
 

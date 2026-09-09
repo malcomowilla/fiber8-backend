@@ -10,6 +10,39 @@ class ReferralsController < ApplicationController
     render json: { error: 'Invalid tenant' }, status: :not_found
   end
 
+
+def current_invoice
+  invoice = Invoice.where(status: 'unpaid').order(:invoice_date).first
+  if invoice
+    render json: {
+      id: invoice.id,
+      invoice_number: invoice.invoice_number,
+      total: invoice.total,
+      due_date: invoice.due_date,
+      credit_applied: invoice.credit_applied
+    }
+  else
+    render json: { invoice: nil }
+  end
+end
+
+def apply_credit
+  invoice = Invoice.find_by(id: params[:invoice_id])
+  return render json: { error: 'Invoice not found' }, status: :not_found unless invoice
+
+  result = ReferralCreditService.call(account: @account, invoice: invoice)
+
+  if result[:success]
+    render json: result
+  else
+    render json: { error: result[:error] }, status: :unprocessable_entity
+  end
+end
+
+
+
+
+
   def my_code
     render json: {
       referral_code: @account.referral_code,
@@ -17,7 +50,7 @@ class ReferralsController < ApplicationController
     }
   end
 
-  
+
 
   def my_referrals
     referrals = Account.where(referred_by_account_id: @account.id).order(created_at: :desc)

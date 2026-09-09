@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_09_09_124107) do
+ActiveRecord::Schema[7.2].define(version: 2026_09_09_201247) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -859,6 +859,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_09_09_124107) do
     t.string "plan_name"
     t.datetime "last_invoiced_at"
     t.integer "amount_paid"
+    t.decimal "credit_applied", precision: 10, scale: 2, default: "0.0"
   end
 
   create_table "ip_bindings", force: :cascade do |t|
@@ -1364,6 +1365,9 @@ ActiveRecord::Schema[7.2].define(version: 2026_09_09_124107) do
     t.datetime "paid_out_at"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.bigint "applied_to_invoice_id"
+    t.datetime "applied_at"
+    t.index ["applied_to_invoice_id"], name: "index_referral_earnings_on_applied_to_invoice_id"
     t.index ["referred_account_id"], name: "index_referral_earnings_on_referred_account_id"
     t.index ["referrer_type", "referrer_id"], name: "index_referral_earnings_on_referrer"
     t.index ["status"], name: "index_referral_earnings_on_status"
