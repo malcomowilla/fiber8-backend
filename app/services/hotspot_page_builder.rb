@@ -135,6 +135,8 @@ class HotspotPageBuilder
       .pkg { display: flex; justify-content: space-between; align-items: center; padding: 14px; border-radius: 14px;
              border: 1px solid color-mix(in srgb, var(--text) 10%, transparent); margin-bottom: 10px; cursor: pointer; transition: border-color .15s; }
 
+      .section-heading { font-size: 16px; font-weight: 800; color: var(--text); margin-bottom: 2px; }
+      .section-sub { font-size: 12px; color: var(--muted); margin-bottom: 14px; }
 
 .pkg-freetrial { display: flex; align-items: flex-start; gap: 10px; padding: 14px;
   border-radius: 14px; margin-bottom: 12px;
@@ -160,12 +162,22 @@ class HotspotPageBuilder
       .support-line .footer-support { color: var(--text); font-weight: 600; }
       .support-line .footer-phone { color: var(--primary); font-weight: 700; text-decoration: none; }
       .support-line .footer-phone:hover { text-decoration: underline; }
-      /* Top placement: a slim strip directly under the header, above tabs/promos */
+      /* Top placement: a slim, attention-grabbing strip directly under the
+         header, above promos/tabs — this is the "Quick Support" pill. */
       .support-top {
         padding: 10px 20px;
         border-bottom: 1px solid color-mix(in srgb, var(--text) 8%, transparent);
         background: color-mix(in srgb, var(--primary) 5%, transparent);
       }
+      .quick-support { display: flex; align-items: center; justify-content: center; gap: 10px; }
+      .quick-support .qs-icon {
+        flex-shrink: 0; width: 28px; height: 28px; border-radius: 50%;
+        display: flex; align-items: center; justify-content: center; font-size: 13px;
+        background: color-mix(in srgb, var(--primary) 18%, transparent);
+        border: 1px solid color-mix(in srgb, var(--primary) 30%, transparent);
+      }
+      .quick-support .qs-label { display: block; font-size: 10px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+      .quick-support .qs-phone { display: block; font-size: 14px; font-weight: 800; color: var(--primary); }
       /* Bottom placement: sits inside the existing footer element */
       .support-bottom { padding: 0; }
       .promo { position: relative; overflow: hidden; border-radius: 16px; margin-bottom: 10px; padding: 14px;
@@ -180,6 +192,35 @@ class HotspotPageBuilder
       .promo-stock-label { font-size: 10px; color: var(--muted); margin-bottom: 4px; }
       .promo-stock-bar { height: 4px; border-radius: 4px; background: color-mix(in srgb, var(--text) 12%, transparent); overflow: hidden; }
       .promo-stock-fill { height: 100%; border-radius: 4px; transition: width .3s ease; }
+
+      /* TV / Console connect promo — deliberately loud so it doesn't get
+         missed the way the buried tab did. Sits above the tabs, under any
+         active discount promos, and hides itself once the visitor is
+         already on the TV tab. */
+      .tv-promo {
+        display: flex; align-items: center; gap: 12px; padding: 14px 16px; border-radius: 16px; margin-bottom: 12px; cursor: pointer;
+        background: linear-gradient(135deg, color-mix(in srgb, var(--secondary) 14%, transparent), color-mix(in srgb, var(--primary) 10%, transparent));
+        border: 1px solid color-mix(in srgb, var(--secondary) 28%, transparent);
+        transition: transform .12s ease, border-color .12s ease;
+      }
+      .tv-promo:hover { transform: translateY(-1px); border-color: color-mix(in srgb, var(--secondary) 45%, transparent); }
+      .tv-promo-icon {
+        flex-shrink: 0; width: 44px; height: 44px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 20px;
+        background: color-mix(in srgb, var(--secondary) 20%, transparent);
+        border: 1px solid color-mix(in srgb, var(--secondary) 35%, transparent);
+      }
+      .tv-promo-body { flex: 1; min-width: 0; }
+      .tv-promo-title { font-size: 13px; font-weight: 800; color: var(--text); display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+      .tv-promo-badge {
+        font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: .03em; padding: 2px 7px; border-radius: 999px;
+        background: color-mix(in srgb, var(--accent) 22%, transparent); color: var(--accent);
+      }
+      .tv-promo-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+      .tv-promo-cta {
+        flex-shrink: 0; font-size: 12px; font-weight: 800; padding: 8px 14px; border-radius: 10px; border: none; color: #fff;
+        background: linear-gradient(135deg, var(--btn-primary), var(--btn-secondary)); cursor: pointer; white-space: nowrap;
+      }
+
       .mock-tag { display: inline-block; font-size: 9px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase;
                   padding: 2px 6px; border-radius: 6px; background: color-mix(in srgb, var(--text) 12%, transparent); color: var(--muted); margin-left: 6px; }
       .ad-card { border-radius: 16px; overflow: hidden; background: color-mix(in srgb, var(--surface) 90%, transparent);
@@ -228,6 +269,7 @@ class HotspotPageBuilder
         </div>
         <div id="support-top"></div>
         <div id="promo-root" class="panel"></div>
+        <div id="tv-promo-root" class="panel"></div>
         <div class="tabs" id="tabs"></div>
         <div class="panel" id="panel"></div>
         <div class="footer" id="footer"></div>
@@ -324,13 +366,31 @@ let freeTrialState = {};
             (cfg.hotspot_email ? ' · ' + cfg.hotspot_email : '');
         }
 
+        // Prominent "Quick Support" pill used at the top placement — a
+        // plain text line was easy to miss up there, so this gives it an
+        // icon + label + tappable phone number, same as a real support widget.
+        function quickSupportHtml() {
+          const phone = (cfg.footer && cfg.footer.support_phone) || cfg.hotspot_phone || '';
+          if (!phone) return '<div class="support-line">' + supportHtml() + '</div>';
+          const tel = phone.replace(/\\s+/g, '');
+          return \`
+            <a class="quick-support" href="tel:\${tel}" style="text-decoration:none;">
+              <span class="qs-icon">📞</span>
+              <span>
+                <span class="qs-label">Quick Support</span>
+                <span class="qs-phone">\${phone}</span>
+              </span>
+            </a>\`;
+        }
+
         function renderFooter() {
           // footer.show_support (default true) lets the admin hide the
           // support contact line entirely. footer.support_position
-          // ('top' | 'bottom', default 'bottom') decides whether it renders
-          // as a strip right under the header, or in the page footer.
+          // ('top' | 'bottom', default 'top') decides whether it renders
+          // as a prominent strip right under the header, or tucked into
+          // the page footer at the very bottom.
           const showSupport = !(cfg.footer && cfg.footer.show_support === false);
-          const position = (cfg.footer && cfg.footer.support_position) || 'bottom';
+          const position = (cfg.footer && cfg.footer.support_position) || 'top';
 
           const topEl = document.getElementById('support-top');
           const footerEl = document.getElementById('footer');
@@ -341,19 +401,38 @@ let freeTrialState = {};
             return;
           }
 
-          const html = '<div class="support-line">' + supportHtml() + '</div>';
           if (position === 'top') {
-            if (topEl) topEl.innerHTML = html;
+            if (topEl) topEl.innerHTML = quickSupportHtml();
             footerEl.innerHTML = '';
           } else {
             if (topEl) topEl.innerHTML = '';
-            footerEl.innerHTML = html;
+            footerEl.innerHTML = '<div class="support-line">' + supportHtml() + '</div>';
           }
+        }
+
+        // Loud, always-visible teaser for TV/console connect — replaces
+        // burying it behind a tab. Shows above the tabs whenever the
+        // feature is on, and steps out of the way once the visitor is
+        // already on the TV tab itself.
+        function tvPromoHtml() {
+          if (cfg.features.show_tv_plans !== true) return '';
+          if (state.tab === 'tv') return '';
+          return \`
+            <div class="tv-promo" data-tv-promo-cta>
+              <div class="tv-promo-icon">📺</div>
+              <div class="tv-promo-body">
+                <div class="tv-promo-title">Connect a TV or Console <span class="tv-promo-badge">No login needed</span></div>
+                <div class="tv-promo-sub">Pay once and we connect it automatically — nothing to type on the TV.</div>
+              </div>
+              <button class="tv-promo-cta" data-tv-promo-cta>Set Up →</button>
+            </div>\`;
         }
 
         function render() {
           document.getElementById('tabs').innerHTML = tabsHtml();
           document.getElementById('panel').innerHTML = panelHtml();
+          const tvPromoRoot = document.getElementById('tv-promo-root');
+          if (tvPromoRoot) tvPromoRoot.innerHTML = tvPromoHtml();
           renderFooter();
           bindEvents();
         }
@@ -484,6 +563,10 @@ function isValidMac(mac) {
             const freeTrialPkgs = state.packages.filter(p => p.enable_free_trial);
             const paidPkgs = state.packages.filter(p => !p.enable_free_trial);
 
+            const heading = state.packages.length
+              ? '<div class="section-heading">Choose Your Plan</div><div class="section-sub">Select a package and get connected instantly</div>'
+              : '';
+
             const list = paidPkgs.map(p => \`
               <div class="pkg" data-pkg="\${p.id}">
                 <div><strong>\${p.name}</strong>\${isMock ? '<span class="mock-tag">Sample</span>' : ''}<br><small>\${p.valid || ''}</small></div>
@@ -492,8 +575,7 @@ function isValidMac(mac) {
             const empty = !state.packages.length
               ? '<p style="color:var(--muted);font-size:12px;padding:8px 0;">No packages configured yet.</p>'
               : '';
-            const hint = paidPkgs.length ? '<p class="tap-hint">Tap a package to continue</p>' : '';
-            return statusHtml() + freeTrialHtml(freeTrialPkgs) + hint + list + empty;
+            return statusHtml() + heading + freeTrialHtml(freeTrialPkgs) + list + empty;
           }
           if (state.tab === 'voucher') {
             return statusHtml() + \`
@@ -566,6 +648,9 @@ if (state.tab === 'tv') {
         function bindEvents() {
           document.querySelectorAll('[data-tab]').forEach(el =>
             el.onclick = () => { state.tab = el.dataset.tab; state.status = null; state.payStep = 'list'; state.selected = null; render(); });
+
+          document.querySelectorAll('[data-tv-promo-cta]').forEach(el =>
+            el.onclick = () => { state.tab = 'tv'; state.status = null; render(); });
 
           document.querySelectorAll('[data-pkg]').forEach(el =>
             el.onclick = () => {
