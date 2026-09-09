@@ -253,7 +253,11 @@ resources :hotspot_sms_templates, only: [:index, :update]
 
 
 
+ get   '/api/hotspot_loyalty_setting', to: 'hotspot_loyalty_settings#show'
+  patch '/api/hotspot_loyalty_setting', to: 'hotspot_loyalty_settings#update'
 
+  get '/api/hotspot_loyalty_customers',     to: 'hotspot_loyalty#index'
+  get '/api/hotspot_loyalty_customers/:id', to: 'hotspot_loyalty#show'
 
 
 get    '/api/referrals/my_code',       to: 'referrals#my_code'

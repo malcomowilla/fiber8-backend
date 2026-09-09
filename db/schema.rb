@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_09_09_104818) do
+ActiveRecord::Schema[7.2].define(version: 2026_09_09_124107) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -538,6 +538,55 @@ ActiveRecord::Schema[7.2].define(version: 2026_09_09_104818) do
     t.string "compensation_hours"
     t.integer "max_customer_bypass_devices", default: 1
     t.boolean "allow_device_self_service", default: false
+  end
+
+  create_table "hotspot_loyalty_activities", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.bigint "hotspot_loyalty_point_id", null: false
+    t.string "kind", null: false
+    t.integer "points", null: false
+    t.integer "balance_after", null: false
+    t.decimal "amount", precision: 12, scale: 2
+    t.string "package"
+    t.string "reference"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id", "reference", "kind"], name: "idx_on_account_id_reference_kind_3c93240279"
+    t.index ["account_id"], name: "index_hotspot_loyalty_activities_on_account_id"
+    t.index ["hotspot_loyalty_point_id"], name: "index_hotspot_loyalty_activities_on_hotspot_loyalty_point_id"
+  end
+
+  create_table "hotspot_loyalty_points", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.string "phone", null: false
+    t.string "name"
+    t.integer "balance", default: 0, null: false
+    t.integer "lifetime_earned", default: 0, null: false
+    t.integer "lifetime_spent", default: 0, null: false
+    t.decimal "total_spent_amount", precision: 12, scale: 2, default: "0.0"
+    t.integer "purchase_count", default: 0
+    t.string "last_package"
+    t.datetime "last_purchase_at"
+    t.datetime "first_seen_at"
+    t.datetime "last_claim_at"
+    t.boolean "expiry_warning_sent", default: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id", "phone"], name: "index_hotspot_loyalty_points_on_account_id_and_phone", unique: true
+    t.index ["account_id"], name: "index_hotspot_loyalty_points_on_account_id"
+  end
+
+  create_table "hotspot_loyalty_settings", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.boolean "enabled", default: false, null: false
+    t.decimal "earn_rate_percent", precision: 5, scale: 2, default: "5.0"
+    t.integer "max_points"
+    t.integer "expire_after_days", default: 30
+    t.integer "expire_warning_days", default: 2
+    t.integer "expire_min_balance", default: 10
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id"], name: "index_hotspot_loyalty_settings_on_account_id", unique: true
   end
 
   create_table "hotspot_mpesa_revenues", force: :cascade do |t|
@@ -1987,6 +2036,10 @@ ActiveRecord::Schema[7.2].define(version: 2026_09_09_104818) do
   add_foreign_key "appearance_settings", "accounts"
   add_foreign_key "default_system_ad_settings", "accounts"
   add_foreign_key "grace_period_settings", "accounts"
+  add_foreign_key "hotspot_loyalty_activities", "accounts"
+  add_foreign_key "hotspot_loyalty_activities", "hotspot_loyalty_points"
+  add_foreign_key "hotspot_loyalty_points", "accounts"
+  add_foreign_key "hotspot_loyalty_settings", "accounts"
   add_foreign_key "incidents", "accounts"
   add_foreign_key "invoice_payments", "accounts"
   add_foreign_key "invoice_payments", "invoices"

@@ -4358,7 +4358,15 @@ broadcast_hotspot_payment(
     payment_method: 'Mpesa',
     reference: data["TransID"]
   )
-
+  
+HotspotLoyaltyService.award_points(
+  account_id: session.account_id,
+  phone: session.phone_number,
+  name: data["FirstName"],
+  amount: data["TransAmount"],
+  package: session.hotspot_package,
+  reference: data["TransID"]
+)
 
   if nas_router_tv_package
 
@@ -4578,7 +4586,7 @@ elsif data["BillRefNumber"].starts_with?("INV")
       expiry: (tenant.hotspot_and_dial_plan.expiry || Time.current) + 30.days,
       expiry_days: 30
     )
-      ReferralQualificationService.call(tenant) 
+          ReferralQualificationService.call(tenant) 
 
   end
 
