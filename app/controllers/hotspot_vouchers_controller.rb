@@ -4359,15 +4359,6 @@ broadcast_hotspot_payment(
     reference: data["TransID"]
   )
   
-HotspotLoyaltyService.award_points(
-  account_id: session.account_id,
-  phone: session.phone_number,
-  name: data["FirstName"],
-  amount: data["TransAmount"],
-  package: session.hotspot_package,
-  reference: data["TransID"]
-)
-
   if nas_router_tv_package
 
     begin
@@ -4456,6 +4447,9 @@ SendSmsHotspotService.send_sms(voucher.voucher, data, session.checkout_request_i
 )
 
 
+
+
+
 broadcast_hotspot_payment(
   account_id: session.account_id,
   kind: 'voucher',
@@ -4464,6 +4458,17 @@ broadcast_hotspot_payment(
   name: data["FirstName"],
   phone: session.phone_number,
   payment_method: 'Mpesa',
+  reference: data["TransID"]
+)
+
+
+
+HotspotLoyaltyService.award_points(
+  account_id: session.account_id,
+  phone: session.phone_number,
+  name: data["FirstName"],
+  amount: data["TransAmount"],
+  package: session.hotspot_package,
   reference: data["TransID"]
 )
 if nas_router
