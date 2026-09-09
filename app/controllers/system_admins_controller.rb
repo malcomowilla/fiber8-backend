@@ -510,33 +510,37 @@ end
 
 
   def invite_company_super_admins
-    account = Account.find_or_create_by(subdomain: params[:company_name])
-    generated_password = generate_secure_password(16)
+  account = Account.find_or_create_by(subdomain: params[:company_name])
+  generated_password = generate_secure_password(16)
 
-    admin = nil
-    ActsAsTenant.with_tenant(account) do
-      admin = User.create!(
-        username: params[:username],
-        email: params[:email],
-        phone_number: params[:phone_number],
-        password: generated_password,
-        password_confirmation: generated_password,
-        role: 'super_administrator',
-        date_registered: Time.now.strftime('%Y-%m-%d %I:%M:%S %p')
-      )
-    end
+  # Attach the referral BEFORE the admin mailer fires, so it's in place
+  # the moment this ISP later pays and ReferralQualificationService checks it.
+  ReferralAttacher.call(account, params[:referral_code]) if params[:referral_code].present?
 
-    send_onboarding = params.key?(:onboarding) ? ActiveModel::Type::Boolean.new.cast(params[:onboarding]) : true
-
-    if send_onboarding
-      login_url = "https://#{account.subdomain}.owitech.co.ke"
-      AdminOnboardingMailer.admin_onboarding(admin, generated_password, login_url).deliver_now
-    end
-
-    render json: admin, status: :created
-  rescue ActiveRecord::RecordInvalid => e
-    render json: { errors: e.record.errors }, status: :unprocessable_entity
+  admin = nil
+  ActsAsTenant.with_tenant(account) do
+    admin = User.create!(
+      username: params[:username],
+      email: params[:email],
+      phone_number: params[:phone_number],
+      password: generated_password,
+      password_confirmation: generated_password,
+      role: 'super_administrator',
+      date_registered: Time.now.strftime('%Y-%m-%d %I:%M:%S %p')
+    )
   end
+
+  send_onboarding = params.key?(:onboarding) ? ActiveModel::Type::Boolean.new.cast(params[:onboarding]) : true
+
+  if send_onboarding
+    login_url = "https://#{account.subdomain}.owitech.co.ke"
+    AdminOnboardingMailer.admin_onboarding(admin, generated_password, login_url).deliver_now
+  end
+
+  render json: admin, status: :created
+rescue ActiveRecord::RecordInvalid => e
+  render json: { errors: e.record.errors }, status: :unprocessable_entity
+end
 
 
   

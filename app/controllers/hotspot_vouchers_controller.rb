@@ -4463,14 +4463,14 @@ broadcast_hotspot_payment(
 
 
 
-HotspotLoyaltyService.award_points(
-  account_id: session.account_id,
-  phone: session.phone_number,
-  name: data["FirstName"],
-  amount: data["TransAmount"],
-  package: session.hotspot_package,
-  reference: data["TransID"]
-)
+# HotspotLoyaltyService.award_points(
+#   account_id: session.account_id,
+#   phone: session.phone_number,
+#   name: data["FirstName"],
+#   amount: data["TransAmount"],
+#   package: session.hotspot_package,
+#   reference: data["TransID"]
+# )
 if nas_router
   client = nil
   begin

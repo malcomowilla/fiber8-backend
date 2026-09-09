@@ -17,6 +17,8 @@ class ReferralsController < ApplicationController
     }
   end
 
+  
+
   def my_referrals
     referrals = Account.where(referred_by_account_id: @account.id).order(created_at: :desc)
 
