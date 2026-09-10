@@ -1,4 +1,5 @@
 class ApplicationController < ActionController::Base
+  include IpAllowlistEnforceable
 
     # set_current_tenant_through_filter
 before_action :set_time_zone

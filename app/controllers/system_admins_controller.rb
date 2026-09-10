@@ -1,5 +1,11 @@
 class SystemAdminsController < ApplicationController
-  
+    skip_before_action :enforce_ip_allowlist, raise: false
+
+
+
+
+
+
   def index
     @system_admins = SystemAdmin.all
     render json: @system_admins

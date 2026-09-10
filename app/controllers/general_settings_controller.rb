@@ -1,4 +1,6 @@
 class GeneralSettingsController < ApplicationController
+    skip_before_action :enforce_ip_allowlist, only: [:create]
+
   before_action :set_general_setting, only: %i[ show edit update destroy ]
 
   set_current_tenant_through_filter
@@ -37,19 +39,7 @@ def set_tenant
     render json: @general_settings
   end
 
-  # GET /general_settings/1 or /general_settings/1.json
-  def show
-  end
-
-  # GET /general_settings/new
-  def new
-    @general_setting = GeneralSetting.new
-  end
-
-  # GET /general_settings/1/edit
-  def edit
-  end
-
+  
   # POST /general_settings or /general_settings.json
   def create
     
@@ -68,28 +58,7 @@ ActivtyLog.create(action: 'create', ip: request.remote_ip,
   end
 
   # PATCH/PUT /general_settings/1 or /general_settings/1.json
-  def update
-    respond_to do |format|
-      if @general_setting.update(general_setting_params)
-        format.html { redirect_to @general_setting, notice: "General setting was successfully updated." }
-        format.json { render :show, status: :ok, location: @general_setting }
-      else
-        format.html { render :edit, status: :unprocessable_entity }
-        format.json { render json: @general_setting.errors, status: :unprocessable_entity }
-      end
-    end
-  end
-
-  # DELETE /general_settings/1 or /general_settings/1.json
-  def destroy
-    @general_setting.destroy!
-
-    respond_to do |format|
-      format.html { redirect_to general_settings_path, status: :see_other, notice: "General setting was successfully destroyed." }
-      format.json { head :no_content }
-    end
-  end
-
+  
   private
     # Use callbacks to share common setup or constraints between actions.
     def set_general_setting
@@ -98,6 +67,7 @@ ActivtyLog.create(action: 'create', ip: request.remote_ip,
 
     # Only allow a list of trusted parameters through.
     def general_setting_params
-      params.require(:general_setting).permit(:title, :timezone, :allowed_ips, :account_id)
+      params.require(:general_setting).permit(:title, :timezone,
+       :allowed_ips, :account_id)
     end
 end
