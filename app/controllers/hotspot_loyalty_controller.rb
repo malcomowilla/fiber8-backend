@@ -19,7 +19,7 @@ class HotspotLoyaltyController < ApplicationController
   def index
     base = HotspotMpesaRevenue
              .joins(:hotspot_voucher)
-             .where(account_id: @account.id, status: 'Completed')
+             .where(status: 'Completed')
              .where.not(hotspot_vouchers: { phone: [nil, ''] })
 
     grouped = base

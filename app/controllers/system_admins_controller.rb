@@ -533,7 +533,7 @@ end
   send_onboarding = params.key?(:onboarding) ? ActiveModel::Type::Boolean.new.cast(params[:onboarding]) : true
 
   if send_onboarding
-    login_url = "https://#{account.subdomain}.owitech.co.ke"
+    login_url = "https://#{account.subdomain}.owitech.co.ke/signin"
     AdminOnboardingMailer.admin_onboarding(admin, generated_password, login_url).deliver_now
   end
 

@@ -1,5 +1,6 @@
 class HotspotLoyaltyService
-  def self.award_points(account_id:, phone:, amount:, name: nil, package: nil, reference: nil)
+  def self.award_points(account_id:, phone:, amount:, name: nil, 
+    package: nil, reference: nil)
     return unless phone.present? && amount.to_f > 0
 
     setting = HotspotLoyaltySetting.find_by(account_id: account_id)

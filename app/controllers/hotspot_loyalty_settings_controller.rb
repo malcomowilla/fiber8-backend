@@ -16,6 +16,8 @@ class HotspotLoyaltySettingsController < ApplicationController
     render json: serialize(setting)
   end
 
+  
+
   def update
     setting = HotspotLoyaltySetting.find_or_initialize_by(account_id: @account.id)
     setting.assign_attributes(loyalty_params)
