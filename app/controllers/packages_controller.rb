@@ -51,6 +51,37 @@ def update
   end
 end
 
+
+
+
+
+
+def sync
+  errors = @package.package_routers.filter_map do |pr|
+    MikrotikProfileSyncService.sync(@package, pr)
+    nil
+  rescue MikrotikProfileSyncService::SyncError => e
+    "#{pr.nas_router.name}: #{e.message}"
+  end
+
+  if errors.any?
+    render json: { error: errors.join('; ') }, status: :unprocessable_entity
+  else
+    payload = ActiveModelSerializers::SerializableResource.new(
+      @package.reload, serializer: PackageSerializer
+    ).as_json
+    render json: payload
+  end
+end
+
+def sync_all
+  @account.packages.find_each { |pkg| SyncPackageJob.perform_later(pkg.id) }
+  render json: { queued: @account.packages.count }
+end
+
+
+
+
   def destroy
     errors = @package.package_routers.filter_map do |pr|
       MikrotikProfileSyncService.delete(pr)
