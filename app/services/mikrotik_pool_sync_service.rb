@@ -13,22 +13,62 @@ class MikrotikPoolSyncService
     @ip_pool = ip_pool
   end
 
+
+
+  def self.delete(ip_pool)
+  new(ip_pool).delete
+end
+
+def delete
+  router = @ip_pool.nas_router
+  return unless router # nothing to clean up if no router was ever attached
+
+  client = RouterosApiClient.new(router.ip_address, router.username, router.password).connect
+
+  found = if @ip_pool.mikrotik_pool_id.present?
+    reply = client.talk(['/ip/pool/print', "?.id=#{@ip_pool.mikrotik_pool_id}"])
+    reply.find { |s| s.first == '!re' }
+  end
+
+  found ||= begin
+    reply = client.talk(['/ip/pool/print', "?name=#{@ip_pool.name}"])
+    reply.find { |s| s.first == '!re' }
+  end
+
+  return unless found # already gone on the router; nothing to do
+
+  pool_id = extract_word(found, '.id')
+  client.talk(['/ip/pool/remove', "=.id=#{pool_id}"])
+rescue RouterosApiClient::ApiError => e
+  raise SyncError, e.message
+ensure
+  client&.close
+end
+
   def sync
-    router = @ip_pool.nas_router
-    client = RouterosApiClient.new(router.ip_address, router.username, router.password).connect
+  router = @ip_pool.nas_router
+  client = RouterosApiClient.new(router.ip_address, router.username, router.password).connect
 
-    ranges = "#{@ip_pool.ip_range_start}-#{@ip_pool.ip_range_end}"
-    existing = client.talk(['/ip/pool/print', "?name=#{@ip_pool.name}"])
-    found = existing.find { |sentence| sentence.first == '!re' }
+  ranges = "#{@ip_pool.ip_range_start}-#{@ip_pool.ip_range_end}"
 
-    if found
-      pool_id = extract_word(found, '.id')
-      client.talk(['/ip/pool/set', "=.id=#{pool_id}", "=ranges=#{ranges}"])
-    else
-      client.talk(['/ip/pool/add', "=name=#{@ip_pool.name}", "=ranges=#{ranges}"])
-      reply = client.talk(['/ip/pool/print', "?name=#{@ip_pool.name}"])
-      pool_id = extract_word(reply.find { |s| s.first == '!re' }, '.id')
-    end
+  found = if @ip_pool.mikrotik_pool_id.present?
+    reply = client.talk(['/ip/pool/print', "?.id=#{@ip_pool.mikrotik_pool_id}"])
+    reply.find { |s| s.first == '!re' }
+  end
+
+  found ||= begin
+    reply = client.talk(['/ip/pool/print', "?name=#{@ip_pool.name}"])
+    reply.find { |s| s.first == '!re' }
+  end
+
+  if found
+    pool_id = extract_word(found, '.id')
+    client.talk(['/ip/pool/set', "=.id=#{pool_id}", "=name=#{@ip_pool.name}", "=ranges=#{ranges}"])
+  else
+    client.talk(['/ip/pool/add', "=name=#{@ip_pool.name}", "=ranges=#{ranges}"])
+    reply = client.talk(['/ip/pool/print', "?name=#{@ip_pool.name}"])
+    pool_id = extract_word(reply.find { |s| s.first == '!re' }, '.id')
+  end
 
     used_reply = client.talk(['/ip/pool/used/print', "?pool=#{@ip_pool.name}"])
     used_count = used_reply.count { |s| s.first == '!re' }

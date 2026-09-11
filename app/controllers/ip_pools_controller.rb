@@ -47,14 +47,26 @@ class IpPoolsController < ApplicationController
     end
   end
 
-  def destroy
-    @ip_pool.destroy
-    ActivtyLog.create(action: 'delete', ip: request.remote_ip,
-      description: "Deleted IP pool #{@ip_pool.name}",
-      user_agent: request.user_agent, user: current_user.username || current_user.email,
-      date: Time.current)
-    head :no_content
+  
+
+
+def destroy
+  begin
+    MikrotikPoolSyncService.delete(@ip_pool)
+  rescue MikrotikPoolSyncService::SyncError => e
+    render json: { error: "Could not remove pool from router: #{e.message}" }, status: :unprocessable_entity
+    return
   end
+
+  @ip_pool.destroy
+  ActivtyLog.create(action: 'delete', ip: request.remote_ip,
+    description: "Deleted IP pool #{@ip_pool.name}",
+    user_agent: request.user_agent, user: current_user.username || current_user.email,
+    date: Time.current)
+  head :no_content
+end
+
+
 
   def sync
     MikrotikPoolSyncService.sync(@ip_pool)
