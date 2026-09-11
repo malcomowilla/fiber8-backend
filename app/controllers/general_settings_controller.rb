@@ -66,8 +66,18 @@ ActivtyLog.create(action: 'create', ip: request.remote_ip,
     end
 
     # Only allow a list of trusted parameters through.
-    def general_setting_params
-      params.require(:general_setting).permit(:title, :timezone,
-       :allowed_ips, :account_id)
-    end
+    # def general_setting_params
+    #   params.require(:general_setting).permit(:title, :timezone,
+    #    :allowed_ips, :account_id)
+    # end
+
+def general_setting_params
+  permitted = params.require(:general_setting).permit(:title, :timezone, :allowed_ips, :account_id)
+  if permitted[:allowed_ips].is_a?(String)
+    permitted[:allowed_ips] = permitted[:allowed_ips].split(',').map(&:strip).reject(&:empty?)
+  end
+  permitted
+end
+
+
 end
