@@ -57,6 +57,7 @@ end
     # before_action :authorized
     # before_action :current_user
     include ActionController::Cookies
+  include IpAllowlistEnforceable
 
     # protect_from_forgery with: :exception
    
