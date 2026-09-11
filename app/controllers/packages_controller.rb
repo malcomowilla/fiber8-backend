@@ -12,40 +12,44 @@ class PackagesController < ApplicationController
   end
 
   def create
-    @package = @account.packages.new(package_params.except(:package_routers_attributes))
-    @package.package_routers.build(router_attrs)
+  @package = @account.packages.new(package_params.except(:package_routers_attributes))
+  @package.package_routers.build(router_attrs)
 
-    if @package.save
-      sync_results = sync_all_routers if truthy?(params[:sync_immediately])
+  if @package.save
+    sync_results = sync_all_routers if truthy?(params[:sync_immediately])
 
-      ActivtyLog.create(action: 'create', ip: request.remote_ip,
-        description: "Created package #{@package.name}",
-        user_agent: request.user_agent, user: current_user.username || current_user.email,
-        date: Time.current)
+    ActivtyLog.create(action: 'create', ip: request.remote_ip,
+      description: "Created package #{@package.name}",
+      user_agent: request.user_agent, user: current_user.username || current_user.email,
+      date: Time.current)
 
-      render json: @package.reload.as_json.merge(sync_errors: sync_results&.compact),
-             serializer: PackageSerializer, status: :created
-    else
-      render json: { errors: @package.errors.full_messages }, status: :unprocessable_entity
-    end
+    payload = ActiveModelSerializers::SerializableResource.new(
+      @package.reload, serializer: PackageSerializer
+    ).as_json
+    render json: payload.merge(sync_errors: sync_results&.compact), status: :created
+  else
+    render json: { errors: @package.errors.full_messages }, status: :unprocessable_entity
   end
+end
 
-  def update
-    if @package.update(package_params.except(:package_routers_attributes))
-      sync_router_assignments!(router_attrs) if params[:package][:routers].present?
-      sync_results = sync_all_routers if truthy?(params[:sync_immediately])
+def update
+  if @package.update(package_params.except(:package_routers_attributes))
+    sync_router_assignments!(router_attrs) if params[:package][:routers].present?
+    sync_results = sync_all_routers if truthy?(params[:sync_immediately])
 
-      ActivtyLog.create(action: 'update', ip: request.remote_ip,
-        description: "Updated package #{@package.name}",
-        user_agent: request.user_agent, user: current_user.username || current_user.email,
-        date: Time.current)
+    ActivtyLog.create(action: 'update', ip: request.remote_ip,
+      description: "Updated package #{@package.name}",
+      user_agent: request.user_agent, user: current_user.username || current_user.email,
+      date: Time.current)
 
-      render json: @package.reload.as_json.merge(sync_errors: sync_results&.compact),
-             serializer: PackageSerializer
-    else
-      render json: { errors: @package.errors.full_messages }, status: :unprocessable_entity
-    end
+    payload = ActiveModelSerializers::SerializableResource.new(
+      @package.reload, serializer: PackageSerializer
+    ).as_json
+    render json: payload.merge(sync_errors: sync_results&.compact)
+  else
+    render json: { errors: @package.errors.full_messages }, status: :unprocessable_entity
   end
+end
 
   def destroy
     errors = @package.package_routers.filter_map do |pr|
@@ -118,6 +122,7 @@ class PackagesController < ApplicationController
       :aggregation, :daily_charge
     )
   end
+
 
   def not_found_response
     render json: { error: 'Package not found' }, status: :not_found
