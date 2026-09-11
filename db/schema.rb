@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_09_11_113837) do
+ActiveRecord::Schema[7.2].define(version: 2026_09_11_142617) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -1152,6 +1152,23 @@ ActiveRecord::Schema[7.2].define(version: 2026_09_11_113837) do
     t.integer "validity"
   end
 
+  create_table "package_routers", force: :cascade do |t|
+    t.bigint "package_id", null: false
+    t.bigint "nas_router_id", null: false
+    t.bigint "ip_pool_id", null: false
+    t.string "mikrotik_ppp_profile_id"
+    t.boolean "synced", default: false
+    t.boolean "is_default", default: false
+    t.datetime "last_synced_at"
+    t.string "sync_error"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["ip_pool_id"], name: "index_package_routers_on_ip_pool_id"
+    t.index ["nas_router_id"], name: "index_package_routers_on_nas_router_id"
+    t.index ["package_id", "nas_router_id"], name: "index_package_routers_on_package_id_and_nas_router_id", unique: true
+    t.index ["package_id"], name: "index_package_routers_on_package_id"
+  end
+
   create_table "packages", force: :cascade do |t|
     t.string "name"
     t.integer "price"
@@ -1185,8 +1202,14 @@ ActiveRecord::Schema[7.2].define(version: 2026_09_11_113837) do
     t.string "subscription"
     t.boolean "fup_enabled", default: false
     t.string "fup_data_unit"
-    t.string "fup_data_limit"
+    t.integer "fup_data_limit"
     t.string "nas_router"
+    t.string "plan_type", default: "standard", null: false
+    t.string "router_profile_name"
+    t.boolean "public", default: true
+    t.bigint "fup_throttle_plan_id"
+    t.boolean "synced", default: false
+    t.datetime "last_synced_at"
   end
 
   create_table "partners", force: :cascade do |t|
@@ -2062,6 +2085,9 @@ ActiveRecord::Schema[7.2].define(version: 2026_09_11_113837) do
   add_foreign_key "maintenance_settings", "accounts"
   add_foreign_key "network_devices", "accounts"
   add_foreign_key "network_devices", "pops"
+  add_foreign_key "package_routers", "ip_pools"
+  add_foreign_key "package_routers", "nas_routers"
+  add_foreign_key "package_routers", "packages"
   add_foreign_key "payment_gateway_otps", "accounts"
   add_foreign_key "payment_gateway_otps", "users"
   add_foreign_key "payment_gateway_pin_settings", "accounts"
