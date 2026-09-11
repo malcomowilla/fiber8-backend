@@ -56,7 +56,6 @@ Rails.application.routes.draw do
   resources :hotspot_templates
   resources :admin_settings
  
-  resources :ip_pools
   resources :subscriber_settings
   resources :support_tickets
   resources :sms_settings
@@ -139,7 +138,6 @@ resources :network_connections, only: %i[create update destroy]
 
 
 
-  resources :ip_pools
   resources :user_groups
   resources :ip_networks
   resources :subscriptions
@@ -251,7 +249,14 @@ resource :tuma_settings, only: [:show, :update]
 resources :hotspot_sms_templates, only: [:index, :update]
 
 
+get    '/api/ip_pools',                    to: 'ip_pools#index'
+post   '/api/ip_pools',                    to: 'ip_pools#create'
+patch  '/api/ip_pools/:id',                to: 'ip_pools#update'
+delete '/api/ip_pools/:id',                to: 'ip_pools#destroy'
 
+post   '/api/ip_pools/sync_all',           to: 'ip_pools#sync_all'
+get    '/api/ip_pools/suggest_range',      to: 'ip_pools#suggest_range'
+post   '/api/ip_pools/:id/sync',           to: 'ip_pools#sync'
 get  '/api/referrals/current_invoice', to: 'referrals#current_invoice'
 post '/api/referrals/apply_credit',    to: 'referrals#apply_credit'
  get   '/api/hotspot_loyalty_setting', to: 'hotspot_loyalty_settings#show'
@@ -628,8 +633,6 @@ post '/disburse_funds_results', to: 'disburse_payment#disburse_funds_results'
 
 post '/api/disburse_funds', to: 'disburse_payment#disburse_funds'
 
-post '/api/find_template_for_ip', to: 'ip_pools#find_template_for_ip'
-get '/api/allow_get_ip_pools', to: 'ip_pools#allow_get_ip_pools'
 get '/api/allow_get_hotspot_customization', to: 'hotspot_customizations#allow_get_hotspot_customization'
 get '/allow_get_hotspot_customization', to: 'hotspot_customizations#allow_get_hotspot_customization'
 

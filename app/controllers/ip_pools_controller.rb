@@ -1,305 +1,106 @@
 class IpPoolsController < ApplicationController
-
+  rescue_from ActiveRecord::RecordNotFound, with: :pool_not_found_response
   load_and_authorize_resource
 
   set_current_tenant_through_filter
-
   before_action :set_tenant
-  before_action :set_time_zone
-
-
-
-
-def set_time_zone
-  Rails.logger.info "Setting time zone"
-  Time.zone = GeneralSetting.first&.timezone || Rails.application.config.time_zone
-    Rails.logger.info "Setting time zone #{Time.zone}"
-
-end
-
-
-
-  def set_tenant
-    host = request.headers['X-Subdomain']
-    @account = Account.find_by(subdomain: host)
-     ActsAsTenant.current_tenant = @account
-    EmailConfiguration.configure(@account, ENV['SYSTEM_ADMIN_EMAIL'])
-    # EmailSystemAdmin.configure(@current_account, current_system_admin)
-  Rails.logger.info "Setting tenant for app#{ActsAsTenant.current_tenant}"
-  rescue ActiveRecord::RecordNotFound
-    render json: { error: 'Invalid tenant' }, status: :not_found
-  
-  end
-
-
-
-
-  def find_template_for_ip
-    ip_pool = IpPool.find_by(start_ip: params[:start_ip])
-    render json: ip_pool, status: :ok
-  end
-
-
-  def create
-
-      @ip_pool = IpPool.new(
-        ip_pool_params
-      )
-
-      ip_pool_id_mikrotik = fetch_ip_pool
-      if ip_pool_id_mikrotik && @ip_pool.save
-        @ip_pool.update(ip_pool_id_mikrotik: ip_pool_id_mikrotik)
-        render json: @ip_pool, status: :created
-  
-      else
-        render json: { error: "Failed to create ip pool" }, status: :unprocessable_entity
-    end
-    
-   
-end
-
-
-
-
+  before_action :update_last_activity
 
   def index
-   
-    @current_account = ActsAsTenant.current_tenant 
-    ActsAsTenant.with_tenant(@current_account) do
-      @ip_pools = IpPool.all
-      render json: @ip_pools, status: :ok
+    @ip_pools = IpPool.includes(:nas_router).all
+    render json: @ip_pools
+  end
+
+  def create
+    @ip_pool = IpPool.new(ip_pool_params)
+    @ip_pool.account = @account
+
+    if @ip_pool.save
+      ActivtyLog.create(action: 'create', ip: request.remote_ip,
+        description: "Created IP pool #{@ip_pool.name}",
+        user_agent: request.user_agent, user: current_user.username || current_user.email,
+        date: Time.current)
+
+      if ActiveModel::Type::Boolean.new.cast(params[:sync_immediately])
+        begin
+          MikrotikPoolSyncService.sync(@ip_pool)
+        rescue MikrotikPoolSyncService::SyncError => e
+          render json: @ip_pool.reload.as_json.merge(sync_error: e.message), status: :created and return
+        end
+      end
+
+      render json: @ip_pool.reload, status: :created
+    else
+      render json: { errors: @ip_pool.errors.full_messages }, status: :unprocessable_entity
     end
   end
-
-
-
-  def allow_get_ip_pools
-
-@ip_pools = IpPool.all
-render json: @ip_pools, status: :ok
-
-  end
-
 
   def update
-    host = request.headers['X-Subdomain'] 
-
-
-    @ip_pool = IpPool.find_by(id: params[:id])
-
-
-
-    if host === 'demo'
-      if @ip_pool
-        @ip_pool.update(start_ip: params[:start_ip], end_ip: params[:end_ip],
-        pool_name: params[:pool_name], description: params[:description],
-        location: params[:location], nas_router: params[:nas_router])
-      render json: @ip_pool, status: :ok
-      else
-        
-        render json: { error: "Ip pool not found" }, status: :not_found
-      end
+    if @ip_pool.update(ip_pool_params)
+      ActivtyLog.create(action: 'update', ip: request.remote_ip,
+        description: "Updated IP pool #{@ip_pool.name}",
+        user_agent: request.user_agent, user: current_user.username || current_user.email,
+        date: Time.current)
+      render json: @ip_pool
     else
-
-      router_name = params[:nas_router]
-      nas_router = NasRouter.find_by(name: router_name)
-        router_ip_address = nas_router.ip_address
-        router_password = nas_router.password
-        router_username = nas_router.username
-      
-  
-      return render json: { error: "router not found" }, status: :not_found unless nas_router
-  
-      ip_pool_id_mikrotik = @ip_pool.ip_pool_id_mikrotik
-  
-  
-        unless ip_pool_id_mikrotik.present?
-          return render json: { error: "ip pool id missing in package" }, status: :unprocessable_entity
-        end
-  
-  
-      request_body = {
-      
-          "name" => params[:pool_name],
-          "ranges" => params[:start_ip] + "-" + params[:end_ip],
-          "next-pool" => "none",
-          "comment" => params[:description]
-      }  
-  
-  
-  
-      if @ip_pool
-      
-  
-        begin
-          uri = URI("http://#{router_ip_address}/rest/ip/pool/#{ip_pool_id_mikrotik}") 
-          req = Net::HTTP::Patch.new(uri)
-             
-  
-              req.basic_auth router_username, router_password
-             
-              req['Content-Type'] = 'application/json'
-  
-    req.body = request_body.to_json
-  
-    response = Net::HTTP.start(uri.hostname, uri.port){|http| http.request(req)}
-  
-  
-  if response.is_a?(Net::HTTPSuccess) 
-    @ip_pool.update(start_ip: params[:start_ip], end_ip: params[:end_ip],
-    pool_name: params[:pool_name], description: params[:description],
-    location: params[:location], nas_router: params[:nas_router])
-  render json: @ip_pool, status: :ok
-  else
-    puts "Failed to update ip pool : #{response.code} - #{response.message}"
-  
-    render json: { error: "Failed to update package" }, status: :unprocessable_entity
-  
-  end
-  
-  
-  rescue Net::OpenTimeout, Net::ReadTimeout
-  render json: { error: "Request timed out while connecting to the router. Please check if the router is online." }, status: :gateway_timeout
-  rescue Errno::ECONNREFUSED
-  render json: { error: "Failed to connect to the router at #{router_ip_address}. Connection refused." }, status: :bad_gateway
-  rescue StandardError => e
-  render json: { error: "An unexpected error occurred: #{e.message}" }, status: :internal_server_error
-  
-  end
-  
-      else
-        render json: { error: "Ip pool not found" }, status: :not_found
-      end
-      
+      render json: { errors: @ip_pool.errors.full_messages }, status: :unprocessable_entity
     end
-   
-
   end
-
-
 
   def destroy
-    @ip_pool = IpPool.find_by(id: params[:id])
-
-
-
-    router_name = params[:nas_router]
-    nas_router = NasRouter.find_by(name: router_name)
-      router_ip_address = nas_router.ip_address
-      router_password = nas_router.password
-      router_username = nas_router.username
-    
-
-    return render json: { error: "router not found" }, status: :not_found unless nas_router
-
-    ip_pool_id_mikrotik = @ip_pool.ip_pool_id_mikrotik
-
-
-      unless ip_pool_id_mikrotik.present?
-        return render json: { error: "ip pool id missing in package" }, status: :unprocessable_entity
-      end
-
-
-
-
-      begin
-        uri = URI("http://#{router_ip_address}/rest/ip/pool/#{ip_pool_id_mikrotik}")
-    
-        request = Net::HTTP::Delete.new(uri)
-    
-        request.basic_auth(router_username, router_password)
-    
-        response = Net::HTTP.start(uri.hostname, uri.port, open_timeout: 10, read_timeout: 10) { |http| http.request(request) }
-    
-        if response.is_a?(Net::HTTPSuccess) 
-          @ip_pool.destroy
-          head :no_content
-        else
-          error_message = "Failed to delete ip pool- #{response.code} #{response.message}"
-          render json: { error: error_message }, status: :unprocessable_entity
-        end
-    
-      rescue Net::OpenTimeout, Net::ReadTimeout
-        render json: { error: "Request timed out while connecting to the router. Please check if the router is online." }, status: :gateway_timeout
-      rescue Errno::ECONNREFUSED
-        render json: { error: "Failed to connect to the router at #{router_ip_address}. Connection refused." }, status: :bad_gateway
-      rescue StandardError => e
-        render json: { error: "An unexpected error occurred: #{e.message}" }, status: :internal_server_error
-      
-      end
-
-      
+    @ip_pool.destroy
+    ActivtyLog.create(action: 'delete', ip: request.remote_ip,
+      description: "Deleted IP pool #{@ip_pool.name}",
+      user_agent: request.user_agent, user: current_user.username || current_user.email,
+      date: Time.current)
+    head :no_content
   end
 
+  def sync
+    MikrotikPoolSyncService.sync(@ip_pool)
+    render json: @ip_pool.reload
+  rescue MikrotikPoolSyncService::SyncError => e
+    render json: { error: e.message }, status: :unprocessable_entity
+  end
+
+  def sync_all
+    @account.ip_pools.find_each { |pool| SyncIpPoolJob.perform_later(pool.id) }
+    render json: { queued: @account.ip_pools.count }
+  end
+
+  def suggest_range
+    render json: MikrotikPoolSyncService.suggest_range(@account)
+  rescue MikrotikPoolSyncService::SyncError => e
+    render json: { error: e.message }, status: :unprocessable_entity
+  end
 
   private
 
-
-  def ip_pool_params
-    params.permit(:pool_name, :start_ip, :end_ip, :description, :location, :nas_router)
+  def set_tenant
+    host = request.headers['X-Subdomain']
+    @account = Account.find_by!(subdomain: host)
+    ActsAsTenant.current_tenant = @account
+  rescue ActiveRecord::RecordNotFound
+    render json: { error: 'Invalid tenant' }, status: :not_found
   end
 
+  def update_last_activity
+    current_user&.update!(last_activity_active: Time.current)
+  end
 
+  def find_ip_pool
+    @ip_pool = IpPool.find(params[:id])
+  end
 
+  def ip_pool_params
+    params.require(:ip_pool).permit(
+      :name, :nas_router_id, :ip_range_start, :ip_range_end,
+      :subnet_mask, :gateway, :primary_dns, :secondary_dns,
+      :description, :status
+    )
+  end
 
-
-
-def fetch_ip_pool
-  router_name = params[:nas_router]
-        
-  nas_router = NasRouter.find_by(name: router_name)
-if nas_router
-  router_ip_address = nas_router.ip_address
-    router_password = nas_router.password
-   router_username = nas_router.username
-
-else
-
-  # puts 'router not found'
-
-  render json: { error: "Router not found" }, status: :not_found
-end
-
-pool_name = params[:pool_name]
-
-start_ip = params[:start_ip]
-end_ip = params[:end_ip]
-
-
-request_body2 = {
-    
-"name" => params[:pool_name],
-"ranges" => start_ip + "-" + end_ip,
-"next-pool" => "none",
-
-}
-
-uri = URI("http://#{router_ip_address}/rest/ip/pool/add")
-request = Net::HTTP::Post.new(uri)
-
-request.basic_auth router_username, router_password
-request.body = request_body2.to_json
-request['Content-Type'] = 'application/json'
-
-response = Net::HTTP.start(uri.hostname, uri.port) do |http|
-  http.request(request)
-end
-if response.is_a?(Net::HTTPSuccess)
-  data = JSON.parse(response.body)
-  return data['ret']
-else
-puts "Failed to post ip pool: #{response.code} - #{response.message}"
-end 
-
-
-
-end
-
-
- # "name": "any",
-  # "next-pool": "any",
-  # "ranges": "any",
-  # {{baseUrl}}/ip/pool/remove
-  # {{baseUrl}}/ip/pool/add
-
+  def pool_not_found_response
+    render json: { error: 'IP Pool Not Found' }, status: :not_found
+  end
 end

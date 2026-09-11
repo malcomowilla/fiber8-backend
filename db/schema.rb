@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_09_09_201247) do
+ActiveRecord::Schema[7.2].define(version: 2026_09_11_113837) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -899,17 +899,26 @@ ActiveRecord::Schema[7.2].define(version: 2026_09_09_201247) do
   end
 
   create_table "ip_pools", force: :cascade do |t|
-    t.string "ip_range"
-    t.string "pool_name"
+    t.string "name", null: false
+    t.bigint "nas_router_id", null: false
+    t.bigint "account_id", null: false
+    t.string "ip_range_start", null: false
+    t.string "ip_range_end", null: false
+    t.string "subnet_mask"
+    t.string "gateway"
+    t.string "primary_dns"
+    t.string "secondary_dns"
+    t.text "description"
+    t.string "status", default: "active", null: false
+    t.boolean "synced", default: false, null: false
+    t.datetime "last_synced_at"
+    t.string "mikrotik_pool_id"
+    t.integer "used_ips", default: 0, null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.string "start_ip"
-    t.string "end_ip"
-    t.integer "account_id"
-    t.string "description"
-    t.string "ip_pool_id_mikrotik"
-    t.string "location"
-    t.string "nas_router"
+    t.index ["account_id", "name"], name: "index_ip_pools_on_account_id_and_name", unique: true
+    t.index ["account_id"], name: "index_ip_pools_on_account_id"
+    t.index ["nas_router_id"], name: "index_ip_pools_on_nas_router_id"
   end
 
   create_table "isp_subscriptions", force: :cascade do |t|
@@ -2048,6 +2057,8 @@ ActiveRecord::Schema[7.2].define(version: 2026_09_09_201247) do
   add_foreign_key "invoice_payments", "accounts"
   add_foreign_key "invoice_payments", "invoices"
   add_foreign_key "ip_bindings", "tv_plans"
+  add_foreign_key "ip_pools", "accounts"
+  add_foreign_key "ip_pools", "nas_routers"
   add_foreign_key "maintenance_settings", "accounts"
   add_foreign_key "network_devices", "accounts"
   add_foreign_key "network_devices", "pops"
