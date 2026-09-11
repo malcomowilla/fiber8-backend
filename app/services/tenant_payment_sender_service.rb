@@ -14,7 +14,6 @@
 #       date: Time.now.strftime("%B %d, %Y at %I:%M %p"),
 #       system_user: current_user&.username || current_user&.email || 'system',
 #       sms_provider: PLATFORM_PROVIDER, account_id: account_id,
-#     )
 #     result
 #   end
 # end
