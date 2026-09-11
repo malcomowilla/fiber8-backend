@@ -58,20 +58,39 @@ module IpAllowlistEnforceable
 
   private
 
-  def enforce_ip_allowlist
-    account = current_tenant_account
-    return unless account
+  # def enforce_ip_allowlist
+  #   account = current_tenant_account
+  #   return unless account
 
-    setting = GeneralSetting.find_by(account_id: account.id)
-    return if setting.blank? || setting.allowed_ips.blank?
+  #   setting = GeneralSetting.find_by(account_id: account.id)
+  #   return if setting.blank? || setting.allowed_ips.blank?
 
-    allowed_entries = Array(setting.allowed_ips).map(&:to_s).map(&:strip).reject(&:empty?)
-    return if allowed_entries.empty?
+  #   allowed_entries = Array(setting.allowed_ips).map(&:to_s).map(&:strip).reject(&:empty?)
+  #   return if allowed_entries.empty?
 
-    unless allowed_entries.any? { |entry| ip_in_range?(request.remote_ip, entry) }
-      render json: { error: 'Access denied: your IP address is not permitted' }, status: :forbidden
-    end
+  #   unless allowed_entries.any? { |entry| ip_in_range?(request.remote_ip, entry) }
+  #     render json: { error: 'Access denied: your IP address is not permitted' }, status: :forbidden
+  #   end
+  # end
+
+
+
+def enforce_ip_allowlist
+  account = current_tenant_account
+  return unless account
+
+  setting = GeneralSetting.find_by(account_id: account.id)
+  return if setting.blank? || setting.allowed_ips.blank?
+
+  blocked_entries = Array(setting.allowed_ips).map(&:to_s).map(&:strip).reject(&:empty?)
+  return if blocked_entries.empty?
+
+  if blocked_entries.any? { |entry| ip_in_range?(request.remote_ip, entry) }
+    render json: { error: 'Access denied: your IP address has been blocked' }, status: :forbidden
   end
+end
+
+
 
   # Resolves the tenant directly from the request, independent of whatever
   # @account-setting before_action each controller happens to define.
