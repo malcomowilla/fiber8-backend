@@ -887,7 +887,6 @@ elsif bill_ref.start_with?("smswallet_")
     head :ok and return
   end
 
-  # Idempotency guard — M-Pesa retries confirmation callbacks that don't
   # get acked fast enough, which would otherwise double-credit the wallet.
   if txn.status == 'completed'
     Rails.logger.info "check_payment_status: sms wallet txn #{txn.id} already completed, ignoring duplicate callback"

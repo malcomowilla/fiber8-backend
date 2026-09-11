@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_09_11_142617) do
+ActiveRecord::Schema[7.2].define(version: 2026_09_11_153419) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -1210,6 +1210,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_09_11_142617) do
     t.bigint "fup_throttle_plan_id"
     t.boolean "synced", default: false
     t.datetime "last_synced_at"
+    t.string "description"
   end
 
   create_table "partners", force: :cascade do |t|
