@@ -1,24 +1,26 @@
 class MikrotikProfileSyncService
   class SyncError < StandardError; end
 
-  def self.sync(package, package_router)
-    new(package, package_router).sync
+  def self.sync(package)
+    new(package).sync
   end
 
-  def self.delete(package_router)
-    new(package_router.package, package_router).delete
+  def self.delete(package)
+    new(package).delete
   end
 
-  def initialize(package, package_router)
+  def initialize(package)
     @package = package
-    @pr = package_router
   end
 
   def sync
-    router = @pr.nas_router
-    pool   = @pr.ip_pool
-    client = connect(router)
+    nas = NasRouter.find_by(name: @package.nas_router, account_id: @package.account_id)
+    raise SyncError, 'No router specified or router not found' unless nas
 
+    pool = IpPool.find_by(name: @package.ip_pool, account_id: @package.account_id)
+    raise SyncError, 'No IP pool specified or pool not found' unless pool
+
+    client = connect(nas)
     name = @package.effective_profile_name
     body = profile_attrs(name, pool)
 
@@ -33,25 +35,26 @@ class MikrotikProfileSyncService
       profile_id = extract_word(reply.find { |s| s.first == '!re' }, '.id')
     end
 
-    @pr.update!(
-      mikrotik_ppp_profile_id: profile_id,
+    @package.update!(
+      mikrotik_id: profile_id,
       synced: true,
       sync_error: nil,
       last_synced_at: Time.current
     )
   rescue RouterosApiClient::ApiError => e
-    @pr.update!(synced: false, sync_error: e.message)
+    @package.update!(synced: false, sync_error: e.message)
     raise SyncError, e.message
   ensure
     client&.close
   end
 
   def delete
-    router = @pr.nas_router
-    client = connect(router)
+    nas = NasRouter.find_by(name: @package.nas_router, account_id: @package.account_id)
+    return unless nas # no router on file — nothing to clean up on a router
 
+    client = connect(nas)
     found = find_by_id(client) || find_by_name(client, @package.effective_profile_name)
-    return unless found # already gone — nothing to clean up
+    return unless found # already gone on the router
 
     profile_id = extract_word(found, '.id')
     client.talk(['/ppp/profile/remove', "=.id=#{profile_id}"])
@@ -63,13 +66,13 @@ class MikrotikProfileSyncService
 
   private
 
-  def connect(router)
-    RouterosApiClient.new(router.ip_address, router.username, router.password).connect
+  def connect(nas)
+    RouterosApiClient.new(nas.ip_address, nas.username, nas.password).connect
   end
 
   def find_by_id(client)
-    return nil if @pr.mikrotik_ppp_profile_id.blank?
-    reply = client.talk(['/ppp/profile/print', "?.id=#{@pr.mikrotik_ppp_profile_id}"])
+    return nil if @package.mikrotik_id.blank?
+    reply = client.talk(['/ppp/profile/print', "?.id=#{@package.mikrotik_id}"])
     reply.find { |s| s.first == '!re' }
   end
 
@@ -85,17 +88,15 @@ class MikrotikProfileSyncService
   # are silently swapped for every customer on the profile.
   def profile_attrs(name, pool)
     rate = "#{@package.upload_limit}M/#{@package.download_limit}M"
-    session_timeout = validity_string
 
-    attrs = [
+    [
       "=name=#{name}",
       "=local-address=#{pool.gateway}",
       "=remote-address=#{pool.name}", # references the pool object on the router
       "=rate-limit=#{rate_with_burst(rate)}",
-      "=session-timeout=#{session_timeout}",
+      "=session-timeout=#{validity_string}",
       "=only-one=yes"
     ]
-    attrs
   end
 
   def rate_with_burst(base_rate)

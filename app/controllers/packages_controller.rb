@@ -7,91 +7,58 @@ class PackagesController < ApplicationController
   before_action :update_last_activity
 
   def index
-    render json: Package.includes(package_routers: [:nas_router, :ip_pool]).all,
-           each_serializer: PackageSerializer
+    render json: Package.all, each_serializer: PackageSerializer
   end
 
   def create
-  @package = @account.packages.new(package_params.except(:package_routers_attributes))
-  @package.package_routers.build(router_attrs)
+    @package = @account.packages.new(package_params)
 
-  if @package.save
-    sync_results = sync_all_routers if truthy?(params[:sync_immediately])
+    if @package.save
+      sync_error = sync_package if truthy?(params[:sync_immediately])
 
-    ActivtyLog.create(action: 'create', ip: request.remote_ip,
-      description: "Created package #{@package.name}",
-      user_agent: request.user_agent, user: current_user.username || current_user.email,
-      date: Time.current)
+      ActivtyLog.create(action: 'create', ip: request.remote_ip,
+        description: "Created package #{@package.name}",
+        user_agent: request.user_agent, user: current_user.username || current_user.email,
+        date: Time.current)
 
-    payload = ActiveModelSerializers::SerializableResource.new(
-      @package.reload, serializer: PackageSerializer
-    ).as_json
-    render json: payload.merge(sync_errors: sync_results&.compact), status: :created
-  else
-    render json: { errors: @package.errors.full_messages }, status: :unprocessable_entity
+      render json: serialize(@package).merge(sync_error: sync_error), status: :created
+    else
+      render json: { errors: @package.errors.full_messages }, status: :unprocessable_entity
+    end
   end
-end
 
-def update
-  if @package.update(package_params.except(:package_routers_attributes))
-    sync_router_assignments!(router_attrs) if params[:package][:routers].present?
-    sync_results = sync_all_routers if truthy?(params[:sync_immediately])
+  def update
+    if @package.update(package_params)
+      sync_error = sync_package if truthy?(params[:sync_immediately])
 
-    ActivtyLog.create(action: 'update', ip: request.remote_ip,
-      description: "Updated package #{@package.name}",
-      user_agent: request.user_agent, user: current_user.username || current_user.email,
-      date: Time.current)
+      ActivtyLog.create(action: 'update', ip: request.remote_ip,
+        description: "Updated package #{@package.name}",
+        user_agent: request.user_agent, user: current_user.username || current_user.email,
+        date: Time.current)
 
-    payload = ActiveModelSerializers::SerializableResource.new(
-      @package.reload, serializer: PackageSerializer
-    ).as_json
-    render json: payload.merge(sync_errors: sync_results&.compact)
-  else
-    render json: { errors: @package.errors.full_messages }, status: :unprocessable_entity
+      render json: serialize(@package).merge(sync_error: sync_error)
+    else
+      render json: { errors: @package.errors.full_messages }, status: :unprocessable_entity
+    end
   end
-end
 
-
-
-
-
-
-def sync
-  errors = @package.package_routers.filter_map do |pr|
-    MikrotikProfileSyncService.sync(@package, pr)
-    nil
+  def sync
+    MikrotikProfileSyncService.sync(@package)
+    render json: serialize(@package.reload)
   rescue MikrotikProfileSyncService::SyncError => e
-    "#{pr.nas_router.name}: #{e.message}"
+    render json: { error: e.message }, status: :unprocessable_entity
   end
 
-  if errors.any?
-    render json: { error: errors.join('; ') }, status: :unprocessable_entity
-  else
-    payload = ActiveModelSerializers::SerializableResource.new(
-      @package.reload, serializer: PackageSerializer
-    ).as_json
-    render json: payload
+  def sync_all
+    @account.packages.find_each { |pkg| SyncPackageJob.perform_later(pkg.id) }
+    render json: { queued: @account.packages.count }
   end
-end
-
-def sync_all
-  @account.packages.find_each { |pkg| SyncPackageJob.perform_later(pkg.id) }
-  render json: { queued: @account.packages.count }
-end
-
-
-
 
   def destroy
-    errors = @package.package_routers.filter_map do |pr|
-      MikrotikProfileSyncService.delete(pr)
-      nil
+    begin
+      MikrotikProfileSyncService.delete(@package)
     rescue MikrotikProfileSyncService::SyncError => e
-      "#{pr.nas_router.name}: #{e.message}"
-    end
-
-    if errors.any?
-      render json: { error: "Could not remove profile from router(s): #{errors.join('; ')}" },
+      render json: { error: "Could not remove profile from router: #{e.message}" },
              status: :unprocessable_entity
       return
     end
@@ -106,26 +73,18 @@ end
 
   private
 
-  def sync_all_routers
-    @package.package_routers.map do |pr|
-      MikrotikProfileSyncService.sync(@package, pr)
-      nil
-    rescue MikrotikProfileSyncService::SyncError => e
-      "#{pr.nas_router.name}: #{e.message}"
-    end
+  # Returns the error message string on failure, nil on success — same
+  # shape as the hotspot voucher flow's sync_status/sync_error, just
+  # surfaced immediately in the response instead of only on the record.
+  def sync_package
+    MikrotikProfileSyncService.sync(@package)
+    nil
+  rescue MikrotikProfileSyncService::SyncError => e
+    e.message
   end
 
-  # Replace the router/pool set wholesale on update — simplest correct
-  # behavior for a small list; swap for a diff if lists get long.
-  def sync_router_assignments!(attrs)
-    @package.package_routers.destroy_all
-    @package.package_routers.create!(attrs)
-  end
-
-  def router_attrs
-    (params[:package][:routers] || []).map.with_index do |r, i|
-      { nas_router_id: r[:nas_router_id], ip_pool_id: r[:ip_pool_id], is_default: i.zero? }
-    end
+  def serialize(package)
+    ActiveModelSerializers::SerializableResource.new(package, serializer: PackageSerializer).as_json
   end
 
   def truthy?(val)
@@ -150,10 +109,9 @@ end
       :burst_upload_speed, :burst_download_speed,
       :burst_threshold_upload, :burst_threshold_download, :burst_time,
       :fup_enabled, :fup_data_limit, :fup_data_unit, :fup_throttle_plan_id,
-      :aggregation, :daily_charge, :nas_router
+      :aggregation, :daily_charge, :nas_router, :ip_pool
     )
   end
-
 
   def not_found_response
     render json: { error: 'Package not found' }, status: :not_found
