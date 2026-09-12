@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_09_11_202408) do
+ActiveRecord::Schema[7.2].define(version: 2026_09_12_112549) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -1212,6 +1212,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_09_11_202408) do
     t.datetime "last_synced_at"
     t.string "description"
     t.string "status", default: "active"
+    t.string "sync_error"
   end
 
   create_table "partners", force: :cascade do |t|
