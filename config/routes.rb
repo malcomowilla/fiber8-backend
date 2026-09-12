@@ -249,6 +249,14 @@ resource :tuma_settings, only: [:show, :update]
 resources :hotspot_sms_templates, only: [:index, :update]
 
 
+
+
+
+
+
+
+post '/api/packages/:id/sync', to: 'packages#sync'
+post '/api/packages/sync_all', to: 'packages#sync_all'
 get    '/api/ip_pools',                    to: 'ip_pools#index'
 post   '/api/ip_pools',                    to: 'ip_pools#create'
 patch  '/api/ip_pools/:id',                to: 'ip_pools#update'

@@ -17,12 +17,12 @@ class MikrotikProfileSyncService
     nas = NasRouter.find_by(name: @package.nas_router, account_id: @package.account_id)
     raise SyncError, 'No router specified or router not found' unless nas
 
-    pool = IpPool.find_by(name: @package.ip_pool, account_id: @package.account_id)
-    raise SyncError, 'No IP pool specified or pool not found' unless pool
+    pools = resolve_pools
+    raise SyncError, 'No IP pool specified or pool(s) not found' if pools.empty?
 
     client = connect(nas)
     name = @package.effective_profile_name
-    body = profile_attrs(name, pool)
+    body = profile_attrs(name, pools)
 
     found = find_by_id(client) || find_by_name(client, name)
 
@@ -66,6 +66,14 @@ class MikrotikProfileSyncService
 
   private
 
+  # Package.ip_pool holds one or more pool NAMES, comma-separated
+  # (e.g. "20Mbps Pool,25Mbps Pool") — same flat-string pattern as
+  # Package.nas_router, just allowing more than one value.
+  def resolve_pools
+    names = @package.ip_pool.to_s.split(',').map(&:strip).reject(&:blank?)
+    names.map { |n| IpPool.find_by(name: n, account_id: @package.account_id) }.compact
+  end
+
   def connect(nas)
     RouterosApiClient.new(nas.ip_address, nas.username, nas.password).connect
   end
@@ -86,13 +94,19 @@ class MikrotikProfileSyncService
   # client (i.e. the client's upload), tx is what it sends TO the client
   # (the client's download). Get this backwards and upload/download limits
   # are silently swapped for every customer on the profile.
-  def profile_attrs(name, pool)
+  #
+  # `pools` is an array — RouterOS accepts a comma-separated list of pool
+  # names in remote-address and draws from whichever pool has room, in the
+  # order given. local-address uses the first pool's gateway; if pools span
+  # different subnets, this account's setup should give them the same
+  # gateway or PPPoE clients on later pools may get an unreachable gateway.
+  def profile_attrs(name, pools)
     rate = "#{@package.upload_limit}M/#{@package.download_limit}M"
 
     [
       "=name=#{name}",
-      "=local-address=#{pool.gateway}",
-      "=remote-address=#{pool.name}", # references the pool object on the router
+      "=local-address=#{pools.first.gateway}",
+      "=remote-address=#{pools.map(&:name).join(',')}",
       "=rate-limit=#{rate_with_burst(rate)}",
       "=session-timeout=#{validity_string}",
       "=only-one=yes"
