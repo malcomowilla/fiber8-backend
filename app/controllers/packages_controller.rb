@@ -150,7 +150,7 @@ end
       :burst_upload_speed, :burst_download_speed,
       :burst_threshold_upload, :burst_threshold_download, :burst_time,
       :fup_enabled, :fup_data_limit, :fup_data_unit, :fup_throttle_plan_id,
-      :aggregation, :daily_charge
+      :aggregation, :daily_charge, :nas_router
     )
   end
 
