@@ -444,7 +444,10 @@ let freeTrialState = {};
           if (cfg.features.show_packages)   tabs.push(['packages', 'Buy Package']);
           if (cfg.features.show_voucher)    tabs.push(['voucher', 'Voucher']);
           if (cfg.features.show_mpesa_code) tabs.push(['mpesa', 'M-Pesa Code']);
-           
+
+          return tabs.map(([id, label]) =>
+            \`<div class="tab \${state.tab === id ? 'active' : ''}" data-tab="\${id}">\${label}</div>\`
+          ).join('');
         }
 
         function statusHtml() {
