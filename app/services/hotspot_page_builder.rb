@@ -445,6 +445,7 @@ let freeTrialState = {};
           if (cfg.features.show_voucher)    tabs.push(['voucher', 'Voucher']);
           if (cfg.features.show_mpesa_code) tabs.push(['mpesa', 'M-Pesa Code']);
            
+        }
 
         function statusHtml() {
           if (!state.status) return '';
