@@ -358,8 +358,11 @@ class GenerateInvoiceJob
   #   0 revenue               -> no charge
   #   > 0 and <= threshold    -> HOTSPOT_FEE_STANDARD
   #   > threshold             -> HOTSPOT_FEE_HIGH_VOLUME
+  #   
+  
+  
   HOTSPOT_FEE_STANDARD = 1000
-  HOTSPOT_FEE_HIGH_VOLUME = 2000
+  HOTSPOT_FEE_HIGH_VOLUME = 1000
   HOTSPOT_HIGH_VOLUME_THRESHOLD = 6000
 
   def perform
