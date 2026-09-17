@@ -54,7 +54,7 @@ class PackagesController < ApplicationController
     render json: { queued: @account.packages.count }
   end
 
-  def destroy
+  def delete
     begin
       MikrotikProfileSyncService.delete(@package)
     rescue MikrotikProfileSyncService::SyncError => e

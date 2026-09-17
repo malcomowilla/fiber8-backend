@@ -350,7 +350,7 @@ class GenerateInvoiceJob
 
   # sidekiq_options lock: :until_executed, lock_timeout: 0
 
-  PPPoE_PRICE_PER_CLIENT = 10
+  PPPoE_PRICE_PER_CLIENT = 15
   SUBSCRIPTION_FEE = 1000
 
   # Tiered hotspot platform fee, based on hotspot revenue collected since the
@@ -657,6 +657,10 @@ to ensure uninterrupted access to your network management platform."
     Rails.logger.error "SMS handling error: #{e.message}"
   end
 
+
+
+
+  
   def generate_invoice_number
     "INV#{rand(100..999)}"
   end
