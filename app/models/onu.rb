@@ -4,8 +4,5 @@ class Onu < ApplicationRecord
 
 
 
-
-
-      
-
 end
+
