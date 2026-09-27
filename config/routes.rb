@@ -184,7 +184,7 @@ end
 resource :grace_period_setting, only: [:show, :update], controller: 'grace_period_settings'
 end
 
-
+get '/api/nas_routers/:id/reachability_stats', to: 'nas_routers#reachability_stats'
 
 resources :nas_routers, path: 'nas_routers' do
   member do
