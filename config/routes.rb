@@ -186,6 +186,13 @@ end
 
 
 
+resources :nas_routers, path: 'nas_routers' do
+  member do
+    post :remote_winbox_session
+    delete 'winbox_session', action: :stop_winbox_session
+    get :reachability_stats        
+  end
+end
 
 
 

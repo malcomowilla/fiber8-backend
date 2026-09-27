@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_09_12_112549) do
+ActiveRecord::Schema[7.2].define(version: 2026_09_27_185447) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -1431,6 +1431,20 @@ ActiveRecord::Schema[7.2].define(version: 2026_09_12_112549) do
     t.boolean "use_radius", default: false
   end
 
+  create_table "router_status_logs", force: :cascade do |t|
+    t.bigint "nas_router_id", null: false
+    t.bigint "tenant_id", null: false
+    t.string "ip", null: false
+    t.boolean "reachable", null: false
+    t.text "response"
+    t.datetime "occurred_at", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["nas_router_id", "occurred_at"], name: "index_router_status_logs_on_nas_router_id_and_occurred_at"
+    t.index ["nas_router_id"], name: "index_router_status_logs_on_nas_router_id"
+    t.index ["tenant_id", "occurred_at"], name: "index_router_status_logs_on_tenant_id_and_occurred_at"
+  end
+
   create_table "router_statuses", force: :cascade do |t|
     t.integer "tenant_id"
     t.string "ip"
@@ -2097,6 +2111,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_09_12_112549) do
   add_foreign_key "payment_gateway_settings", "accounts"
   add_foreign_key "paystack_settings", "accounts"
   add_foreign_key "promotional_plans", "hotspot_packages"
+  add_foreign_key "router_status_logs", "nas_routers"
   add_foreign_key "temporary_sessions", "tv_plans"
   add_foreign_key "ticket_updates", "support_tickets"
   add_foreign_key "tv_plans", "accounts"
