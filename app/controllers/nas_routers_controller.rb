@@ -1,4 +1,3 @@
-# File: app/controllers/nas_routers_controller.rb
 class NasRoutersController < ApplicationController
   rescue_from ActiveRecord::RecordNotFound, with: :router_not_found_response
   load_and_authorize_resource
@@ -143,6 +142,26 @@ class NasRoutersController < ApplicationController
       end
     end
 
+    # Source of truth for "is it down right now" is the live poll
+    # (RouterStatus — the same row the routers table's Reachable/Not
+    # Reachable badge reads), not the log. The log can lag or, for a
+    # router that was already down when this feature shipped, have no
+    # matching "went offline" entry at all — don't let that make the
+    # badge lie and say Online while the table says Not Reachable.
+    live_status = RouterStatus.find_by(tenant_id: @tenant.id, ip: @nas_router.ip_address)
+    currently_offline = live_status ? !live_status.reachable : false
+
+    # If still offline right now, count the ongoing outage toward
+    # downtime/uptime too, instead of only counting closed ones.
+    if pending_offline
+      downtime_minutes_ongoing = ((Time.current - pending_offline.occurred_at) / 60).round(1)
+      outages << {
+        went_offline_at: pending_offline.occurred_at.iso8601,
+        back_online_at: nil,
+        duration_minutes: downtime_minutes_ongoing
+      }
+    end
+
     total_period_minutes = days * 24 * 60
     downtime_minutes = outages.sum { |o| o[:duration_minutes] }
     uptime_percent = total_period_minutes.positive? ? (100 - (downtime_minutes / total_period_minutes.to_f * 100)).round(2) : 100.0
@@ -154,7 +173,7 @@ class NasRoutersController < ApplicationController
       uptime_percent: uptime_percent,
       total_outages: outages.size,
       avg_downtime_minutes: outages.any? ? (downtime_minutes / outages.size).round(1) : 0,
-      currently_offline: pending_offline.present?,
+      currently_offline: currently_offline,
       by_day_of_week: by_day_of_week,
       by_hour: by_hour,
       recent_outages: outages.last(15).reverse

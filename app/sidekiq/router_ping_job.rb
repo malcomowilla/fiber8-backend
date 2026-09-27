@@ -124,8 +124,6 @@
 # end
 
 
-
-
 require 'open3'
 
 class RouterPingJob
@@ -201,9 +199,13 @@ class RouterPingJob
 
             # Only write a log row when reachability actually flips — keeps
             # the log table a history of outages/recoveries, not a dump of
-            # every 35s poll.
-            previous_status = RouterStatus.find_by(tenant_id: tenant.id, ip: ip_address)
-            status_changed = previous_status.nil? || previous_status.reachable != reachable
+            # every 35s poll. Compared against the *log's own* last entry,
+            # not RouterStatus: RouterStatus predates this feature and may
+            # already read `false` for a router that was down before this
+            # shipped, which would silently swallow that outage forever.
+            last_log = RouterStatusLog.where(nas_router_id: nas_router.id, tenant_id: tenant.id)
+                                       .order(occurred_at: :desc).first
+            status_changed = last_log.nil? || last_log.reachable != reachable
 
             RouterStatus.find_or_initialize_by(
               tenant_id: tenant.id,
@@ -233,20 +235,3 @@ class RouterPingJob
     end
   end
 end
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
