@@ -170,6 +170,7 @@ end
 # Row-level detail for the admin: every device/phone that started a payment
 # in the last 24h and is still sitting there unpaid — so support can actually
 # see who bailed, not just a count.
+
 def abandoned_sessions
   sessions = TemporarySession
     .where(paid: false)
@@ -187,6 +188,12 @@ def abandoned_sessions
     minutes_since = ((Time.current - s.created_at) / 60).round
     revenue = revenues_by_checkout[s.checkout_request_id]
 
+    # Exact time the payment went through (only when the revenue row is Completed)
+    paid_at =
+      if revenue&.status == 'Completed'
+        revenue.time_paid.presence || format_datetime(revenue.created_at)
+      end
+
     {
       id: s.id,
       phone_number: s.phone_number,
@@ -194,6 +201,8 @@ def abandoned_sessions
       mac: s.mac,
       ip: s.ip,
       created_at: s.created_at,
+      started_at: format_datetime(s.created_at),
+      paid_at: paid_at,
       minutes_since: minutes_since,
       connected: s.connected,
       revenue_status: revenue&.status || 'No STK response',
@@ -215,8 +224,6 @@ def abandoned_sessions
 
   render json: data
 end
-
-
 
 
 
