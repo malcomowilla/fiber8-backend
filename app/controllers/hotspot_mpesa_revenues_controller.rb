@@ -170,7 +170,8 @@ end
 # Row-level detail for the admin: every device/phone that started a payment
 # in the last 24h and is still sitting there unpaid — so support can actually
 # see who bailed, not just a count.
-
+# Each row now carries exact, tenant-timezone timestamps (date + AM/PM time)
+# for when the session started and, if applicable, when it was paid.
 def abandoned_sessions
   sessions = TemporarySession
     .where(paid: false)
@@ -224,6 +225,8 @@ def abandoned_sessions
 
   render json: data
 end
+
+
 
 
 
@@ -533,7 +536,10 @@ end
 
   private
 
-
+  # "28 Sep 2026, 03:45 PM" in the tenant's configured time zone (set by set_time_zone)
+  def format_datetime(time)
+    time&.in_time_zone&.strftime('%d %b %Y, %I:%M %p')
+  end
 
   def clear_revenue_caches
       Rails.cache.delete("hotspot_mpesa_revenues_#{@account.id}")
@@ -568,5 +574,3 @@ end
        :reference, :time_paid, :account_id)
     end
 end
-
-
