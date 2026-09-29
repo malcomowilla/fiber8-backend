@@ -282,13 +282,25 @@ def create
     return
   end
 
-  @hotspot_package = HotspotPackage.new(hotspot_package_params)
+  attrs = hotspot_package_params
+  free_trial = ActiveModel::Type::Boolean.new.cast(params[:enable_free_trial])
 
-  if !@hotspot_package.enable_free_trial && params[:price].blank?
+  if !free_trial && params[:price].blank?
     render json: { error: "price is required" }, status: :unprocessable_entity
     return
   end
 
+  unless free_trial
+    if (err = time_limit_error)
+      return render json: { error: err }, status: :unprocessable_entity
+    end
+
+    bytes, err = parse_data_limit
+    return render json: { error: err }, status: :unprocessable_entity if err
+    attrs = attrs.merge(data_limit_bytes: bytes)
+  end
+
+  @hotspot_package = HotspotPackage.new(attrs)
   use_radius = router_uses_radius?
 
   if use_radius
@@ -299,7 +311,7 @@ def create
     else
       update_freeradius_policies(params[:name],
         params[:shared_users], params[:upload_limit], params[:download_limit],
-        params[:weekdays], @hotspot_package.account_id)
+        params[:weekdays], @hotspot_package.account_id, @hotspot_package.data_limit_bytes)
     end
   end
 
@@ -325,10 +337,6 @@ rescue => e
 end
 
 
-
-
-
-
 def update
   @hotspot_package = set_hotspot_package
 
@@ -337,6 +345,24 @@ def update
     return
   end
 
+  attrs = hotspot_package_params
+  free_trial = ActiveModel::Type::Boolean.new.cast(
+    params.key?(:enable_free_trial) ? params[:enable_free_trial] : @hotspot_package.enable_free_trial
+  )
+
+  unless free_trial
+    if (err = time_limit_error)
+      return render json: { error: err }, status: :unprocessable_entity
+    end
+
+    if params.key?(:data_limit_value)
+      bytes, err = parse_data_limit
+      return render json: { error: err }, status: :unprocessable_entity if err
+      attrs = attrs.merge(data_limit_bytes: bytes)
+    end
+  end
+
+  effective_bytes = attrs.key?(:data_limit_bytes) ? attrs[:data_limit_bytes] : @hotspot_package.data_limit_bytes
   use_radius = router_uses_radius?
 
   if use_radius
@@ -347,14 +373,14 @@ def update
     else
       update_freeradius_policies(params[:name],
         params[:shared_users], params[:upload_limit], params[:download_limit],
-        params[:weekdays], @hotspot_package.account_id)
+        params[:weekdays], @hotspot_package.account_id, effective_bytes)
     end
   end
 
-  if @hotspot_package.update(hotspot_package_params)
+  if @hotspot_package.update(attrs)
     unless use_radius
       if ActiveModel::Type::Boolean.new.cast(params[:sync_to_mikrotik])
-        sync_package_natively(@hotspot_package, params[:router_name])
+        sync_package_natively(@hotspot_package)
       end
     end
 
@@ -371,6 +397,8 @@ rescue => e
   Rails.logger.error "HotspotPackage update failed: #{e.class} #{e.message}"
   render json: { error: "Failed to update hotspot package: #{e.message}" }, status: :unprocessable_entity
 end
+
+
 
 
 
@@ -486,6 +514,53 @@ end
 
 
   private
+
+
+DATA_UNIT_BYTES = { 'MB' => 1024**2, 'GB' => 1024**3 }.freeze
+VALID_TIME_UNITS = %w[minutes hours days].freeze
+RADIUS_WORD = 4_294_967_296 # 2**32, Mikrotik-Total-Limit is 32-bit
+
+# Time limit must be a whole number > 0 with a supported unit.
+def time_limit_error
+  raw = params[:validity].to_s.strip
+  return 'Time limit is required' if raw.blank?
+  return 'Time limit must be a whole number (use minutes for 1.5 hours)' unless raw.match?(/\A\d+\z/) && raw.to_i > 0
+  return 'Time limit unit must be minutes, hours or days' unless VALID_TIME_UNITS.include?(params[:validity_period_units].to_s)
+  nil
+end
+
+# Returns [bytes_or_nil, error_or_nil]. Blank => unlimited (nil).
+def parse_data_limit
+  raw = params[:data_limit_value].to_s.strip
+  return [nil, nil] if raw.blank?
+
+  value = Float(raw) rescue nil
+  return [nil, 'Data limit must be a positive number'] if value.nil? || value <= 0
+
+  multiplier = DATA_UNIT_BYTES[params[:data_limit_unit].to_s.upcase]
+  return [nil, 'Data limit unit must be MB or GB'] unless multiplier
+
+  [(value * multiplier).round, nil]
+end
+
+
+
+def upsert_data_limit_replies(group_name, bytes)
+  if bytes.present?
+    giga, low = bytes.divmod(RADIUS_WORD)
+
+    RadGroupReply.find_or_initialize_by(groupname: group_name, radiusattribute: 'Mikrotik-Total-Limit')
+                 .update!(op: ':=', value: low.to_s)
+    RadGroupReply.find_or_initialize_by(groupname: group_name, radiusattribute: 'Mikrotik-Total-Limit-Gigawords')
+                 .update!(op: ':=', value: giga.to_s)
+  else
+    RadGroupReply.where(groupname: group_name,
+                        radiusattribute: %w[Mikrotik-Total-Limit Mikrotik-Total-Limit-Gigawords]).destroy_all
+  end
+end
+
+
+
 def fetch_profile_limitation_id
   router_name = params[:router_name]
   nas_router = NasRouter.find_by(name: router_name)
@@ -613,24 +688,20 @@ end
 
 
 
-
-
-
-
-  def update_freeradius_policies(
+def update_freeradius_policies(
   package_name,
   shared_users,
   upload_limit,
   download_limit,
   weekdays,
-  account_id
+  account_id,
+  data_limit_bytes = nil
 )
-
   group_name = "hotspot_#{account_id}_#{package_name.parameterize(separator: '_')}"
 
   burst_enabled = params[:burst_enabled]
 
-  rate_limit_value =  
+  rate_limit_value =
     if burst_enabled
       "#{upload_limit}M/#{download_limit}M " \
       "#{params[:burst_limit_upload]}M/#{params[:burst_limit_download]}M " \
@@ -649,6 +720,8 @@ end
       value: rate_limit_value
     )
 
+    upsert_data_limit_replies(group_name, data_limit_bytes)
+
     rad_days = RadGroupCheck.find_or_initialize_by(
       groupname: group_name,
       radiusattribute: 'Login-Time'
@@ -660,22 +733,15 @@ end
         "#{code}0000-2359"
       }.join(",")
 
-      rad_days.update!(
-        op: ':=',
-        value: login_time_value
-      )
+      rad_days.update!(op: ':=', value: login_time_value)
     else
-      rad_days.update!(
-        op: ':=',
-        value: 'Al0000-2359'
-      )
+      rad_days.update!(op: ':=', value: 'Al0000-2359')
     end
   end
-end
 
 
 
-
+  
 
 
 

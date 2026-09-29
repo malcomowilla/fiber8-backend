@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_09_27_185447) do
+ActiveRecord::Schema[7.2].define(version: 2026_09_29_184439) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -670,6 +670,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_09_27_185447) do
     t.datetime "synced_at"
     t.string "sync_error"
     t.boolean "enabled", default: true, null: false
+    t.bigint "data_limit_bytes"
     t.index ["enabled"], name: "index_hotspot_packages_on_enabled"
     t.index ["name"], name: "index_hotspot_packages_on_name"
   end
