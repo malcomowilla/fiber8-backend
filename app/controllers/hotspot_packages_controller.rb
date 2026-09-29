@@ -688,20 +688,24 @@ end
 
 
 
-def update_freeradius_policies(
+
+
+
+
+  def update_freeradius_policies(
   package_name,
   shared_users,
   upload_limit,
   download_limit,
   weekdays,
-  account_id,
-  data_limit_bytes = nil
+  account_id
 )
+
   group_name = "hotspot_#{account_id}_#{package_name.parameterize(separator: '_')}"
 
   burst_enabled = params[:burst_enabled]
 
-  rate_limit_value =
+  rate_limit_value =  
     if burst_enabled
       "#{upload_limit}M/#{download_limit}M " \
       "#{params[:burst_limit_upload]}M/#{params[:burst_limit_download]}M " \
@@ -720,8 +724,6 @@ def update_freeradius_policies(
       value: rate_limit_value
     )
 
-    upsert_data_limit_replies(group_name, data_limit_bytes)
-
     rad_days = RadGroupCheck.find_or_initialize_by(
       groupname: group_name,
       radiusattribute: 'Login-Time'
@@ -733,15 +735,22 @@ def update_freeradius_policies(
         "#{code}0000-2359"
       }.join(",")
 
-      rad_days.update!(op: ':=', value: login_time_value)
+      rad_days.update!(
+        op: ':=',
+        value: login_time_value
+      )
     else
-      rad_days.update!(op: ':=', value: 'Al0000-2359')
+      rad_days.update!(
+        op: ':=',
+        value: 'Al0000-2359'
+      )
     end
   end
+end
 
 
 
-  
+
 
 
 
