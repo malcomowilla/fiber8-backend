@@ -1,4 +1,3 @@
-# app/services/hotspot_page_builder.rb
 class HotspotPageBuilder
   def initialize(account, design_override: nil, platform_domain: nil)
     @account = account

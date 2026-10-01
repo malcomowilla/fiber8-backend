@@ -261,7 +261,8 @@ resources :hotspot_sms_templates, only: [:index, :update]
 
 
 
-
+get '/api/hotspot_analytics', to: 'hotspot_analytics#show'
+get '/hotspot_analytics', to: 'hotspot_analytics#show'
 post '/api/packages/:id/sync', to: 'packages#sync'
 post '/api/packages/sync_all', to: 'packages#sync_all'
 get    '/api/ip_pools',                    to: 'ip_pools#index'
@@ -460,7 +461,7 @@ get "/api/ad_engagement_trend", to: "ad_settings#ad_engagement_trend"
 get "/ad_engagement_trend", to: "ad_settings#ad_engagement_trend"
 
 post 'track_ad_event', to: 'ad_settings#track_ad_event'
-get  'ad_stats',        to: 'ad_settings#ad_stats'
+get  'ad_stats',  to: 'ad_settings#ad_stats'
 
 get 'hotspot_payment_funnel',    to: 'hotspot_mpesa_revenues#payment_funnel'
 get 'hotspot_abandoned_sessions', to: 'hotspot_mpesa_revenues#abandoned_sessions'
