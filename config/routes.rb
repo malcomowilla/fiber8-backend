@@ -212,6 +212,29 @@ resources :nas_routers, path: 'nas_routers' do
     delete 'winbox_session', action: :stop_winbox_session   # stops it early
   end
 end
+
+
+
+
+post   "/api/collector/signup", to: "collector_auth#signup"
+post   "/api/collector/login",  to: "collector_auth#login"
+get    "/api/collector/me",     to: "collector_auth#me"
+delete "/api/collector/logout", to: "collector_auth#logout"
+ 
+# collector (signed in, scoped to their own account)
+get  "/api/collector/dashboard",          to: "collector_dashboard#show"
+post "/api/collector/buildings",          to: "collector_buildings#create"
+post "/api/collector/customers",          to: "collector_customers#create"
+post "/api/collector/customers/:id/pay",  to: "collector_customers#pay"
+post "/api/collector/withdrawals",        to: "collector_wallet#withdraw"
+ 
+# system admin (these two live in SystemAdminsController, like client_accounts_overview)
+get   "/api/collector_registrations",     to: "system_admins#collector_registrations"
+patch "/api/collector_registrations/:id", to: "system_admins#update_collector_status"
+ 
+
+
+
   post   '/api/hotspot/portal/request_otp',        to: 'hotspot_portal#request_otp'
   post   '/api/hotspot/portal/verify_otp',         to: 'hotspot_portal#verify_otp'
   get    '/api/hotspot/portal/session',            to: 'hotspot_portal#session_info'

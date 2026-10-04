@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_09_29_184439) do
+ActiveRecord::Schema[7.2].define(version: 2026_10_03_133803) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -75,6 +75,11 @@ ActiveRecord::Schema[7.2].define(version: 2026_09_29_184439) do
     t.bigint "referred_by_account_id"
     t.bigint "referred_by_outside_referrer_id"
     t.datetime "referral_qualified_at"
+    t.string "account_type", default: "isp", null: false
+    t.string "company_name"
+    t.string "status", default: "active", null: false
+    t.string "signup_ip"
+    t.index ["account_type"], name: "index_accounts_on_account_type"
     t.index ["referral_code"], name: "index_accounts_on_referral_code", unique: true
     t.index ["referred_by_account_id"], name: "index_accounts_on_referred_by_account_id"
     t.index ["referred_by_outside_referrer_id"], name: "index_accounts_on_referred_by_outside_referrer_id"
@@ -339,6 +344,43 @@ ActiveRecord::Schema[7.2].define(version: 2026_09_29_184439) do
     t.index ["account_id"], name: "index_client_support_tickets_on_account_id"
     t.index ["priority"], name: "index_client_support_tickets_on_priority"
     t.index ["status"], name: "index_client_support_tickets_on_status"
+  end
+
+  create_table "collector_buildings", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.string "name", null: false
+    t.string "area", null: false
+    t.integer "units"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id"], name: "index_collector_buildings_on_account_id"
+  end
+
+  create_table "collector_customers", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.bigint "collector_building_id", null: false
+    t.string "name", null: false
+    t.string "phone"
+    t.string "unit", null: false
+    t.integer "packs_paid", default: 0, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id"], name: "index_collector_customers_on_account_id"
+    t.index ["collector_building_id"], name: "index_collector_customers_on_collector_building_id"
+  end
+
+  create_table "collector_transactions", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.bigint "collector_customer_id"
+    t.string "kind", null: false
+    t.string "label", null: false
+    t.decimal "gross", precision: 12, scale: 2, default: "0.0", null: false
+    t.decimal "fee", precision: 12, scale: 2, default: "0.0", null: false
+    t.decimal "net", precision: 12, scale: 2, default: "0.0", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id"], name: "index_collector_transactions_on_account_id"
+    t.index ["collector_customer_id"], name: "index_collector_transactions_on_collector_customer_id"
   end
 
   create_table "company_financial_records", force: :cascade do |t|
@@ -2088,6 +2130,11 @@ ActiveRecord::Schema[7.2].define(version: 2026_09_29_184439) do
   add_foreign_key "ad_events", "accounts"
   add_foreign_key "ad_events", "ad_settings"
   add_foreign_key "appearance_settings", "accounts"
+  add_foreign_key "collector_buildings", "accounts"
+  add_foreign_key "collector_customers", "accounts"
+  add_foreign_key "collector_customers", "collector_buildings"
+  add_foreign_key "collector_transactions", "accounts"
+  add_foreign_key "collector_transactions", "collector_customers"
   add_foreign_key "default_system_ad_settings", "accounts"
   add_foreign_key "grace_period_settings", "accounts"
   add_foreign_key "hotspot_loyalty_activities", "accounts"
