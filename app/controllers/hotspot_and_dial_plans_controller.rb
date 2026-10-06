@@ -65,16 +65,16 @@ if current_user
   if plans.empty?
     default_plan = HotspotAndDialPlan.first_or_initialize(
        name: "Free Trial",
-      expiry_days: 7,
+      expiry_days: 5,
       status: "active",
-      expiry: Time.current + 7.days,
+      expiry: Time.current + 5.days,
 
     )
     default_plan.update(
        name: "Free Trial",
-      expiry_days: 7,
+      expiry_days: 5,
       status: "active",
-      expiry: Time.current + 7.days,
+      expiry: Time.current + 5.days,
 
     )
     plans = [default_plan]
