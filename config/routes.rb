@@ -231,7 +231,7 @@ post "/api/collector/withdrawals",        to: "collector_wallet#withdraw"
 # system admin (these two live in SystemAdminsController, like client_accounts_overview)
 get   "/api/collector_registrations",     to: "system_admins#collector_registrations"
 patch "/api/collector_registrations/:id", to: "system_admins#update_collector_status"
- delete "/api/collector_registrations/:id", to: "system_admins#destroy_collector"
+delete "/api/collector_registrations/:id", to: "system_admins#destroy_collector"
 
 
 
