@@ -350,7 +350,7 @@ class GenerateInvoiceJob
 
   # sidekiq_options lock: :until_executed, lock_timeout: 0
 
-  PPPoE_PRICE_PER_CLIENT = 15
+  PPPoE_PRICE_PER_CLIENT = 10
   SUBSCRIPTION_FEE = 1000
 
   # Tiered hotspot platform fee, based on hotspot revenue collected since the
