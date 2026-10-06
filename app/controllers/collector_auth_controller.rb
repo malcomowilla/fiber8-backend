@@ -5,7 +5,8 @@ class CollectorAuthController < ApplicationController
   # POST /api/collector/signup
   # Creates the company Account (account_type "collector") and its first admin User.
   def signup
-    p = params.permit(:company_name, :owner_name, :email, :phone_number, :password, :password_confirmation)
+    p = params.permit(:company_name, :owner_name, :email, :phone_number, 
+    :password, :password_confirmation)
     email = p[:email].to_s.strip.downcase
     phone = normalize_phone(p[:phone_number])
 
