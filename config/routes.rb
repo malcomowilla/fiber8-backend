@@ -465,6 +465,7 @@ get '/invoice_payments', to: 'system_admins#invoice_payments'
 get '/api/invoice_payments', to: 'system_admins#invoice_payments'
 
 post '/api/nas_routers/:id/remote_winbox_session', to: 'nas_routers#remote_winbox_session'
+delete '/api/nas_routers/:id/winbox_session', to: 'nas_routers#stop_winbox_session'
 post '/api/payment_and_conected_status', to: 'hotspot_vouchers#payment_and_conected_status'
 
 get '/api/allow_get_tv_plans', to: 'tv_plans#allow_get_tv_plans'

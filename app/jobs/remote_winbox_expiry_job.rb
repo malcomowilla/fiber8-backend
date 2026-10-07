@@ -45,7 +45,7 @@ class RemoteWinboxExpiryJob < ApplicationJob
   def perform(router_id, port)
     router = NasRouter.find_by(id: router_id)
     return unless router
-    return unless router.winbox_relay_port == port # a newer session already replaced this port
+    return unless router.winbox_relay_port == port
 
     WinboxRelayService.close(router, port)
   end
