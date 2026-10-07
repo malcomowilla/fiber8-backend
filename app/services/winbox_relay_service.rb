@@ -1,5 +1,6 @@
 class WinboxRelayService
   CONF_DIR = "/etc/haproxy/conf.d".freeze
+  PORT_RANGE = (25_000..25_019).freeze # must match the rathole services
 
   class RelayError < StandardError; end
 
@@ -16,11 +17,14 @@ class WinboxRelayService
   end
 
   def open(ttl: 15.minutes)
+    unless @router.ip_address.to_s.match?(/\A[\w.\-]+\z/)
+      raise RelayError, "Invalid router address"
+    end
+
     port = nil
     expires_at = ttl.from_now
 
-    10.times do
-      candidate = rand(20_000..29_999)
+    PORT_RANGE.to_a.shuffle.first(10).each do |candidate|
       begin
         @router.update!(winbox_relay_port: candidate, winbox_relay_expires_at: expires_at)
         port = candidate
@@ -38,9 +42,6 @@ class WinboxRelayService
     port
   end
 
-  # Deleting the conf file is what makes the port unreachable: the host
-  # watcher picks up the delete, revalidates the merged HAProxy config,
-  # and reloads. After that, new connections to the port are refused.
   def close(port)
     path = conf_path(port)
     File.delete(path) if File.exist?(path)
@@ -53,16 +54,15 @@ class WinboxRelayService
   private
 
   def conf_path(port)
-    File.join(CONF_DIR, "winbox_#{port}.cfg")
+    File.join(CONF_DIR, "winbox_#{Integer(port)}.cfg")
   end
 
   def write_listen_block(port)
     File.write(conf_path(port), <<~CFG)
       listen winbox_#{port}
           mode tcp
-          bind *:#{port}
+          bind 127.0.0.1:#{port}
           server winbox_target #{@router.ip_address}:8291
     CFG
-    
   end
 end
