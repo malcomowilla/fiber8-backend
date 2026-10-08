@@ -214,6 +214,10 @@ resources :nas_routers, path: 'nas_routers' do
 end
 
 
+get  '/api/paid_not_connected/summary',    to: 'paid_not_connected#summary'
+get  '/api/paid_not_connected',            to: 'paid_not_connected#index'
+post '/api/paid_not_connected/compensate', to: 'paid_not_connected#compensate'
+post '/api/paid_not_connected/dismiss',    to: 'paid_not_connected#dismiss'
 
 
 post   "/api/collector/signup", to: "collector_auth#signup"

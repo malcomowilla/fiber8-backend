@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_10_03_133803) do
+ActiveRecord::Schema[7.2].define(version: 2026_10_08_125045) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -1875,6 +1875,10 @@ ActiveRecord::Schema[7.2].define(version: 2026_10_03_133803) do
     t.string "payment_type"
     t.bigint "tv_plan_id"
     t.string "payment_gateway", default: "mpesa"
+    t.string "compensation_status"
+    t.datetime "compensated_at"
+    t.integer "compensated_minutes"
+    t.index ["compensation_status"], name: "index_temporary_sessions_on_compensation_status"
     t.index ["connected"], name: "index_temporary_sessions_on_connected"
     t.index ["hotspot_package"], name: "index_temporary_sessions_on_hotspot_package"
     t.index ["ip"], name: "index_temporary_sessions_on_ip"

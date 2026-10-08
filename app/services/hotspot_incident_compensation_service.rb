@@ -2,7 +2,8 @@
 
 
 class HotspotIncidentCompensationService
-  Result = Struct.new(:compensated_count, :sms_sent_count, :voucher_ids, keyword_init: true)
+  Result = Struct.new(:compensated_count, :sms_sent_count,
+   :voucher_ids, keyword_init: true)
 
   def initialize(account, grace_duration)
     @account = account
