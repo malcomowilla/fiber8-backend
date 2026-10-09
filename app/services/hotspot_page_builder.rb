@@ -339,7 +339,9 @@ class HotspotPageBuilder
                        background: color-mix(in srgb, var(--primary) 16%, transparent);
                        border: 1px solid color-mix(in srgb, var(--primary) 50%, transparent); margin-bottom: 18px; }
       .pay-modal-valid { font-size: 14px; font-weight: 600; margin-top: 2px; }
-      .pay-modal-hint { font-size: 16px; font-weight: 800; color: var(--text); margin: -2px 0 16px; line-height: 1.4; }
+      .pay-modal-hint { font-size: 17px; font-weight: 900; color: var(--text); margin: -2px 0 16px; line-height: 1.4;
+                        -webkit-text-stroke: 0.4px currentColor; letter-spacing: .01em; }
+      .pay-modal-hint strong { font-weight: 900; }
       .pay-modal-amount { display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; border-radius: 14px;
                           font-size: 16px; font-weight: 700; color: var(--text); margin-bottom: 16px;
                           border: 2px solid var(--primary); background: color-mix(in srgb, var(--primary) 10%, transparent); }
@@ -893,7 +895,7 @@ if (state.tab === 'tv') {
                 '</div>' +
                 '<label class="field-label" for="phone">M-PESA Phone Number</label>' +
                 '<input class="field" id="phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="07XXXXXXXX" value="' + esc(state.phone || '') + '">' +
-                '<p class="pay-modal-hint">Enter your Safaricom number (07XXXXXXXX)</p>' +
+                '<p class="pay-modal-hint"><strong>Enter your Safaricom number (07XXXXXXXX)</strong></p>' +
                 '<div class="pay-modal-amount"><span>Amount to Pay:</span><strong>KES ' + esc(p.price) + '</strong></div>' +
                 '<button class="btn" id="pay-btn">Pay with M-PESA</button>' +
               '</div>' +
