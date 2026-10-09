@@ -731,10 +731,7 @@ if (state.tab === 'tv') {
               state.selected = state.packages.find(p => String(p.id) === el.dataset.pkg);
               state.payStep = 'pay';
               render();
-              requestAnimationFrame(() => {
-                const card = document.querySelector('.card');
-                if (card) card.scrollIntoView({ behavior: 'smooth', block: 'start' });
-              });
+              focusPhoneField();
             });
 
 
@@ -818,11 +815,25 @@ if (state.tab === 'tv') {
               state.tab = 'packages';
               state.payStep = 'pay';
               render();
-              requestAnimationFrame(() => {
-                const card = document.querySelector('.card');
-                if (card) card.scrollIntoView({ behavior: 'smooth', block: 'start' });
-              });
+              focusPhoneField();
             });
+        }
+
+        // Takes the customer straight to the M-Pesa phone field after they pick
+        // a package: scrolls it to the middle of the screen and focuses it so
+        // the phone keyboard opens immediately. Falls back to the top of the
+        // card if the field isn't there.
+        function focusPhoneField() {
+          requestAnimationFrame(() => {
+            const phoneEl = document.getElementById('phone');
+            if (phoneEl) {
+              phoneEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              phoneEl.focus({ preventScroll: true });
+            } else {
+              const card = document.querySelector('.card');
+              if (card) card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+          });
         }
 
         function setStatus(status, message) { state.status = status; state.message = message; render(); }
