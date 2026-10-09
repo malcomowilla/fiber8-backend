@@ -4,24 +4,23 @@ class PaymentGatewaySettingsController < ApplicationController
   set_current_tenant_through_filter
   before_action :set_tenant
 
-  VALID_GATEWAYS = %w[mpesa tuma paystack sasapay].freeze
+  VALID_GATEWAYS = %w[mpesa payhero tuma paystack sasapay].freeze
 
   def set_tenant
     host = request.headers['X-Subdomain']
-    @account = Account.find_by(subdomain: host)
+    @account = Account.find_by!(subdomain: host)
     ActsAsTenant.current_tenant = @account
   rescue ActiveRecord::RecordNotFound
     render json: { error: 'Invalid tenant' }, status: :not_found
   end
 
-  # GET /api/payment_gateway_settings  =>  { "hotspot": "tuma" }
+  # GET /api/payment_gateway_settings  =>  { "hotspot": "payhero" }
   def show
     setting = PaymentGatewaySetting.find_by(account_id: @account.id, use_case: 'hotspot')
     render json: { hotspot: setting&.gateway || 'mpesa' }
   end
 
-  # PATCH /api/payment_gateway_settings  { gateways: { hotspot: "tuma" } }
-  # One active gateway. Hotspot vouchers and TV plans share it.
+  # PATCH /api/payment_gateway_settings  { gateways: { hotspot: "payhero" } }
   def update
     gateway = (params.dig(:gateways, :hotspot) || params[:gateway]).to_s
 
@@ -30,7 +29,6 @@ class PaymentGatewaySettingsController < ApplicationController
     end
 
     PaymentGatewaySetting.transaction do
-      # tv_plans is mirrored so existing active_gateway_for(id, 'tv_plans') callers keep working
       %w[hotspot tv_plans].each do |use_case|
         setting = PaymentGatewaySetting.find_or_initialize_by(account_id: @account.id, use_case: use_case)
         setting.gateway = gateway

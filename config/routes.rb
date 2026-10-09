@@ -182,6 +182,10 @@ resources :incidents, only: [:index, :create, :show, :update, :destroy] do
   collection { get :stats } 
 end
 resource :grace_period_setting, only: [:show, :update], controller: 'grace_period_settings'
+
+resources :payhero_channels, only: [:index, :create, :destroy] do
+  member { patch :set_default }
+end
 end
 
 get '/api/nas_routers/:id/reachability_stats', to: 'nas_routers#reachability_stats'
@@ -286,6 +290,8 @@ resources :hotspot_sms_templates, only: [:index, :update]
 
 
 
+post '/paystack_owitech_callback',     to: 'payhero_callbacks#hotspot_callback'
+post '/api/paystack_owitech_callback', to: 'payhero_callbacks#hotspot_callback'
 
 
 get '/api/hotspot_analytics', to: 'hotspot_analytics#show'

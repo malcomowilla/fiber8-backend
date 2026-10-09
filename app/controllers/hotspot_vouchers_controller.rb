@@ -1569,7 +1569,7 @@ def make_payment
   expired_pppoe = plan&.expiry.present? && plan.expiry <= Time.current
 
   if expired_pppoe
-    return render json: { error: 'License has expired'}, status: 422  
+    return render json: { error: 'License has expired'}, status: 422
   end
 
   phone_number = params[:phone_number]
@@ -1579,10 +1579,9 @@ def make_payment
 
   amount = params[:amount]
   shortcode = ActsAsTenant.current_tenant&.hotspot_mpesa_setting&.short_code.presence || ENV['B2C_SHORTCODE']
-passkey = ActsAsTenant.current_tenant&.hotspot_mpesa_setting&.passkey.presence || ENV['PASSKEY']
-consumer_key = ActsAsTenant.current_tenant&.hotspot_mpesa_setting&.consumer_key.presence || ENV['CONSUMER_KEY']
-consumer_secret = ActsAsTenant.current_tenant&.hotspot_mpesa_setting&.consumer_secret.presence || ENV['CONSUMER_SECRET']
-
+  passkey = ActsAsTenant.current_tenant&.hotspot_mpesa_setting&.passkey.presence || ENV['PASSKEY']
+  consumer_key = ActsAsTenant.current_tenant&.hotspot_mpesa_setting&.consumer_key.presence || ENV['CONSUMER_KEY']
+  consumer_secret = ActsAsTenant.current_tenant&.hotspot_mpesa_setting&.consumer_secret.presence || ENV['CONSUMER_SECRET']
 
   voucher_code = generate_voucher_code
   session_id = rand(100000..999999).to_s
@@ -1595,7 +1594,14 @@ consumer_secret = ActsAsTenant.current_tenant&.hotspot_mpesa_setting&.consumer_s
   paystack_setting = PaystackSetting.find_by(account_id: ActsAsTenant.current_tenant.id)
   use_paystack = active_gateway == 'paystack' && paystack_setting&.enabled
 
-  gateway_label = use_tuma ? 'tuma' : (use_paystack ? 'paystack' : 'mpesa')
+  use_payhero = active_gateway == 'payhero'
+
+  gateway_label =
+    if use_tuma then 'tuma'
+    elsif use_paystack then 'paystack'
+    elsif use_payhero then 'payhero'
+    else 'mpesa'
+    end
 
   temp_session = TemporarySession.find_or_initialize_by(
     ip: params[:ip], session: session_id, paid: false, connected: false,
@@ -1603,6 +1609,37 @@ consumer_secret = ActsAsTenant.current_tenant&.hotspot_mpesa_setting&.consumer_s
     phone_number: phone_number, mac: params[:mac], status: 'pending',
     payment_gateway: gateway_label
   )
+
+  if use_payhero
+    channel = PayheroChannel.receiving_for(ActsAsTenant.current_tenant.id)
+    unless channel
+      return render json: { error: 'Payments are not available right now. Please contact the network owner.' },
+                    status: :unprocessable_entity
+    end
+
+    reference = "hotspot_#{session_id}_#{voucher_code}"
+
+    result = PayheroService.initiate_stk_push(
+      amount: amount, phone: phone_number,
+      channel_id: channel.payhero_channel_id,
+      external_reference: reference
+    )
+
+    if result[:success]
+      temp_session.update!(checkout_request_id: reference)
+      HotspotMpesaRevenue.create!(
+        voucher: voucher_code, amount: amount, payment_method: 'PayHero',
+        phone_number: phone_number, status: 'Pending', checkout_request_id: reference
+      )
+      return render json: {
+        message: 'Please check your phone to complete the payment',
+        checkout_request_id: reference,
+        gateway: gateway_label
+      }
+    else
+      return render json: { error: result[:error] || 'Failed to initiate PayHero payment' }, status: :unprocessable_entity
+    end
+  end
 
   if use_paystack
     reference = "hotspot_#{session_id}_#{voucher_code}"
@@ -1621,7 +1658,7 @@ consumer_secret = ActsAsTenant.current_tenant&.hotspot_mpesa_setting&.consumer_s
       return render json: {
         message: result[:display_text].presence || 'Please check your phone to complete the payment',
         checkout_request_id: reference,
-        gateway: gateway_label  
+        gateway: gateway_label
       }
     else
       return render json: { error: result[:error] || 'Failed to initiate Paystack payment' }, status: :unprocessable_entity
@@ -1658,7 +1695,7 @@ consumer_secret = ActsAsTenant.current_tenant&.hotspot_mpesa_setting&.consumer_s
       return render json: {
         message: 'Please check your phone to complete the payment',
         checkout_request_id: checkout_request_id,
-        gateway: gateway_label  
+        gateway: gateway_label
       }
     else
       return render json: { error: result[:error] || 'Failed to initiate Tuma payment' }, status: :unprocessable_entity
@@ -1678,10 +1715,6 @@ consumer_secret = ActsAsTenant.current_tenant&.hotspot_mpesa_setting&.consumer_s
     session_id
   )
 
-  # MpesaService can fail before ever reaching Safaricom (e.g. "Error fetching
-  # access token") and return {success: false, error: "..."} with no :response
-  # key at all. Guard on success before touching [:response] so a credential
-  # or network failure returns a clean 422 instead of a 500.
   unless hotspot_payment[:success]
     return render json: { error: hotspot_payment[:error] || 'Failed to initiate payment' }, status: :unprocessable_entity
   end
@@ -1708,7 +1741,7 @@ consumer_secret = ActsAsTenant.current_tenant&.hotspot_mpesa_setting&.consumer_s
   render json: {
     message: 'Please check your phone to complete the payment',
     checkout_request_id: checkout_request_id,
-    gateway: gateway_label  
+    gateway: gateway_label
   }
 end
 

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_10_08_125045) do
+ActiveRecord::Schema[7.2].define(version: 2026_10_09_224855) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -1283,6 +1283,22 @@ ActiveRecord::Schema[7.2].define(version: 2026_10_08_125045) do
     t.datetime "updated_at", null: false
   end
 
+  create_table "payhero_channels", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.string "channel_type", null: false
+    t.string "short_code", null: false
+    t.string "account_number"
+    t.string "description", null: false
+    t.bigint "payhero_channel_id", null: false
+    t.boolean "is_default", default: false, null: false
+    t.boolean "is_active", default: true, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id", "is_default"], name: "index_payhero_channels_on_account_id_and_is_default"
+    t.index ["account_id"], name: "index_payhero_channels_on_account_id"
+    t.index ["payhero_channel_id"], name: "index_payhero_channels_on_payhero_channel_id", unique: true
+  end
+
   create_table "payment_gateway_otps", force: :cascade do |t|
     t.bigint "user_id", null: false
     t.bigint "account_id", null: false
@@ -2157,6 +2173,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_10_08_125045) do
   add_foreign_key "package_routers", "ip_pools"
   add_foreign_key "package_routers", "nas_routers"
   add_foreign_key "package_routers", "packages"
+  add_foreign_key "payhero_channels", "accounts"
   add_foreign_key "payment_gateway_otps", "accounts"
   add_foreign_key "payment_gateway_otps", "users"
   add_foreign_key "payment_gateway_pin_settings", "accounts"
