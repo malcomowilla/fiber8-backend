@@ -22,12 +22,13 @@ class PayheroChannelsController < ApplicationController
   # POST /api/payhero_channels
   def create
     type           = params[:channel_type].to_s
-    short_code     = params[:short_code].to_s.strip
+    short_code     = params[:short_code].to_s.gsub(/\D/, '')
     account_number = params[:account_number].to_s.strip
     description    = params[:description].to_s.strip
 
     return fail_with('Invalid channel type') unless PayheroChannel::CHANNEL_TYPES.include?(type)
-    return fail_with('Enter a valid paybill or till number') unless short_code.match?(/\A\d{4,8}\z/)
+    return fail_with("Paybill or till number must be 4 to 10 digits (got \"#{params[:short_code]}\")") unless short_code.match?(/\A\d{4,10}\z/)
+    
     return fail_with('Enter a name for this channel') if description.blank?
     return fail_with('Enter the account number') if type != 'till' && account_number.blank?
 
