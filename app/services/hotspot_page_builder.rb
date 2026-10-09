@@ -197,7 +197,10 @@ class HotspotPageBuilder
       .field { width: 100%; padding: 14px; font-size: 16px; border-radius: 12px; border: 2px solid color-mix(in srgb, var(--text) 35%, transparent);
                background: color-mix(in srgb, var(--surface) 90%, var(--text) 4%); color: var(--text); margin-bottom: 12px; }
       .field:focus { outline: none; border-color: var(--primary); }
-      .field::placeholder { color: var(--muted); opacity: 1; }
+      /* Placeholder: clearly softer than typed text so it doesn't look filled in,
+         but still readable (about 62% of the text color, normal weight). */
+      .field::placeholder { color: color-mix(in srgb, var(--text) 62%, var(--surface)); opacity: 1; font-weight: 400; }
+      .field { font-weight: 600; }
       select.field option { background: var(--surface); color: var(--text); }
       .btn { width: 100%; padding: 15px; font-size: 16px; border-radius: 12px; border: none; font-weight: 800; color: var(--on-btn); cursor: pointer;
              background: linear-gradient(135deg, var(--btn-primary), var(--btn-secondary)); transition: transform .1s, opacity .15s; }
