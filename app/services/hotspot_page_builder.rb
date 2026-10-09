@@ -320,6 +320,27 @@ class HotspotPageBuilder
       }
       .field-label { display: block; font-size: 14px; font-weight: 800; color: var(--text);
                       margin-bottom: 6px; }
+
+      /* ── Payment modal (opens when a package is tapped) ───────────── */
+      .pay-modal-backdrop { position: fixed; inset: 0; z-index: 19000; display: flex; align-items: center; justify-content: center;
+                            padding: 16px; background: rgba(0,0,0,.82); backdrop-filter: blur(6px); overflow-y: auto; }
+      .pay-modal { position: relative; width: 100%; max-width: 400px; background: var(--surface); color: var(--text);
+                   border: 2px solid color-mix(in srgb, var(--text) 30%, transparent); border-radius: min(var(--radius), 28px);
+                   padding: 28px 22px 22px; box-shadow: 0 30px 60px rgba(0,0,0,.6); }
+      .pay-modal-close { position: absolute; top: 10px; right: 10px; width: 40px; height: 40px; border-radius: 12px; cursor: pointer;
+                         font-size: 18px; font-weight: 800; color: var(--text);
+                         background: color-mix(in srgb, var(--text) 14%, transparent);
+                         border: 1px solid color-mix(in srgb, var(--text) 40%, transparent); }
+      .pay-modal-title { font-size: 24px; font-weight: 800; text-align: center; color: var(--text); margin: 0 36px 14px; }
+      .pay-modal-pkg { text-align: center; font-size: 20px; font-weight: 800; color: var(--text); padding: 10px 12px; border-radius: 14px;
+                       background: color-mix(in srgb, var(--primary) 16%, transparent);
+                       border: 1px solid color-mix(in srgb, var(--primary) 50%, transparent); margin-bottom: 18px; }
+      .pay-modal-valid { font-size: 14px; font-weight: 600; margin-top: 2px; }
+      .pay-modal-hint { font-size: 14px; color: var(--text); margin: -4px 0 16px; }
+      .pay-modal-amount { display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; border-radius: 14px;
+                          font-size: 16px; font-weight: 700; color: var(--text); margin-bottom: 16px;
+                          border: 2px solid var(--primary); background: color-mix(in srgb, var(--primary) 10%, transparent); }
+      .pay-modal-amount strong { font-size: 24px; font-weight: 800; }
     CSS
   end
 
@@ -506,6 +527,7 @@ let freeTrialState = {};
           const tvPromoRoot = document.getElementById('tv-promo-root');
           if (tvPromoRoot) tvPromoRoot.innerHTML = tvPromoHtml();
           renderFooter();
+          renderPayModal();
           bindEvents();
         }
 
@@ -609,28 +631,8 @@ function isValidMac(mac) {
             const isMock = cfg.preview && state.packages.length && String(state.packages[0].id).startsWith('mock-');
 
 
-            // ── Focused pay step: shown the instant a package is tapped,
-            // so a non-technical customer never has to scroll to find the
-            // phone-number field or guess what to do next. ──────────────
-            if (state.payStep === 'pay' && state.selected) {
-              return statusHtml() + \`
-                <div class="step-back" data-back-to-list>← Back to packages</div>
-                <div class="pkg-recap">
-                  <div>
-                    <div class="pkg-recap-name">\${state.selected.name}</div>
-                    \${state.selected.valid ? '<div class="pkg-recap-sub">' + state.selected.valid + '</div>' : ''}
-                  </div>
-                  <div class="pkg-recap-price">Ksh \${state.selected.price}</div>
-                </div>
-                <div class="pay-instructions">
-                  <span class="num">1</span>
-                  <span>Enter your M-Pesa phone number below, then tap <strong>Pay</strong>. You'll get a prompt on your phone — enter your M-Pesa PIN to finish connecting.</span>
-                </div>
-                <label class="field-label">M-Pesa Phone Number</label>
-                <input class="field" id="phone" inputmode="tel" placeholder="07XX XXX XXX" value="\${state.phone || ''}">
-                <button class="btn" id="pay-btn">Pay Ksh \${state.selected.price} via M-Pesa</button>
-              \`;
-            }
+            // The pay step is no longer inline — tapping a package opens the
+            // payment modal (see renderPayModal), which overlays this list.
 
             const freeTrialPkgs = state.packages.filter(p => p.enable_free_trial);
             const paidPkgs = state.packages.filter(p => !p.enable_free_trial);
@@ -757,6 +759,18 @@ if (state.tab === 'tv') {
           };
 
 
+          const payBackdrop = document.getElementById('pay-modal-backdrop');
+          if (payBackdrop) payBackdrop.onclick = (e) => { if (e.target === payBackdrop) closePayModal(); };
+          const payClose = document.getElementById('pay-modal-close');
+          if (payClose) payClose.onclick = closePayModal;
+          const phoneInput = document.getElementById('phone');
+          if (phoneInput) {
+            phoneInput.oninput = () => { state.phone = phoneInput.value; };
+            phoneInput.onkeydown = (e) => {
+              if (e.key === 'Enter') { e.preventDefault(); const b = document.getElementById('pay-btn'); if (b) b.click(); }
+            };
+          }
+
           const tvMacInput = document.getElementById('tv-mac');
           if (tvMacInput) tvMacInput.oninput = (e) => {
             const formatted = formatMacInput(e.target.value);
@@ -819,21 +833,68 @@ if (state.tab === 'tv') {
             });
         }
 
-        // Takes the customer straight to the M-Pesa phone field after they pick
-        // a package: scrolls it to the middle of the screen and focuses it so
-        // the phone keyboard opens immediately. Falls back to the top of the
-        // card if the field isn't there.
+        function esc(v) {
+          return String(v == null ? '' : v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        }
+
+        // Puts the cursor in the M-Pesa phone field so the keyboard opens as
+        // soon as the payment modal appears.
         function focusPhoneField() {
           requestAnimationFrame(() => {
             const phoneEl = document.getElementById('phone');
-            if (phoneEl) {
-              phoneEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
-              phoneEl.focus({ preventScroll: true });
-            } else {
-              const card = document.querySelector('.card');
-              if (card) card.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            }
+            if (phoneEl) phoneEl.focus();
           });
+        }
+
+        let payModalKey = null;
+
+        function closePayModal() {
+          state.payStep = 'list';
+          state.selected = null;
+          state.status = null;
+          render();
+        }
+
+        // "Complete Payment" modal — opens whenever a package (or promo) is
+        // tapped. It sits under the payment-status modal (z-index 19000 vs
+        // 20000), so if a payment fails and that modal is closed, the
+        // customer lands back here and can retry without re-selecting.
+        // It is only rebuilt when the selected package changes, so a re-render
+        // never wipes what the customer is typing.
+        function renderPayModal() {
+          let root = document.getElementById('pay-modal-root');
+          if (!root) {
+            root = document.createElement('div');
+            root.id = 'pay-modal-root';
+            document.body.appendChild(root);
+          }
+          const open = state.tab === 'packages' && state.payStep === 'pay' && state.selected;
+          if (!open) {
+            root.innerHTML = '';
+            payModalKey = null;
+            document.body.style.overflow = '';
+            return;
+          }
+          document.body.style.overflow = 'hidden';
+          const key = String(state.selected.id) + '|' + state.selected.price;
+          if (payModalKey === key && root.firstChild) return;
+          payModalKey = key;
+          const p = state.selected;
+          root.innerHTML =
+            '<div class="pay-modal-backdrop" id="pay-modal-backdrop">' +
+              '<div class="pay-modal" role="dialog" aria-modal="true" aria-labelledby="pay-modal-title">' +
+                '<button class="pay-modal-close" id="pay-modal-close" aria-label="Close">✕</button>' +
+                '<h2 class="pay-modal-title" id="pay-modal-title">Complete Payment</h2>' +
+                '<div class="pay-modal-pkg">' + esc(p.name) +
+                  (p.valid ? '<div class="pay-modal-valid">' + esc(p.valid) + '</div>' : '') +
+                '</div>' +
+                '<label class="field-label" for="phone">M-PESA Phone Number</label>' +
+                '<input class="field" id="phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="07XXXXXXXX" value="' + esc(state.phone || '') + '">' +
+                '<p class="pay-modal-hint">Enter your Safaricom number (07XXXXXXXX)</p>' +
+                '<div class="pay-modal-amount"><span>Amount to Pay:</span><strong>KES ' + esc(p.price) + '</strong></div>' +
+                '<button class="btn" id="pay-btn">Pay with M-PESA</button>' +
+              '</div>' +
+            '</div>';
         }
 
         function setStatus(status, message) { state.status = status; state.message = message; render(); }
@@ -1545,6 +1606,7 @@ async function payPackage() {
             type: details.type || 'default',
           };
           if (connectedInfo.username) localStorage.setItem('hotspot_username', connectedInfo.username);
+          state.payStep = 'list';
           renderConnectedScreen();
           setStatus('success', 'Connected! Redirecting…');
           setTimeout(() => { window.location.href = '$(link-orig)'; }, 4000);
@@ -2108,7 +2170,11 @@ function startAdTimers(ad) {
             }
           }
         }
-document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && expandedAdId) collapseExpandedAd(); });
+document.addEventListener('keydown', (e) => {
+  if (e.key !== 'Escape') return;
+  if (expandedAdId) { collapseExpandedAd(); return; }
+  if (state.payStep === 'pay' && !queryModal.status) closePayModal();
+});
         if (cfg.features.show_ads !== false) loadAds();
         loadPromotions();
         loadPackages();
