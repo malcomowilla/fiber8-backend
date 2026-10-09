@@ -39,6 +39,67 @@ class HotspotPageBuilder
   def footer_cfg = @design["footer"] || {}
   def features = @design["features"] || {}
 
+  # ── Contrast guarantees ───────────────────────────────────────────────
+  # Customers may have poor eyesight or be outdoors in sunlight, so text
+  # contrast is enforced here instead of trusting every theme color to be
+  # readable. Rules:
+  #   * body text is always >= 7:1 against the background AND the surface
+  #     (WCAG AAA). If a theme's text color fails, it falls back to
+  #     black/white, whichever is readable on that background.
+  #   * "muted" text is no longer a separate grey — it is derived from the
+  #     text color in CSS, so it can never be faint.
+  #   * text sitting on a primary/button color is picked automatically
+  #     (black or white) based on that color's brightness.
+  def hex_to_rgb(hex)
+    h = hex.to_s.delete("#")
+    h = h.chars.map { |c| c * 2 }.join if h.length == 3
+    return nil unless h.match?(/\A[0-9a-fA-F]{6}\z/)
+    [h[0, 2], h[2, 2], h[4, 2]].map { |x| x.to_i(16) }
+  end
+
+  def luminance(hex)
+    rgb = hex_to_rgb(hex)
+    return nil unless rgb
+    r, g, b = rgb.map do |v|
+      c = v / 255.0
+      c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055)**2.4
+    end
+    0.2126 * r + 0.7152 * g + 0.0722 * b
+  end
+
+  def contrast_ratio(a, b)
+    la = luminance(a)
+    lb = luminance(b)
+    return nil unless la && lb
+    hi, lo = [la, lb].max, [la, lb].min
+    (hi + 0.05) / (lo + 0.05)
+  end
+
+  # Black or white, whichever reads better on the given background color.
+  def readable_text_color(bg_hex)
+    l = luminance(bg_hex)
+    return "#ffffff" if l.nil?
+    l > 0.179 ? "#000000" : "#ffffff"
+  end
+
+  def safe_text_color
+    bg = theme["background"] || "#020617"
+    surface = theme["surface"] || "#0f172a"
+    txt = theme["text"] || "#e2e8f0"
+    ratios = [contrast_ratio(txt, bg), contrast_ratio(txt, surface)].compact
+    return txt if ratios.any? && ratios.min >= 7
+    readable_text_color(bg)
+  end
+
+  def button_text_color
+    lums = [
+      theme["button_primary"] || theme["primary"] || "#38bdf8",
+      theme["button_secondary"] || theme["secondary"] || "#a78bfa"
+    ].map { |c| luminance(c) }.compact
+    return "#ffffff" if lums.empty?
+    (lums.sum / lums.size) > 0.179 ? "#000000" : "#ffffff"
+  end
+
   def google_font_link
     url = typography["google_font_url"]
     url.present? ? %(<link rel="stylesheet" href="#{url}">) : ""
@@ -74,13 +135,14 @@ class HotspotPageBuilder
       header: header,
       footer: footer_cfg,
       preview: !!@preview,
-        mikrotik_mac: "$(mac)",
-    mikrotik_ip: "$(ip)",
-    mikrotik_link_orig: "$(link-orig)",
+      mikrotik_mac: "$(mac)",
+      mikrotik_ip: "$(ip)",
+      mikrotik_link_orig: "$(link-orig)",
     }.to_json
   end
 
   def compiled_css
+    base_size = [typography["base_size"].to_i, 15].max
     <<~CSS
       :root {
         --primary:         #{theme["primary"]         || "#38bdf8"};
@@ -90,106 +152,116 @@ class HotspotPageBuilder
         --btn-secondary:   #{theme["button_secondary"]|| theme["secondary"] || "#a78bfa"};
         --background:      #{theme["background"]      || "#020617"};
         --surface:         #{theme["surface"]         || "#0f172a"};
-        --text:            #{theme["text"]             || "#e2e8f0"};
-        --muted:           #{theme["muted"]            || "#64748b"};
+        --text:            #{safe_text_color};
+        /* No separate grey anymore: "muted" is the text color, just very slightly softened. */
+        --muted:           color-mix(in srgb, var(--text) 88%, var(--background));
+        --on-btn:          #{button_text_color};
+        --on-primary:      #{readable_text_color(theme["primary"] || "#38bdf8")};
         --radius:          #{layout["corner_radius"]   || 24}px;
         --font:            '#{typography["font_family"] || "Plus Jakarta Sans"}', sans-serif;
-        --font-size:       #{typography["base_size"]   || 14}px;
+        --font-size:       #{base_size}px;
       }
       * { box-sizing: border-box; margin: 0; padding: 0; font-family: var(--font); }
       body {
         background: radial-gradient(circle at 20% -10%, color-mix(in srgb, var(--primary) 12%, transparent), transparent 60%),
                     radial-gradient(circle at 90% 110%, color-mix(in srgb, var(--secondary) 10%, transparent), transparent 60%),
                     var(--background);
-        color: var(--text); font-size: var(--font-size); min-height: 100vh;
+        color: var(--text); font-size: var(--font-size); min-height: 100vh; line-height: 1.5;
       }
       .card {
         max-width: #{layout["card_width"] || 420}px;
         margin: 48px auto;
-        background: color-mix(in srgb, var(--surface) 75%, transparent);
+        background: color-mix(in srgb, var(--surface) 92%, transparent);
         backdrop-filter: blur(20px);
-        border: 1px solid color-mix(in srgb, var(--text) 10%, transparent);
+        border: 1px solid color-mix(in srgb, var(--text) 18%, transparent);
         border-radius: var(--radius);
         overflow: hidden;
         box-shadow: 0 30px 60px -20px rgba(0,0,0,.5);
       }
-      .header { text-align: center; padding: 32px 24px 20px; border-bottom: 1px solid color-mix(in srgb, var(--text) 8%, transparent); }
+      .header { text-align: center; padding: 32px 24px 20px; border-bottom: 1px solid color-mix(in srgb, var(--text) 14%, transparent); }
       .header .wifi-badge {
         width: 56px; height: 56px; margin: 0 auto 12px; border-radius: 18px;
         display: flex; align-items: center; justify-content: center; font-size: 24px;
-        background: color-mix(in srgb, var(--primary) 12%, transparent);
-        border: 1px solid color-mix(in srgb, var(--primary) 25%, transparent);
+        background: color-mix(in srgb, var(--primary) 18%, transparent);
+        border: 1px solid color-mix(in srgb, var(--primary) 35%, transparent);
       }
       .header img.logo { max-height: 56px; margin: 0 auto 12px; display: block; }
-      .header h1 { font-size: #{typography["heading_size"] || 24}px; font-weight: #{typography["weight_heading"] || 700}; }
-      .header p { color: var(--muted); margin-top: 4px; }
+      .header h1 { font-size: #{typography["heading_size"] || 24}px; font-weight: #{typography["weight_heading"] || 700}; color: var(--text); }
+      .header p { color: var(--text); margin-top: 4px; font-size: 15px; }
       .tabs { display: flex; gap: 6px; padding: 16px; }
-      .tab { flex: 1; text-align: center; padding: 10px; border-radius: 12px; cursor: pointer; color: var(--muted); font-size: 12px; font-weight: 600; transition: background .15s, color .15s; }
-      .tab.active { background: color-mix(in srgb, var(--primary) 14%, transparent); color: var(--primary); }
+      .tab { flex: 1; text-align: center; padding: 12px 6px; border-radius: 12px; cursor: pointer; color: var(--text); font-size: 14px; font-weight: 700;
+             border: 1px solid color-mix(in srgb, var(--text) 18%, transparent); transition: background .15s, color .15s; }
+      .tab.active { background: color-mix(in srgb, var(--primary) 28%, transparent); color: var(--text);
+                    border-color: var(--primary); box-shadow: inset 0 -3px 0 var(--primary); }
       .panel { padding: 0 20px 24px; }
-      .field { width: 100%; padding: 14px; border-radius: 12px; border: 1px solid color-mix(in srgb, var(--text) 12%, transparent); background: color-mix(in srgb, var(--surface) 70%, transparent); color: var(--text); margin-bottom: 12px; }
-      .btn { width: 100%; padding: 14px; border-radius: 12px; border: none; font-weight: 700; color: #fff; cursor: pointer;
+      .field { width: 100%; padding: 14px; font-size: 16px; border-radius: 12px; border: 2px solid color-mix(in srgb, var(--text) 35%, transparent);
+               background: color-mix(in srgb, var(--surface) 90%, var(--text) 4%); color: var(--text); margin-bottom: 12px; }
+      .field:focus { outline: none; border-color: var(--primary); }
+      .field::placeholder { color: var(--muted); opacity: 1; }
+      select.field option { background: var(--surface); color: var(--text); }
+      .btn { width: 100%; padding: 15px; font-size: 16px; border-radius: 12px; border: none; font-weight: 800; color: var(--on-btn); cursor: pointer;
              background: linear-gradient(135deg, var(--btn-primary), var(--btn-secondary)); transition: transform .1s, opacity .15s; }
       .btn:hover { opacity: .92; transform: translateY(-1px); }
-      .pkg { display: flex; justify-content: space-between; align-items: center; padding: 14px; border-radius: 14px;
-             border: 1px solid color-mix(in srgb, var(--text) 10%, transparent); margin-bottom: 10px; cursor: pointer; transition: border-color .15s; }
+      .pkg { display: flex; justify-content: space-between; align-items: center; padding: 14px; border-radius: 14px; font-size: 15px; color: var(--text);
+             border: 1px solid color-mix(in srgb, var(--text) 25%, transparent); margin-bottom: 10px; cursor: pointer; transition: border-color .15s; }
+      .pkg small { font-size: 13px; color: var(--muted); }
 
-      .section-heading { font-size: 16px; font-weight: 800; color: var(--text); margin-bottom: 2px; }
-      .section-sub { font-size: 12px; color: var(--muted); margin-bottom: 14px; }
+      .section-heading { font-size: 18px; font-weight: 800; color: var(--text); margin-bottom: 2px; }
+      .section-sub { font-size: 14px; color: var(--text); margin-bottom: 14px; }
 
-.pkg-freetrial { display: flex; align-items: flex-start; gap: 10px; padding: 14px;
-  border-radius: 14px; margin-bottom: 12px;
-  background: color-mix(in srgb, #facc15 7%, transparent);
-  border: 1px solid color-mix(in srgb, #facc15 20%, transparent); }
-.pkg-freetrial .icon { flex-shrink:0; font-size:15px; margin-top:1px; }
-.pkg-freetrial-title { font-weight:700; font-size:13px; color:var(--text); }
-.pkg-freetrial-sub { font-size:11px; color:var(--muted); margin-top:2px; line-height:1.5; }
-.pkg-freetrial-btn { width:100%; margin-top:10px; padding:11px; border-radius:12px; border:none;
-  font-weight:700; font-size:13px; color:#1a1206; cursor:pointer;
-  background: linear-gradient(135deg,#facc15,#f59e0b); }
-.pkg-freetrial-btn:disabled { opacity:.6; cursor:not-allowed; }
+      .pkg-freetrial { display: flex; align-items: flex-start; gap: 10px; padding: 14px;
+        border-radius: 14px; margin-bottom: 12px;
+        background: color-mix(in srgb, #facc15 14%, var(--surface));
+        border: 1px solid color-mix(in srgb, #facc15 45%, transparent); }
+      .pkg-freetrial .icon { flex-shrink:0; font-size:16px; margin-top:1px; }
+      .pkg-freetrial-title { font-weight:800; font-size:15px; color:var(--text); }
+      .pkg-freetrial-sub { font-size:13px; color:var(--text); margin-top:2px; line-height:1.5; }
+      .pkg-freetrial-btn { width:100%; margin-top:10px; padding:12px; border-radius:12px; border:none;
+        font-weight:800; font-size:15px; color:#1a1206; cursor:pointer;
+        background: linear-gradient(135deg,#facc15,#f59e0b); }
+      .pkg-freetrial-btn:disabled { opacity:.75; cursor:not-allowed; }
 
-      .pkg.selected { border-color: var(--primary); background: color-mix(in srgb, var(--primary) 6%, transparent); }
-      .pkg-skeleton { height: 62px; border-radius: 14px; margin-bottom: 10px; background: color-mix(in srgb, var(--text) 6%, transparent); animation: pulse 1.4s ease-in-out infinite; }
+      .pkg.selected { border-color: var(--primary); background: color-mix(in srgb, var(--primary) 12%, transparent); }
+      .pkg-skeleton { height: 62px; border-radius: 14px; margin-bottom: 10px; background: color-mix(in srgb, var(--text) 10%, transparent); animation: pulse 1.4s ease-in-out infinite; }
       @keyframes pulse { 0%,100% { opacity: .5; } 50% { opacity: 1; } }
-      .status { padding: 12px; border-radius: 12px; margin-bottom: 12px; font-size: 13px; }
-      .status.error { background: rgba(239,68,68,.1); color: #fca5a5; }
-      .status.success { background: rgba(52,211,153,.1); color: #6ee7b7; }
-      .status.processing { background: rgba(251,191,36,.1); color: #fcd34d; }
-      .footer { text-align: center; padding: 16px; color: color-mix(in srgb, var(--muted) 55%, var(--text) 45%); font-size: 12px; }
-      .support-line { text-align: center; font-size: 13px; }
-      .support-line .footer-support { color: var(--text); font-weight: 600; }
-      .support-line .footer-phone { color: var(--primary); font-weight: 700; text-decoration: none; }
-      .support-line .footer-phone:hover { text-decoration: underline; }
+      .status { padding: 12px 14px; border-radius: 12px; margin-bottom: 12px; font-size: 15px; font-weight: 600; color: var(--text); border: 1px solid transparent; }
+      .status.error { background: color-mix(in srgb, #ef4444 20%, var(--surface)); border-color: #ef4444; }
+      .status.success { background: color-mix(in srgb, #22c55e 20%, var(--surface)); border-color: #22c55e; }
+      .status.processing { background: color-mix(in srgb, #f59e0b 20%, var(--surface)); border-color: #f59e0b; }
+      .footer { text-align: center; padding: 16px; color: var(--text); font-size: 14px; }
+      .support-line { text-align: center; font-size: 15px; color: var(--text); }
+      .support-line .footer-support { color: var(--text); font-weight: 700; }
+      .support-line .footer-phone { color: var(--text); font-weight: 800; text-decoration: underline; }
       /* Top placement: a slim, attention-grabbing strip directly under the
          header, above promos/tabs — this is the "Quick Support" pill. */
       .support-top {
         padding: 10px 20px;
-        border-bottom: 1px solid color-mix(in srgb, var(--text) 8%, transparent);
-        background: color-mix(in srgb, var(--primary) 5%, transparent);
+        border-bottom: 1px solid color-mix(in srgb, var(--text) 14%, transparent);
+        background: color-mix(in srgb, var(--primary) 10%, transparent);
       }
-      .quick-support { display: flex; align-items: center; justify-content: center; gap: 10px; }
+      .quick-support { display: flex; align-items: center; justify-content: center; gap: 10px; color: var(--text); }
       .quick-support .qs-icon {
-        flex-shrink: 0; width: 28px; height: 28px; border-radius: 50%;
-        display: flex; align-items: center; justify-content: center; font-size: 13px;
-        background: color-mix(in srgb, var(--primary) 18%, transparent);
-        border: 1px solid color-mix(in srgb, var(--primary) 30%, transparent);
+        flex-shrink: 0; width: 32px; height: 32px; border-radius: 50%;
+        display: flex; align-items: center; justify-content: center; font-size: 15px;
+        background: color-mix(in srgb, var(--primary) 25%, transparent);
+        border: 1px solid color-mix(in srgb, var(--primary) 45%, transparent);
       }
-      .quick-support .qs-label { display: block; font-size: 10px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
-      .quick-support .qs-phone { display: block; font-size: 14px; font-weight: 800; color: var(--primary); }
+      .quick-support .qs-label { display: block; font-size: 12px; font-weight: 800; color: var(--text); text-transform: uppercase; letter-spacing: .04em; }
+      .quick-support .qs-phone { display: block; font-size: 17px; font-weight: 800; color: var(--text); text-decoration: underline; }
       /* Bottom placement: sits inside the existing footer element */
       .support-bottom { padding: 0; }
-      .promo { position: relative; overflow: hidden; border-radius: 16px; margin-bottom: 10px; padding: 14px;
-               border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
-               background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 10%, transparent), color-mix(in srgb, var(--surface) 60%, transparent)); }
-      .promo .badge { display: inline-flex; gap: 4px; align-items:center; padding: 3px 9px; border-radius: 999px; font-size: 10px; font-weight: 800;
-                      background: color-mix(in srgb, var(--accent) 20%, transparent); color: var(--accent); }
-      .promo .price { font-weight: 800; font-size: 18px; }
-      .promo .price-old { text-decoration: line-through; color: var(--muted); font-size: 12px; margin-left: 6px; }
-      .promo-timer { font-family: 'Space Mono', monospace; font-size: 11px; font-weight: 700; color: var(--accent); white-space: nowrap; }
+      .promo { position: relative; overflow: hidden; border-radius: 16px; margin-bottom: 10px; padding: 14px; color: var(--text);
+               border: 1px solid color-mix(in srgb, var(--accent) 55%, transparent);
+               background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 16%, var(--surface)), color-mix(in srgb, var(--surface) 90%, transparent)); }
+      .promo .badge { display: inline-flex; gap: 4px; align-items:center; padding: 4px 10px; border-radius: 999px; font-size: 12px; font-weight: 800;
+                      background: color-mix(in srgb, var(--accent) 30%, transparent); color: var(--text);
+                      border: 1px solid color-mix(in srgb, var(--accent) 60%, transparent); }
+      .promo .price { font-weight: 800; font-size: 20px; }
+      .promo .price-old { text-decoration: line-through; color: var(--muted); font-size: 14px; margin-left: 6px; }
+      .promo-timer { font-family: 'Space Mono', monospace; font-size: 13px; font-weight: 700; color: var(--text); white-space: nowrap; }
       .promo-stock { margin-top: 10px; }
-      .promo-stock-label { font-size: 10px; color: var(--muted); margin-bottom: 4px; }
-      .promo-stock-bar { height: 4px; border-radius: 4px; background: color-mix(in srgb, var(--text) 12%, transparent); overflow: hidden; }
+      .promo-stock-label { font-size: 12px; color: var(--text); margin-bottom: 4px; font-weight: 600; }
+      .promo-stock-bar { height: 6px; border-radius: 4px; background: color-mix(in srgb, var(--text) 20%, transparent); overflow: hidden; }
       .promo-stock-fill { height: 100%; border-radius: 4px; transition: width .3s ease; }
 
       /* TV / Console connect promo — deliberately loud so it doesn't get
@@ -197,57 +269,57 @@ class HotspotPageBuilder
          active discount promos, and hides itself once the visitor is
          already on the TV tab. */
       .tv-promo {
-        display: flex; align-items: center; gap: 12px; padding: 14px 16px; border-radius: 16px; margin-bottom: 12px; cursor: pointer;
-        background: linear-gradient(135deg, color-mix(in srgb, var(--secondary) 14%, transparent), color-mix(in srgb, var(--primary) 10%, transparent));
-        border: 1px solid color-mix(in srgb, var(--secondary) 28%, transparent);
+        display: flex; align-items: center; gap: 12px; padding: 14px 16px; border-radius: 16px; margin-bottom: 12px; cursor: pointer; color: var(--text);
+        background: linear-gradient(135deg, color-mix(in srgb, var(--secondary) 22%, var(--surface)), color-mix(in srgb, var(--primary) 16%, var(--surface)));
+        border: 1px solid color-mix(in srgb, var(--secondary) 50%, transparent);
         transition: transform .12s ease, border-color .12s ease;
       }
-      .tv-promo:hover { transform: translateY(-1px); border-color: color-mix(in srgb, var(--secondary) 45%, transparent); }
+      .tv-promo:hover { transform: translateY(-1px); border-color: var(--secondary); }
       .tv-promo-icon {
         flex-shrink: 0; width: 44px; height: 44px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 20px;
-        background: color-mix(in srgb, var(--secondary) 20%, transparent);
-        border: 1px solid color-mix(in srgb, var(--secondary) 35%, transparent);
+        background: color-mix(in srgb, var(--secondary) 28%, transparent);
+        border: 1px solid color-mix(in srgb, var(--secondary) 50%, transparent);
       }
       .tv-promo-body { flex: 1; min-width: 0; }
-      .tv-promo-title { font-size: 13px; font-weight: 800; color: var(--text); display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+      .tv-promo-title { font-size: 15px; font-weight: 800; color: var(--text); display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
       .tv-promo-badge {
-        font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: .03em; padding: 2px 7px; border-radius: 999px;
-        background: color-mix(in srgb, var(--accent) 22%, transparent); color: var(--accent);
+        font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: .03em; padding: 2px 8px; border-radius: 999px;
+        background: color-mix(in srgb, var(--accent) 30%, transparent); color: var(--text);
+        border: 1px solid color-mix(in srgb, var(--accent) 60%, transparent);
       }
-      .tv-promo-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+      .tv-promo-sub { font-size: 13px; color: var(--text); margin-top: 2px; }
       .tv-promo-cta {
-        flex-shrink: 0; font-size: 12px; font-weight: 800; padding: 8px 14px; border-radius: 10px; border: none; color: #fff;
+        flex-shrink: 0; font-size: 14px; font-weight: 800; padding: 10px 14px; border-radius: 10px; border: none; color: var(--on-btn);
         background: linear-gradient(135deg, var(--btn-primary), var(--btn-secondary)); cursor: pointer; white-space: nowrap;
       }
 
-      .mock-tag { display: inline-block; font-size: 9px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase;
-                  padding: 2px 6px; border-radius: 6px; background: color-mix(in srgb, var(--text) 12%, transparent); color: var(--muted); margin-left: 6px; }
-      .ad-card { border-radius: 16px; overflow: hidden; background: color-mix(in srgb, var(--surface) 90%, transparent);
-                 border: 1px solid color-mix(in srgb, var(--text) 10%, transparent); box-shadow: 0 20px 40px rgba(0,0,0,.35); }
+      .mock-tag { display: inline-block; font-size: 12px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase;
+                  padding: 2px 6px; border-radius: 6px; background: color-mix(in srgb, var(--text) 18%, transparent); color: var(--text); margin-left: 6px; }
+      .ad-card { border-radius: 16px; overflow: hidden; background: color-mix(in srgb, var(--surface) 96%, transparent); color: var(--text);
+                 border: 1px solid color-mix(in srgb, var(--text) 20%, transparent); box-shadow: 0 20px 40px rgba(0,0,0,.35); }
 
-                 .ad-card.fullscreen { display: flex; flex-direction: column; height: 100%; border-radius: 0; border: none; box-shadow: none; }
+      .ad-card.fullscreen { display: flex; flex-direction: column; height: 100%; border-radius: 0; border: none; box-shadow: none; }
 
       /* ── Guided pay-step UI ──────────────────────────────────────── */
-      .tap-hint { font-size: 12px; color: var(--muted); margin-bottom: 10px; }
-      .step-back { display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; color: var(--muted);
+      .tap-hint { font-size: 14px; color: var(--text); margin-bottom: 10px; }
+      .step-back { display: flex; align-items: center; gap: 6px; font-size: 15px; font-weight: 700; color: var(--text); text-decoration: underline;
                    margin-bottom: 14px; cursor: pointer; user-select: none; }
-      .step-back:hover { color: var(--text); }
-      .pkg-recap { display: flex; justify-content: space-between; align-items: center; padding: 16px;
-                   border-radius: 16px; background: color-mix(in srgb, var(--primary) 7%, transparent);
-                   border: 1px solid color-mix(in srgb, var(--primary) 22%, transparent); margin-bottom: 16px; }
-      .pkg-recap-name { font-weight: 700; }
-      .pkg-recap-sub { color: var(--muted); font-size: 12px; margin-top: 2px; }
-      .pkg-recap-price { font-weight: 800; font-size: 18px; white-space: nowrap; margin-left: 12px; }
-      .pay-instructions { display: flex; gap: 10px; align-items: flex-start; font-size: 13px; color: var(--text);
-                           background: color-mix(in srgb, var(--primary) 6%, transparent);
-                           border: 1px solid color-mix(in srgb, var(--primary) 15%, transparent);
+      .pkg-recap { display: flex; justify-content: space-between; align-items: center; padding: 16px; color: var(--text);
+                   border-radius: 16px; background: color-mix(in srgb, var(--primary) 14%, transparent);
+                   border: 1px solid color-mix(in srgb, var(--primary) 45%, transparent); margin-bottom: 16px; }
+      .pkg-recap-name { font-weight: 800; font-size: 16px; }
+      .pkg-recap-sub { color: var(--text); font-size: 14px; margin-top: 2px; }
+      .pkg-recap-price { font-weight: 800; font-size: 20px; white-space: nowrap; margin-left: 12px; }
+      .pay-instructions { display: flex; gap: 10px; align-items: flex-start; font-size: 15px; color: var(--text);
+                           background: color-mix(in srgb, var(--primary) 12%, transparent);
+                           border: 1px solid color-mix(in srgb, var(--primary) 35%, transparent);
                            border-radius: 14px; padding: 12px 14px; margin-bottom: 16px; line-height: 1.5; }
       .pay-instructions .num {
-        flex-shrink: 0; width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center;
-        justify-content: center; font-size: 11px; font-weight: 800; background: var(--primary); color: #fff;
+        flex-shrink: 0; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center;
+        justify-content: center; font-size: 13px; font-weight: 800; background: var(--primary); color: var(--on-primary);
       }
-      .field-label { display: block; font-size: 11px; font-weight: 700; color: var(--muted);
-                      text-transform: uppercase; letter-spacing: .04em; margin-bottom: 6px; }
+      .field-label { display: block; font-size: 14px; font-weight: 800; color: var(--text);
+                      margin-bottom: 6px; }
     CSS
   end
 
@@ -256,7 +328,7 @@ class HotspotPageBuilder
     logo = (header["show_logo"] != false && logo_src.present?) ? %(<img class="logo" src="#{logo_src}" alt="" onerror="this.style.display='none'">) : ""
     wifi_icon = header["show_wifi_icon"] != false ? %(<div class="wifi-badge">📶</div>) : ""
     title = header["network_name"].presence || @settings&.hotspot_name || "Free WiFi"
-    preview_badge = @preview ? %(<div style="position:fixed;top:8px;left:50%;transform:translateX(-50%);z-index:10000;background:rgba(2,6,23,.85);color:var(--primary);font:600 11px/1 sans-serif;padding:5px 12px;border-radius:20px;white-space:nowrap;">Preview — ad views aren't counted</div>) : ""
+    preview_badge = @preview ? %(<div style="position:fixed;top:8px;left:50%;transform:translateX(-50%);z-index:10000;background:rgba(0,0,0,.9);color:#ffffff;font:700 12px/1 sans-serif;padding:6px 12px;border-radius:20px;white-space:nowrap;">Preview — ad views aren't counted</div>) : ""
     <<~HTML
       #{preview_badge}
       <div class="card">
@@ -333,7 +405,7 @@ if (username) localStorage.setItem('hotspot_username', username);
         const MOCK_AD = {
           id: 'mock-ad', media_type: 'image', ad_title: 'Your Ad Here',
           media_url: 'data:image/svg+xml;utf8,' + encodeURIComponent(
-            '<svg xmlns="http://www.w3.org/2000/svg" width="320" height="140"><rect width="100%" height="100%" fill="#1e293b"/><text x="50%" y="50%" fill="#94a3b8" font-family="sans-serif" font-size="14" text-anchor="middle">Sample ad image</text></svg>'
+            '<svg xmlns="http://www.w3.org/2000/svg" width="320" height="140"><rect width="100%" height="100%" fill="#1e293b"/><text x="50%" y="50%" fill="#ffffff" font-family="sans-serif" font-size="16" text-anchor="middle">Sample ad image</text></svg>'
           ),
           position: 'bottom-right', reward_type: 'none', ad_link: null,
         };
@@ -351,10 +423,10 @@ let connectedInfo = null;
 let stkQueryInterval = null;
 let tvStkQueryInterval = null;
 const activePoll = { interval: null };
-let promoState = {};          // { [promoId]: secondsRemaining } — ticks down locally between refreshes
+let promoState = {};
 let promoTimerInterval = null;
 let expandedAdId = null;
-let expandedAdRenderedFor = null; 
+let expandedAdRenderedFor = null;
 let freeTrialState = {};
 
         function supportHtml() {
@@ -402,9 +474,10 @@ let freeTrialState = {};
 
           if (position === 'top') {
             if (topEl) topEl.innerHTML = quickSupportHtml();
+            if (topEl) topEl.className = 'support-top';
             footerEl.innerHTML = '';
           } else {
-            if (topEl) topEl.innerHTML = '';
+            if (topEl) { topEl.innerHTML = ''; topEl.className = ''; }
             footerEl.innerHTML = '<div class="support-line">' + supportHtml() + '</div>';
           }
         }
@@ -494,14 +567,14 @@ function isValidMac(mac) {
                 \${showTimer ? '<span class="promo-timer" data-promo-timer="' + p.id + '">' + formatCountdown(secondsLeft) + '</span>' : ''}
                 \${cfg.preview && String(p.id).startsWith('mock-') ? '<span class="mock-tag">Sample</span>' : ''}
               </div>
-              <p style="font-weight:700;font-size:13px;">\${p.name}</p>
-              \${p.description ? \`<p style="color:var(--muted);font-size:12px;margin:4px 0 8px;">\${p.description}</p>\` : ''}
+              <p style="font-weight:800;font-size:15px;">\${p.name}</p>
+              \${p.description ? \`<p style="color:var(--text);font-size:14px;margin:4px 0 8px;">\${p.description}</p>\` : ''}
               <div style="display:flex;justify-content:space-between;align-items:flex-end;">
                 <div>
                   <span class="price">Ksh \${Number(p.promotional_price).toFixed(2)}</span>
                   <span class="price-old">Ksh \${Number(p.original_price).toFixed(2)}</span>
                 </div>
-                <button class="btn" style="width:auto;padding:8px 14px;font-size:12px;" data-promo-claim="\${p.id}">Claim Offer</button>
+                <button class="btn" style="width:auto;padding:10px 16px;font-size:14px;" data-promo-claim="\${p.id}">Claim Offer</button>
               </div>
               \${showStock ? \`
                 <div class="promo-stock">
@@ -569,21 +642,22 @@ function isValidMac(mac) {
             const list = paidPkgs.map(p => \`
               <div class="pkg" data-pkg="\${p.id}">
                 <div><strong>\${p.name}</strong>\${isMock ? '<span class="mock-tag">Sample</span>' : ''}<br><small>\${p.valid || ''}</small></div>
-                <div>Ksh \${p.price}</div>
+                <div><strong>Ksh \${p.price}</strong></div>
               </div>\`).join('');
             const empty = !state.packages.length
-              ? '<p style="color:var(--muted);font-size:12px;padding:8px 0;">No packages configured yet.</p>'
+              ? '<p style="color:var(--text);font-size:14px;padding:8px 0;">No packages configured yet.</p>'
               : '';
             return statusHtml() + heading + freeTrialHtml(freeTrialPkgs) + list + empty;
           }
           if (state.tab === 'voucher') {
             return statusHtml() + \`
+              <label class="field-label">Voucher Code</label>
               <input class="field" id="voucher-code" placeholder="Enter voucher code">
               <button class="btn" id="voucher-btn">Connect with Voucher</button>\`;
           }
 
 
-          
+
 if (state.tab === 'tv') {
   if (!state.tvPlansLoaded) {
     return statusHtml() + '<div class="pkg-skeleton"></div><div class="pkg-skeleton"></div>';
@@ -598,7 +672,7 @@ if (state.tab === 'tv') {
     ? \`\${state.tvSelected.validity} \${state.tvSelected.validity_period_units || ''}\`.trim()
     : null;
   return statusHtml() + \`
-    <p style="font-size:12px;color:var(--muted);line-height:1.6;margin-bottom:16px;">
+    <p style="font-size:14px;color:var(--text);line-height:1.6;margin-bottom:16px;">
       Enter your TV or device's MAC address and your M-Pesa number, choose a plan, and pay.
       The device connects automatically, no login needed on the TV. To find the MAC address,
       open the TV's Settings, go to Network, then Status or About, and look for "MAC address"
@@ -615,19 +689,19 @@ if (state.tab === 'tv') {
     </select>
 
     \${validityText ? \`
-    <div style="display:flex;justify-content:space-between;align-items:center;margin:4px 0 10px;font-size:13px;">
-      <span style="color:var(--muted);">Plan Validity:</span>
-      <span style="font-weight:700;">\${validityText}</span>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin:4px 0 10px;font-size:15px;">
+      <span style="color:var(--text);">Plan Validity:</span>
+      <span style="font-weight:800;">\${validityText}</span>
     </div>\` : ''}
-    
-    <div style="display:flex;justify-content:space-between;align-items:center;margin:4px 0 14px;font-size:13px;">
-      <span style="color:var(--muted);">Amount to Pay:</span>
+
+    <div style="display:flex;justify-content:space-between;align-items:center;margin:4px 0 14px;font-size:15px;">
+      <span style="color:var(--text);">Amount to Pay:</span>
       <span style="font-weight:800;">KES \${amount}</span>
     </div>
     <div class="pay-instructions">
-  <span class="num">1</span>
-  <span>We'll send a payment prompt to your phone. Enter your M-Pesa PIN, then wait a few seconds — we connect your TV automatically, no need to touch it.</span>
-</div>
+      <span class="num">1</span>
+      <span>We'll send a payment prompt to your phone. Enter your M-Pesa PIN, then wait a few seconds — we connect your TV automatically, no need to touch it.</span>
+    </div>
     <button class="btn" id="tv-pay-btn">Pay & Connect TV</button>
   \`;
 }
@@ -636,6 +710,7 @@ if (state.tab === 'tv') {
 
           if (state.tab === 'mpesa') {
             return statusHtml() + \`
+              <label class="field-label">M-Pesa Transaction Code</label>
               <input class="field" id="tx-code" placeholder="e.g. QHJ1234ABC">
               <button class="btn" id="mpesa-btn">Verify & Connect</button>\`;
           }
@@ -663,58 +738,58 @@ if (state.tab === 'tv') {
             });
 
 
-            document.querySelectorAll('[data-freetrial]').forEach(el =>
-    el.onclick = () => {
-      const pkg = state.packages.find(p => String(p.id) === el.dataset.freetrial);
-      if (pkg) startFreeTrial(pkg);
-    });
+          document.querySelectorAll('[data-freetrial]').forEach(el =>
+            el.onclick = () => {
+              const pkg = state.packages.find(p => String(p.id) === el.dataset.freetrial);
+              if (pkg) startFreeTrial(pkg);
+            });
 
           document.querySelectorAll('[data-back-to-list]').forEach(el =>
             el.onclick = () => { state.payStep = 'list'; state.selected = null; state.status = null; render(); });
 
-        const payBtn = document.getElementById('pay-btn');
-if (payBtn) payBtn.onclick = () => {
-  state.phone = document.getElementById('phone').value.trim();
+          const payBtn = document.getElementById('pay-btn');
+          if (payBtn) payBtn.onclick = () => {
+            state.phone = document.getElementById('phone').value.trim();
 
-  if (!state.phone) {
-    queryModal = { status: 'error', message: 'Enter your M-Pesa phone number before paying.' };
-    renderQueryModal();
-    return;
-  }
-  payPackage();
-};
-
-
-const tvMacInput = document.getElementById('tv-mac');
-if (tvMacInput) tvMacInput.oninput = (e) => {
-  const formatted = formatMacInput(e.target.value);
-  e.target.value = formatted;
-  state.tvMac = formatted;
-};
+            if (!state.phone) {
+              queryModal = { status: 'error', message: 'Enter your M-Pesa phone number before paying.' };
+              renderQueryModal();
+              return;
+            }
+            payPackage();
+          };
 
 
-const tvPlanSel = document.getElementById('tv-plan');
-if (tvPlanSel) tvPlanSel.onchange = () => {
-  // capture whatever the user already typed before the re-render wipes the inputs
-  const macEl = document.getElementById('tv-mac');
-  const phoneEl = document.getElementById('tv-phone');
-  if (macEl) state.tvMac = macEl.value;
-  if (phoneEl) state.tvPhone = phoneEl.value;
-  state.tvSelected = state.tvPlans.find(p => String(p.id) === tvPlanSel.value) || null;
-  render();
-};
+          const tvMacInput = document.getElementById('tv-mac');
+          if (tvMacInput) tvMacInput.oninput = (e) => {
+            const formatted = formatMacInput(e.target.value);
+            e.target.value = formatted;
+            state.tvMac = formatted;
+          };
 
 
-const tvPayBtn = document.getElementById('tv-pay-btn');
-if (tvPayBtn) tvPayBtn.onclick = () => {
-  state.tvMac = document.getElementById('tv-mac').value.trim();
-  state.tvPhone = document.getElementById('tv-phone').value.trim();
-  if (!state.tvMac)       { queryModal = { status: 'error', message: 'Enter the TV/device MAC address.' }; renderQueryModal(); return; }
-  if (!isValidMac(state.tvMac)) { queryModal = { status: 'error', message: 'That doesn\\'t look like a valid MAC address. Format: AA:BB:CC:DD:EE:FF' }; renderQueryModal(); return; }
-  if (!state.tvPhone)     { queryModal = { status: 'error', message: 'Enter your M-Pesa phone number.' }; renderQueryModal(); return; }
-  if (!state.tvSelected)  { queryModal = { status: 'error', message: 'Choose a TV plan first.' }; renderQueryModal(); return; }
-  payTvPlan();
-};
+          const tvPlanSel = document.getElementById('tv-plan');
+          if (tvPlanSel) tvPlanSel.onchange = () => {
+            // capture whatever the user already typed before the re-render wipes the inputs
+            const macEl = document.getElementById('tv-mac');
+            const phoneEl = document.getElementById('tv-phone');
+            if (macEl) state.tvMac = macEl.value;
+            if (phoneEl) state.tvPhone = phoneEl.value;
+            state.tvSelected = state.tvPlans.find(p => String(p.id) === tvPlanSel.value) || null;
+            render();
+          };
+
+
+          const tvPayBtn = document.getElementById('tv-pay-btn');
+          if (tvPayBtn) tvPayBtn.onclick = () => {
+            state.tvMac = document.getElementById('tv-mac').value.trim();
+            state.tvPhone = document.getElementById('tv-phone').value.trim();
+            if (!state.tvMac)       { queryModal = { status: 'error', message: 'Enter the TV/device MAC address.' }; renderQueryModal(); return; }
+            if (!isValidMac(state.tvMac)) { queryModal = { status: 'error', message: 'That doesn\\'t look like a valid MAC address. Format: AA:BB:CC:DD:EE:FF' }; renderQueryModal(); return; }
+            if (!state.tvPhone)     { queryModal = { status: 'error', message: 'Enter your M-Pesa phone number.' }; renderQueryModal(); return; }
+            if (!state.tvSelected)  { queryModal = { status: 'error', message: 'Choose a TV plan first.' }; renderQueryModal(); return; }
+            payTvPlan();
+          };
 
 
           const voucherBtn = document.getElementById('voucher-btn');
@@ -773,15 +848,15 @@ function renderQueryModal() {
   };
 
   root.innerHTML = `
-    <div style="position:fixed;inset:0;z-index:20000;display:flex;align-items:center;justify-content:center;background:rgba(2,6,23,.75);backdrop-filter:blur(6px);">
-      <div style="background:var(--surface);color:var(--text);border-radius:20px;max-width:380px;width:90%;padding:24px;text-align:center;box-shadow:0 30px 60px rgba(0,0,0,.5);">
+    <div style="position:fixed;inset:0;z-index:20000;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.8);backdrop-filter:blur(6px);">
+      <div style="background:var(--surface);color:var(--text);border:1px solid color-mix(in srgb, var(--text) 25%, transparent);border-radius:20px;max-width:380px;width:90%;padding:24px;text-align:center;box-shadow:0 30px 60px rgba(0,0,0,.5);">
         <div style="font-size:32px;margin-bottom:10px;">${icons[queryModal.status] || 'ℹ️'}</div>
-        <h3 style="font-size:18px;font-weight:700;margin-bottom:10px;">${titles[queryModal.status] || 'Status'}</h3>
-        <p style="font-size:14px;color:var(--muted);margin-bottom:20px;line-height:1.5;">${queryModal.message}</p>
+        <h3 style="font-size:20px;font-weight:800;margin-bottom:10px;color:var(--text);">${titles[queryModal.status] || 'Status'}</h3>
+        <p style="font-size:16px;color:var(--text);margin-bottom:20px;line-height:1.5;">${queryModal.message}</p>
         ${queryModal.status === 'processing' ? `
-          <div style="margin:0 auto 16px;width:36px;height:36px;border:3px solid color-mix(in srgb, var(--primary) 25%, transparent);border-top-color:var(--primary);border-radius:50%;animation:spin 0.8s linear infinite;"></div>
+          <div style="margin:0 auto 16px;width:36px;height:36px;border:3px solid color-mix(in srgb, var(--text) 25%, transparent);border-top-color:var(--primary);border-radius:50%;animation:spin 0.8s linear infinite;"></div>
           <div style="display:flex;gap:8px;">
-            <button id="qm-stop" class="btn" style="background:color-mix(in srgb, var(--text) 12%, transparent);color:var(--text);">Stop Checking</button>
+            <button id="qm-stop" class="btn" style="background:color-mix(in srgb, var(--text) 18%, transparent);color:var(--text);border:1px solid color-mix(in srgb, var(--text) 40%, transparent);">Stop Checking</button>
             <button id="qm-check" class="btn">Check Now</button>
           </div>
         ` : `
@@ -828,25 +903,25 @@ function renderConnectedScreen() {
     ['Expires', connectedInfo.expiration],
   ].filter(([, v]) => v);
 
-   const isTv = connectedInfo.type === 'tv';
+  const isTv = connectedInfo.type === 'tv';
   const heading  = isTv ? 'TV Connected! 📺' : 'Connected!';
   const subtitle = isTv
     ? 'Your TV is now online — enjoy streaming.'
     : "You're online — enjoy browsing.";
   const icon = isTv ? '📺' : '✅';
   const btnLabel = isTv ? 'Done →' : 'Start Browsing →';
- root.innerHTML = `
-    <div style="position:fixed;inset:0;z-index:21000;display:flex;align-items:center;justify-content:center;background:rgba(2,6,23,.92);backdrop-filter:blur(20px);">
-      <div style="background:color-mix(in srgb, var(--surface) 90%, transparent);border:1px solid color-mix(in srgb, var(--accent) 25%, transparent);border-radius:24px;max-width:360px;width:90%;padding:32px 28px;text-align:center;box-shadow:0 0 60px rgba(52,211,153,.15);">
-        <div style="width:64px;height:64px;margin:0 auto 20px;border-radius:20px;background:color-mix(in srgb, var(--accent) 15%, transparent);border:1px solid color-mix(in srgb, var(--accent) 30%, transparent);display:flex;align-items:center;justify-content:center;font-size:28px;">${icon}</div>
-        <h2 style="font-size:22px;font-weight:800;color:var(--text);margin-bottom:4px;">${heading}</h2>
-        <p style="font-size:13px;color:var(--muted);margin-bottom:22px;">${subtitle}</p>
+  root.innerHTML = `
+    <div style="position:fixed;inset:0;z-index:21000;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.92);backdrop-filter:blur(20px);">
+      <div style="background:var(--surface);color:var(--text);border:1px solid color-mix(in srgb, var(--accent) 50%, transparent);border-radius:24px;max-width:360px;width:90%;padding:32px 28px;text-align:center;box-shadow:0 0 60px rgba(52,211,153,.15);">
+        <div style="width:64px;height:64px;margin:0 auto 20px;border-radius:20px;background:color-mix(in srgb, var(--accent) 22%, transparent);border:1px solid color-mix(in srgb, var(--accent) 50%, transparent);display:flex;align-items:center;justify-content:center;font-size:28px;">${icon}</div>
+        <h2 style="font-size:24px;font-weight:800;color:var(--text);margin-bottom:4px;">${heading}</h2>
+        <p style="font-size:15px;color:var(--text);margin-bottom:22px;">${subtitle}</p>
         ${rows.length ? `
           <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:22px;text-align:left;">
             ${rows.map(([l, v]) => `
-              <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border-radius:12px;background:color-mix(in srgb, var(--text) 6%, transparent);">
-                <span style="font-size:11px;color:var(--muted);">${l}</span>
-                <span style="font-size:13px;font-weight:700;color:var(--text);">${v}</span>
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border-radius:12px;background:color-mix(in srgb, var(--text) 10%, transparent);">
+                <span style="font-size:14px;color:var(--text);">${l}</span>
+                <span style="font-size:15px;font-weight:800;color:var(--text);">${v}</span>
               </div>
             `).join('')}
           </div>
@@ -856,7 +931,7 @@ function renderConnectedScreen() {
     </div>
   `;
 
-const startBtn = document.getElementById('connected-start-btn');
+  const startBtn = document.getElementById('connected-start-btn');
   if (startBtn) startBtn.onclick = () => { window.location.href = '$(link-orig)'; };
 }
 
@@ -899,36 +974,36 @@ function renderExpandedAd() {
       : '';
 
   const rewardBanner = isVideo ? \`
-    <div style="display:flex;align-items:center;gap:10px;padding:12px 16px;background:linear-gradient(90deg,color-mix(in srgb, var(--accent) 15%, transparent),color-mix(in srgb, var(--secondary) 12%, transparent));border-bottom:1px solid color-mix(in srgb, var(--accent) 20%, transparent);">
-      <div style="width:28px;height:28px;border-radius:50%;background:color-mix(in srgb, var(--accent) 20%, transparent);display:flex;align-items:center;justify-content:center;flex-shrink:0;">🎁</div>
+    <div style="display:flex;align-items:center;gap:10px;padding:12px 16px;background:linear-gradient(90deg,color-mix(in srgb, var(--accent) 22%, var(--surface)),color-mix(in srgb, var(--secondary) 18%, var(--surface)));border-bottom:1px solid color-mix(in srgb, var(--accent) 40%, transparent);">
+      <div style="width:28px;height:28px;border-radius:50%;background:color-mix(in srgb, var(--accent) 30%, transparent);display:flex;align-items:center;justify-content:center;flex-shrink:0;">🎁</div>
       <div style="flex:1;min-width:0;">
-        <p style="margin:0;font-size:13px;font-weight:600;color:var(--accent);">Watch this ad to unlock free internet!</p>
-        <p style="margin:2px 0 0;font-size:12px;color:var(--accent);">Reward: <strong>\${rewardLabel}</strong></p>
+        <p style="margin:0;font-size:15px;font-weight:700;color:var(--text);">Watch this ad to unlock free internet!</p>
+        <p style="margin:2px 0 0;font-size:14px;color:var(--text);">Reward: <strong>\${rewardLabel}</strong></p>
       </div>
     </div>\` : '';
 
   root.innerHTML = \`
     <div id="ad-expanded-backdrop" style="position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.93);backdrop-filter:blur(16px);padding:16px;">
-      <p style="position:absolute;top:16px;right:20px;font-size:12px;color:rgba(255,255,255,.7);">Press ESC or click outside to close</p>
-      <div id="ad-expanded-panel" style="position:relative;width:100%;max-width:720px;border-radius:20px;overflow:hidden;box-shadow:0 30px 60px rgba(0,0,0,.5);background:color-mix(in srgb, var(--surface) 98%, transparent);border:1px solid color-mix(in srgb, var(--text) 12%, transparent);">
+      <p style="position:absolute;top:16px;right:20px;font-size:14px;color:rgba(255,255,255,.95);">Press ESC or click outside to close</p>
+      <div id="ad-expanded-panel" style="position:relative;width:100%;max-width:720px;border-radius:20px;overflow:hidden;box-shadow:0 30px 60px rgba(0,0,0,.5);background:var(--surface);color:var(--text);border:1px solid color-mix(in srgb, var(--text) 25%, transparent);">
         \${rewardBanner}
         \${media}
         <div style="padding:14px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px;">
           <div style="display:flex;align-items:center;gap:8px;min-width:0;flex:1;">
-            <span style="font-size:11px;font-weight:800;padding:2px 8px;border-radius:6px;background:color-mix(in srgb, var(--primary) 15%, transparent);color:var(--primary);">Ad</span>
-            \${ad.ad_title ? \`<span style="font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">\${ad.ad_title}</span>\` : ''}
+            <span style="font-size:13px;font-weight:800;padding:2px 8px;border-radius:6px;background:color-mix(in srgb, var(--primary) 25%, transparent);border:1px solid var(--primary);color:var(--text);">Ad</span>
+            \${ad.ad_title ? \`<span style="font-size:15px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">\${ad.ad_title}</span>\` : ''}
           </div>
           <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
             \${isVideo && ad.can_skip ? \`
-              <button id="ad-expanded-skip" style="display:\${s.skipReady ? 'flex' : 'none'};align-items:center;gap:5px;font-size:13px;padding:7px 12px;border-radius:10px;font-weight:700;border:none;background:color-mix(in srgb, var(--accent) 18%, transparent);color:var(--accent);cursor:pointer;">Skip Ad ⏭</button>
-              <span id="ad-expanded-skip-wait" style="display:\${s.skipReady ? 'none' : 'inline'};font-size:12px;padding:7px 12px;border-radius:10px;background:color-mix(in srgb, var(--text) 8%, transparent);color:var(--muted);"><span id="ad-expanded-skip-countdown">\${skipCountdown}</span>s remaining</span>
+              <button id="ad-expanded-skip" style="display:\${s.skipReady ? 'flex' : 'none'};align-items:center;gap:5px;font-size:15px;padding:8px 12px;border-radius:10px;font-weight:800;border:1px solid var(--accent);background:color-mix(in srgb, var(--accent) 28%, transparent);color:var(--text);cursor:pointer;">Skip Ad ⏭</button>
+              <span id="ad-expanded-skip-wait" style="display:\${s.skipReady ? 'none' : 'inline'};font-size:14px;padding:8px 12px;border-radius:10px;background:color-mix(in srgb, var(--text) 14%, transparent);color:var(--text);"><span id="ad-expanded-skip-countdown">\${skipCountdown}</span>s remaining</span>
             \` : ''}
-            \${ad.ad_link ? \`<button id="ad-expanded-visit" style="display:flex;align-items:center;gap:5px;font-size:13px;padding:7px 12px;border-radius:10px;font-weight:700;border:none;background:color-mix(in srgb, var(--primary) 15%, transparent);color:var(--primary);cursor:pointer;">Visit ↗</button>\` : ''}
-            \${isImage ? \`<button id="ad-expanded-dismiss" style="display:flex;align-items:center;gap:5px;font-size:13px;padding:7px 12px;border-radius:10px;font-weight:600;border:none;background:color-mix(in srgb, var(--text) 10%, transparent);color:var(--muted);cursor:pointer;">✕ Close Ad</button>\` : ''}
-            <button id="ad-expanded-collapse" style="display:flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:10px;border:none;background:color-mix(in srgb, var(--text) 10%, transparent);color:var(--muted);cursor:pointer;">⤡</button>
+            \${ad.ad_link ? \`<button id="ad-expanded-visit" style="display:flex;align-items:center;gap:5px;font-size:15px;padding:8px 12px;border-radius:10px;font-weight:800;border:1px solid var(--primary);background:color-mix(in srgb, var(--primary) 25%, transparent);color:var(--text);cursor:pointer;">Visit ↗</button>\` : ''}
+            \${isImage ? \`<button id="ad-expanded-dismiss" style="display:flex;align-items:center;gap:5px;font-size:15px;padding:8px 12px;border-radius:10px;font-weight:700;border:1px solid color-mix(in srgb, var(--text) 40%, transparent);background:color-mix(in srgb, var(--text) 14%, transparent);color:var(--text);cursor:pointer;">✕ Close Ad</button>\` : ''}
+            <button id="ad-expanded-collapse" style="display:flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:10px;border:1px solid color-mix(in srgb, var(--text) 40%, transparent);background:color-mix(in srgb, var(--text) 14%, transparent);color:var(--text);cursor:pointer;font-size:16px;">⤡</button>
           </div>
         </div>
-        \${isVideo ? \`<div style="height:3px;background:color-mix(in srgb, var(--text) 10%, transparent);"><div id="ad-expanded-progress-bar" style="height:100%;width:\${((ad.ad_duration || 15) - s.secondsLeft) / (ad.ad_duration || 15) * 100}%;background:linear-gradient(90deg,var(--accent),var(--secondary));transition:width 1s linear;"></div></div>\` : ''}
+        \${isVideo ? \`<div style="height:4px;background:color-mix(in srgb, var(--text) 20%, transparent);"><div id="ad-expanded-progress-bar" style="height:100%;width:\${((ad.ad_duration || 15) - s.secondsLeft) / (ad.ad_duration || 15) * 100}%;background:linear-gradient(90deg,var(--accent),var(--secondary));transition:width 1s linear;"></div></div>\` : ''}
       </div>
     </div>\`;
 
@@ -1288,14 +1363,14 @@ function pollDeviceBindingStatus() {
 
 
 
-        
+
         async function loadPackages() {
           try {
             const res = await fetch(api('/api/allow_get_hotspot_packages'), { headers });
             const data = res.ok ? await res.json() : [];
             state.packages = (cfg.preview && (!data || !data.length)) ? MOCK_PACKAGES : (data || []);
           } catch (e) {
-           console.error('Failed to load packages (check CORS / walled-garden):', e);
+            console.error('Failed to load packages (check CORS / walled-garden):', e);
             document.getElementById('panel').innerHTML = '<div class="status error">DEBUG: ' + e.message + '</div>';
             state.packages = cfg.preview ? MOCK_PACKAGES : [];
           } finally {
@@ -1430,7 +1505,7 @@ async function payPackage() {
           } catch (e) { console.error(e); setStatus('error', 'Network error. Check your connection and try again.'); }
         }
 
-               async function connectReceipt(code) {
+        async function connectReceipt(code) {
           setStatus('processing', 'Verifying your M-Pesa transaction…');
           try {
             const res = await fetch(api('/api/login_with_receipt_number'), {
@@ -1451,18 +1526,18 @@ async function payPackage() {
         }
 
         function onConnected(details) {
-  details = details || {};
-  connectedInfo = {
-    username: details.username || username || '',
-    package: details.package || (state.selected && state.selected.name) || '',
-    expiration: details.expiration || '',
-    type: details.type || 'default',
-  };
-  if (connectedInfo.username) localStorage.setItem('hotspot_username', connectedInfo.username);
-  renderConnectedScreen();
-  setStatus('success', 'Connected! Redirecting…');
-  setTimeout(() => { window.location.href = '$(link-orig)'; }, 4000);
-}
+          details = details || {};
+          connectedInfo = {
+            username: details.username || username || '',
+            package: details.package || (state.selected && state.selected.name) || '',
+            expiration: details.expiration || '',
+            type: details.type || 'default',
+          };
+          if (connectedInfo.username) localStorage.setItem('hotspot_username', connectedInfo.username);
+          renderConnectedScreen();
+          setStatus('success', 'Connected! Redirecting…');
+          setTimeout(() => { window.location.href = '$(link-orig)'; }, 4000);
+        }
 
         // ── Autologin / autoreconnect ───────────────────────────────────
         // Mirrors React's voucherAutoLogin(): if the account has
@@ -1524,22 +1599,22 @@ function renderSystemAd(adId, brand) {
     const progress = Math.min(100, (elapsed / duration) * 100);
     root.innerHTML = \`
       <div style="position:fixed;inset:0;z-index:99999;background:#020617;display:flex;flex-direction:column;font-family:'Plus Jakarta Sans',sans-serif;">
-        <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 16px;background:rgba(0,0,0,.4);border-bottom:1px solid rgba(255,255,255,.07);">
-          <span style="font-size:11px;font-weight:700;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.08em;">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 16px;background:rgba(0,0,0,.4);border-bottom:1px solid rgba(255,255,255,.2);">
+          <span style="font-size:13px;font-weight:700;color:rgba(255,255,255,.95);text-transform:uppercase;letter-spacing:.08em;">
             ✨ Sponsored · \${brand.company_name || 'Your ISP'}
           </span>
           \${canSkip
-            ? '<button id="sysad-skip" style="padding:5px 10px;border-radius:8px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.07);color:rgba(255,255,255,.7);font-size:12px;font-weight:600;cursor:pointer;">Skip ✕</button>'
-            : '<span style="font-size:11px;color:rgba(255,255,255,.35);padding:5px 10px;">Skip in \${5 - elapsed}s</span>'
+            ? '<button id="sysad-skip" style="padding:6px 12px;border-radius:8px;border:1px solid rgba(255,255,255,.5);background:rgba(255,255,255,.15);color:#ffffff;font-size:14px;font-weight:700;cursor:pointer;">Skip ✕</button>'
+            : '<span style="font-size:13px;color:rgba(255,255,255,.95);padding:6px 12px;">Skip in ' + (5 - elapsed) + 's</span>'
           }
         </div>
         <div style="flex:1;overflow:hidden;">\${currentScene().html()}</div>
-        <div style="height:3px;background:rgba(255,255,255,.15);">
+        <div style="height:4px;background:rgba(255,255,255,.25);">
           <div style="height:100%;width:\${progress}%;background:linear-gradient(90deg,#38bdf8,#a78bfa);transition:width .9s linear;"></div>
         </div>
-        <div style="padding:8px 16px;background:rgba(0,0,0,.4);display:flex;justify-content:space-between;border-top:1px solid rgba(255,255,255,.07);">
-          <span style="font-size:11px;color:rgba(255,255,255,.3);">Ad ends in \${Math.max(0, duration - elapsed)}s</span>
-          \${brand.contact_info ? '<a href="tel:' + brand.contact_info + '" style="font-size:11px;font-weight:700;color:#38bdf8;text-decoration:none;">📞 ' + brand.contact_info + '</a>' : ''}
+        <div style="padding:8px 16px;background:rgba(0,0,0,.4);display:flex;justify-content:space-between;border-top:1px solid rgba(255,255,255,.2);">
+          <span style="font-size:13px;color:rgba(255,255,255,.95);">Ad ends in \${Math.max(0, duration - elapsed)}s</span>
+          \${brand.contact_info ? '<a href="tel:' + brand.contact_info + '" style="font-size:14px;font-weight:800;color:#ffffff;text-decoration:underline;">📞 ' + brand.contact_info + '</a>' : ''}
         </div>
       </div>\`;
     const skipBtn = document.getElementById('sysad-skip');
@@ -1562,11 +1637,11 @@ function renderSystemAd(adId, brand) {
 function systemAdScene0(b) {
   const c = b.primary_color || '#facc15';
   return \`<div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:28px;background:linear-gradient(160deg,#030712,#1a0f00);gap:16px;">
-    <div style="width:72px;height:72px;border-radius:50%;background:\${c}22;border:2px solid \${c};display:flex;align-items:center;justify-content:center;font-size:32px;">📢</div>
-    <p style="font-size:26px;font-weight:900;color:#fff;text-align:center;line-height:1.2;">Je, una biashara?</p>
-    <p style="font-size:15px;color:rgba(255,255,255,.6);text-align:center;">Do you own a business?</p>
-    <div style="padding:8px 20px;border-radius:999px;background:\${c}22;border:1px solid \${c}44;">
-      <p style="font-size:13px;font-weight:700;color:\${c};">Tangaza kwenye WiFi hii 📶</p>
+    <div style="width:72px;height:72px;border-radius:50%;background:\${c}33;border:2px solid \${c};display:flex;align-items:center;justify-content:center;font-size:32px;">📢</div>
+    <p style="font-size:28px;font-weight:900;color:#fff;text-align:center;line-height:1.2;">Je, una biashara?</p>
+    <p style="font-size:17px;color:rgba(255,255,255,.95);text-align:center;">Do you own a business?</p>
+    <div style="padding:8px 20px;border-radius:999px;background:\${c}33;border:1px solid \${c};">
+      <p style="font-size:15px;font-weight:800;color:#ffffff;">Tangaza kwenye WiFi hii 📶</p>
     </div>
   </div>\`;
 }
@@ -1574,12 +1649,12 @@ function systemAdScene0(b) {
 function systemAdScene1(b) {
   const c = b.primary_color || '#34d399';
   return \`<div style="flex:1;display:flex;flex-direction:column;padding:20px 24px;background:linear-gradient(160deg,#030712,#001a0f);gap:14px;">
-    <p style="font-size:17px;font-weight:800;color:#fff;">Wafikie wateja wako 🎯</p>
-    <p style="font-size:12px;color:rgba(255,255,255,.5);">Reach your customers through this hotspot</p>
+    <p style="font-size:19px;font-weight:800;color:#fff;">Wafikie wateja wako 🎯</p>
+    <p style="font-size:14px;color:rgba(255,255,255,.95);">Reach your customers through this hotspot</p>
     \${[['1,000+','Wateja kila siku','#34d399'],['100%','Ad visibility','#38bdf8'],['3×','vs print ads','#a78bfa']].map(([num,label,col]) =>
-      '<div style="display:flex;align-items:center;gap:14px;padding:12px 16px;border-radius:14px;background:' + col + '0f;border:1px solid ' + col + '25;">' +
-        '<p style="font-size:20px;font-weight:900;color:' + col + ';min-width:60px;">' + num + '</p>' +
-        '<p style="font-size:11px;color:rgba(255,255,255,.5);">' + label + '</p>' +
+      '<div style="display:flex;align-items:center;gap:14px;padding:12px 16px;border-radius:14px;background:' + col + '26;border:1px solid ' + col + '66;">' +
+        '<p style="font-size:22px;font-weight:900;color:' + col + ';min-width:70px;">' + num + '</p>' +
+        '<p style="font-size:14px;color:rgba(255,255,255,.95);">' + label + '</p>' +
       '</div>'
     ).join('')}
   </div>\`;
@@ -1587,13 +1662,13 @@ function systemAdScene1(b) {
 
 function systemAdScene2(b) {
   return \`<div style="flex:1;display:flex;flex-direction:column;padding:20px 24px;background:linear-gradient(160deg,#030712,#0a0018);gap:10px;">
-    <p style="font-size:16px;font-weight:800;color:#fff;">Inafaa kwa biashara yoyote 🏪</p>
-    <p style="font-size:12px;color:rgba(255,255,255,.4);">Works for any type of business</p>
+    <p style="font-size:18px;font-weight:800;color:#fff;">Inafaa kwa biashara yoyote 🏪</p>
+    <p style="font-size:14px;color:rgba(255,255,255,.95);">Works for any type of business</p>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
       \${[['🍽️','Mkahawa','Restaurant'],['💇','Salon','Barber'],['🏥','Duka la dawa','Pharmacy'],['🛒','Duka','Shop'],['🏫','Shule','School'],['🎉','Tukio','Event']].map(([e,sw,en]) =>
-        '<div style="padding:10px 12px;border-radius:12px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);display:flex;align-items:center;gap:8px;">' +
+        '<div style="padding:10px 12px;border-radius:12px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.25);display:flex;align-items:center;gap:8px;">' +
           '<span style="font-size:20px;">' + e + '</span>' +
-          '<div><p style="font-size:11px;font-weight:700;color:#fff;">' + sw + '</p><p style="font-size:10px;color:rgba(255,255,255,.4);">' + en + '</p></div>' +
+          '<div><p style="font-size:14px;font-weight:700;color:#fff;">' + sw + '</p><p style="font-size:12px;color:rgba(255,255,255,.95);">' + en + '</p></div>' +
         '</div>'
       ).join('')}
     </div>
@@ -1603,13 +1678,13 @@ function systemAdScene2(b) {
 function systemAdScene3(b) {
   const c = b.primary_color || '#38bdf8';
   const logo = b.logo_url || b.logo_preview;
-  return \`<div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:28px;background:linear-gradient(160deg,#030712,\${c}22);gap:16px;">
-    \${logo ? '<img src="' + logo + '" style="width:72px;height:72px;border-radius:18px;object-fit:contain;border:2px solid ' + c + '44;padding:6px;background:rgba(255,255,255,.06);">' :
+  return \`<div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:28px;background:linear-gradient(160deg,#030712,\${c}33);gap:16px;">
+    \${logo ? '<img src="' + logo + '" style="width:72px;height:72px;border-radius:18px;object-fit:contain;border:2px solid ' + c + '66;padding:6px;background:rgba(255,255,255,.1);">' :
       '<div style="width:72px;height:72px;border-radius:18px;background:linear-gradient(135deg,' + c + ',' + c + '88);display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:900;color:#fff;">' + (b.company_name||'I')[0] + '</div>'}
-    <p style="font-size:22px;font-weight:900;color:#fff;text-align:center;">\${b.company_name || 'Your ISP'}</p>
-    <p style="font-size:13px;color:\${c};font-weight:700;">WiFi Advertising Platform</p>
-    \${b.contact_info ? '<div style="display:flex;align-items:center;gap:8px;padding:10px 20px;border-radius:999px;background:' + c + '18;border:1px solid ' + c + '30;"><span style="font-size:14px;font-weight:800;color:#fff;">📞 ' + b.contact_info + '</span></div>' : ''}
-    <p style="font-size:11px;color:rgba(255,255,255,.35);text-align:center;">Powered by \${b.company_name || 'your ISP'} · WiFi Marketing</p>
+    <p style="font-size:24px;font-weight:900;color:#fff;text-align:center;">\${b.company_name || 'Your ISP'}</p>
+    <p style="font-size:15px;color:#ffffff;font-weight:700;">WiFi Advertising Platform</p>
+    \${b.contact_info ? '<div style="display:flex;align-items:center;gap:8px;padding:10px 20px;border-radius:999px;background:' + c + '33;border:1px solid ' + c + ';"><span style="font-size:16px;font-weight:800;color:#fff;">📞 ' + b.contact_info + '</span></div>' : ''}
+    <p style="font-size:13px;color:rgba(255,255,255,.95);text-align:center;">Powered by \${b.company_name || 'your ISP'} · WiFi Marketing</p>
   </div>\`;
 }
 
@@ -1643,7 +1718,7 @@ function tryQrVoucherLogin() {
 
 
 
-       async function tryAutoLogin() {
+        async function tryAutoLogin() {
           try {
             const custRes = await fetch(api('/api/allow_get_hotspot_customization'), { headers });
             if (!custRes.ok) { console.info('[autologin] skipped: could not load customization settings'); return; }
@@ -1689,7 +1764,7 @@ function tryQrVoucherLogin() {
         }
 
         // ── Ads ──────────────────────────────────────────────────────────
-      const AD_POSITIONS = {
+        const AD_POSITIONS = {
   'top-banner':    'position:fixed;top:0;left:0;right:0;z-index:9999;',
   'bottom-banner': 'position:fixed;bottom:0;left:0;right:0;z-index:9999;',
   'bottom-right':  'position:fixed;bottom:16px;right:16px;z-index:9999;width:320px;max-width:calc(100vw - 32px);',
@@ -1758,14 +1833,14 @@ function trackAdEvent(adId, eventType) {
           }).join('');
 
           const visitBtn = ad.ad_link
-            ? \`<button data-ad-visit="\${ad.id}" style="position:absolute;bottom:8px;left:8px;display:flex;align-items:center;gap:4px;padding:4px 10px;border-radius:20px;border:none;background:rgba(0,0,0,.5);color:#fff;font-size:11px;font-weight:600;cursor:pointer;">Visit ↗</button>\`
+            ? \`<button data-ad-visit="\${ad.id}" style="position:absolute;bottom:8px;left:8px;display:flex;align-items:center;gap:4px;padding:6px 12px;border-radius:20px;border:none;background:rgba(0,0,0,.8);color:#fff;font-size:13px;font-weight:700;cursor:pointer;">Visit ↗</button>\`
             : '';
-          const closeBtn = \`<button data-ad-dismiss="\${ad.id}" style="position:absolute;top:8px;right:8px;width:24px;height:24px;border-radius:50%;background:rgba(0,0,0,.5);border:none;color:#fff;cursor:pointer;">✕</button>\`;
+          const closeBtn = \`<button data-ad-dismiss="\${ad.id}" style="position:absolute;top:8px;right:8px;width:28px;height:28px;border-radius:50%;background:rgba(0,0,0,.8);border:none;color:#fff;cursor:pointer;font-size:14px;">✕</button>\`;
 
           return \`<div data-ad-track="\${ad.id}" style="position:relative;width:\${w}px;max-width:320px;height:\${h}px;background:\${bg};border-radius:10px;overflow:hidden;cursor:pointer;">\${parts}\${visitBtn}\${closeBtn}</div>\`;
         }
 
-     function adCardHtml(ad) {
+        function adCardHtml(ad) {
   const s = adState[ad.id];
   if (!s || s.completed) return '';
   const isVideo = ad.media_type === 'video';
@@ -1773,7 +1848,7 @@ function trackAdEvent(adId, eventType) {
   const isCustom = ad.media_type === 'custom_design';
   const isMock = cfg.preview && String(ad.id) === 'mock-ad';
   const isFullscreen = ad.position === 'fullscreen';
-let media = '';
+  let media = '';
   if (isImage) {
     media = isFullscreen
       ? \`<img src="\${ad.media_url}" style="width:100%;flex:1;object-fit:contain;display:block;">\`
@@ -1797,34 +1872,34 @@ let media = '';
     footer = \`
       <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 14px;">
         <div style="display:flex;align-items:center;gap:6px;min-width:0;flex:1;">
-          <span style="font-weight:700;font-size:11px;padding:2px 6px;border-radius:4px;background:color-mix(in srgb, var(--primary) 15%, transparent);color:var(--primary);">Ad</span>
+          <span style="font-weight:800;font-size:13px;padding:2px 6px;border-radius:4px;background:color-mix(in srgb, var(--primary) 25%, transparent);border:1px solid var(--primary);color:var(--text);">Ad</span>
           \${isMock ? '<span class="mock-tag">Sample</span>' : ''}
-          \${ad.ad_title ? \`<span style="font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">\${ad.ad_title}</span>\` : ''}
+          \${ad.ad_title ? \`<span style="font-size:14px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">\${ad.ad_title}</span>\` : ''}
         </div>
         <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
-          \${(isImage || isVideo) ? \`<button data-ad-expand="\${ad.id}" style="display:flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:8px;border:none;background:color-mix(in srgb, var(--text) 10%, transparent);color:var(--muted);cursor:pointer;font-size:13px;">⤢</button>\` : ''}
-          \${ad.ad_link ? \`<button data-ad-visit="\${ad.id}" style="display:flex;align-items:center;gap:4px;font-size:11px;padding:5px 10px;border-radius:8px;font-weight:700;border:none;background:color-mix(in srgb, var(--primary) 15%, transparent);color:var(--primary);cursor:pointer;">Visit ↗</button>\` : ''}
-          \${isVideo && ad.can_skip && s.skipReady ? \`<button data-ad-skip="\${ad.id}" style="display:flex;align-items:center;gap:4px;font-size:11px;padding:5px 10px;border-radius:8px;font-weight:700;border:none;background:color-mix(in srgb, var(--accent) 15%, transparent);color:var(--accent);cursor:pointer;">Skip ⏭</button>\` : ''}
-          \${isVideo && ad.can_skip && !s.skipReady ? \`<span style="font-size:11px;padding:5px 10px;border-radius:8px;background:color-mix(in srgb, var(--text) 8%, transparent);color:var(--muted);">Skip in \${skipCountdown}s</span>\` : ''}
-          \${isImage ? \`<button data-ad-dismiss="\${ad.id}" style="width:26px;height:26px;border-radius:50%;border:none;background:color-mix(in srgb, var(--text) 12%, transparent);color:var(--muted);cursor:pointer;">✕</button>\` : ''}
+          \${(isImage || isVideo) ? \`<button data-ad-expand="\${ad.id}" style="display:flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:8px;border:1px solid color-mix(in srgb, var(--text) 40%, transparent);background:color-mix(in srgb, var(--text) 14%, transparent);color:var(--text);cursor:pointer;font-size:15px;">⤢</button>\` : ''}
+          \${ad.ad_link ? \`<button data-ad-visit="\${ad.id}" style="display:flex;align-items:center;gap:4px;font-size:13px;padding:6px 10px;border-radius:8px;font-weight:800;border:1px solid var(--primary);background:color-mix(in srgb, var(--primary) 25%, transparent);color:var(--text);cursor:pointer;">Visit ↗</button>\` : ''}
+          \${isVideo && ad.can_skip && s.skipReady ? \`<button data-ad-skip="\${ad.id}" style="display:flex;align-items:center;gap:4px;font-size:13px;padding:6px 10px;border-radius:8px;font-weight:800;border:1px solid var(--accent);background:color-mix(in srgb, var(--accent) 28%, transparent);color:var(--text);cursor:pointer;">Skip ⏭</button>\` : ''}
+          \${isVideo && ad.can_skip && !s.skipReady ? \`<span style="font-size:13px;padding:6px 10px;border-radius:8px;background:color-mix(in srgb, var(--text) 14%, transparent);color:var(--text);">Skip in \${skipCountdown}s</span>\` : ''}
+          \${isImage ? \`<button data-ad-dismiss="\${ad.id}" style="width:32px;height:32px;border-radius:50%;border:1px solid color-mix(in srgb, var(--text) 40%, transparent);background:color-mix(in srgb, var(--text) 14%, transparent);color:var(--text);cursor:pointer;font-size:14px;">✕</button>\` : ''}
         </div>
       </div>\`;
   }
 
   const banner = isVideo ? \`
-    <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:linear-gradient(90deg,color-mix(in srgb, var(--accent) 15%, transparent),color-mix(in srgb, var(--secondary) 12%, transparent));border-bottom:1px solid color-mix(in srgb, var(--accent) 20%, transparent);">
-      <div style="width:26px;height:26px;border-radius:50%;background:color-mix(in srgb, var(--accent) 20%, transparent);display:flex;align-items:center;justify-content:center;flex-shrink:0;">🎁</div>
+    <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:linear-gradient(90deg,color-mix(in srgb, var(--accent) 22%, var(--surface)),color-mix(in srgb, var(--secondary) 18%, var(--surface)));border-bottom:1px solid color-mix(in srgb, var(--accent) 40%, transparent);">
+      <div style="width:28px;height:28px;border-radius:50%;background:color-mix(in srgb, var(--accent) 30%, transparent);display:flex;align-items:center;justify-content:center;flex-shrink:0;">🎁</div>
       <div style="flex:1;min-width:0;">
-        <p style="margin:0;font-size:12px;font-weight:600;color:var(--accent);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Watch this ad to unlock free internet!</p>
-        <p style="margin:2px 0 0;font-size:11px;color:var(--accent);">Reward: <strong>\${rewardLabelFor(ad)}</strong></p>
+        <p style="margin:0;font-size:14px;font-weight:700;color:var(--text);">Watch this ad to unlock free internet!</p>
+        <p style="margin:2px 0 0;font-size:13px;color:var(--text);">Reward: <strong>\${rewardLabelFor(ad)}</strong></p>
       </div>
-      <div style="flex-shrink:0;display:flex;align-items:center;gap:4px;padding:3px 8px;border-radius:20px;background:rgba(0,0,0,.4);">
-        <span style="font-size:11px;font-weight:700;color:#fcd34d;">\${s.secondsLeft}s</span>
+      <div style="flex-shrink:0;display:flex;align-items:center;gap:4px;padding:4px 10px;border-radius:20px;background:rgba(0,0,0,.85);">
+        <span style="font-size:14px;font-weight:800;color:#ffffff;">\${s.secondsLeft}s</span>
       </div>
     </div>\` : '';
 
   const progress = isVideo
-    ? \`<div style="height:2px;background:color-mix(in srgb, var(--text) 10%, transparent);"><div style="height:100%;background:linear-gradient(90deg,var(--accent),var(--secondary));width:\${((ad.ad_duration || 15) - s.secondsLeft) / (ad.ad_duration || 15) * 100}%;transition:width 1s linear;"></div></div>\`
+    ? \`<div style="height:3px;background:color-mix(in srgb, var(--text) 20%, transparent);"><div style="height:100%;background:linear-gradient(90deg,var(--accent),var(--secondary));width:\${((ad.ad_duration || 15) - s.secondsLeft) / (ad.ad_duration || 15) * 100}%;transition:width 1s linear;"></div></div>\`
     : '';
 
   const isFull = ad.position === 'fullscreen';
@@ -1853,7 +1928,7 @@ function renderAds() {
   bindAdEvents();
 }
 
-      function bindAdEvents() {
+        function bindAdEvents() {
   document.querySelectorAll('[data-ad-visit]').forEach(el => {
     el.onclick = (e) => {
       e.stopPropagation();
@@ -1887,22 +1962,22 @@ function renderAds() {
       };
     }
   });
-  
 
-document.querySelectorAll('[data-ad-expand]').forEach(el => {
-  el.onclick = (e) => {
-    e.stopPropagation();
-    const id = el.dataset.adExpand;
-    const s = adState[id];
-    if (!s || s.completed) return;
-    trackAdEvent(id, 'engaged_view');   // deliberate action — counts as engagement
-    expandedAdId = id;
-    renderExpandedAd();
-    // Real watch-timer starts here — the first time they actually open
-    // the video, not when the ad merely appeared on the page.
-    if (s.ad.media_type === 'video') startAdTimers(s.ad);
-  };
-});
+
+  document.querySelectorAll('[data-ad-expand]').forEach(el => {
+    el.onclick = (e) => {
+      e.stopPropagation();
+      const id = el.dataset.adExpand;
+      const s = adState[id];
+      if (!s || s.completed) return;
+      trackAdEvent(id, 'engaged_view');   // deliberate action — counts as engagement
+      expandedAdId = id;
+      renderExpandedAd();
+      // Real watch-timer starts here — the first time they actually open
+      // the video, not when the ad merely appeared on the page.
+      if (s.ad.media_type === 'video') startAdTimers(s.ad);
+    };
+  });
 
 
 
@@ -1910,7 +1985,7 @@ document.querySelectorAll('[data-ad-expand]').forEach(el => {
 
       }
 
-       function completeAd(adId, reason) {
+        function completeAd(adId, reason) {
   const s = adState[adId];
   if (!s || s.completed) return;
   clearInterval(adTimers[adId]);
@@ -1921,7 +1996,7 @@ document.querySelectorAll('[data-ad-expand]').forEach(el => {
   if (isVideo) trackAdEvent(adId, reason === 'skipped' ? 'video_skipped' : 'video_completed');
   else if (s.ad.media_type === 'image') trackAdEvent(adId, 'dismissed');
 
-if (isVideo && s.started) grantAdReward(s.ad);
+  if (isVideo && s.started) grantAdReward(s.ad);
 
 
   if (expandedAdId === adId) {
@@ -2004,14 +2079,14 @@ function startAdTimers(ad) {
 
             renderAds();
 
-Object.values(adState).forEach(s => {
-  if (!s.viewTracked) { trackAdEvent(s.ad.id, 'Ad View'); s.viewTracked = true; }
-  // Image ads have no timer to worry about. Video ads: don't start the
-  // countdown just because the ad loaded on the page — that lets anyone
-  // earn the reward without ever actually watching. The timer only starts
-  // once the viewer taps to expand and actually opens the video.
-  if (s.ad.media_type !== 'video') startAdTimers(s.ad);
-});
+            Object.values(adState).forEach(s => {
+              if (!s.viewTracked) { trackAdEvent(s.ad.id, 'Ad View'); s.viewTracked = true; }
+              // Image ads have no timer to worry about. Video ads: don't start the
+              // countdown just because the ad loaded on the page — that lets anyone
+              // earn the reward without ever actually watching. The timer only starts
+              // once the viewer taps to expand and actually opens the video.
+              if (s.ad.media_type !== 'video') startAdTimers(s.ad);
+            });
 
 
           } catch (e) {
