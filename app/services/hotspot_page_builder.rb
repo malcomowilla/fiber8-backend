@@ -339,7 +339,7 @@ class HotspotPageBuilder
                        background: color-mix(in srgb, var(--primary) 16%, transparent);
                        border: 1px solid color-mix(in srgb, var(--primary) 50%, transparent); margin-bottom: 18px; }
       .pay-modal-valid { font-size: 14px; font-weight: 600; margin-top: 2px; }
-      .pay-modal-hint { font-size: 14px; color: var(--text); margin: -4px 0 16px; }
+      .pay-modal-hint { font-size: 16px; font-weight: 800; color: var(--text); margin: -2px 0 16px; line-height: 1.4; }
       .pay-modal-amount { display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; border-radius: 14px;
                           font-size: 16px; font-weight: 700; color: var(--text); margin-bottom: 16px;
                           border: 2px solid var(--primary); background: color-mix(in srgb, var(--primary) 10%, transparent); }
