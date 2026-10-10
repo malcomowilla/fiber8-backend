@@ -8,14 +8,19 @@ class PayheroService
   class << self
     # Registers a paybill / till / bank channel inside the platform's PayHero account.
     def register_channel(channel_type:, short_code:, account_number:, description:)
-      call(:post, '/payment_channels', body: {
-        channel_type:   channel_type,
-        account_id:     ENV['PAYHERO_ACCOUNT_ID'].to_i,
-        short_code:     short_code.to_i,
-        account_number: account_number.to_s,
-        description:    description
-      })
-    end
+  account_id = ENV['PAYHERO_ACCOUNT_ID'].to_i
+  return { success: false, error: 'PAYHERO_ACCOUNT_ID is not set' } if account_id.zero?
+
+  body = {
+    channel_type:   channel_type,
+    account_id:     account_id,
+    short_code:     short_code.to_i,
+    account_number: account_number.to_s,
+    description:    description
+  }
+  Rails.logger.info "[PayHero] register body: #{body.inspect}"
+  call(:post, '/payment_channels', body: body)
+end
 
     def initiate_stk_push(amount:, phone:, channel_id:, external_reference:, customer_name: nil, callback_url: nil)
       call(:post, '/payments', body: {
