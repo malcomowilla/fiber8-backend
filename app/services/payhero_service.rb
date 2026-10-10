@@ -43,36 +43,45 @@ class PayheroService
       token.start_with?('Basic ', 'Bearer ') ? token : "Basic #{token}"
     end
 
-    def call(method, path, body: nil, query: nil)
-      header = auth_header
-      return { success: false, error: 'PAYHERO_BEARER_TOKEN is not set' } unless header
+   def call(method, path, body: nil, query: nil)
+  header = auth_header
+  return { success: false, error: 'PAYHERO_BEARER_TOKEN is not set' } unless header
 
-      uri = URI("#{BASE_URL}#{path}")
-      uri.query = URI.encode_www_form(query) if query
+  uri = URI("#{BASE_URL}#{path}")
+  uri.query = URI.encode_www_form(query) if query
 
-      req = method == :post ? Net::HTTP::Post.new(uri) : Net::HTTP::Get.new(uri)
-      req['Authorization'] = header
-      req['Content-Type']  = 'application/json'
-      req.body = body.to_json if body
+  req = method == :post ? Net::HTTP::Post.new(uri) : Net::HTTP::Get.new(uri)
+  req['Authorization']   = header
+  req['Content-Type']    = 'application/json'
+  req['Accept']          = 'application/json'
+  req['Accept-Encoding'] = 'identity' # no compression, avoids Zlib::DataError
+  req.body = body.to_json if body
 
-      res = Net::HTTP.start(uri.hostname, uri.port, use_ssl: true, open_timeout: 8, read_timeout: 20) do |http|
-        http.request(req)
-      end
+  res = Net::HTTP.start(uri.hostname, uri.port, use_ssl: true, open_timeout: 8, read_timeout: 20) do |http|
+    http.request(req)
+  end
 
-      parsed = JSON.parse(res.body) rescue {}
-      ok = res.is_a?(Net::HTTPSuccess) && parsed['success'] != false
+  parsed = JSON.parse(res.body) rescue {}
+  ok = res.is_a?(Net::HTTPSuccess) && parsed['success'] != false
 
-      if ok
-        { success: true, response: parsed }
-      else
-        { success: false, response: parsed,
-          error: parsed['error_message'] || parsed['message'] || parsed['error'] || "PayHero returned #{res.code}" }
-      end
-    rescue Net::OpenTimeout, Net::ReadTimeout
-      { success: false, error: 'PayHero timed out, please try again' }
-    rescue StandardError => e
-      Rails.logger.error "PayheroService error: #{e.class} #{e.message}"
-      { success: false, error: 'Could not reach PayHero' }
-    end
+  unless ok
+    Rails.logger.info "[PayHero] #{method.to_s.upcase} #{path} -> #{res.code} #{res.body.to_s[0, 300]}"
+  end
+
+  if ok
+    { success: true, response: parsed }
+  else
+    { success: false, response: parsed,
+      error: parsed['error_message'] || parsed['message'] || parsed['error'] || "PayHero returned #{res.code}" }
+  end
+rescue Net::OpenTimeout, Net::ReadTimeout
+  { success: false, error: 'PayHero timed out, please try again' }
+rescue StandardError => e
+  Rails.logger.error "PayheroService error: #{e.class} #{e.message}"
+  Rails.logger.error e.backtrace.first(5).join("\n")
+  { success: false, error: 'Could not reach PayHero' }
+end
+
+
   end
 end
