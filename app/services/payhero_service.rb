@@ -14,7 +14,7 @@ class PayheroService
   body = {
     channel_type:   channel_type,
     account_id:     account_id,
-    short_code:     short_code.to_i,
+    short_code:     short_code.to_s,
     account_number: account_number.to_s,
     description:    description
   }
