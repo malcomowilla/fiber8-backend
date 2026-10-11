@@ -1,27 +1,13 @@
 class HotspotMpesaSettingsController < ApplicationController
 
-  # --- Payment gateway 2FA gate ------------------------------------------
-  # Requires a fresh OTP verification (session-scoped, see
-  # PaymentGatewayVerifiable) before ANY action here runs — this covers
-  # both viewing (index/get_mpesa_settings/saved_hotspot_mpesa_settings)
-  # and saving (create/update/destroy).
-  #
-  # customer_mpesa_stk_payments is Safaricom's callback endpoint — it's
-  # already locked down by whitelist_mpesa_ips below and must stay
-  # reachable without a human sitting at a browser to enter an OTP, so
-  # it's explicitly exempted.
   include PaymentGatewayVerifiable
-  skip_before_action :require_payment_gateway_verification, only: [:customer_mpesa_stk_payments]
-  # ------------------------------------------------------------------------
+  skip_before_action :require_payment_gateway_verification, only: [:customer_mpesa_stk_payments, :index, :get_mpesa_settings, :saved_hotspot_mpesa_settings]
 
   load_and_authorize_resource
 
   set_current_tenant_through_filter
 
-
-  
   before_action :set_tenant
-  # GET /hotspot_mpesa_settings or /hotspot_mpesa_settings.json
   before_action :update_last_activity
  before_action :whitelist_mpesa_ips, only: [:customer_mpesa_stk_payments]
     before_action :set_time_zone
