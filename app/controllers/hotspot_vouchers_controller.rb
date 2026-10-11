@@ -652,6 +652,7 @@ end
 
 
 
+
 def check_payment_status
   raw_body = request.body.read
 
@@ -905,22 +906,18 @@ elsif bill_ref.start_with?("smswallet_")
   end
 
 
-elsif data["BillRefNumber"].starts_with?("INV")
-  bill_ref    = data["BillRefNumber"]
+elsif bill_ref.start_with?("INV")
   paid_amount = data["TransAmount"].to_i
 
   invoice = Invoice.find_by(invoice_number: bill_ref)
-
   unless invoice
     Rails.logger.warn "check_payment_status: no invoice found for #{bill_ref}"
     head :ok and return
   end
 
-  # Record the payment regardless of whether it fully settles the invoice —
-  # this is now the system admin's source of truth for "what did this ISP
-  # actually pay", independent of the invoice's current status.
+  payment = nil
   ActsAsTenant.with_tenant(Account.find_by(id: invoice.account_id)) do
-    InvoicePayment.find_or_create_by!(reference: data["TransID"]) do |p|
+    payment = InvoicePayment.find_or_create_by!(reference: data["TransID"]) do |p|
       p.invoice_id    = invoice.id
       p.account_id    = invoice.account_id
       p.phone_number  = data["MSISDN"] || data["DebitPartyMSISDN"]
@@ -930,6 +927,8 @@ elsif data["BillRefNumber"].starts_with?("INV")
       p.status        = paid_amount >= invoice.total.to_i ? 'completed' : 'partial'
     end
   end
+  first_time = payment.previously_new_record?   # Rails 6.1+
+  fully_paid = false
 
   if invoice.status == 'unpaid' && invoice.total.to_i == paid_amount
     invoice.update!(
@@ -942,15 +941,18 @@ elsif data["BillRefNumber"].starts_with?("INV")
     tenant = Account.find_by(id: invoice.account_id)
     tenant.hotspot_and_dial_plan.update(
       name: 'Hotspot And PPPOE Plan',
-      # expiry: Time.current + 30.days,
       expiry: (tenant.hotspot_and_dial_plan.expiry || Time.current) + 30.days,
       expiry_days: 30
     )
-          ReferralQualificationService.call(tenant) 
-
+    ReferralQualificationService.call(tenant)
+    fully_paid = true
   end
 
+  send_invoice_payment_sms(invoice, payment, paid_amount, fully_paid: fully_paid) if first_time
 
+
+
+  
 
   
   else
@@ -3694,6 +3696,68 @@ def default_tv_plan_sms(data)
   "Payment received! Your #{data[:plan_name]} plan for #{data[:device_name]} is active until #{data[:validity]}. " \
   "Manage devices: #{data[:portal_url]} (login with this phone number). — #{data[:company_name]}"
 end
+
+
+
+
+def send_invoice_payment_sms(invoice, payment, paid_amount, fully_paid:)
+  phone = Rails.cache.read("invoice_phone:#{invoice.id}") ||
+          CompanySetting.find_by(account_id: invoice.account_id)&.customer_support_phone_number
+  return if phone.blank?
+
+  fmt = ->(n) { ActionController::Base.helpers.number_with_delimiter(n.to_i) }
+
+  message =
+    if fully_paid
+      expiry = Account.find_by(id: invoice.account_id)&.hotspot_and_dial_plan&.expiry
+      "Payment of KES #{fmt.call(paid_amount)} received for invoice #{invoice.invoice_number} " \
+      "(M-Pesa ref #{payment.reference}). " \
+      "#{expiry ? "Your plan is active until #{expiry.strftime('%d %b %Y')}. " : ''}Thank you!"
+    else
+      balance = invoice.total.to_i - paid_amount
+      "Received KES #{fmt.call(paid_amount)} (ref #{payment.reference}) for invoice #{invoice.invoice_number}. " \
+      "Balance remaining: KES #{fmt.call([balance, 0].max)}."
+    end
+
+  deliver_platform_sms(phone, message)
+rescue => e
+  Rails.logger.error "send_invoice_payment_sms failed: #{e.message}"   # never break the M-Pesa callback
+end
+
+def deliver_platform_sms(phone, message)
+  api_key    = ENV['TEXT_SMS_API_KEY']
+  partner_id = ENV['TEXTSMS_PARTNER_ID']
+  shortcode  = 'TextSms'
+
+  if api_key.blank? || partner_id.blank? || shortcode.blank?
+    Rails.logger.warn "deliver_platform_sms: TextSMS ENV credentials missing, SMS not sent"
+    return
+  end
+
+  mobile = "254#{phone.to_s.gsub(/\D/, '').sub(/\A(254|0)/, '')}"
+
+  uri = URI("https://sms.textsms.co.ke/api/services/sendsms")
+  uri.query = URI.encode_www_form(
+    apikey:    api_key,
+    message:   message,
+    mobile:    mobile,
+    partnerID: partner_id,
+    shortcode: shortcode
+  )
+
+  res = Net::HTTP.start(uri.host, uri.port, use_ssl: true, open_timeout: 5, read_timeout: 10) do |http|
+    http.request(Net::HTTP::Get.new(uri))
+  end
+
+  if res.is_a?(Net::HTTPSuccess)
+    first  = JSON.parse(res.body)['responses']&.first
+    status = first && first['response-description']
+    Rails.logger.info "Invoice SMS to #{mobile}: #{status.inspect}"
+  else
+    Rails.logger.error "Invoice SMS failed: #{res.code} #{res.body}"
+  end
+end
+
 
 # Build the portal URL for the customer's tenant — adjust the default
 # platform domain / account->domain mapping to match how you already

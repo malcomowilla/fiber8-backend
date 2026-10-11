@@ -218,6 +218,12 @@ resources :nas_routers, path: 'nas_routers' do
 end
 
 
+post '/api/invoice_stk_push',      to: 'invoice_payments#stk_push'
+get  '/api/invoice_payment_status', to: 'invoice_payments#status'
+post '/api/invoice_stk_callback',  to: 'invoice_payments#stk_callback'
+post '/invoice_stk_callback',  to: 'invoice_payments#stk_callback'
+
+
 get  '/api/paid_not_connected/summary',    to: 'paid_not_connected#summary'
 get  '/api/paid_not_connected',            to: 'paid_not_connected#index'
 post '/api/paid_not_connected/compensate', to: 'paid_not_connected#compensate'
