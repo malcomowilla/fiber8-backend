@@ -41,7 +41,7 @@ class InvoicePaymentsController < ApplicationController
       PartyA: phone,
       PartyB: shortcode,
       PhoneNumber: phone,
-      CallBackURL: ENV.fetch('INVOICE_STK_CALLBACK_URL'),
+      CallBackURL: ENV['INVOICE_STK_CALLBACK_URL'],
       AccountReference: invoice.invoice_number,   # Daraja limit: 12 chars
       TransactionDesc: "Invoice #{invoice.invoice_number}"
     })
