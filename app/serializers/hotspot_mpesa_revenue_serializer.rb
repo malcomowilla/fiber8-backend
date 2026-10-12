@@ -79,3 +79,6 @@ class HotspotMpesaRevenueSerializer < ActiveModel::Serializer
     "N/A"
   end
 end
+
+
+
