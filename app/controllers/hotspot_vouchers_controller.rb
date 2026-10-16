@@ -2233,7 +2233,7 @@ def recover_session
   mac = params[:mac].to_s.upcase
 
   vouchers = HotspotVoucher
-               .where(account_id: ActsAsTenant.current_tenant&.id, phone: candidates)
+               .where(phone: candidates)
                .where.not(status: 'expired')
                .order(created_at: :desc)
                .limit(10)
