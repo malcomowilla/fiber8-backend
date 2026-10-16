@@ -2298,7 +2298,7 @@ def recover_session
     if voucher.expiration.nil?
       calculate_expiration_login_with_voucher(package, voucher, voucher.account_id)
     end
-
+[]
     render json: success_payload.call, status: :ok
 
   rescue Errno::ETIMEDOUT, IO::TimeoutError
