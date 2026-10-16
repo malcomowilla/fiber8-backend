@@ -212,6 +212,17 @@ class HotspotPageBuilder
       .section-heading { font-size: 18px; font-weight: 800; color: var(--text); margin-bottom: 2px; }
       .section-sub { font-size: 14px; color: var(--text); margin-bottom: 14px; }
 
+      /* Always-visible boxes (Recover Session / Have a Voucher / M-Pesa code).
+         These replace the old tabs so non-technical customers never have to
+         hunt for the right place to type. */
+      .section-card { padding: 16px; border-radius: 16px; margin-bottom: 16px;
+        border: 1px solid color-mix(in srgb, var(--text) 25%, transparent);
+        background: color-mix(in srgb, var(--primary) 8%, transparent); }
+      .section-card .section-sub { margin-bottom: 12px; }
+      .section-card .status { margin-bottom: 12px; }
+      .section-card .btn { margin-top: 2px; }
+      .section-divider { height: 1px; margin: 4px 0 18px; background: color-mix(in srgb, var(--text) 18%, transparent); }
+
       .pkg-freetrial { display: flex; align-items: flex-start; gap: 10px; padding: 14px;
         border-radius: 14px; margin-bottom: 12px;
         background: color-mix(in srgb, #facc15 14%, var(--surface));
@@ -235,8 +246,7 @@ class HotspotPageBuilder
       .support-line { text-align: center; font-size: 15px; color: var(--text); }
       .support-line .footer-support { color: var(--text); font-weight: 700; }
       .support-line .footer-phone { color: var(--text); font-weight: 800; text-decoration: underline; }
-      /* Top placement: a slim, attention-grabbing strip directly under the
-         header, above promos/tabs — this is the "Quick Support" pill. */
+     
       .support-top {
         padding: 10px 20px;
         border-bottom: 1px solid color-mix(in srgb, var(--text) 14%, transparent);
@@ -307,6 +317,7 @@ class HotspotPageBuilder
       .tap-hint { font-size: 14px; color: var(--text); margin-bottom: 10px; }
       .step-back { display: flex; align-items: center; gap: 6px; font-size: 15px; font-weight: 700; color: var(--text); text-decoration: underline;
                    margin-bottom: 14px; cursor: pointer; user-select: none; }
+      .tabs .step-back { margin-bottom: 0; }
       .pkg-recap { display: flex; justify-content: space-between; align-items: center; padding: 16px; color: var(--text);
                    border-radius: 16px; background: color-mix(in srgb, var(--primary) 14%, transparent);
                    border: 1px solid color-mix(in srgb, var(--primary) 45%, transparent); margin-bottom: 16px; }
@@ -381,6 +392,16 @@ class HotspotPageBuilder
   # what actually ships to the router via publish_hotspot_page, so behavior
   # must not diverge from the live React version.
   #
+  # There are NO TABS any more. Customers are not tech-savvy and never found
+  # the Voucher / M-Pesa Code tabs, so the main view now shows everything at
+  # once, top to bottom:
+  #   1. Recover Session (reconnect with the phone number used to purchase)
+  #   2. Have a Voucher? (enter a voucher code)
+  #   3. Buy a Package
+  #   4. Paid with M-Pesa but not connected? (enter M-Pesa transaction code)
+  # state.tab is now only 'main' or 'tv' (the TV setup screen has its own
+  # "Back" button).
+  #
   # cfg.preview (only ever true from preview_page_design):
   #   - suppresses tracking calls and reward-granting side effects
   #   - shows SAMPLE/MOCK content (clearly tagged "Sample") whenever the
@@ -437,12 +458,20 @@ if (username) localStorage.setItem('hotspot_username', username);
         };
 
         // payStep controls the guided packages flow: 'list' shows all
-        // packages; 'pay' shows a focused recap + phone-number step for
-        // the one the customer tapped, so there's no scrolling required
-        // and no ambiguity about what to do next.
+        // packages; 'pay' opens the payment modal for the one the customer
+        // tapped, so there's no scrolling required and no ambiguity about
+        // what to do next.
+        //
+        // statusFor says WHICH box on the page the current status message
+        // belongs to ('recover' | 'voucher' | 'mpesa' | 'packages'), so an
+        // error from the voucher box shows under the voucher box and not
+        // somewhere the customer can't see it.
+        // voucherInput / recoverPhone / txCode remember what the customer
+        // typed, because render() rebuilds the panel and would otherwise
+        // wipe the other boxes.
 
 
-          let state = { tab: 'packages', packages: [], packagesLoaded: false, promos: [], selected: null, payStep: 'list', status: null, message: '', tvPlans: [], tvPlansLoaded: false, tvSelected: null, tvMac: '', tvPhone: '' };
+          let state = { tab: 'main', packages: [], packagesLoaded: false, promos: [], selected: null, payStep: 'list', status: null, statusFor: null, message: '', tvPlans: [], tvPlansLoaded: false, tvSelected: null, tvMac: '', tvPhone: '', voucherInput: '', recoverPhone: '', txCode: '' };
 
 let queryModal = { status: null, message: '' };
 let connectedInfo = null;
@@ -463,9 +492,6 @@ let freeTrialState = {};
             (cfg.hotspot_email ? ' · ' + cfg.hotspot_email : '');
         }
 
-        // Prominent "Quick Support" pill used at the top placement — a
-        // plain text line was easy to miss up there, so this gives it an
-        // icon + label + tappable phone number, same as a real support widget.
         function quickSupportHtml() {
           const phone = (cfg.footer && cfg.footer.support_phone) || cfg.hotspot_phone || '';
           if (!phone) return '<div class="support-line">' + supportHtml() + '</div>';
@@ -474,7 +500,7 @@ let freeTrialState = {};
             <a class="quick-support" href="tel:\${tel}" style="text-decoration:none;">
               <span class="qs-icon">📞</span>
               <span>
-                <span class="qs-label">Quick Support</span>
+                <span class="qs-label">Customer Support</span>
                 <span class="qs-phone">\${phone}</span>
               </span>
             </a>\`;
@@ -508,10 +534,9 @@ let freeTrialState = {};
           }
         }
 
-        // Loud, always-visible teaser for TV/console connect — replaces
-        // burying it behind a tab. Shows above the tabs whenever the
-        // feature is on, and steps out of the way once the visitor is
-        // already on the TV tab itself.
+        // Loud, always-visible teaser for TV/console connect. Shows above
+        // the main sections whenever the feature is on, and steps out of
+        // the way once the visitor is already on the TV screen itself.
         function tvPromoHtml() {
           if (cfg.features.show_tv_plans !== true) return '';
           if (state.tab === 'tv') return '';
@@ -527,7 +552,10 @@ let freeTrialState = {};
         }
 
         function render() {
-          document.getElementById('tabs').innerHTML = tabsHtml();
+          const tabsEl = document.getElementById('tabs');
+          const tabsMarkup = tabsHtml();
+          tabsEl.innerHTML = tabsMarkup;
+          tabsEl.style.display = tabsMarkup ? '' : 'none';
           document.getElementById('panel').innerHTML = panelHtml();
           const tvPromoRoot = document.getElementById('tv-promo-root');
           if (tvPromoRoot) tvPromoRoot.innerHTML = tvPromoHtml();
@@ -537,20 +565,16 @@ let freeTrialState = {};
         }
 
 
-
+        // No more tabs. The only navigation left is a Back button shown
+        // while the customer is on the TV setup screen.
         function tabsHtml() {
-          const tabs = [];
-          if (cfg.features.show_packages)   tabs.push(['packages', 'Buy Package']);
-          if (cfg.features.show_voucher)    tabs.push(['voucher', 'Voucher']);
-          if (cfg.features.show_mpesa_code) tabs.push(['mpesa', 'M-Pesa Code']);
-
-          return tabs.map(([id, label]) =>
-            \`<div class="tab \${state.tab === id ? 'active' : ''}" data-tab="\${id}">\${label}</div>\`
-          ).join('');
+          if (state.tab === 'tv') return '<div class="step-back" data-back-main>← Back to main page</div>';
+          return '';
         }
 
-        function statusHtml() {
+        function statusHtml(section) {
           if (!state.status) return '';
+          if ((state.statusFor || 'packages') !== section) return '';
           return \`<div class="status \${state.status}">\${state.message}</div>\`;
         }
 
@@ -628,110 +652,148 @@ function isValidMac(mac) {
           }, 1000);
         }
 
+        // ── Always-visible sections (replace the old tabs) ─────────────
+
+        // Reconnect using the phone number that was used to purchase.
+        // Shown first because it is what a returning customer needs after
+        // their phone switched off / the session dropped.
+        function recoverSectionHtml() {
+          if (cfg.features.show_recover_session === false) return '';
+          return '<div class="section-card">' +
+            '<div class="section-heading">Recover Session</div>' +
+            '<div class="section-sub">Was your session interrupted? Enter the phone number you used to purchase to reconnect.</div>' +
+            statusHtml('recover') +
+            '<label class="field-label" for="recover-phone">Phone Number</label>' +
+            '<input class="field" id="recover-phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="07XXXXXXXX" value="' + esc(state.recoverPhone) + '">' +
+            '<button class="btn" id="recover-btn">Reconnect</button>' +
+          '</div>';
+        }
+
+        function voucherSectionHtml() {
+          if (!cfg.features.show_voucher) return '';
+          return '<div class="section-card">' +
+            '<div class="section-heading">Have a Voucher?</div>' +
+            '<div class="section-sub">Enter your voucher code to login.</div>' +
+            statusHtml('voucher') +
+            '<input class="field" id="voucher-code" autocomplete="off" autocapitalize="characters" placeholder="Enter voucher code" value="' + esc(state.voucherInput) + '">' +
+            '<button class="btn" id="voucher-btn">Connect with Voucher</button>' +
+          '</div>';
+        }
+
+        function mpesaSectionHtml() {
+          if (!cfg.features.show_mpesa_code) return '';
+          return '<div class="section-divider"></div>' +
+            '<div class="section-card">' +
+            '<div class="section-heading">Paid with M-Pesa but not connected?</div>' +
+            '<div class="section-sub">Enter the M-Pesa transaction code from your payment message (for example QHJ1234ABC).</div>' +
+            statusHtml('mpesa') +
+            '<input class="field" id="tx-code" autocomplete="off" autocapitalize="characters" placeholder="e.g. QHJ1234ABC" value="' + esc(state.txCode) + '">' +
+            '<button class="btn" id="mpesa-btn">Verify & Connect</button>' +
+          '</div>';
+        }
+
+        function packagesSectionHtml() {
+          if (!cfg.features.show_packages) return '';
+          if (!state.packagesLoaded) {
+            return statusHtml('packages') + '<div class="pkg-skeleton"></div><div class="pkg-skeleton"></div><div class="pkg-skeleton"></div>';
+          }
+          const isMock = cfg.preview && state.packages.length && String(state.packages[0].id).startsWith('mock-');
+
+          // The pay step is no longer inline — tapping a package opens the
+          // payment modal (see renderPayModal), which overlays this list.
+
+          const freeTrialPkgs = state.packages.filter(p => p.enable_free_trial);
+          const paidPkgs = state.packages.filter(p => !p.enable_free_trial);
+
+          const heading = state.packages.length
+            ? '<div class="section-heading">Buy a Package</div><div class="section-sub">Choose a package, pay with M-Pesa and get connected instantly</div>'
+            : '';
+
+          const list = paidPkgs.map(p => \`
+            <div class="pkg" data-pkg="\${p.id}">
+              <div><strong>\${p.name}</strong>\${isMock ? '<span class="mock-tag">Sample</span>' : ''}<br><small>\${p.valid || ''}</small></div>
+              <div><strong>Ksh \${p.price}</strong></div>
+            </div>\`).join('');
+          const empty = !state.packages.length
+            ? '<p style="color:var(--text);font-size:14px;padding:8px 0;">No packages configured yet.</p>'
+            : '';
+          return statusHtml('packages') + heading + freeTrialHtml(freeTrialPkgs) + list + empty;
+        }
+
+        function tvPanelHtml() {
+          if (!state.tvPlansLoaded) {
+            return statusHtml('packages') + '<div class="pkg-skeleton"></div><div class="pkg-skeleton"></div>';
+          }
+          const options = state.tvPlans.map(p => {
+            const validityLabel = (p.validity && p.validity_period_units) ? \` · \${p.validity} \${p.validity_period_units}\` : '';
+            const isSelected = state.tvSelected && String(state.tvSelected.id) === String(p.id) ? ' selected' : '';
+            return \`<option value="\${p.id}"\${isSelected}>\${p.name} — Ksh \${p.price}\${validityLabel}</option>\`;
+          }).join('');
+          const amount = state.tvSelected ? state.tvSelected.price : '--';
+          const validityText = (state.tvSelected && state.tvSelected.validity)
+            ? \`\${state.tvSelected.validity} \${state.tvSelected.validity_period_units || ''}\`.trim()
+            : null;
+          return statusHtml('packages') + \`
+            <p style="font-size:14px;color:var(--text);line-height:1.6;margin-bottom:16px;">
+              Enter your TV or device's MAC address and your M-Pesa number, choose a plan, and pay.
+              The device connects automatically, no login needed on the TV. To find the MAC address,
+              open the TV's Settings, go to Network, then Status or About, and look for "MAC address"
+              (sometimes shown as "Physical address" or "Wi-Fi MAC").
+            </p>
+            <label class="field-label">TV / Device MAC Address</label>
+            <input class="field" id="tv-mac" placeholder="AA:BB:CC:DD:EE:FF" maxlength="17" value="\${state.tvMac || ''}">
+            <label class="field-label">Your Phone Number (M-Pesa)</label>
+            <input class="field" id="tv-phone" inputmode="tel" placeholder="07XX XXX XXX" value="\${state.tvPhone || ''}">
+            <label class="field-label">Choose a Plan</label>
+            <select class="field" id="tv-plan">
+              <option value="">\${state.tvPlans.length ? 'Select a plan' : 'No TV plans available'}</option>
+              \${options}
+            </select>
+
+            \${validityText ? \`
+            <div style="display:flex;justify-content:space-between;align-items:center;margin:4px 0 10px;font-size:15px;">
+              <span style="color:var(--text);">Plan Validity:</span>
+              <span style="font-weight:800;">\${validityText}</span>
+            </div>\` : ''}
+
+            <div style="display:flex;justify-content:space-between;align-items:center;margin:4px 0 14px;font-size:15px;">
+              <span style="color:var(--text);">Amount to Pay:</span>
+              <span style="font-weight:800;">KES \${amount}</span>
+            </div>
+            <div class="pay-instructions">
+              <span class="num">1</span>
+              <span>We'll send a payment prompt to your phone. Enter your M-Pesa PIN, then wait a few seconds — we connect your TV automatically, no need to touch it.</span>
+            </div>
+            <button class="btn" id="tv-pay-btn">Pay & Connect TV</button>
+          \`;
+        }
+
         function panelHtml() {
-          if (state.tab === 'packages') {
-            if (!state.packagesLoaded) {
-              return statusHtml() + '<div class="pkg-skeleton"></div><div class="pkg-skeleton"></div><div class="pkg-skeleton"></div>';
-            }
-            const isMock = cfg.preview && state.packages.length && String(state.packages[0].id).startsWith('mock-');
+          if (state.tab === 'tv') return tvPanelHtml();
 
-
-            // The pay step is no longer inline — tapping a package opens the
-            // payment modal (see renderPayModal), which overlays this list.
-
-            const freeTrialPkgs = state.packages.filter(p => p.enable_free_trial);
-            const paidPkgs = state.packages.filter(p => !p.enable_free_trial);
-
-            const heading = state.packages.length
-              ? '<div class="section-heading">Choose Your Plan</div><div class="section-sub">Select a package and get connected instantly</div>'
-              : '';
-
-            const list = paidPkgs.map(p => \`
-              <div class="pkg" data-pkg="\${p.id}">
-                <div><strong>\${p.name}</strong>\${isMock ? '<span class="mock-tag">Sample</span>' : ''}<br><small>\${p.valid || ''}</small></div>
-                <div><strong>Ksh \${p.price}</strong></div>
-              </div>\`).join('');
-            const empty = !state.packages.length
-              ? '<p style="color:var(--text);font-size:14px;padding:8px 0;">No packages configured yet.</p>'
-              : '';
-            return statusHtml() + heading + freeTrialHtml(freeTrialPkgs) + list + empty;
-          }
-          if (state.tab === 'voucher') {
-            return statusHtml() + \`
-              <label class="field-label">Voucher Code</label>
-              <input class="field" id="voucher-code" placeholder="Enter voucher code">
-              <button class="btn" id="voucher-btn">Connect with Voucher</button>\`;
-          }
-
-
-
-if (state.tab === 'tv') {
-  if (!state.tvPlansLoaded) {
-    return statusHtml() + '<div class="pkg-skeleton"></div><div class="pkg-skeleton"></div>';
-  }
-  const options = state.tvPlans.map(p => {
-    const validityLabel = (p.validity && p.validity_period_units) ? \` · \${p.validity} \${p.validity_period_units}\` : '';
-    const isSelected = state.tvSelected && String(state.tvSelected.id) === String(p.id) ? ' selected' : '';
-    return \`<option value="\${p.id}"\${isSelected}>\${p.name} — Ksh \${p.price}\${validityLabel}</option>\`;
-  }).join('');
-  const amount = state.tvSelected ? state.tvSelected.price : '--';
-  const validityText = (state.tvSelected && state.tvSelected.validity)
-    ? \`\${state.tvSelected.validity} \${state.tvSelected.validity_period_units || ''}\`.trim()
-    : null;
-  return statusHtml() + \`
-    <p style="font-size:14px;color:var(--text);line-height:1.6;margin-bottom:16px;">
-      Enter your TV or device's MAC address and your M-Pesa number, choose a plan, and pay.
-      The device connects automatically, no login needed on the TV. To find the MAC address,
-      open the TV's Settings, go to Network, then Status or About, and look for "MAC address"
-      (sometimes shown as "Physical address" or "Wi-Fi MAC").
-    </p>
-    <label class="field-label">TV / Device MAC Address</label>
-    <input class="field" id="tv-mac" placeholder="AA:BB:CC:DD:EE:FF" maxlength="17" value="\${state.tvMac || ''}">
-    <label class="field-label">Your Phone Number (M-Pesa)</label>
-    <input class="field" id="tv-phone" inputmode="tel" placeholder="07XX XXX XXX" value="\${state.tvPhone || ''}">
-    <label class="field-label">Choose a Plan</label>
-    <select class="field" id="tv-plan">
-      <option value="">\${state.tvPlans.length ? 'Select a plan' : 'No TV plans available'}</option>
-      \${options}
-    </select>
-
-    \${validityText ? \`
-    <div style="display:flex;justify-content:space-between;align-items:center;margin:4px 0 10px;font-size:15px;">
-      <span style="color:var(--text);">Plan Validity:</span>
-      <span style="font-weight:800;">\${validityText}</span>
-    </div>\` : ''}
-
-    <div style="display:flex;justify-content:space-between;align-items:center;margin:4px 0 14px;font-size:15px;">
-      <span style="color:var(--text);">Amount to Pay:</span>
-      <span style="font-weight:800;">KES \${amount}</span>
-    </div>
-    <div class="pay-instructions">
-      <span class="num">1</span>
-      <span>We'll send a payment prompt to your phone. Enter your M-Pesa PIN, then wait a few seconds — we connect your TV automatically, no need to touch it.</span>
-    </div>
-    <button class="btn" id="tv-pay-btn">Pay & Connect TV</button>
-  \`;
-}
-
-
-
-          if (state.tab === 'mpesa') {
-            return statusHtml() + \`
-              <label class="field-label">M-Pesa Transaction Code</label>
-              <input class="field" id="tx-code" placeholder="e.g. QHJ1234ABC">
-              <button class="btn" id="mpesa-btn">Verify & Connect</button>\`;
-          }
-          return '';
+          // Everything on one page, top to bottom, no tabs.
+          return recoverSectionHtml() +
+                 voucherSectionHtml() +
+                 packagesSectionHtml() +
+                 mpesaSectionHtml();
         }
 
 
 
+        function bindEnter(inputId, buttonId) {
+          const input = document.getElementById(inputId);
+          if (!input) return;
+          input.onkeydown = (e) => {
+            if (e.key === 'Enter') { e.preventDefault(); const b = document.getElementById(buttonId); if (b) b.click(); }
+          };
+        }
+
         function bindEvents() {
-          document.querySelectorAll('[data-tab]').forEach(el =>
-            el.onclick = () => { state.tab = el.dataset.tab; state.status = null; state.payStep = 'list'; state.selected = null; render(); });
+          document.querySelectorAll('[data-back-main]').forEach(el =>
+            el.onclick = () => { state.tab = 'main'; state.status = null; state.statusFor = null; render(); });
 
           document.querySelectorAll('[data-tv-promo-cta]').forEach(el =>
-            el.onclick = () => { state.tab = 'tv'; state.status = null; render(); });
+            el.onclick = () => { state.tab = 'tv'; state.status = null; state.statusFor = null; render(); });
 
           document.querySelectorAll('[data-pkg]').forEach(el =>
             el.onclick = () => {
@@ -808,14 +870,41 @@ if (state.tab === 'tv') {
           };
 
 
-          const voucherBtn = document.getElementById('voucher-btn');
-          if (voucherBtn) voucherBtn.onclick = () => {
-            connectVoucher(document.getElementById('voucher-code').value);
+          // ── Recover Session (phone number) ───────────────────────────
+          const recoverInput = document.getElementById('recover-phone');
+          if (recoverInput) recoverInput.oninput = () => { state.recoverPhone = recoverInput.value; };
+          bindEnter('recover-phone', 'recover-btn');
+          const recoverBtn = document.getElementById('recover-btn');
+          if (recoverBtn) recoverBtn.onclick = () => {
+            const el = document.getElementById('recover-phone');
+            if (el) state.recoverPhone = el.value;
+            recoverSession((state.recoverPhone || '').trim());
           };
 
+          // ── Voucher ──────────────────────────────────────────────────
+          const voucherInput = document.getElementById('voucher-code');
+          if (voucherInput) voucherInput.oninput = () => { state.voucherInput = voucherInput.value; };
+          bindEnter('voucher-code', 'voucher-btn');
+          const voucherBtn = document.getElementById('voucher-btn');
+          if (voucherBtn) voucherBtn.onclick = () => {
+            const el = document.getElementById('voucher-code');
+            if (el) state.voucherInput = el.value;
+            const code = (state.voucherInput || '').trim();
+            if (!code) { setStatus('error', 'Enter your voucher code first.', 'voucher'); return; }
+            connectVoucher(code);
+          };
+
+          // ── M-Pesa transaction code ──────────────────────────────────
+          const txInput = document.getElementById('tx-code');
+          if (txInput) txInput.oninput = () => { state.txCode = txInput.value; };
+          bindEnter('tx-code', 'mpesa-btn');
           const mpesaBtn = document.getElementById('mpesa-btn');
           if (mpesaBtn) mpesaBtn.onclick = () => {
-            connectReceipt(document.getElementById('tx-code').value);
+            const el = document.getElementById('tx-code');
+            if (el) state.txCode = el.value;
+            const code = (state.txCode || '').trim();
+            if (!code) { setStatus('error', 'Enter the M-Pesa transaction code first.', 'mpesa'); return; }
+            connectReceipt(code);
           };
 
           document.querySelectorAll('[data-promo-claim]').forEach(el =>
@@ -823,15 +912,15 @@ if (state.tab === 'tv') {
               const promo = state.promos.find(p => String(p.id) === el.dataset.promoClaim);
               if (!promo) return;
               if (cfg.preview && String(promo.id).startsWith('mock-')) {
-                // Sample promo — just switch tabs and preview the pricing, no real package to select.
-                state.tab = 'packages';
+                // Sample promo — just go to the main page and preview the pricing, no real package to select.
+                state.tab = 'main';
                 state.payStep = 'list';
                 render();
                 return;
               }
               const pkg = state.packages.find(p => String(p.id) === String(promo.package_id));
               state.selected = pkg ? { ...pkg, price: promo.promotional_price } : { id: promo.package_id, name: promo.package_name, price: promo.promotional_price };
-              state.tab = 'packages';
+              state.tab = 'main';
               state.payStep = 'pay';
               render();
               focusPhoneField();
@@ -873,7 +962,7 @@ if (state.tab === 'tv') {
             root.id = 'pay-modal-root';
             document.body.appendChild(root);
           }
-          const open = state.tab === 'packages' && state.payStep === 'pay' && state.selected;
+          const open = state.tab === 'main' && state.payStep === 'pay' && state.selected;
           if (!open) {
             root.innerHTML = '';
             payModalKey = null;
@@ -902,7 +991,14 @@ if (state.tab === 'tv') {
             '</div>';
         }
 
-        function setStatus(status, message) { state.status = status; state.message = message; render(); }
+        // section = which box on the page the message belongs to
+        // ('recover' | 'voucher' | 'mpesa' | 'packages'). Defaults to 'packages'.
+        function setStatus(status, message, section) {
+          state.status = status;
+          state.message = message;
+          state.statusFor = section || 'packages';
+          render();
+        }
 
 
 function renderQueryModal() {
@@ -1562,13 +1658,13 @@ async function payPackage() {
             } catch (e) { console.error(e); }
             if (elapsed >= 120000) {
               clearInterval(iv);
-              setStatus('error', 'Timed out. Please check your M-Pesa SMS and try the receipt tab.');
+              setStatus('error', 'Timed out. Please check your M-Pesa SMS and enter the code in the M-Pesa code box.', 'mpesa');
             }
           }, 5000);
         }
 
         async function connectVoucher(code) {
-          setStatus('processing', 'Connecting…');
+          setStatus('processing', 'Connecting…', 'voucher');
           try {
             const res = await fetch(api('/api/login_with_hotspot_voucher'), {
               method: 'POST', headers, body: JSON.stringify({ voucher: code, mac, ip })
@@ -1577,13 +1673,35 @@ async function payPackage() {
             if (res.ok) {
               onConnected({ username: data.username, package: data.package, expiration: data.expiration });
             } else {
-              setStatus('error', data.error || 'Invalid voucher code. Please check and try again.');
+              setStatus('error', data.error || 'Invalid voucher code. Please check and try again.', 'voucher');
             }
-          } catch (e) { console.error(e); setStatus('error', 'Network error. Check your connection and try again.'); }
+          } catch (e) { console.error(e); setStatus('error', 'Network error. Check your connection and try again.', 'voucher'); }
+        }
+
+        // Reconnect with the phone number used at purchase time. The server
+        // finds that number's latest still-valid package and logs this device
+        // in with it (POST /api/recover_session).
+        async function recoverSession(phone) {
+          if (!phone) {
+            setStatus('error', 'Enter the phone number you used to purchase.', 'recover');
+            return;
+          }
+          setStatus('processing', 'Looking for your session…', 'recover');
+          try {
+            const res = await fetch(api('/api/recover_session'), {
+              method: 'POST', headers, body: JSON.stringify({ phone_number: phone, mac, ip })
+            });
+            const data = await res.json().catch(() => ({}));
+            if (res.ok) {
+              onConnected({ username: data.username, package: data.package, expiration: data.expiration });
+            } else {
+              setStatus('error', data.error || 'We could not find an active package for that number. Check the number and try again.', 'recover');
+            }
+          } catch (e) { console.error(e); setStatus('error', 'Network error. Check your connection and try again.', 'recover'); }
         }
 
         async function connectReceipt(code) {
-          setStatus('processing', 'Verifying your M-Pesa transaction…');
+          setStatus('processing', 'Verifying your M-Pesa transaction…', 'mpesa');
           try {
             const res = await fetch(api('/api/login_with_receipt_number'), {
               method: 'POST', headers, body: JSON.stringify({ receipt_number: code, mac, ip })
@@ -1597,9 +1715,9 @@ async function payPackage() {
               // line and a separate polling round-trip.
               onConnected({ username: data.username, package: data.package, expiration: data.expiration });
             } else {
-              setStatus('error', data.error || 'Transaction not found. Check the code and try again.');
+              setStatus('error', data.error || 'Transaction not found. Check the code and try again.', 'mpesa');
             }
-          } catch (e) { console.error(e); setStatus('error', 'Network error. Check your connection and try again.'); }
+          } catch (e) { console.error(e); setStatus('error', 'Network error. Check your connection and try again.', 'mpesa'); }
         }
 
         function onConnected(details) {
@@ -1613,7 +1731,7 @@ async function payPackage() {
           if (connectedInfo.username) localStorage.setItem('hotspot_username', connectedInfo.username);
           state.payStep = 'list';
           renderConnectedScreen();
-          setStatus('success', 'Connected! Redirecting…');
+          setStatus('success', 'Connected! Redirecting…', 'packages');
           setTimeout(() => { window.location.href = '$(link-orig)'; }, 4000);
         }
 
@@ -1789,7 +1907,7 @@ function tryQrVoucherLogin() {
   if (!voucherFromQr) return;
 
   console.info('[qr-login] voucher found in QR redirect, auto-connecting:', voucherFromQr);
-  if (cfg.features.show_voucher !== false) state.tab = 'voucher';
+  state.voucherInput = voucherFromQr;
   render();
   connectVoucher(voucherFromQr);
 }
@@ -1882,7 +2000,7 @@ function trackAdEvent(adId, eventType) {
           }
           if (ad.reward_type === 'specific' && ad.selected_package) {
             const pkg = state.packages.find(p => String(p.id) === String(ad.selected_package));
-            if (pkg) { state.selected = pkg; state.tab = 'packages'; state.payStep = 'pay'; render(); }
+            if (pkg) { state.selected = pkg; state.tab = 'main'; state.payStep = 'pay'; render(); }
           }
         }
 

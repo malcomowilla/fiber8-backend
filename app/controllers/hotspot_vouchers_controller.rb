@@ -7,9 +7,13 @@ load_and_authorize_resource except: [:login_with_hotspot_voucher,
  :make_payment, :check_payment_status, :payment_and_conected_status,
  :login_with_receipt_number, :calculate_expiration_login_with_voucher,
  :create_voucher_radcheck, :receipt_number_status, :stk_push_status,
-  :payment_reference_status, :transaction_status_result
-
+  :payment_reference_status, :transaction_status_result, :recover_session
 ]
+
+
+
+
+
   # skip_before_action :set_tenant, only: [:check_payment_status]
 
 
@@ -2208,6 +2212,112 @@ rescue => e
 end
 
  
+
+
+
+
+
+
+
+
+def recover_session
+  digits = params[:phone_number].to_s.gsub(/\D/, '')
+  if digits.length < 9
+    return render json: { error: 'Enter the phone number you used to purchase.' }, status: :bad_request
+  end
+
+  last9 = digits[-9..]
+  candidates = ["0#{last9}", "254#{last9}", "+254#{last9}", last9]
+
+  ip  = params[:ip]
+  mac = params[:mac].to_s.upcase
+
+  vouchers = HotspotVoucher
+               .where(account_id: ActsAsTenant.current_tenant&.id, phone: candidates)
+               .where.not(status: 'expired')
+               .order(created_at: :desc)
+               .limit(10)
+
+  voucher = vouchers.find { |v| v.expiration.blank? || v.expiration > Time.current }
+  unless voucher
+    return render json: {
+      error: 'We could not find an active package for that number. Check the number, or enter your M-Pesa code below.'
+    }, status: :not_found
+  end
+
+  package = HotspotPackage.find_by(name: voucher.package, account_id: voucher.account_id)
+  return render json: { error: 'Package not found' }, status: :not_found unless package
+
+  router = NasRouter.find_by(name: package.nas_router, account_id: voucher.account_id)
+  return render json: { error: 'No router configured for this package' }, status: :unprocessable_entity unless router
+
+  success_payload = lambda do
+    {
+      message: 'Connected successfully',
+      device_ip: ip,
+      username: voucher.voucher,
+      expiration: voucher.expiration&.strftime("%B %d, %Y at %I:%M %p"),
+      package: voucher.package
+    }
+  end
+
+  # Already online on this device? Nothing to do, just confirm.
+  active_sessions = get_active_sessions(voucher.voucher)
+  if active_sessions.any? { |s| s['mac-address'].to_s.upcase == mac }
+    return render json: success_payload.call, status: :ok
+  end
+
+  shared_users = [package.shared_users.to_i, 1].max
+  if active_sessions.count >= shared_users
+    return render json: {
+      error: "This package is already in use on #{shared_users} device(s), which is the maximum allowed."
+    }, status: :forbidden
+  end
+
+  client = nil
+  begin
+    client = RouterosApiClient.new(router.ip_address, router.username.to_s, router.password.to_s, timeout: 5)
+    client.connect
+
+    reply = client.talk([
+      '/ip/hotspot/active/login',
+      "=ip=#{ip}",
+      "=user=#{voucher.voucher}",
+      "=password=#{voucher.voucher}"
+    ])
+
+    if reply.last.first == '!trap'
+      error_message = reply.last.find { |w| w.start_with?('=message=') }&.sub('=message=', '') || 'Unknown MikroTik error'
+      Rails.logger.info "recover_session MikroTik error (#{router.ip_address}): #{error_message}"
+      return render json: { error: 'Failed to connect please try again' }, status: :unprocessable_entity
+    end
+
+    voucher.update!(status: 'used', last_logged_in: Time.now, ip: ip, mac: params[:mac],
+                    used_voucher: true, login_by: 'Voucher Code')
+
+    if voucher.expiration.nil?
+      calculate_expiration_login_with_voucher(package, voucher, voucher.account_id)
+    end
+
+    render json: success_payload.call, status: :ok
+
+  rescue Errno::ETIMEDOUT, IO::TimeoutError
+    Rails.logger.info "recover_session: router #{router.ip_address} timed out"
+    render json: { error: 'Router timed out, please try again' }, status: :unprocessable_entity
+  rescue Errno::ECONNREFUSED, Errno::EHOSTUNREACH, SocketError => e
+    Rails.logger.info "recover_session: router #{router.ip_address} unreachable: #{e.message}"
+    render json: { error: 'Router unreachable, please try again' }, status: :unprocessable_entity
+  rescue RouterosApiClient::ApiError, StandardError => e
+    Rails.logger.info "recover_session error: #{e.message}"
+    render json: { error: 'Failed to connect please try again' }, status: :unprocessable_entity
+  ensure
+    client&.close
+  end
+end
+
+
+
+
 
 
 def sync_to_mikrotik

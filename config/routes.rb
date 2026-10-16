@@ -217,7 +217,7 @@ resources :nas_routers, path: 'nas_routers' do
   end
 end
 
-
+post '/api/recover_session', to: 'hotspot_vouchers#recover_session'
 post '/api/invoice_stk_push',      to: 'invoice_payments#stk_push'
 get  '/api/invoice_payment_status', to: 'invoice_payments#status'
 post '/api/invoice_stk_callback',  to: 'invoice_payments#stk_callback'
