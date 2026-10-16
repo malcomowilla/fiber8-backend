@@ -2293,7 +2293,7 @@ def recover_session
     end
 
     voucher.update!(status: 'used', last_logged_in: Time.now, ip: ip, mac: params[:mac],
-                    used_voucher: true, login_by: 'Voucher Code')
+                    used_voucher: true, login_by: 'Phone Number')
 
     if voucher.expiration.nil?
       calculate_expiration_login_with_voucher(package, voucher, voucher.account_id)
