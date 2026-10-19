@@ -42,10 +42,13 @@ class LimitPaymentsController < ApplicationController
         checkout_request_id: resp['CheckoutRequestID']
       )
       render json: { success: true, reference: payment.external_reference }
-    else
-      Rails.logger.warn "[LimitPayment] STK failed #{payment.external_reference}: #{result[:error]}"
+       else
+      Rails.logger.warn "[LimitPayment] STK failed #{payment.external_reference}: #{result[:error]} | #{result[:response].inspect}"
       payment.mark_failed!(desc: result[:error])
-      render_error('Could not send the M-Pesa prompt. Please try again.', :bad_gateway)
+      render json: {
+        success: false,
+        error: 'Could not send the M-Pesa prompt. Please try again.'
+      }, status: :unprocessable_entity
     end
   rescue StandardError => e
     Rails.logger.error "[LimitPayment] create error: #{e.class} #{e.message}"
