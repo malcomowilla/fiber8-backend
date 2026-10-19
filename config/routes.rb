@@ -294,7 +294,9 @@ resources :hotspot_sms_templates, only: [:index, :update]
 
 
 
-
+post '/api/make_limit_payment',              to: 'limit_payments#create'
+get  '/api/limit_payment_status/:reference', to: 'limit_payments#status'
+post '/limit_payment_callback',          to: 'limit_payments#callback'
 
 post '/paystack_owitech_callback',     to: 'payhero_callbacks#hotspot_callback'
 post '/api/paystack_owitech_callback', to: 'payhero_callbacks#hotspot_callback'

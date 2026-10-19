@@ -1630,6 +1630,7 @@ def make_payment
       channel_id: channel.payhero_channel_id,
       external_reference: reference
     )
+    
 
     if result[:success]
       temp_session.update!(checkout_request_id: reference)

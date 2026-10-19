@@ -6,7 +6,6 @@ class PayheroService
   DEFAULT_CALLBACK_URL = 'https://owitech.co.ke/paystack_owitech_callback'.freeze
 
   class << self
-    # Registers a paybill / till / bank channel inside the platform's PayHero account.
     def register_channel(channel_type:, short_code:, account_number:, description:)
   account_id = ENV['PAYHERO_ACCOUNT_ID'].to_i
   return { success: false, error: 'PAYHERO_ACCOUNT_ID is not set' } if account_id.zero?
@@ -22,7 +21,8 @@ class PayheroService
   call(:post, '/payment_channels', body: body)
 end
 
-    def initiate_stk_push(amount:, phone:, channel_id:, external_reference:, customer_name: nil, callback_url: nil)
+    def initiate_stk_push(amount:, phone:, channel_id:,
+       external_reference:, customer_name: nil, callback_url: nil)
       call(:post, '/payments', body: {
         amount:             amount.to_i,
         phone_number:       phone.to_s,
@@ -41,7 +41,6 @@ end
 
     private
 
-    # PAYHERO_BEARER_TOKEN may hold the raw token or the full "Basic xxx" / "Bearer xxx" value.
     def auth_header
       token = ENV['PAYHERO_BEARER_TOKEN'].to_s.strip
       return nil if token.empty?

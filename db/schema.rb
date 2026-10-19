@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_10_09_224855) do
+ActiveRecord::Schema[7.2].define(version: 2026_10_19_081308) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -984,6 +984,26 @@ ActiveRecord::Schema[7.2].define(version: 2026_10_09_224855) do
     t.integer "account_id"
     t.boolean "phone_notification"
     t.integer "expiry_warning_days"
+  end
+
+  create_table "limit_payments", force: :cascade do |t|
+    t.string "id_number", null: false
+    t.string "phone", null: false
+    t.integer "new_limit", null: false
+    t.integer "amount", null: false
+    t.string "external_reference", null: false
+    t.string "payhero_reference"
+    t.string "checkout_request_id"
+    t.string "mpesa_receipt"
+    t.string "status", default: "pending", null: false
+    t.string "result_desc"
+    t.json "callback_payload"
+    t.datetime "paid_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["external_reference"], name: "index_limit_payments_on_external_reference", unique: true
+    t.index ["id_number"], name: "index_limit_payments_on_id_number"
+    t.index ["status"], name: "index_limit_payments_on_status"
   end
 
   create_table "maintenance_settings", force: :cascade do |t|
