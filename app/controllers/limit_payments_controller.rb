@@ -1,9 +1,11 @@
 class LimitPaymentsController < ApplicationController
   # Public JSON endpoints: the React page and PayHero's webhook send no CSRF token
-  skip_before_action :verify_authenticity_token
+  # skip_before_action :verify_authenticity_token
 
   CHANNEL_ID = 13890
   RECONCILE_AFTER = 25.seconds
+
+
 
   # POST /api/make_limit_payment
   # body: { id_number, phone, new_limit }
