@@ -171,8 +171,16 @@ class CallCenterController < ApplicationController
   private
 
   def set_account
-    @account = ActsAsTenant.current_tenant
-    render json: { error: "Account not found" }, status: :unauthorized unless @account
+    
+    host = request.headers['X-Subdomain']
+    @account = Account.find_by(subdomain: host)
+     ActsAsTenant.current_tenant = @account
+    EmailConfiguration.configure(@account, ENV['SYSTEM_ADMIN_EMAIL'])
+    # EmailSystemAdmin.configure(@current_account, current_system_admin)
+  
+    # set_current_tenant(@account)
+  rescue ActiveRecord::RecordNotFound
+    render json: { error: 'Account not found' }, status: :not_found
   end
 
   # Short numbers (3–6 digits) are extensions.

@@ -1,6 +1,8 @@
 class CallCenterIvrController < ActionController::API
   before_action :authenticate_pbx
   before_action :set_account
+    set_current_tenant_through_filter
+
 
   def show
     ActsAsTenant.with_tenant(@account) do
@@ -36,7 +38,14 @@ class CallCenterIvrController < ActionController::API
 
   # account_id may arrive zero-padded ("00007") from the dialplan.
   def set_account
-    @account = Account.find_by(id: params[:account_id].to_s.to_i)
-    head :not_found unless @account
+    host = request.headers['X-Subdomain']
+    @account = Account.find_by(subdomain: host)
+     ActsAsTenant.current_tenant = @account
+    EmailConfiguration.configure(@account, ENV['SYSTEM_ADMIN_EMAIL'])
+    # EmailSystemAdmin.configure(@current_account, current_system_admin)
+  
+    # set_current_tenant(@account)
+  rescue ActiveRecord::RecordNotFound
+    render json: { error: 'Account not found' }, status: :not_found
   end
 end
