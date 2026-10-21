@@ -234,7 +234,7 @@ class ProvisionExtensionService
       }
 
       if x.kind.to_s == "webrtc"
-        base.merge(allow: "opus,ulaw,alaw", webrtc: "yes", dtls_auto_generate_cert: "yes")
+        base.merge(allow: "ulaw,alaw", webrtc: "yes", dtls_auto_generate_cert: "yes")
       else
         base.merge(allow: "ulaw,alaw")
       end
