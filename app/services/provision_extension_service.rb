@@ -1,6 +1,6 @@
 require "securerandom"
 
-class ProvisionExtension
+class ProvisionExtensionService
   KINDS = %w[webrtc softphone].freeze
 
   class << self

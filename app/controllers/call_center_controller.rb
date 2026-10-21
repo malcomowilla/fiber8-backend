@@ -4,11 +4,11 @@ class CallCenterController < ApplicationController
   before_action :set_account
 
   def extensions
-    render json: ProvisionExtension.list(account: @account)
+    render json: ProvisionExtensionService.list(account: @account)
   end
 
   def create_extension
-    result = ProvisionExtension.call(
+    result = ProvisionExtensionService.call(
       account: @account,
       extension: params[:extension],
       name: params[:name],
@@ -25,7 +25,7 @@ class CallCenterController < ApplicationController
   end
 
   def update_extension
-    result = ProvisionExtension.update(
+    result = ProvisionExtensionService.update(
       account: @account,
       extension: params[:extension],
       name: params[:name],
@@ -41,7 +41,7 @@ class CallCenterController < ApplicationController
   end
 
   def reset_password
-    result = ProvisionExtension.reset_password(account: @account, extension: params[:extension])
+    result = ProvisionExtensionService.reset_password(account: @account, extension: params[:extension])
     return render json: result, status: :unprocessable_entity unless result[:success]
 
     render json: result.merge(sip_domain: ENV["ASTERISK_SIP_DOMAIN"])
@@ -49,7 +49,7 @@ class CallCenterController < ApplicationController
 
   # Restrict to admins: returns a SIP password. `extension` in the response is the SIP login (PBX id).
   def softphone
-    creds = ProvisionExtension.credentials(account: @account, extension: params[:extension])
+    creds = ProvisionExtensionService.credentials(account: @account, extension: params[:extension])
     return render json: creds, status: :unprocessable_entity unless creds[:success]
 
     render json: creds.merge(
