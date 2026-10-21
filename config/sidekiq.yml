@@ -245,6 +245,11 @@ development:
       class: ReferralEarningsMaturityJob
       cron: "*/5 * * * *"
 
+
+      cdr_tenant_tag_job:
+      class: CdrTenantTagJob
+      cron: "*/4 * * * *"
+
     inactivity_check_job:
       class: InactivityCheckJob
       cron: "*/5 * * * *"
