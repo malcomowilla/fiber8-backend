@@ -1,5 +1,6 @@
 class Account < ApplicationRecord
     has_many :users, dependent: :destroy
+    
     has_many :hotspot_templates,  dependent: :destroy
     has_one :hotspot_customization,  dependent: :destroy
     has_many :ads, dependent: :destroy
@@ -51,7 +52,7 @@ has_many :referral_withdrawals, as: :referrer, dependent: :destroy
 belongs_to :referred_by_account, class_name: 'Account', optional: true
 belongs_to :referred_by_outside_referrer, class_name: 'OutsideReferrer', optional: true
 has_many :accounts_referred, class_name: 'Account', foreign_key: :referred_by_account_id
-
+has_many :sip_extensions, dependent: :destroy
 
 before_validation :assign_referral_code, on: :create
 

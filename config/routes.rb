@@ -217,6 +217,26 @@ resources :nas_routers, path: 'nas_routers' do
   end
 end
 
+
+  # ── Call center ──
+  get    '/api/call_center/extensions',                           to: 'call_center#extensions'
+  post   '/api/call_center/extensions',                           to: 'call_center#create_extension'
+  patch  '/api/call_center/extensions/:extension',                to: 'call_center#update_extension',  constraints: { extension: /\d{3,10}/ }
+  delete '/api/call_center/extensions/:extension',                to: 'call_center#destroy_extension', constraints: { extension: /\d{3,10}/ }
+  post   '/api/call_center/extensions/:extension/reset_password', to: 'call_center#reset_password',    constraints: { extension: /\d{3,10}/ }
+  get    '/api/call_center/extensions/:extension/softphone',      to: 'call_center#softphone',         constraints: { extension: /\d{3,10}/ }
+
+  get    '/api/call_center/live_calls',                           to: 'call_center#live_calls'
+  get    '/api/call_center/stats',                                to: 'call_center#stats'
+  get    '/api/call_center/calls',                                to: 'call_center#calls'
+  get    '/api/call_center/recordings/:uniqueid',                 to: 'call_center#recording',         constraints: { uniqueid: /[^\/]+/ }
+
+  get    '/api/call_center/settings',                             to: 'call_center_settings#show'
+  patch  '/api/call_center/settings',                             to: 'call_center_settings#update'
+
+  # Asterisk dialplan only (token-protected, no session)
+  get    '/api/call_center/ivr_config',                           to: 'call_center_ivr#show'
+  get    '/api/call_center/ivr_recording',                        to: 'call_center_ivr#recording'
 post '/api/recover_session', to: 'hotspot_vouchers#recover_session'
 post '/api/invoice_stk_push',      to: 'invoice_payments#stk_push'
 get  '/api/invoice_payment_status', to: 'invoice_payments#status'

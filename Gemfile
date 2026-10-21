@@ -105,7 +105,7 @@ gem 'twilio-ruby', '~> 7.2.0'
 gem 'rack-cors'
 gem "aws-sdk-s3", require: false
 gem "net-ssh", "~> 7.2"
-
+gem 'ruby-asterisk'
 gem 'rubyzip', require: 'zip'
 
 
@@ -252,7 +252,7 @@ gem 'cloudinary'
 
 
 
-
+gem 'net-telnet'
 
 
 gem "solid_queue", "~> 1.6"

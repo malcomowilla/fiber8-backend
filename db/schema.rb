@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_10_19_081308) do
+ActiveRecord::Schema[7.2].define(version: 2026_10_21_111431) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -277,6 +277,24 @@ ActiveRecord::Schema[7.2].define(version: 2026_10_19_081308) do
     t.integer "account_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+  end
+
+  create_table "call_center_settings", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.boolean "always_open", default: false, null: false
+    t.string "open_days", default: "mon,tue,wed,thu,fri", null: false
+    t.string "open_from", default: "08:00", null: false
+    t.string "open_until", default: "17:00", null: false
+    t.string "timezone", default: "Africa/Nairobi", null: false
+    t.text "open_message"
+    t.text "closed_message"
+    t.text "hold_message"
+    t.string "hold_music_url"
+    t.boolean "record_calls", default: false, null: false
+    t.boolean "announce_recording", default: false, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id"], name: "index_call_center_settings_on_account_id", unique: true
   end
 
   create_table "cdr", id: false, force: :cascade do |t|
@@ -1541,6 +1559,22 @@ ActiveRecord::Schema[7.2].define(version: 2026_10_19_081308) do
     t.datetime "updated_at", null: false
   end
 
+  create_table "sip_extensions", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.string "extension", null: false
+    t.string "name", null: false
+    t.string "transport", default: "transport-udp", null: false
+    t.boolean "enabled", default: true, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.string "kind", default: "webrtc", null: false
+    t.string "pbx_id", null: false
+    t.index ["account_id", "extension"], name: "index_sip_extensions_on_account_id_and_extension", unique: true
+    t.index ["account_id"], name: "index_sip_extensions_on_account_id"
+    t.index ["extension"], name: "index_sip_extensions_on_extension", unique: true
+    t.index ["pbx_id"], name: "index_sip_extensions_on_pbx_id", unique: true
+  end
+
   create_table "sms", force: :cascade do |t|
     t.string "user"
     t.string "message"
@@ -2201,6 +2235,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_10_19_081308) do
   add_foreign_key "paystack_settings", "accounts"
   add_foreign_key "promotional_plans", "hotspot_packages"
   add_foreign_key "router_status_logs", "nas_routers"
+  add_foreign_key "sip_extensions", "accounts"
   add_foreign_key "temporary_sessions", "tv_plans"
   add_foreign_key "ticket_updates", "support_tickets"
   add_foreign_key "tv_plans", "accounts"
