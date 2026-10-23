@@ -150,7 +150,9 @@ class PaidNotConnectedController < ApplicationController
                  .where(checkout_request_id: checkout_ids, status: 'Completed')
                  .index_by(&:checkout_request_id)
 
-    # customer retried and got online later -> not a problem anymore
+    # latest connected session per phone. A later connection no longer hides
+    # the row: the customer paid again to get online, so the first payment
+    # was wasted and needs a human decision.
     connected_later = TemporarySession.where(connected: true)
                                       .where('created_at > ?', since)
                                       .group(:phone_number).maximum(:created_at)
@@ -167,7 +169,7 @@ class PaidNotConnectedController < ApplicationController
       next unless rev
 
       later = connected_later[s.phone_number]
-      next if later && later > s.created_at
+      paid_twice = later.present? && later > s.created_at
 
       paid_at = parse_paid_at(rev)
       waited = [((Time.current - paid_at) / 60).round, 0].max
@@ -176,6 +178,7 @@ class PaidNotConnectedController < ApplicationController
       repeats = recent_comp[s.phone_number].to_i
 
       reasons = []
+      reasons << 'Connected later with another payment (paid twice)' if paid_twice
       reasons << 'No voucher found' unless voucher
       reasons << 'Zero amount' unless rev.amount.to_f.positive?
       reasons << "Already compensated #{repeats}x in 30 days" if repeats >= MAX_AUTO_PER_30_DAYS
@@ -211,4 +214,3 @@ class PaidNotConnectedController < ApplicationController
     }
   end
 end
-
