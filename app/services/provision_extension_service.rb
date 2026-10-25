@@ -16,7 +16,7 @@ class ProvisionExtensionService
       return failure("Invalid type") unless KINDS.include?(kind)
 
       pbx_id = PbxId.build(extension, account.id)
-      password = SecureRandom.hex(16)
+      password = SecureRandom.hex(4)
 
       SipExtension.transaction do
         if PjsipEndpoint.exists?(id: pbx_id) ||

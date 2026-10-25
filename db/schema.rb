@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_10_21_111431) do
+ActiveRecord::Schema[7.2].define(version: 2026_10_25_192604) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -294,6 +294,8 @@ ActiveRecord::Schema[7.2].define(version: 2026_10_21_111431) do
     t.boolean "announce_recording", default: false, null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "did_numbers"
+    t.text "unreachable_message"
     t.index ["account_id"], name: "index_call_center_settings_on_account_id", unique: true
   end
 

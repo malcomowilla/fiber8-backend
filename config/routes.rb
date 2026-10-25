@@ -219,6 +219,12 @@ end
 
 
   # ── Call center ──
+  # 
+  #
+  get  '/api/call_center/ivr_inbound',          to: 'call_center_ivr#inbound'
+  get  '/api/call_center/ivr_audio',            to: 'call_center_ivr#audio'
+  post '/api/call_center/ivr_recording_upload', to: 'call_center_ivr#upload'
+
   get    '/api/call_center/extensions',                           to: 'call_center#extensions'
   post   '/api/call_center/extensions',                           to: 'call_center#create_extension'
   patch  '/api/call_center/extensions/:extension',                to: 'call_center#update_extension',  constraints: { extension: /\d{3,10}/ }
