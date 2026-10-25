@@ -104,7 +104,7 @@ class ProvisionExtensionService
       sip_extension = find_extension(account, extension)
       return failure("Extension not found") unless sip_extension
 
-      password = SecureRandom.hex(16)
+      password = SecureRandom.hex(4)
       PjsipAuth.find_by!(id: sip_extension.pbx_id).update!(password: password)
 
       { success: true, credentials: { username: sip_extension.pbx_id, password: password } }
