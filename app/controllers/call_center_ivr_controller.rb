@@ -1,11 +1,9 @@
-class CallCenterIvrController < ApplicationController
+class CallCenterIvrController < ActionController::API
   before_action :authenticate_pbx
-    before_action :set_account, except: :inbound
+  before_action :set_account, except: :inbound
 
-    set_current_tenant_through_filter
-
-
-    def inbound
+  # Dialplan reads: "<account>|open|closed|<dial string>|<announce 1/0>". Empty = unknown number.
+  def inbound
     did = params[:did].to_s.delete("^0-9")
     setting = did.present? &&
       CallCenterSetting.unscoped.where("? = ANY(string_to_array(did_numbers, ','))", did).first
@@ -80,15 +78,8 @@ class CallCenterIvrController < ApplicationController
 
   # account_id arrives zero-padded ("00209") from the dialplan.
   def set_account
-    host = request.headers['X-Subdomain']
-    @account = Account.find_by(subdomain: host)
-     ActsAsTenant.current_tenant = @account
-    EmailConfiguration.configure(@account, ENV['SYSTEM_ADMIN_EMAIL'])
-    # EmailSystemAdmin.configure(@current_account, current_system_admin)
-  
-    # set_current_tenant(@account)
-  rescue ActiveRecord::RecordNotFound
-    render json: { error: 'Account not found' }, status: :not_found
+    @account = Account.find_by(id: params[:account_id].to_s.to_i)
+    head :not_found unless @account
   end
 
   # Only agents that are registered right now. If AMI is down, ring everyone and let Dial decide.
