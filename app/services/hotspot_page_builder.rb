@@ -2295,7 +2295,6 @@ function startAdTimers(ad) {
           }
         }
 
-            renderAds();
 
             Object.values(adState).forEach(s => {
               if (!s.viewTracked) { trackAdEvent(s.ad.id, 'Ad View'); s.viewTracked = true; }
