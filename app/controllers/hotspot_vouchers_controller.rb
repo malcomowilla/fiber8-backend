@@ -738,7 +738,7 @@ broadcast_hotspot_payment(
   return
 end
 
-
+mark_hotspot_revenue_completed(session, voucher_code, data)  
  hotspot_package = HotspotPackage.find_by(
       name:       session&.hotspot_package,
       account_id: session&.account_id,
@@ -1224,17 +1224,12 @@ def stk_push_status
     checkout_request_id: checkout_request_id
   )
 
-  if revenue.present?
+    if revenue.present? && revenue.status != "Completed"
     case stk_push_query_response["ResultCode"].to_s
     when "0"
       revenue.update(status: "Completed")
-
-    when "1037"
+    when "1037", "4999"
       revenue.update(status: "Pending")
-
-      when "4999"
-      revenue.update(status: "Pending")
-
     else
       revenue.update(status: "Cancelled")
     end
@@ -3878,6 +3873,68 @@ def hotspot_portal_url(account_id)
 
   platform_domain = account.respond_to?(:platform_domain) && account.platform_domain.present? ? account.platform_domain : 'aitechs.co.ke'
   "https://#{account.subdomain}.#{platform_domain}/hotspot-customer-portal"
+end
+
+
+
+def mark_hotspot_revenue_completed(session, voucher_code, data)
+  ActsAsTenant.without_tenant do
+    revenue = nil
+    if session.checkout_request_id.present?
+      revenue = HotspotMpesaRevenue.find_by(checkout_request_id: session.checkout_request_id)
+    end
+    revenue ||= HotspotMpesaRevenue.find_by(voucher: voucher_code)   # fallback
+    return unless revenue
+
+    revenue.update(
+      status: "Completed",
+      amount: data["TransAmount"],
+      reference: data["TransID"],
+      time_paid: data["TransTime"],
+      name: data["FirstName"],
+      account_id: session.account_id
+    )
+  end
+rescue => e
+  Rails.logger.error "mark_hotspot_revenue_completed failed: #{e.message}"
+end
+
+
+
+
+def mark_hotspot_revenue_completed(session, voucher_code, data)
+  account = Account.find_by(id: session.account_id)
+  return unless account
+
+  ActsAsTenant.with_tenant(account) do
+    revenue = nil
+     voucher = HotspotVoucher.find_by(voucher: voucher_code)
+    if session.checkout_request_id.present?
+      revenue = HotspotMpesaRevenue.find_by(checkout_request_id: session.checkout_request_id)
+    end
+    revenue ||= HotspotMpesaRevenue.find_by(voucher: voucher_code)
+    return unless revenue
+
+
+        
+        
+
+    revenue.update(
+      status: "Completed",
+      voucher: voucher_code,
+      amount: data["TransAmount"],
+      reference: data["TransID"],
+      time_paid: data["TransTime"],
+      account_id: voucher.account_id,
+      name: data["FirstName"],
+      payment_method: "Mpesa",
+      hotspot_voucher_id: voucher.id
+
+    )
+  end
+rescue => e
+  Rails.logger.error "mark_hotspot_revenue_completed failed: #{e.class} - #{e.message}"
+  Rails.logger.error e.backtrace.first(5).join("\n")
 end
 
 end

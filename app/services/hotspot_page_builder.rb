@@ -2369,3 +2369,11 @@ function startAdTimers(ad) {
     JS
   end
 end
+
+
+
+
+
+
+
+

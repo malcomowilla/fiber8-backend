@@ -3,21 +3,21 @@ class SendSmsHotspotService
     voucher = HotspotVoucher.find_by(voucher: voucher_code)
     return unless voucher
 
-    revenue = HotspotMpesaRevenue.find_by(checkout_request_id: checkout_request_id)
+    # revenue = HotspotMpesaRevenue.find_by(checkout_request_id: checkout_request_id)
 
-    if revenue
-      revenue.update!(
-        amount: data["TransAmount"],
-        reference: data["TransID"],
-        voucher: voucher_code,
-        payment_method: "Mpesa",
-        time_paid: data["TransTime"],
-        name: data["FirstName"],
-        account_id: voucher.account_id,
-        status: "Completed",
-        hotspot_voucher_id: voucher.id
-      )
-    end
+    # if revenue
+    #   revenue.update!(
+    #     amount: data["TransAmount"],
+    #     reference: data["TransID"],
+    #     voucher: voucher_code,
+    #     payment_method: "Mpesa",
+    #     time_paid: data["TransTime"],
+    #     name: data["FirstName"],
+    #     account_id: voucher.account_id,
+    #     # status: "Completed",
+    #     hotspot_voucher_id: voucher.id
+    #   )
+    # end
 
     return if voucher.sms_sent_at_voucher.present?
 
