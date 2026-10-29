@@ -246,7 +246,7 @@ class HotspotPageBuilder
       .support-line { text-align: center; font-size: 15px; color: var(--text); }
       .support-line .footer-support { color: var(--text); font-weight: 700; }
       .support-line .footer-phone { color: var(--text); font-weight: 800; text-decoration: underline; }
-     
+
       .support-top {
         padding: 10px 20px;
         border-bottom: 1px solid color-mix(in srgb, var(--text) 14%, transparent);
@@ -308,10 +308,10 @@ class HotspotPageBuilder
 
       .mock-tag { display: inline-block; font-size: 12px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase;
                   padding: 2px 6px; border-radius: 6px; background: color-mix(in srgb, var(--text) 18%, transparent); color: var(--text); margin-left: 6px; }
-      .ad-card { border-radius: 16px; overflow: hidden; background: color-mix(in srgb, var(--surface) 96%, transparent); color: var(--text);
+      .fx-card { border-radius: 16px; overflow: hidden; background: color-mix(in srgb, var(--surface) 96%, transparent); color: var(--text);
                  border: 1px solid color-mix(in srgb, var(--text) 20%, transparent); box-shadow: 0 20px 40px rgba(0,0,0,.35); }
 
-      .ad-card.fullscreen { display: flex; flex-direction: column; height: 100%; border-radius: 0; border: none; box-shadow: none; }
+      .fx-card.fullscreen { display: flex; flex-direction: column; height: 100%; border-radius: 0; border: none; box-shadow: none; }
 
       /* ── Guided pay-step UI ──────────────────────────────────────── */
       .tap-hint { font-size: 14px; color: var(--text); margin-bottom: 10px; }
@@ -382,7 +382,7 @@ class HotspotPageBuilder
         <div class="panel" id="panel"></div>
         <div class="footer" id="footer"></div>
       </div>
-      <div id="ad-root"></div>
+      <div id="fx-root"></div>
     HTML
   end
 
@@ -410,6 +410,13 @@ class HotspotPageBuilder
   #     there, so real customers only ever see real data (or nothing).
   #   - also skips the autologin/session-check flow entirely, since there's
   #     nothing to reconnect to inside the designer's iframe.
+  #
+  # AD-BLOCKER NOTE: every DOM class/id/data-attribute for the offer card uses
+  # the neutral "fx" prefix (fx-card, fx-root, data-fx-*) because generic filter
+  # lists hide anything named ad-*. The offer endpoints try neutral paths first
+  # (/api/allow_get_highlights, /api/track_event) and fall back to the legacy
+  # ad paths if the neutral routes aren't defined yet. If something is still
+  # hidden/removed by an extension, the page shows a notice to the customer.
   def compiled_js
     <<~JS
       (function () {
@@ -436,6 +443,16 @@ if (username) localStorage.setItem('hotspot_username', username);
 
         const headers = { 'X-Subdomain': cfg.subdomain, 'Content-Type': 'application/json' };
         const api = (path) => cfg.api_base + path;
+
+        // Tries the neutral endpoint first; if the route doesn't exist (404) or
+        // the request is blocked, falls back to the legacy path.
+        async function fetchWithFallback(primary, fallback, options) {
+          try {
+            const r = await fetch(api(primary), options);
+            if (r.status !== 404) return r;
+          } catch (e) { /* blocked or failed, try the fallback path */ }
+          return fetch(api(fallback), options);
+        }
 
         const MOCK_PACKAGES = [
           { id: 'mock-1', name: 'Quick Browse', valid: '1 Hour', price: 20 },
@@ -1113,10 +1130,10 @@ function renderConnectedScreen() {
 
 
 function renderExpandedAd() {
-  let root = document.getElementById('ad-expanded-root');
+  let root = document.getElementById('fx-expanded-root');
   if (!root) {
     root = document.createElement('div');
-    root.id = 'ad-expanded-root';
+    root.id = 'fx-expanded-root';
     document.body.appendChild(root);
   }
   if (!expandedAdId) { root.innerHTML = ''; expandedAdRenderedFor = null; return; }
@@ -1143,7 +1160,7 @@ function renderExpandedAd() {
   const media = isImage
     ? \`<img src="\${ad.media_url}" alt="\${ad.ad_title || 'Ad'}" style="width:100%;max-height:65vh;object-fit:contain;display:block;">\`
     : isVideo
-      ? \`<video id="ad-expanded-video" src="\${ad.media_url}" autoplay controls playsinline style="width:100%;max-height:65vh;object-fit:contain;display:block;"></video>\`
+      ? \`<video id="fx-expanded-video" src="\${ad.media_url}" autoplay controls playsinline style="width:100%;max-height:65vh;object-fit:contain;display:block;"></video>\`
       : '';
 
   const rewardBanner = isVideo ? \`
@@ -1156,9 +1173,9 @@ function renderExpandedAd() {
     </div>\` : '';
 
   root.innerHTML = \`
-    <div id="ad-expanded-backdrop" style="position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.93);backdrop-filter:blur(16px);padding:16px;">
+    <div id="fx-expanded-backdrop" style="position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.93);backdrop-filter:blur(16px);padding:16px;">
       <p style="position:absolute;top:16px;right:20px;font-size:14px;color:rgba(255,255,255,.95);">Press ESC or click outside to close</p>
-      <div id="ad-expanded-panel" style="position:relative;width:100%;max-width:720px;border-radius:20px;overflow:hidden;box-shadow:0 30px 60px rgba(0,0,0,.5);background:var(--surface);color:var(--text);border:1px solid color-mix(in srgb, var(--text) 25%, transparent);">
+      <div id="fx-expanded-panel" style="position:relative;width:100%;max-width:720px;border-radius:20px;overflow:hidden;box-shadow:0 30px 60px rgba(0,0,0,.5);background:var(--surface);color:var(--text);border:1px solid color-mix(in srgb, var(--text) 25%, transparent);">
         \${rewardBanner}
         \${media}
         <div style="padding:14px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px;">
@@ -1168,41 +1185,41 @@ function renderExpandedAd() {
           </div>
           <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
             \${isVideo && ad.can_skip ? \`
-              <button id="ad-expanded-skip" style="display:\${s.skipReady ? 'flex' : 'none'};align-items:center;gap:5px;font-size:15px;padding:8px 12px;border-radius:10px;font-weight:800;border:1px solid var(--accent);background:color-mix(in srgb, var(--accent) 28%, transparent);color:var(--text);cursor:pointer;">Skip Ad ⏭</button>
-              <span id="ad-expanded-skip-wait" style="display:\${s.skipReady ? 'none' : 'inline'};font-size:14px;padding:8px 12px;border-radius:10px;background:color-mix(in srgb, var(--text) 14%, transparent);color:var(--text);"><span id="ad-expanded-skip-countdown">\${skipCountdown}</span>s remaining</span>
+              <button id="fx-expanded-skip" style="display:\${s.skipReady ? 'flex' : 'none'};align-items:center;gap:5px;font-size:15px;padding:8px 12px;border-radius:10px;font-weight:800;border:1px solid var(--accent);background:color-mix(in srgb, var(--accent) 28%, transparent);color:var(--text);cursor:pointer;">Skip Ad ⏭</button>
+              <span id="fx-expanded-skip-wait" style="display:\${s.skipReady ? 'none' : 'inline'};font-size:14px;padding:8px 12px;border-radius:10px;background:color-mix(in srgb, var(--text) 14%, transparent);color:var(--text);"><span id="fx-expanded-skip-countdown">\${skipCountdown}</span>s remaining</span>
             \` : ''}
-            \${ad.ad_link ? \`<button id="ad-expanded-visit" style="display:flex;align-items:center;gap:5px;font-size:15px;padding:8px 12px;border-radius:10px;font-weight:800;border:1px solid var(--primary);background:color-mix(in srgb, var(--primary) 25%, transparent);color:var(--text);cursor:pointer;">Visit ↗</button>\` : ''}
-            \${isImage ? \`<button id="ad-expanded-dismiss" style="display:flex;align-items:center;gap:5px;font-size:15px;padding:8px 12px;border-radius:10px;font-weight:700;border:1px solid color-mix(in srgb, var(--text) 40%, transparent);background:color-mix(in srgb, var(--text) 14%, transparent);color:var(--text);cursor:pointer;">✕ Close Ad</button>\` : ''}
-            <button id="ad-expanded-collapse" style="display:flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:10px;border:1px solid color-mix(in srgb, var(--text) 40%, transparent);background:color-mix(in srgb, var(--text) 14%, transparent);color:var(--text);cursor:pointer;font-size:16px;">⤡</button>
+            \${ad.ad_link ? \`<button id="fx-expanded-visit" style="display:flex;align-items:center;gap:5px;font-size:15px;padding:8px 12px;border-radius:10px;font-weight:800;border:1px solid var(--primary);background:color-mix(in srgb, var(--primary) 25%, transparent);color:var(--text);cursor:pointer;">Visit ↗</button>\` : ''}
+            \${isImage ? \`<button id="fx-expanded-dismiss" style="display:flex;align-items:center;gap:5px;font-size:15px;padding:8px 12px;border-radius:10px;font-weight:700;border:1px solid color-mix(in srgb, var(--text) 40%, transparent);background:color-mix(in srgb, var(--text) 14%, transparent);color:var(--text);cursor:pointer;">✕ Close Ad</button>\` : ''}
+            <button id="fx-expanded-collapse" style="display:flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:10px;border:1px solid color-mix(in srgb, var(--text) 40%, transparent);background:color-mix(in srgb, var(--text) 14%, transparent);color:var(--text);cursor:pointer;font-size:16px;">⤡</button>
           </div>
         </div>
-        \${isVideo ? \`<div style="height:4px;background:color-mix(in srgb, var(--text) 20%, transparent);"><div id="ad-expanded-progress-bar" style="height:100%;width:\${((ad.ad_duration || 15) - s.secondsLeft) / (ad.ad_duration || 15) * 100}%;background:linear-gradient(90deg,var(--accent),var(--secondary));transition:width 1s linear;"></div></div>\` : ''}
+        \${isVideo ? \`<div style="height:4px;background:color-mix(in srgb, var(--text) 20%, transparent);"><div id="fx-expanded-progress-bar" style="height:100%;width:\${((ad.ad_duration || 15) - s.secondsLeft) / (ad.ad_duration || 15) * 100}%;background:linear-gradient(90deg,var(--accent),var(--secondary));transition:width 1s linear;"></div></div>\` : ''}
       </div>
     </div>\`;
 
-  const backdrop = document.getElementById('ad-expanded-backdrop');
-  const panel = document.getElementById('ad-expanded-panel');
+  const backdrop = document.getElementById('fx-expanded-backdrop');
+  const panel = document.getElementById('fx-expanded-panel');
   if (backdrop) backdrop.onclick = () => collapseExpandedAd();
   if (panel) panel.onclick = (e) => e.stopPropagation();
 
-  const collapseBtn = document.getElementById('ad-expanded-collapse');
+  const collapseBtn = document.getElementById('fx-expanded-collapse');
   if (collapseBtn) collapseBtn.onclick = () => collapseExpandedAd();
 
-  const dismissBtn = document.getElementById('ad-expanded-dismiss');
+  const dismissBtn = document.getElementById('fx-expanded-dismiss');
   if (dismissBtn) dismissBtn.onclick = () => completeAd(ad.id, 'dismissed');
 
-  const skipBtn = document.getElementById('ad-expanded-skip');
+  const skipBtn = document.getElementById('fx-expanded-skip');
   if (skipBtn) skipBtn.onclick = () => completeAd(ad.id, 'skipped');
 
-  const visitBtn = document.getElementById('ad-expanded-visit');
+  const visitBtn = document.getElementById('fx-expanded-visit');
   if (visitBtn) visitBtn.onclick = () => {
     trackAdEvent(ad.id, 'click');
     if (ad.ad_link && !cfg.preview) window.open(ad.ad_link, '_blank');
   };
 
   if (isVideo) {
-    const inlineVideo = document.getElementById('ad-video-' + ad.id);
-    const expandedVideo = document.getElementById('ad-expanded-video');
+    const inlineVideo = document.getElementById('fx-video-' + ad.id);
+    const expandedVideo = document.getElementById('fx-expanded-video');
     if (inlineVideo && expandedVideo) {
       expandedVideo.currentTime = inlineVideo.currentTime || 0;
       inlineVideo.pause();
@@ -1228,17 +1245,17 @@ function updateExpandedAdProgress() {
   if (ad.media_type !== 'video') return;
 
   const skipCountdown = Math.max(0, (ad.skip_after || 5) - ((ad.ad_duration || 15) - s.secondsLeft));
-  const countdownEl = document.getElementById('ad-expanded-skip-countdown');
+  const countdownEl = document.getElementById('fx-expanded-skip-countdown');
   if (countdownEl) countdownEl.textContent = skipCountdown;
 
   if (s.skipReady) {
-    const skipBtn = document.getElementById('ad-expanded-skip');
-    const waitLabel = document.getElementById('ad-expanded-skip-wait');
+    const skipBtn = document.getElementById('fx-expanded-skip');
+    const waitLabel = document.getElementById('fx-expanded-skip-wait');
     if (skipBtn) skipBtn.style.display = 'flex';
     if (waitLabel) waitLabel.style.display = 'none';
   }
 
-  const bar = document.getElementById('ad-expanded-progress-bar');
+  const bar = document.getElementById('fx-expanded-progress-bar');
   if (bar) bar.style.width = (((ad.ad_duration || 15) - s.secondsLeft) / (ad.ad_duration || 15) * 100) + '%';
 }
 
@@ -1260,8 +1277,8 @@ function collapseExpandedAd() {
     if (adTimers[expandedAdId]) { clearInterval(adTimers[expandedAdId]); delete adTimers[expandedAdId]; }
     if (adSkipTimers[expandedAdId] && !s.skipReady) { clearTimeout(adSkipTimers[expandedAdId]); delete adSkipTimers[expandedAdId]; }
 
-    const inlineVideo = document.getElementById('ad-video-' + expandedAdId);
-    const expandedVideo = document.getElementById('ad-expanded-video');
+    const inlineVideo = document.getElementById('fx-video-' + expandedAdId);
+    const expandedVideo = document.getElementById('fx-expanded-video');
     if (inlineVideo && expandedVideo) {
       inlineVideo.currentTime = expandedVideo.currentTime || 0;
       inlineVideo.play().catch(() => {});
@@ -1771,7 +1788,7 @@ async function loadSystemAd() {
 
 function renderSystemAd(adId, brand) {
   const root = document.createElement('div');
-  root.id = 'system-ad-root';
+  root.id = 'fx-system-root';
   document.body.appendChild(root);
 
   let elapsed = 0;
@@ -1800,7 +1817,7 @@ function renderSystemAd(adId, brand) {
             ✨ Sponsored · \${brand.company_name || 'Your ISP'}
           </span>
           \${canSkip
-            ? '<button id="sysad-skip" style="padding:6px 12px;border-radius:8px;border:1px solid rgba(255,255,255,.5);background:rgba(255,255,255,.15);color:#ffffff;font-size:14px;font-weight:700;cursor:pointer;">Skip ✕</button>'
+            ? '<button id="fx-system-skip" style="padding:6px 12px;border-radius:8px;border:1px solid rgba(255,255,255,.5);background:rgba(255,255,255,.15);color:#ffffff;font-size:14px;font-weight:700;cursor:pointer;">Skip ✕</button>'
             : '<span style="font-size:13px;color:rgba(255,255,255,.95);padding:6px 12px;">Skip in ' + (5 - elapsed) + 's</span>'
           }
         </div>
@@ -1813,7 +1830,7 @@ function renderSystemAd(adId, brand) {
           \${brand.contact_info ? '<a href="tel:' + brand.contact_info + '" style="font-size:14px;font-weight:800;color:#ffffff;text-decoration:underline;">📞 ' + brand.contact_info + '</a>' : ''}
         </div>
       </div>\`;
-    const skipBtn = document.getElementById('sysad-skip');
+    const skipBtn = document.getElementById('fx-system-skip');
     if (skipBtn) skipBtn.onclick = dismiss;
   }
 
@@ -1959,7 +1976,7 @@ function tryQrVoucherLogin() {
           }
         }
 
-        // ── Ads ──────────────────────────────────────────────────────────
+        // ── Offer cards (ads) ────────────────────────────────────────────
         const AD_POSITIONS = {
   'top-banner':    'position:fixed;top:0;left:0;right:0;z-index:9999;',
   'bottom-banner': 'position:fixed;bottom:0;left:0;right:0;z-index:9999;',
@@ -1984,7 +2001,7 @@ function tryQrVoucherLogin() {
 
 function trackAdEvent(adId, eventType) {
   if (!adId || cfg.preview) return;
-  fetch(api('/api/track_ad_event'), {
+  fetchWithFallback('/api/track_event', '/api/track_ad_event', {
     method: 'POST', headers,
     body: JSON.stringify({ event_type: eventType, ad_id: adId, mac })
   }).catch(() => {});
@@ -2029,11 +2046,11 @@ function trackAdEvent(adId, eventType) {
           }).join('');
 
           const visitBtn = ad.ad_link
-            ? \`<button data-ad-visit="\${ad.id}" style="position:absolute;bottom:8px;left:8px;display:flex;align-items:center;gap:4px;padding:6px 12px;border-radius:20px;border:none;background:rgba(0,0,0,.8);color:#fff;font-size:13px;font-weight:700;cursor:pointer;">Visit ↗</button>\`
+            ? \`<button data-fx-visit="\${ad.id}" style="position:absolute;bottom:8px;left:8px;display:flex;align-items:center;gap:4px;padding:6px 12px;border-radius:20px;border:none;background:rgba(0,0,0,.8);color:#fff;font-size:13px;font-weight:700;cursor:pointer;">Visit ↗</button>\`
             : '';
-          const closeBtn = \`<button data-ad-dismiss="\${ad.id}" style="position:absolute;top:8px;right:8px;width:28px;height:28px;border-radius:50%;background:rgba(0,0,0,.8);border:none;color:#fff;cursor:pointer;font-size:14px;">✕</button>\`;
+          const closeBtn = \`<button data-fx-dismiss="\${ad.id}" style="position:absolute;top:8px;right:8px;width:28px;height:28px;border-radius:50%;background:rgba(0,0,0,.8);border:none;color:#fff;cursor:pointer;font-size:14px;">✕</button>\`;
 
-          return \`<div data-ad-track="\${ad.id}" style="position:relative;width:\${w}px;max-width:320px;height:\${h}px;background:\${bg};border-radius:10px;overflow:hidden;cursor:pointer;">\${parts}\${visitBtn}\${closeBtn}</div>\`;
+          return \`<div data-fx-track="\${ad.id}" style="position:relative;width:\${w}px;max-width:320px;height:\${h}px;background:\${bg};border-radius:10px;overflow:hidden;cursor:pointer;">\${parts}\${visitBtn}\${closeBtn}</div>\`;
         }
 
         function adCardHtml(ad) {
@@ -2056,8 +2073,8 @@ function trackAdEvent(adId, eventType) {
     // Sound isn't lost for the viewer: they still get full sound once
     // they tap expand, which opens the real (unmuted) modal video.
     media = isFullscreen
-      ? \`<video id="ad-video-\${ad.id}" src="\${ad.media_url}" autoplay muted playsinline style="width:100%;flex:1;object-fit:contain;display:block;"></video>\`
-      : \`<video id="ad-video-\${ad.id}" src="\${ad.media_url}" autoplay muted playsinline style="width:100%;max-height:220px;object-fit:cover;display:block;"></video>\`;
+      ? \`<video id="fx-video-\${ad.id}" src="\${ad.media_url}" autoplay muted playsinline style="width:100%;flex:1;object-fit:contain;display:block;"></video>\`
+      : \`<video id="fx-video-\${ad.id}" src="\${ad.media_url}" autoplay muted playsinline style="width:100%;max-height:220px;object-fit:cover;display:block;"></video>\`;
   } else if (isCustom) {
     media = customDesignHtml(ad);
   }
@@ -2073,11 +2090,11 @@ function trackAdEvent(adId, eventType) {
           \${ad.ad_title ? \`<span style="font-size:14px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">\${ad.ad_title}</span>\` : ''}
         </div>
         <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
-          \${(isImage || isVideo) ? \`<button data-ad-expand="\${ad.id}" style="display:flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:8px;border:1px solid color-mix(in srgb, var(--text) 40%, transparent);background:color-mix(in srgb, var(--text) 14%, transparent);color:var(--text);cursor:pointer;font-size:15px;">⤢</button>\` : ''}
-          \${ad.ad_link ? \`<button data-ad-visit="\${ad.id}" style="display:flex;align-items:center;gap:4px;font-size:13px;padding:6px 10px;border-radius:8px;font-weight:800;border:1px solid var(--primary);background:color-mix(in srgb, var(--primary) 25%, transparent);color:var(--text);cursor:pointer;">Visit ↗</button>\` : ''}
-          \${isVideo && ad.can_skip && s.skipReady ? \`<button data-ad-skip="\${ad.id}" style="display:flex;align-items:center;gap:4px;font-size:13px;padding:6px 10px;border-radius:8px;font-weight:800;border:1px solid var(--accent);background:color-mix(in srgb, var(--accent) 28%, transparent);color:var(--text);cursor:pointer;">Skip ⏭</button>\` : ''}
+          \${(isImage || isVideo) ? \`<button data-fx-expand="\${ad.id}" style="display:flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:8px;border:1px solid color-mix(in srgb, var(--text) 40%, transparent);background:color-mix(in srgb, var(--text) 14%, transparent);color:var(--text);cursor:pointer;font-size:15px;">⤢</button>\` : ''}
+          \${ad.ad_link ? \`<button data-fx-visit="\${ad.id}" style="display:flex;align-items:center;gap:4px;font-size:13px;padding:6px 10px;border-radius:8px;font-weight:800;border:1px solid var(--primary);background:color-mix(in srgb, var(--primary) 25%, transparent);color:var(--text);cursor:pointer;">Visit ↗</button>\` : ''}
+          \${isVideo && ad.can_skip && s.skipReady ? \`<button data-fx-skip="\${ad.id}" style="display:flex;align-items:center;gap:4px;font-size:13px;padding:6px 10px;border-radius:8px;font-weight:800;border:1px solid var(--accent);background:color-mix(in srgb, var(--accent) 28%, transparent);color:var(--text);cursor:pointer;">Skip ⏭</button>\` : ''}
           \${isVideo && ad.can_skip && !s.skipReady ? \`<span style="font-size:13px;padding:6px 10px;border-radius:8px;background:color-mix(in srgb, var(--text) 14%, transparent);color:var(--text);">Skip in \${skipCountdown}s</span>\` : ''}
-          \${isImage ? \`<button data-ad-dismiss="\${ad.id}" style="width:32px;height:32px;border-radius:50%;border:1px solid color-mix(in srgb, var(--text) 40%, transparent);background:color-mix(in srgb, var(--text) 14%, transparent);color:var(--text);cursor:pointer;font-size:14px;">✕</button>\` : ''}
+          \${isImage ? \`<button data-fx-dismiss="\${ad.id}" style="width:32px;height:32px;border-radius:50%;border:1px solid color-mix(in srgb, var(--text) 40%, transparent);background:color-mix(in srgb, var(--text) 14%, transparent);color:var(--text);cursor:pointer;font-size:14px;">✕</button>\` : ''}
         </div>
       </div>\`;
   }
@@ -2100,7 +2117,7 @@ function trackAdEvent(adId, eventType) {
 
   const isFull = ad.position === 'fullscreen';
   return \`
-    <div class="ad-card\${isFull ? ' fullscreen' : ''}" style="position:relative;\${isFull ? 'height:100%;' : ''}">
+    <div class="fx-card\${isFull ? ' fullscreen' : ''}" style="position:relative;\${isFull ? 'height:100%;' : ''}">
       \${banner}
       \${media}
       \${footer}
@@ -2111,7 +2128,7 @@ function trackAdEvent(adId, eventType) {
 
 
 function renderAds() {
-  const root = document.getElementById('ad-root');
+  const root = document.getElementById('fx-root');
   if (!root) return;
   root.innerHTML = Object.values(adState)
     .filter(s => !s.completed)
@@ -2125,10 +2142,10 @@ function renderAds() {
 }
 
         function bindAdEvents() {
-  document.querySelectorAll('[data-ad-visit]').forEach(el => {
+  document.querySelectorAll('[data-fx-visit]').forEach(el => {
     el.onclick = (e) => {
       e.stopPropagation();
-      const id = el.dataset.adVisit;
+      const id = el.dataset.fxVisit;
       const ad = adState[id]?.ad;
       trackAdEvent(id, 'click');
       if (ad?.ad_link && !cfg.preview) window.open(ad.ad_link, '_blank');
@@ -2136,21 +2153,21 @@ function renderAds() {
   });
 
 
-  document.querySelectorAll('[data-ad-skip]').forEach(el => {
-    el.onclick = (e) => { e.stopPropagation(); completeAd(el.dataset.adSkip, 'skipped'); };
+  document.querySelectorAll('[data-fx-skip]').forEach(el => {
+    el.onclick = (e) => { e.stopPropagation(); completeAd(el.dataset.fxSkip, 'skipped'); };
   });
-  document.querySelectorAll('[data-ad-dismiss]').forEach(el => {
-    el.onclick = (e) => { e.stopPropagation(); completeAd(el.dataset.adDismiss, 'dismissed'); };
+  document.querySelectorAll('[data-fx-dismiss]').forEach(el => {
+    el.onclick = (e) => { e.stopPropagation(); completeAd(el.dataset.fxDismiss, 'dismissed'); };
   });
-  document.querySelectorAll('[data-ad-track]').forEach(el => {
-    el.onclick = () => trackAdEvent(el.dataset.adTrack, 'click');
+  document.querySelectorAll('[data-fx-track]').forEach(el => {
+    el.onclick = () => trackAdEvent(el.dataset.fxTrack, 'click');
   });
 
 
 
   Object.values(adState).forEach(s => {
     if (s.completed || s.ad.media_type !== 'video') return;
-    const el = document.getElementById('ad-video-' + s.ad.id);
+    const el = document.getElementById('fx-video-' + s.ad.id);
     if (el) {
       el.onended = () => {
         if (expandedAdId === s.ad.id) return; // modal owns completion in that case
@@ -2160,10 +2177,10 @@ function renderAds() {
   });
 
 
-  document.querySelectorAll('[data-ad-expand]').forEach(el => {
+  document.querySelectorAll('[data-fx-expand]').forEach(el => {
     el.onclick = (e) => {
       e.stopPropagation();
-      const id = el.dataset.adExpand;
+      const id = el.dataset.fxExpand;
       const s = adState[id];
       if (!s || s.completed) return;
       trackAdEvent(id, 'engaged_view');   // deliberate action — counts as engagement
@@ -2235,9 +2252,46 @@ function startAdTimers(ad) {
   }, 1000);
 }
 
+        // Shown when an extension hides or removes the offer card. Uses inline
+        // styles and a neutral id so filter lists can't target it.
+        function showBlockedNotice() {
+          if (document.getElementById('fx-notice')) return;
+          const n = document.createElement('div');
+          n.id = 'fx-notice';
+          n.setAttribute('style',
+            'position:fixed;left:12px;right:12px;bottom:12px;z-index:99998;padding:12px 14px;border-radius:14px;' +
+            'background:#111827;color:#ffffff;border:1px solid #f59e0b;font:600 14px/1.4 sans-serif;' +
+            'display:flex;gap:10px;align-items:flex-start;box-shadow:0 10px 30px rgba(0,0,0,.5);');
+          n.innerHTML =
+            '<span style="font-size:18px;">⚠️</span>' +
+            '<span style="flex:1;">An extension or ad blocker on this device is hiding part of this page. ' +
+            'Please turn it off for this site to see all content.</span>' +
+            '<button id="fx-notice-close" style="background:transparent;border:none;color:#ffffff;font-size:18px;cursor:pointer;">✕</button>';
+          document.body.appendChild(n);
+          const c = document.getElementById('fx-notice-close');
+          if (c) c.onclick = () => n.remove();
+        }
+
+        // After the card renders, check it is actually visible. Blockers either
+        // inject display:none or remove the node entirely.
+        function checkHidden() {
+          setTimeout(() => {
+            const expected = Object.values(adState).some(s => !s.completed);
+            if (!expected) return;
+            const el = document.querySelector('.fx-card');
+            const hidden = !el ||
+              getComputedStyle(el).display === 'none' ||
+              el.getBoundingClientRect().height === 0;
+            if (hidden) {
+              console.warn('[content] offer card hidden or removed, likely blocked by an extension');
+              showBlockedNotice();
+            }
+          }, 1500);
+        }
+
         async function loadAds() {
           try {
-            const res = await fetch(api('/api/allow_get_ads'), { headers });
+            const res = await fetchWithFallback('/api/allow_get_highlights', '/api/allow_get_ads', { headers });
             let list = [];
             if (res.ok) {
               const raw = await res.json();
@@ -2273,6 +2327,7 @@ function startAdTimers(ad) {
             });
 
             renderAds();
+            checkHidden();
 
             Object.values(adState).forEach(s => {
               if (!s.viewTracked) { trackAdEvent(s.ad.id, 'Ad View'); s.viewTracked = true; }
@@ -2281,10 +2336,16 @@ function startAdTimers(ad) {
             });
           } catch (e) {
             console.error('[ads] loadAds failed:', e);
+            // A thrown TypeError here while packages loaded fine usually means
+            // the request itself was blocked by an extension.
+            if (e instanceof TypeError && state.packagesLoaded && state.packages.length && !cfg.preview) {
+              showBlockedNotice();
+            }
             if (cfg.preview) {
               try {
                 adState[MOCK_AD.id] = { ad: MOCK_AD, secondsLeft: 0, skipReady: false, completed: false, viewTracked: true };
                 renderAds();
+                checkHidden();
               } catch (e2) { console.error('[ads] mock render failed:', e2); }
             }
           }
