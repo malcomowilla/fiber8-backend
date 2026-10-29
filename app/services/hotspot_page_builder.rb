@@ -39,67 +39,6 @@ class HotspotPageBuilder
   def footer_cfg = @design["footer"] || {}
   def features = @design["features"] || {}
 
-  # ── Contrast guarantees ───────────────────────────────────────────────
-  # Customers may have poor eyesight or be outdoors in sunlight, so text
-  # contrast is enforced here instead of trusting every theme color to be
-  # readable. Rules:
-  #   * body text is always >= 7:1 against the background AND the surface
-  #     (WCAG AAA). If a theme's text color fails, it falls back to
-  #     black/white, whichever is readable on that background.
-  #   * "muted" text is no longer a separate grey — it is derived from the
-  #     text color in CSS, so it can never be faint.
-  #   * text sitting on a primary/button color is picked automatically
-  #     (black or white) based on that color's brightness.
-  def hex_to_rgb(hex)
-    h = hex.to_s.delete("#")
-    h = h.chars.map { |c| c * 2 }.join if h.length == 3
-    return nil unless h.match?(/\A[0-9a-fA-F]{6}\z/)
-    [h[0, 2], h[2, 2], h[4, 2]].map { |x| x.to_i(16) }
-  end
-
-  def luminance(hex)
-    rgb = hex_to_rgb(hex)
-    return nil unless rgb
-    r, g, b = rgb.map do |v|
-      c = v / 255.0
-      c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055)**2.4
-    end
-    0.2126 * r + 0.7152 * g + 0.0722 * b
-  end
-
-  def contrast_ratio(a, b)
-    la = luminance(a)
-    lb = luminance(b)
-    return nil unless la && lb
-    hi, lo = [la, lb].max, [la, lb].min
-    (hi + 0.05) / (lo + 0.05)
-  end
-
-  # Black or white, whichever reads better on the given background color.
-  def readable_text_color(bg_hex)
-    l = luminance(bg_hex)
-    return "#ffffff" if l.nil?
-    l > 0.179 ? "#000000" : "#ffffff"
-  end
-
-  def safe_text_color
-    bg = theme["background"] || "#020617"
-    surface = theme["surface"] || "#0f172a"
-    txt = theme["text"] || "#e2e8f0"
-    ratios = [contrast_ratio(txt, bg), contrast_ratio(txt, surface)].compact
-    return txt if ratios.any? && ratios.min >= 7
-    readable_text_color(bg)
-  end
-
-  def button_text_color
-    lums = [
-      theme["button_primary"] || theme["primary"] || "#38bdf8",
-      theme["button_secondary"] || theme["secondary"] || "#a78bfa"
-    ].map { |c| luminance(c) }.compact
-    return "#ffffff" if lums.empty?
-    (lums.sum / lums.size) > 0.179 ? "#000000" : "#ffffff"
-  end
-
   def google_font_link
     url = typography["google_font_url"]
     url.present? ? %(<link rel="stylesheet" href="#{url}">) : ""
@@ -135,14 +74,13 @@ class HotspotPageBuilder
       header: header,
       footer: footer_cfg,
       preview: !!@preview,
-      mikrotik_mac: "$(mac)",
-      mikrotik_ip: "$(ip)",
-      mikrotik_link_orig: "$(link-orig)",
+        mikrotik_mac: "$(mac)",
+    mikrotik_ip: "$(ip)",
+    mikrotik_link_orig: "$(link-orig)",
     }.to_json
   end
 
   def compiled_css
-    base_size = [typography["base_size"].to_i, 15].max
     <<~CSS
       :root {
         --primary:         #{theme["primary"]         || "#38bdf8"};
@@ -152,129 +90,106 @@ class HotspotPageBuilder
         --btn-secondary:   #{theme["button_secondary"]|| theme["secondary"] || "#a78bfa"};
         --background:      #{theme["background"]      || "#020617"};
         --surface:         #{theme["surface"]         || "#0f172a"};
-        --text:            #{safe_text_color};
-        /* No separate grey anymore: "muted" is the text color, just very slightly softened. */
-        --muted:           color-mix(in srgb, var(--text) 88%, var(--background));
-        --on-btn:          #{button_text_color};
-        --on-primary:      #{readable_text_color(theme["primary"] || "#38bdf8")};
+        --text:            #{theme["text"]             || "#e2e8f0"};
+        --muted:           #{theme["muted"]            || "#64748b"};
         --radius:          #{layout["corner_radius"]   || 24}px;
         --font:            '#{typography["font_family"] || "Plus Jakarta Sans"}', sans-serif;
-        --font-size:       #{base_size}px;
+        --font-size:       #{typography["base_size"]   || 14}px;
       }
       * { box-sizing: border-box; margin: 0; padding: 0; font-family: var(--font); }
       body {
         background: radial-gradient(circle at 20% -10%, color-mix(in srgb, var(--primary) 12%, transparent), transparent 60%),
                     radial-gradient(circle at 90% 110%, color-mix(in srgb, var(--secondary) 10%, transparent), transparent 60%),
                     var(--background);
-        color: var(--text); font-size: var(--font-size); min-height: 100vh; line-height: 1.5;
+        color: var(--text); font-size: var(--font-size); min-height: 100vh;
       }
       .card {
         max-width: #{layout["card_width"] || 420}px;
         margin: 48px auto;
-        background: color-mix(in srgb, var(--surface) 92%, transparent);
+        background: color-mix(in srgb, var(--surface) 75%, transparent);
         backdrop-filter: blur(20px);
-        border: 1px solid color-mix(in srgb, var(--text) 18%, transparent);
+        border: 1px solid color-mix(in srgb, var(--text) 10%, transparent);
         border-radius: var(--radius);
         overflow: hidden;
         box-shadow: 0 30px 60px -20px rgba(0,0,0,.5);
       }
-      .header { text-align: center; padding: 32px 24px 20px; border-bottom: 1px solid color-mix(in srgb, var(--text) 14%, transparent); }
+      .header { text-align: center; padding: 32px 24px 20px; border-bottom: 1px solid color-mix(in srgb, var(--text) 8%, transparent); }
       .header .wifi-badge {
         width: 56px; height: 56px; margin: 0 auto 12px; border-radius: 18px;
         display: flex; align-items: center; justify-content: center; font-size: 24px;
-        background: color-mix(in srgb, var(--primary) 18%, transparent);
-        border: 1px solid color-mix(in srgb, var(--primary) 35%, transparent);
+        background: color-mix(in srgb, var(--primary) 12%, transparent);
+        border: 1px solid color-mix(in srgb, var(--primary) 25%, transparent);
       }
       .header img.logo { max-height: 56px; margin: 0 auto 12px; display: block; }
-      .header h1 { font-size: #{typography["heading_size"] || 24}px; font-weight: #{typography["weight_heading"] || 700}; color: var(--text); }
-      .header p { color: var(--text); margin-top: 4px; font-size: 15px; }
+      .header h1 { font-size: #{typography["heading_size"] || 24}px; font-weight: #{typography["weight_heading"] || 700}; }
+      .header p { color: var(--muted); margin-top: 4px; }
       .tabs { display: flex; gap: 6px; padding: 16px; }
-      .tab { flex: 1; text-align: center; padding: 12px 6px; border-radius: 12px; cursor: pointer; color: var(--text); font-size: 14px; font-weight: 700;
-             border: 1px solid color-mix(in srgb, var(--text) 18%, transparent); transition: background .15s, color .15s; }
-      .tab.active { background: color-mix(in srgb, var(--primary) 28%, transparent); color: var(--text);
-                    border-color: var(--primary); box-shadow: inset 0 -3px 0 var(--primary); }
+      .tab { flex: 1; text-align: center; padding: 10px; border-radius: 12px; cursor: pointer; color: var(--muted); font-size: 12px; font-weight: 600; transition: background .15s, color .15s; }
+      .tab.active { background: color-mix(in srgb, var(--primary) 14%, transparent); color: var(--primary); }
       .panel { padding: 0 20px 24px; }
-      .field { width: 100%; padding: 14px; font-size: 16px; border-radius: 12px; border: 2px solid color-mix(in srgb, var(--text) 35%, transparent);
-               background: color-mix(in srgb, var(--surface) 90%, var(--text) 4%); color: var(--text); margin-bottom: 12px; }
-      .field:focus { outline: none; border-color: var(--primary); }
-      /* Placeholder: clearly softer than typed text so it doesn't look filled in,
-         but still readable (about 62% of the text color, normal weight). */
-      .field::placeholder { color: color-mix(in srgb, var(--text) 62%, var(--surface)); opacity: 1; font-weight: 400; }
-      .field { font-weight: 600; }
-      select.field option { background: var(--surface); color: var(--text); }
-      .btn { width: 100%; padding: 15px; font-size: 16px; border-radius: 12px; border: none; font-weight: 800; color: var(--on-btn); cursor: pointer;
+      .field { width: 100%; padding: 14px; border-radius: 12px; border: 1px solid color-mix(in srgb, var(--text) 12%, transparent); background: color-mix(in srgb, var(--surface) 70%, transparent); color: var(--text); margin-bottom: 12px; }
+      .btn { width: 100%; padding: 14px; border-radius: 12px; border: none; font-weight: 700; color: #fff; cursor: pointer;
              background: linear-gradient(135deg, var(--btn-primary), var(--btn-secondary)); transition: transform .1s, opacity .15s; }
       .btn:hover { opacity: .92; transform: translateY(-1px); }
-      .pkg { display: flex; justify-content: space-between; align-items: center; padding: 14px; border-radius: 14px; font-size: 15px; color: var(--text);
-             border: 1px solid color-mix(in srgb, var(--text) 25%, transparent); margin-bottom: 10px; cursor: pointer; transition: border-color .15s; }
-      .pkg small { font-size: 13px; color: var(--muted); }
+      .pkg { display: flex; justify-content: space-between; align-items: center; padding: 14px; border-radius: 14px;
+             border: 1px solid color-mix(in srgb, var(--text) 10%, transparent); margin-bottom: 10px; cursor: pointer; transition: border-color .15s; }
 
-      .section-heading { font-size: 18px; font-weight: 800; color: var(--text); margin-bottom: 2px; }
-      .section-sub { font-size: 14px; color: var(--text); margin-bottom: 14px; }
+      .section-heading { font-size: 16px; font-weight: 800; color: var(--text); margin-bottom: 2px; }
+      .section-sub { font-size: 12px; color: var(--muted); margin-bottom: 14px; }
 
-      /* Always-visible boxes (Recover Session / Have a Voucher / M-Pesa code).
-         These replace the old tabs so non-technical customers never have to
-         hunt for the right place to type. */
-      .section-card { padding: 16px; border-radius: 16px; margin-bottom: 16px;
-        border: 1px solid color-mix(in srgb, var(--text) 25%, transparent);
-        background: color-mix(in srgb, var(--primary) 8%, transparent); }
-      .section-card .section-sub { margin-bottom: 12px; }
-      .section-card .status { margin-bottom: 12px; }
-      .section-card .btn { margin-top: 2px; }
-      .section-divider { height: 1px; margin: 4px 0 18px; background: color-mix(in srgb, var(--text) 18%, transparent); }
+.pkg-freetrial { display: flex; align-items: flex-start; gap: 10px; padding: 14px;
+  border-radius: 14px; margin-bottom: 12px;
+  background: color-mix(in srgb, #facc15 7%, transparent);
+  border: 1px solid color-mix(in srgb, #facc15 20%, transparent); }
+.pkg-freetrial .icon { flex-shrink:0; font-size:15px; margin-top:1px; }
+.pkg-freetrial-title { font-weight:700; font-size:13px; color:var(--text); }
+.pkg-freetrial-sub { font-size:11px; color:var(--muted); margin-top:2px; line-height:1.5; }
+.pkg-freetrial-btn { width:100%; margin-top:10px; padding:11px; border-radius:12px; border:none;
+  font-weight:700; font-size:13px; color:#1a1206; cursor:pointer;
+  background: linear-gradient(135deg,#facc15,#f59e0b); }
+.pkg-freetrial-btn:disabled { opacity:.6; cursor:not-allowed; }
 
-      .pkg-freetrial { display: flex; align-items: flex-start; gap: 10px; padding: 14px;
-        border-radius: 14px; margin-bottom: 12px;
-        background: color-mix(in srgb, #facc15 14%, var(--surface));
-        border: 1px solid color-mix(in srgb, #facc15 45%, transparent); }
-      .pkg-freetrial .icon { flex-shrink:0; font-size:16px; margin-top:1px; }
-      .pkg-freetrial-title { font-weight:800; font-size:15px; color:var(--text); }
-      .pkg-freetrial-sub { font-size:13px; color:var(--text); margin-top:2px; line-height:1.5; }
-      .pkg-freetrial-btn { width:100%; margin-top:10px; padding:12px; border-radius:12px; border:none;
-        font-weight:800; font-size:15px; color:#1a1206; cursor:pointer;
-        background: linear-gradient(135deg,#facc15,#f59e0b); }
-      .pkg-freetrial-btn:disabled { opacity:.75; cursor:not-allowed; }
-
-      .pkg.selected { border-color: var(--primary); background: color-mix(in srgb, var(--primary) 12%, transparent); }
-      .pkg-skeleton { height: 62px; border-radius: 14px; margin-bottom: 10px; background: color-mix(in srgb, var(--text) 10%, transparent); animation: pulse 1.4s ease-in-out infinite; }
+      .pkg.selected { border-color: var(--primary); background: color-mix(in srgb, var(--primary) 6%, transparent); }
+      .pkg-skeleton { height: 62px; border-radius: 14px; margin-bottom: 10px; background: color-mix(in srgb, var(--text) 6%, transparent); animation: pulse 1.4s ease-in-out infinite; }
       @keyframes pulse { 0%,100% { opacity: .5; } 50% { opacity: 1; } }
-      .status { padding: 12px 14px; border-radius: 12px; margin-bottom: 12px; font-size: 15px; font-weight: 600; color: var(--text); border: 1px solid transparent; }
-      .status.error { background: color-mix(in srgb, #ef4444 20%, var(--surface)); border-color: #ef4444; }
-      .status.success { background: color-mix(in srgb, #22c55e 20%, var(--surface)); border-color: #22c55e; }
-      .status.processing { background: color-mix(in srgb, #f59e0b 20%, var(--surface)); border-color: #f59e0b; }
-      .footer { text-align: center; padding: 16px; color: var(--text); font-size: 14px; }
-      .support-line { text-align: center; font-size: 15px; color: var(--text); }
-      .support-line .footer-support { color: var(--text); font-weight: 700; }
-      .support-line .footer-phone { color: var(--text); font-weight: 800; text-decoration: underline; }
-     
+      .status { padding: 12px; border-radius: 12px; margin-bottom: 12px; font-size: 13px; }
+      .status.error { background: rgba(239,68,68,.1); color: #fca5a5; }
+      .status.success { background: rgba(52,211,153,.1); color: #6ee7b7; }
+      .status.processing { background: rgba(251,191,36,.1); color: #fcd34d; }
+      .footer { text-align: center; padding: 16px; color: color-mix(in srgb, var(--muted) 55%, var(--text) 45%); font-size: 12px; }
+      .support-line { text-align: center; font-size: 13px; }
+      .support-line .footer-support { color: var(--text); font-weight: 600; }
+      .support-line .footer-phone { color: var(--primary); font-weight: 700; text-decoration: none; }
+      .support-line .footer-phone:hover { text-decoration: underline; }
+      /* Top placement: a slim, attention-grabbing strip directly under the
+         header, above promos/tabs — this is the "Quick Support" pill. */
       .support-top {
         padding: 10px 20px;
-        border-bottom: 1px solid color-mix(in srgb, var(--text) 14%, transparent);
-        background: color-mix(in srgb, var(--primary) 10%, transparent);
+        border-bottom: 1px solid color-mix(in srgb, var(--text) 8%, transparent);
+        background: color-mix(in srgb, var(--primary) 5%, transparent);
       }
-      .quick-support { display: flex; align-items: center; justify-content: center; gap: 10px; color: var(--text); }
+      .quick-support { display: flex; align-items: center; justify-content: center; gap: 10px; }
       .quick-support .qs-icon {
-        flex-shrink: 0; width: 32px; height: 32px; border-radius: 50%;
-        display: flex; align-items: center; justify-content: center; font-size: 15px;
-        background: color-mix(in srgb, var(--primary) 25%, transparent);
-        border: 1px solid color-mix(in srgb, var(--primary) 45%, transparent);
+        flex-shrink: 0; width: 28px; height: 28px; border-radius: 50%;
+        display: flex; align-items: center; justify-content: center; font-size: 13px;
+        background: color-mix(in srgb, var(--primary) 18%, transparent);
+        border: 1px solid color-mix(in srgb, var(--primary) 30%, transparent);
       }
-      .quick-support .qs-label { display: block; font-size: 12px; font-weight: 800; color: var(--text); text-transform: uppercase; letter-spacing: .04em; }
-      .quick-support .qs-phone { display: block; font-size: 17px; font-weight: 800; color: var(--text); text-decoration: underline; }
+      .quick-support .qs-label { display: block; font-size: 10px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+      .quick-support .qs-phone { display: block; font-size: 14px; font-weight: 800; color: var(--primary); }
       /* Bottom placement: sits inside the existing footer element */
       .support-bottom { padding: 0; }
-      .promo { position: relative; overflow: hidden; border-radius: 16px; margin-bottom: 10px; padding: 14px; color: var(--text);
-               border: 1px solid color-mix(in srgb, var(--accent) 55%, transparent);
-               background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 16%, var(--surface)), color-mix(in srgb, var(--surface) 90%, transparent)); }
-      .promo .badge { display: inline-flex; gap: 4px; align-items:center; padding: 4px 10px; border-radius: 999px; font-size: 12px; font-weight: 800;
-                      background: color-mix(in srgb, var(--accent) 30%, transparent); color: var(--text);
-                      border: 1px solid color-mix(in srgb, var(--accent) 60%, transparent); }
-      .promo .price { font-weight: 800; font-size: 20px; }
-      .promo .price-old { text-decoration: line-through; color: var(--muted); font-size: 14px; margin-left: 6px; }
-      .promo-timer { font-family: 'Space Mono', monospace; font-size: 13px; font-weight: 700; color: var(--text); white-space: nowrap; }
+      .promo { position: relative; overflow: hidden; border-radius: 16px; margin-bottom: 10px; padding: 14px;
+               border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+               background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 10%, transparent), color-mix(in srgb, var(--surface) 60%, transparent)); }
+      .promo .badge { display: inline-flex; gap: 4px; align-items:center; padding: 3px 9px; border-radius: 999px; font-size: 10px; font-weight: 800;
+                      background: color-mix(in srgb, var(--accent) 20%, transparent); color: var(--accent); }
+      .promo .price { font-weight: 800; font-size: 18px; }
+      .promo .price-old { text-decoration: line-through; color: var(--muted); font-size: 12px; margin-left: 6px; }
+      .promo-timer { font-family: 'Space Mono', monospace; font-size: 11px; font-weight: 700; color: var(--accent); white-space: nowrap; }
       .promo-stock { margin-top: 10px; }
-      .promo-stock-label { font-size: 12px; color: var(--text); margin-bottom: 4px; font-weight: 600; }
-      .promo-stock-bar { height: 6px; border-radius: 4px; background: color-mix(in srgb, var(--text) 20%, transparent); overflow: hidden; }
+      .promo-stock-label { font-size: 10px; color: var(--muted); margin-bottom: 4px; }
+      .promo-stock-bar { height: 4px; border-radius: 4px; background: color-mix(in srgb, var(--text) 12%, transparent); overflow: hidden; }
       .promo-stock-fill { height: 100%; border-radius: 4px; transition: width .3s ease; }
 
       /* TV / Console connect promo — deliberately loud so it doesn't get
@@ -282,81 +197,57 @@ class HotspotPageBuilder
          active discount promos, and hides itself once the visitor is
          already on the TV tab. */
       .tv-promo {
-        display: flex; align-items: center; gap: 12px; padding: 14px 16px; border-radius: 16px; margin-bottom: 12px; cursor: pointer; color: var(--text);
-        background: linear-gradient(135deg, color-mix(in srgb, var(--secondary) 22%, var(--surface)), color-mix(in srgb, var(--primary) 16%, var(--surface)));
-        border: 1px solid color-mix(in srgb, var(--secondary) 50%, transparent);
+        display: flex; align-items: center; gap: 12px; padding: 14px 16px; border-radius: 16px; margin-bottom: 12px; cursor: pointer;
+        background: linear-gradient(135deg, color-mix(in srgb, var(--secondary) 14%, transparent), color-mix(in srgb, var(--primary) 10%, transparent));
+        border: 1px solid color-mix(in srgb, var(--secondary) 28%, transparent);
         transition: transform .12s ease, border-color .12s ease;
       }
-      .tv-promo:hover { transform: translateY(-1px); border-color: var(--secondary); }
+      .tv-promo:hover { transform: translateY(-1px); border-color: color-mix(in srgb, var(--secondary) 45%, transparent); }
       .tv-promo-icon {
         flex-shrink: 0; width: 44px; height: 44px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 20px;
-        background: color-mix(in srgb, var(--secondary) 28%, transparent);
-        border: 1px solid color-mix(in srgb, var(--secondary) 50%, transparent);
+        background: color-mix(in srgb, var(--secondary) 20%, transparent);
+        border: 1px solid color-mix(in srgb, var(--secondary) 35%, transparent);
       }
       .tv-promo-body { flex: 1; min-width: 0; }
-      .tv-promo-title { font-size: 15px; font-weight: 800; color: var(--text); display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+      .tv-promo-title { font-size: 13px; font-weight: 800; color: var(--text); display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
       .tv-promo-badge {
-        font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: .03em; padding: 2px 8px; border-radius: 999px;
-        background: color-mix(in srgb, var(--accent) 30%, transparent); color: var(--text);
-        border: 1px solid color-mix(in srgb, var(--accent) 60%, transparent);
+        font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: .03em; padding: 2px 7px; border-radius: 999px;
+        background: color-mix(in srgb, var(--accent) 22%, transparent); color: var(--accent);
       }
-      .tv-promo-sub { font-size: 13px; color: var(--text); margin-top: 2px; }
+      .tv-promo-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
       .tv-promo-cta {
-        flex-shrink: 0; font-size: 14px; font-weight: 800; padding: 10px 14px; border-radius: 10px; border: none; color: var(--on-btn);
+        flex-shrink: 0; font-size: 12px; font-weight: 800; padding: 8px 14px; border-radius: 10px; border: none; color: #fff;
         background: linear-gradient(135deg, var(--btn-primary), var(--btn-secondary)); cursor: pointer; white-space: nowrap;
       }
 
-      .mock-tag { display: inline-block; font-size: 12px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase;
-                  padding: 2px 6px; border-radius: 6px; background: color-mix(in srgb, var(--text) 18%, transparent); color: var(--text); margin-left: 6px; }
-      .ad-card { border-radius: 16px; overflow: hidden; background: color-mix(in srgb, var(--surface) 96%, transparent); color: var(--text);
-                 border: 1px solid color-mix(in srgb, var(--text) 20%, transparent); box-shadow: 0 20px 40px rgba(0,0,0,.35); }
+      .mock-tag { display: inline-block; font-size: 9px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase;
+                  padding: 2px 6px; border-radius: 6px; background: color-mix(in srgb, var(--text) 12%, transparent); color: var(--muted); margin-left: 6px; }
+      .ad-card { border-radius: 16px; overflow: hidden; background: color-mix(in srgb, var(--surface) 90%, transparent);
+                 border: 1px solid color-mix(in srgb, var(--text) 10%, transparent); box-shadow: 0 20px 40px rgba(0,0,0,.35); }
 
-      .ad-card.fullscreen { display: flex; flex-direction: column; height: 100%; border-radius: 0; border: none; box-shadow: none; }
+                 .ad-card.fullscreen { display: flex; flex-direction: column; height: 100%; border-radius: 0; border: none; box-shadow: none; }
 
       /* ── Guided pay-step UI ──────────────────────────────────────── */
-      .tap-hint { font-size: 14px; color: var(--text); margin-bottom: 10px; }
-      .step-back { display: flex; align-items: center; gap: 6px; font-size: 15px; font-weight: 700; color: var(--text); text-decoration: underline;
+      .tap-hint { font-size: 12px; color: var(--muted); margin-bottom: 10px; }
+      .step-back { display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; color: var(--muted);
                    margin-bottom: 14px; cursor: pointer; user-select: none; }
-      .tabs .step-back { margin-bottom: 0; }
-      .pkg-recap { display: flex; justify-content: space-between; align-items: center; padding: 16px; color: var(--text);
-                   border-radius: 16px; background: color-mix(in srgb, var(--primary) 14%, transparent);
-                   border: 1px solid color-mix(in srgb, var(--primary) 45%, transparent); margin-bottom: 16px; }
-      .pkg-recap-name { font-weight: 800; font-size: 16px; }
-      .pkg-recap-sub { color: var(--text); font-size: 14px; margin-top: 2px; }
-      .pkg-recap-price { font-weight: 800; font-size: 20px; white-space: nowrap; margin-left: 12px; }
-      .pay-instructions { display: flex; gap: 10px; align-items: flex-start; font-size: 15px; color: var(--text);
-                           background: color-mix(in srgb, var(--primary) 12%, transparent);
-                           border: 1px solid color-mix(in srgb, var(--primary) 35%, transparent);
+      .step-back:hover { color: var(--text); }
+      .pkg-recap { display: flex; justify-content: space-between; align-items: center; padding: 16px;
+                   border-radius: 16px; background: color-mix(in srgb, var(--primary) 7%, transparent);
+                   border: 1px solid color-mix(in srgb, var(--primary) 22%, transparent); margin-bottom: 16px; }
+      .pkg-recap-name { font-weight: 700; }
+      .pkg-recap-sub { color: var(--muted); font-size: 12px; margin-top: 2px; }
+      .pkg-recap-price { font-weight: 800; font-size: 18px; white-space: nowrap; margin-left: 12px; }
+      .pay-instructions { display: flex; gap: 10px; align-items: flex-start; font-size: 13px; color: var(--text);
+                           background: color-mix(in srgb, var(--primary) 6%, transparent);
+                           border: 1px solid color-mix(in srgb, var(--primary) 15%, transparent);
                            border-radius: 14px; padding: 12px 14px; margin-bottom: 16px; line-height: 1.5; }
       .pay-instructions .num {
-        flex-shrink: 0; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center;
-        justify-content: center; font-size: 13px; font-weight: 800; background: var(--primary); color: var(--on-primary);
+        flex-shrink: 0; width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center;
+        justify-content: center; font-size: 11px; font-weight: 800; background: var(--primary); color: #fff;
       }
-      .field-label { display: block; font-size: 14px; font-weight: 800; color: var(--text);
-                      margin-bottom: 6px; }
-
-      /* ── Payment modal (opens when a package is tapped) ───────────── */
-      .pay-modal-backdrop { position: fixed; inset: 0; z-index: 19000; display: flex; align-items: center; justify-content: center;
-                            padding: 16px; background: rgba(0,0,0,.82); backdrop-filter: blur(6px); overflow-y: auto; }
-      .pay-modal { position: relative; width: 100%; max-width: 400px; background: var(--surface); color: var(--text);
-                   border: 2px solid color-mix(in srgb, var(--text) 30%, transparent); border-radius: min(var(--radius), 28px);
-                   padding: 28px 22px 22px; box-shadow: 0 30px 60px rgba(0,0,0,.6); }
-      .pay-modal-close { position: absolute; top: 10px; right: 10px; width: 40px; height: 40px; border-radius: 12px; cursor: pointer;
-                         font-size: 18px; font-weight: 800; color: var(--text);
-                         background: color-mix(in srgb, var(--text) 14%, transparent);
-                         border: 1px solid color-mix(in srgb, var(--text) 40%, transparent); }
-      .pay-modal-title { font-size: 24px; font-weight: 800; text-align: center; color: var(--text); margin: 0 36px 14px; }
-      .pay-modal-pkg { text-align: center; font-size: 20px; font-weight: 800; color: var(--text); padding: 10px 12px; border-radius: 14px;
-                       background: color-mix(in srgb, var(--primary) 16%, transparent);
-                       border: 1px solid color-mix(in srgb, var(--primary) 50%, transparent); margin-bottom: 18px; }
-      .pay-modal-valid { font-size: 14px; font-weight: 600; margin-top: 2px; }
-      .pay-modal-hint { font-size: 17px; font-weight: 900; color: var(--text); margin: -2px 0 16px; line-height: 1.4;
-                        -webkit-text-stroke: 0.4px currentColor; letter-spacing: .01em; }
-      .pay-modal-hint strong { font-weight: 900; }
-      .pay-modal-amount { display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; border-radius: 14px;
-                          font-size: 16px; font-weight: 700; color: var(--text); margin-bottom: 16px;
-                          border: 2px solid var(--primary); background: color-mix(in srgb, var(--primary) 10%, transparent); }
-      .pay-modal-amount strong { font-size: 24px; font-weight: 800; }
+      .field-label { display: block; font-size: 11px; font-weight: 700; color: var(--muted);
+                      text-transform: uppercase; letter-spacing: .04em; margin-bottom: 6px; }
     CSS
   end
 
@@ -365,7 +256,7 @@ class HotspotPageBuilder
     logo = (header["show_logo"] != false && logo_src.present?) ? %(<img class="logo" src="#{logo_src}" alt="" onerror="this.style.display='none'">) : ""
     wifi_icon = header["show_wifi_icon"] != false ? %(<div class="wifi-badge">📶</div>) : ""
     title = header["network_name"].presence || @settings&.hotspot_name || "Free WiFi"
-    preview_badge = @preview ? %(<div style="position:fixed;top:8px;left:50%;transform:translateX(-50%);z-index:10000;background:rgba(0,0,0,.9);color:#ffffff;font:700 12px/1 sans-serif;padding:6px 12px;border-radius:20px;white-space:nowrap;">Preview — ad views aren't counted</div>) : ""
+    preview_badge = @preview ? %(<div style="position:fixed;top:8px;left:50%;transform:translateX(-50%);z-index:10000;background:rgba(2,6,23,.85);color:var(--primary);font:600 11px/1 sans-serif;padding:5px 12px;border-radius:20px;white-space:nowrap;">Preview — ad views aren't counted</div>) : ""
     <<~HTML
       #{preview_badge}
       <div class="card">
@@ -391,16 +282,6 @@ class HotspotPageBuilder
   # HotspotAdOverlay.jsx and HotspotPromotionCard.jsx already use — this is
   # what actually ships to the router via publish_hotspot_page, so behavior
   # must not diverge from the live React version.
-  #
-  # There are NO TABS any more. Customers are not tech-savvy and never found
-  # the Voucher / M-Pesa Code tabs, so the main view now shows everything at
-  # once, top to bottom:
-  #   1. Recover Session (reconnect with the phone number used to purchase)
-  #   2. Have a Voucher? (enter a voucher code)
-  #   3. Buy a Package
-  #   4. Paid with M-Pesa but not connected? (enter M-Pesa transaction code)
-  # state.tab is now only 'main' or 'tv' (the TV setup screen has its own
-  # "Back" button).
   #
   # cfg.preview (only ever true from preview_page_design):
   #   - suppresses tracking calls and reward-granting side effects
@@ -452,36 +333,28 @@ if (username) localStorage.setItem('hotspot_username', username);
         const MOCK_AD = {
           id: 'mock-ad', media_type: 'image', ad_title: 'Your Ad Here',
           media_url: 'data:image/svg+xml;utf8,' + encodeURIComponent(
-            '<svg xmlns="http://www.w3.org/2000/svg" width="320" height="140"><rect width="100%" height="100%" fill="#1e293b"/><text x="50%" y="50%" fill="#ffffff" font-family="sans-serif" font-size="16" text-anchor="middle">Sample ad image</text></svg>'
+            '<svg xmlns="http://www.w3.org/2000/svg" width="320" height="140"><rect width="100%" height="100%" fill="#1e293b"/><text x="50%" y="50%" fill="#94a3b8" font-family="sans-serif" font-size="14" text-anchor="middle">Sample ad image</text></svg>'
           ),
           position: 'bottom-right', reward_type: 'none', ad_link: null,
         };
 
         // payStep controls the guided packages flow: 'list' shows all
-        // packages; 'pay' opens the payment modal for the one the customer
-        // tapped, so there's no scrolling required and no ambiguity about
-        // what to do next.
-        //
-        // statusFor says WHICH box on the page the current status message
-        // belongs to ('recover' | 'voucher' | 'mpesa' | 'packages'), so an
-        // error from the voucher box shows under the voucher box and not
-        // somewhere the customer can't see it.
-        // voucherInput / recoverPhone / txCode remember what the customer
-        // typed, because render() rebuilds the panel and would otherwise
-        // wipe the other boxes.
+        // packages; 'pay' shows a focused recap + phone-number step for
+        // the one the customer tapped, so there's no scrolling required
+        // and no ambiguity about what to do next.
 
 
-          let state = { tab: 'main', packages: [], packagesLoaded: false, promos: [], selected: null, payStep: 'list', status: null, statusFor: null, message: '', tvPlans: [], tvPlansLoaded: false, tvSelected: null, tvMac: '', tvPhone: '', voucherInput: '', recoverPhone: '', txCode: '' };
+          let state = { tab: 'packages', packages: [], packagesLoaded: false, promos: [], selected: null, payStep: 'list', status: null, message: '', tvPlans: [], tvPlansLoaded: false, tvSelected: null, tvMac: '', tvPhone: '' };
 
 let queryModal = { status: null, message: '' };
 let connectedInfo = null;
 let stkQueryInterval = null;
 let tvStkQueryInterval = null;
 const activePoll = { interval: null };
-let promoState = {};
+let promoState = {};          
 let promoTimerInterval = null;
 let expandedAdId = null;
-let expandedAdRenderedFor = null;
+let expandedAdRenderedFor = null; 
 let freeTrialState = {};
 
         function supportHtml() {
@@ -492,6 +365,9 @@ let freeTrialState = {};
             (cfg.hotspot_email ? ' · ' + cfg.hotspot_email : '');
         }
 
+        // Prominent "Quick Support" pill used at the top placement — a
+        // plain text line was easy to miss up there, so this gives it an
+        // icon + label + tappable phone number, same as a real support widget.
         function quickSupportHtml() {
           const phone = (cfg.footer && cfg.footer.support_phone) || cfg.hotspot_phone || '';
           if (!phone) return '<div class="support-line">' + supportHtml() + '</div>';
@@ -500,7 +376,7 @@ let freeTrialState = {};
             <a class="quick-support" href="tel:\${tel}" style="text-decoration:none;">
               <span class="qs-icon">📞</span>
               <span>
-                <span class="qs-label">Customer Support</span>
+                <span class="qs-label">Quick Support</span>
                 <span class="qs-phone">\${phone}</span>
               </span>
             </a>\`;
@@ -526,17 +402,17 @@ let freeTrialState = {};
 
           if (position === 'top') {
             if (topEl) topEl.innerHTML = quickSupportHtml();
-            if (topEl) topEl.className = 'support-top';
             footerEl.innerHTML = '';
           } else {
-            if (topEl) { topEl.innerHTML = ''; topEl.className = ''; }
+            if (topEl) topEl.innerHTML = '';
             footerEl.innerHTML = '<div class="support-line">' + supportHtml() + '</div>';
           }
         }
 
-        // Loud, always-visible teaser for TV/console connect. Shows above
-        // the main sections whenever the feature is on, and steps out of
-        // the way once the visitor is already on the TV screen itself.
+        // Loud, always-visible teaser for TV/console connect — replaces
+        // burying it behind a tab. Shows above the tabs whenever the
+        // feature is on, and steps out of the way once the visitor is
+        // already on the TV tab itself.
         function tvPromoHtml() {
           if (cfg.features.show_tv_plans !== true) return '';
           if (state.tab === 'tv') return '';
@@ -552,29 +428,29 @@ let freeTrialState = {};
         }
 
         function render() {
-          const tabsEl = document.getElementById('tabs');
-          const tabsMarkup = tabsHtml();
-          tabsEl.innerHTML = tabsMarkup;
-          tabsEl.style.display = tabsMarkup ? '' : 'none';
+          document.getElementById('tabs').innerHTML = tabsHtml();
           document.getElementById('panel').innerHTML = panelHtml();
           const tvPromoRoot = document.getElementById('tv-promo-root');
           if (tvPromoRoot) tvPromoRoot.innerHTML = tvPromoHtml();
           renderFooter();
-          renderPayModal();
           bindEvents();
         }
 
 
-        // No more tabs. The only navigation left is a Back button shown
-        // while the customer is on the TV setup screen.
+
         function tabsHtml() {
-          if (state.tab === 'tv') return '<div class="step-back" data-back-main>← Back to main page</div>';
-          return '';
+          const tabs = [];
+          if (cfg.features.show_packages)   tabs.push(['packages', 'Buy Package']);
+          if (cfg.features.show_voucher)    tabs.push(['voucher', 'Voucher']);
+          if (cfg.features.show_mpesa_code) tabs.push(['mpesa', 'M-Pesa Code']);
+
+          return tabs.map(([id, label]) =>
+            \`<div class="tab \${state.tab === id ? 'active' : ''}" data-tab="\${id}">\${label}</div>\`
+          ).join('');
         }
 
-        function statusHtml(section) {
+        function statusHtml() {
           if (!state.status) return '';
-          if ((state.statusFor || 'packages') !== section) return '';
           return \`<div class="status \${state.status}">\${state.message}</div>\`;
         }
 
@@ -618,14 +494,14 @@ function isValidMac(mac) {
                 \${showTimer ? '<span class="promo-timer" data-promo-timer="' + p.id + '">' + formatCountdown(secondsLeft) + '</span>' : ''}
                 \${cfg.preview && String(p.id).startsWith('mock-') ? '<span class="mock-tag">Sample</span>' : ''}
               </div>
-              <p style="font-weight:800;font-size:15px;">\${p.name}</p>
-              \${p.description ? \`<p style="color:var(--text);font-size:14px;margin:4px 0 8px;">\${p.description}</p>\` : ''}
+              <p style="font-weight:700;font-size:13px;">\${p.name}</p>
+              \${p.description ? \`<p style="color:var(--muted);font-size:12px;margin:4px 0 8px;">\${p.description}</p>\` : ''}
               <div style="display:flex;justify-content:space-between;align-items:flex-end;">
                 <div>
                   <span class="price">Ksh \${Number(p.promotional_price).toFixed(2)}</span>
                   <span class="price-old">Ksh \${Number(p.original_price).toFixed(2)}</span>
                 </div>
-                <button class="btn" style="width:auto;padding:10px 16px;font-size:14px;" data-promo-claim="\${p.id}">Claim Offer</button>
+                <button class="btn" style="width:auto;padding:8px 14px;font-size:12px;" data-promo-claim="\${p.id}">Claim Offer</button>
               </div>
               \${showStock ? \`
                 <div class="promo-stock">
@@ -652,259 +528,203 @@ function isValidMac(mac) {
           }, 1000);
         }
 
-        // ── Always-visible sections (replace the old tabs) ─────────────
-
-        // Reconnect using the phone number that was used to purchase.
-        // Shown first because it is what a returning customer needs after
-        // their phone switched off / the session dropped.
-        function recoverSectionHtml() {
-          if (cfg.features.show_recover_session === false) return '';
-          return '<div class="section-card">' +
-            '<div class="section-heading">Recover Session</div>' +
-            '<div class="section-sub">Was your session interrupted? Enter the phone number you used to purchase to reconnect.</div>' +
-            statusHtml('recover') +
-            '<label class="field-label" for="recover-phone">Phone Number</label>' +
-            '<input class="field" id="recover-phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="07XXXXXXXX" value="' + esc(state.recoverPhone) + '">' +
-            '<button class="btn" id="recover-btn">Reconnect</button>' +
-          '</div>';
-        }
-
-        function voucherSectionHtml() {
-          if (!cfg.features.show_voucher) return '';
-          return '<div class="section-card">' +
-            '<div class="section-heading">Have a Voucher?</div>' +
-            '<div class="section-sub">Enter your voucher code to login.</div>' +
-            statusHtml('voucher') +
-            '<input class="field" id="voucher-code" autocomplete="off" autocapitalize="characters" placeholder="Enter voucher code" value="' + esc(state.voucherInput) + '">' +
-            '<button class="btn" id="voucher-btn">Connect with Voucher</button>' +
-          '</div>';
-        }
-
-        function mpesaSectionHtml() {
-          if (!cfg.features.show_mpesa_code) return '';
-          return '<div class="section-divider"></div>' +
-            '<div class="section-card">' +
-            '<div class="section-heading">Paid with M-Pesa but not connected?</div>' +
-            '<div class="section-sub">Enter the M-Pesa transaction code from your payment message (for example QHJ1234ABC).</div>' +
-            statusHtml('mpesa') +
-            '<input class="field" id="tx-code" autocomplete="off" autocapitalize="characters" placeholder="e.g. QHJ1234ABC" value="' + esc(state.txCode) + '">' +
-            '<button class="btn" id="mpesa-btn">Verify & Connect</button>' +
-          '</div>';
-        }
-
-        function packagesSectionHtml() {
-          if (!cfg.features.show_packages) return '';
-          if (!state.packagesLoaded) {
-            return statusHtml('packages') + '<div class="pkg-skeleton"></div><div class="pkg-skeleton"></div><div class="pkg-skeleton"></div>';
-          }
-          const isMock = cfg.preview && state.packages.length && String(state.packages[0].id).startsWith('mock-');
-
-          // The pay step is no longer inline — tapping a package opens the
-          // payment modal (see renderPayModal), which overlays this list.
-
-          const freeTrialPkgs = state.packages.filter(p => p.enable_free_trial);
-          const paidPkgs = state.packages.filter(p => !p.enable_free_trial);
-
-          const heading = state.packages.length
-            ? '<div class="section-heading">Buy a Package</div><div class="section-sub">Choose a package, pay with M-Pesa and get connected instantly</div>'
-            : '';
-
-          const list = paidPkgs.map(p => \`
-            <div class="pkg" data-pkg="\${p.id}">
-              <div><strong>\${p.name}</strong>\${isMock ? '<span class="mock-tag">Sample</span>' : ''}<br><small>\${p.valid || ''}</small></div>
-              <div><strong>Ksh \${p.price}</strong></div>
-            </div>\`).join('');
-          const empty = !state.packages.length
-            ? '<p style="color:var(--text);font-size:14px;padding:8px 0;">No packages configured yet.</p>'
-            : '';
-          return statusHtml('packages') + heading + freeTrialHtml(freeTrialPkgs) + list + empty;
-        }
-
-        function tvPanelHtml() {
-          if (!state.tvPlansLoaded) {
-            return statusHtml('packages') + '<div class="pkg-skeleton"></div><div class="pkg-skeleton"></div>';
-          }
-          const options = state.tvPlans.map(p => {
-            const validityLabel = (p.validity && p.validity_period_units) ? \` · \${p.validity} \${p.validity_period_units}\` : '';
-            const isSelected = state.tvSelected && String(state.tvSelected.id) === String(p.id) ? ' selected' : '';
-            return \`<option value="\${p.id}"\${isSelected}>\${p.name} — Ksh \${p.price}\${validityLabel}</option>\`;
-          }).join('');
-          const amount = state.tvSelected ? state.tvSelected.price : '--';
-          const validityText = (state.tvSelected && state.tvSelected.validity)
-            ? \`\${state.tvSelected.validity} \${state.tvSelected.validity_period_units || ''}\`.trim()
-            : null;
-          return statusHtml('packages') + \`
-            <p style="font-size:14px;color:var(--text);line-height:1.6;margin-bottom:16px;">
-              Enter your TV or device's MAC address and your M-Pesa number, choose a plan, and pay.
-              The device connects automatically, no login needed on the TV. To find the MAC address,
-              open the TV's Settings, go to Network, then Status or About, and look for "MAC address"
-              (sometimes shown as "Physical address" or "Wi-Fi MAC").
-            </p>
-            <label class="field-label">TV / Device MAC Address</label>
-            <input class="field" id="tv-mac" placeholder="AA:BB:CC:DD:EE:FF" maxlength="17" value="\${state.tvMac || ''}">
-            <label class="field-label">Your Phone Number (M-Pesa)</label>
-            <input class="field" id="tv-phone" inputmode="tel" placeholder="07XX XXX XXX" value="\${state.tvPhone || ''}">
-            <label class="field-label">Choose a Plan</label>
-            <select class="field" id="tv-plan">
-              <option value="">\${state.tvPlans.length ? 'Select a plan' : 'No TV plans available'}</option>
-              \${options}
-            </select>
-
-            \${validityText ? \`
-            <div style="display:flex;justify-content:space-between;align-items:center;margin:4px 0 10px;font-size:15px;">
-              <span style="color:var(--text);">Plan Validity:</span>
-              <span style="font-weight:800;">\${validityText}</span>
-            </div>\` : ''}
-
-            <div style="display:flex;justify-content:space-between;align-items:center;margin:4px 0 14px;font-size:15px;">
-              <span style="color:var(--text);">Amount to Pay:</span>
-              <span style="font-weight:800;">KES \${amount}</span>
-            </div>
-            <div class="pay-instructions">
-              <span class="num">1</span>
-              <span>We'll send a payment prompt to your phone. Enter your M-Pesa PIN, then wait a few seconds — we connect your TV automatically, no need to touch it.</span>
-            </div>
-            <button class="btn" id="tv-pay-btn">Pay & Connect TV</button>
-          \`;
-        }
-
         function panelHtml() {
-          if (state.tab === 'tv') return tvPanelHtml();
+          if (state.tab === 'packages') {
+            if (!state.packagesLoaded) {
+              return statusHtml() + '<div class="pkg-skeleton"></div><div class="pkg-skeleton"></div><div class="pkg-skeleton"></div>';
+            }
+            const isMock = cfg.preview && state.packages.length && String(state.packages[0].id).startsWith('mock-');
 
-          // Everything on one page, top to bottom, no tabs.
-          return recoverSectionHtml() +
-                 voucherSectionHtml() +
-                 packagesSectionHtml() +
-                 mpesaSectionHtml();
+
+            // ── Focused pay step: shown the instant a package is tapped,
+            // so a non-technical customer never has to scroll to find the
+            // phone-number field or guess what to do next. ──────────────
+            if (state.payStep === 'pay' && state.selected) {
+              return statusHtml() + \`
+                <div class="step-back" data-back-to-list>← Back to packages</div>
+                <div class="pkg-recap">
+                  <div>
+                    <div class="pkg-recap-name">\${state.selected.name}</div>
+                    \${state.selected.valid ? '<div class="pkg-recap-sub">' + state.selected.valid + '</div>' : ''}
+                  </div>
+                  <div class="pkg-recap-price">Ksh \${state.selected.price}</div>
+                </div>
+                <div class="pay-instructions">
+                  <span class="num">1</span>
+                  <span>Enter your M-Pesa phone number below, then tap <strong>Pay</strong>. You'll get a prompt on your phone — enter your M-Pesa PIN to finish connecting.</span>
+                </div>
+                <label class="field-label">M-Pesa Phone Number</label>
+                <input class="field" id="phone" inputmode="tel" placeholder="07XX XXX XXX" value="\${state.phone || ''}">
+                <button class="btn" id="pay-btn">Pay Ksh \${state.selected.price} via M-Pesa</button>
+              \`;
+            }
+
+            const freeTrialPkgs = state.packages.filter(p => p.enable_free_trial);
+            const paidPkgs = state.packages.filter(p => !p.enable_free_trial);
+
+            const heading = state.packages.length
+              ? '<div class="section-heading">Choose Your Plan</div><div class="section-sub">Select a package and get connected instantly</div>'
+              : '';
+
+            const list = paidPkgs.map(p => \`
+              <div class="pkg" data-pkg="\${p.id}">
+                <div><strong>\${p.name}</strong>\${isMock ? '<span class="mock-tag">Sample</span>' : ''}<br><small>\${p.valid || ''}</small></div>
+                <div>Ksh \${p.price}</div>
+              </div>\`).join('');
+            const empty = !state.packages.length
+              ? '<p style="color:var(--muted);font-size:12px;padding:8px 0;">No packages configured yet.</p>'
+              : '';
+            return statusHtml() + heading + freeTrialHtml(freeTrialPkgs) + list + empty;
+          }
+          if (state.tab === 'voucher') {
+            return statusHtml() + \`
+              <input class="field" id="voucher-code" placeholder="Enter voucher code">
+              <button class="btn" id="voucher-btn">Connect with Voucher</button>\`;
+          }
+
+
+          
+if (state.tab === 'tv') {
+  if (!state.tvPlansLoaded) {
+    return statusHtml() + '<div class="pkg-skeleton"></div><div class="pkg-skeleton"></div>';
+  }
+  const options = state.tvPlans.map(p => {
+    const validityLabel = (p.validity && p.validity_period_units) ? \` · \${p.validity} \${p.validity_period_units}\` : '';
+    const isSelected = state.tvSelected && String(state.tvSelected.id) === String(p.id) ? ' selected' : '';
+    return \`<option value="\${p.id}"\${isSelected}>\${p.name} — Ksh \${p.price}\${validityLabel}</option>\`;
+  }).join('');
+  const amount = state.tvSelected ? state.tvSelected.price : '--';
+  const validityText = (state.tvSelected && state.tvSelected.validity)
+    ? \`\${state.tvSelected.validity} \${state.tvSelected.validity_period_units || ''}\`.trim()
+    : null;
+  return statusHtml() + \`
+    <p style="font-size:12px;color:var(--muted);line-height:1.6;margin-bottom:16px;">
+      Enter your TV or device's MAC address and your M-Pesa number, choose a plan, and pay.
+      The device connects automatically, no login needed on the TV. To find the MAC address,
+      open the TV's Settings, go to Network, then Status or About, and look for "MAC address"
+      (sometimes shown as "Physical address" or "Wi-Fi MAC").
+    </p>
+    <label class="field-label">TV / Device MAC Address</label>
+    <input class="field" id="tv-mac" placeholder="AA:BB:CC:DD:EE:FF" maxlength="17" value="\${state.tvMac || ''}">
+    <label class="field-label">Your Phone Number (M-Pesa)</label>
+    <input class="field" id="tv-phone" inputmode="tel" placeholder="07XX XXX XXX" value="\${state.tvPhone || ''}">
+    <label class="field-label">Choose a Plan</label>
+    <select class="field" id="tv-plan">
+      <option value="">\${state.tvPlans.length ? 'Select a plan' : 'No TV plans available'}</option>
+      \${options}
+    </select>
+
+    \${validityText ? \`
+    <div style="display:flex;justify-content:space-between;align-items:center;margin:4px 0 10px;font-size:13px;">
+      <span style="color:var(--muted);">Plan Validity:</span>
+      <span style="font-weight:700;">\${validityText}</span>
+    </div>\` : ''}
+    
+    <div style="display:flex;justify-content:space-between;align-items:center;margin:4px 0 14px;font-size:13px;">
+      <span style="color:var(--muted);">Amount to Pay:</span>
+      <span style="font-weight:800;">KES \${amount}</span>
+    </div>
+    <div class="pay-instructions">
+  <span class="num">1</span>
+  <span>We'll send a payment prompt to your phone. Enter your M-Pesa PIN, then wait a few seconds — we connect your TV automatically, no need to touch it.</span>
+</div>
+    <button class="btn" id="tv-pay-btn">Pay & Connect TV</button>
+  \`;
+}
+
+
+
+          if (state.tab === 'mpesa') {
+            return statusHtml() + \`
+              <input class="field" id="tx-code" placeholder="e.g. QHJ1234ABC">
+              <button class="btn" id="mpesa-btn">Verify & Connect</button>\`;
+          }
+          return '';
         }
 
 
-
-        function bindEnter(inputId, buttonId) {
-          const input = document.getElementById(inputId);
-          if (!input) return;
-          input.onkeydown = (e) => {
-            if (e.key === 'Enter') { e.preventDefault(); const b = document.getElementById(buttonId); if (b) b.click(); }
-          };
-        }
 
         function bindEvents() {
-          document.querySelectorAll('[data-back-main]').forEach(el =>
-            el.onclick = () => { state.tab = 'main'; state.status = null; state.statusFor = null; render(); });
+          document.querySelectorAll('[data-tab]').forEach(el =>
+            el.onclick = () => { state.tab = el.dataset.tab; state.status = null; state.payStep = 'list'; state.selected = null; render(); });
 
           document.querySelectorAll('[data-tv-promo-cta]').forEach(el =>
-            el.onclick = () => { state.tab = 'tv'; state.status = null; state.statusFor = null; render(); });
+            el.onclick = () => { state.tab = 'tv'; state.status = null; render(); });
 
           document.querySelectorAll('[data-pkg]').forEach(el =>
             el.onclick = () => {
               state.selected = state.packages.find(p => String(p.id) === el.dataset.pkg);
               state.payStep = 'pay';
               render();
-              focusPhoneField();
+              requestAnimationFrame(() => {
+                const card = document.querySelector('.card');
+                if (card) card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              });
             });
 
 
-          document.querySelectorAll('[data-freetrial]').forEach(el =>
-            el.onclick = () => {
-              const pkg = state.packages.find(p => String(p.id) === el.dataset.freetrial);
-              if (pkg) startFreeTrial(pkg);
-            });
+            document.querySelectorAll('[data-freetrial]').forEach(el =>
+    el.onclick = () => {
+      const pkg = state.packages.find(p => String(p.id) === el.dataset.freetrial);
+      if (pkg) startFreeTrial(pkg);
+    });
 
           document.querySelectorAll('[data-back-to-list]').forEach(el =>
             el.onclick = () => { state.payStep = 'list'; state.selected = null; state.status = null; render(); });
 
-          const payBtn = document.getElementById('pay-btn');
-          if (payBtn) payBtn.onclick = () => {
-            state.phone = document.getElementById('phone').value.trim();
+        const payBtn = document.getElementById('pay-btn');
+if (payBtn) payBtn.onclick = () => {
+  state.phone = document.getElementById('phone').value.trim();
 
-            if (!state.phone) {
-              queryModal = { status: 'error', message: 'Enter your M-Pesa phone number before paying.' };
-              renderQueryModal();
-              return;
-            }
-            payPackage();
-          };
-
-
-          const payBackdrop = document.getElementById('pay-modal-backdrop');
-          if (payBackdrop) payBackdrop.onclick = (e) => { if (e.target === payBackdrop) closePayModal(); };
-          const payClose = document.getElementById('pay-modal-close');
-          if (payClose) payClose.onclick = closePayModal;
-          const phoneInput = document.getElementById('phone');
-          if (phoneInput) {
-            phoneInput.oninput = () => { state.phone = phoneInput.value; };
-            phoneInput.onkeydown = (e) => {
-              if (e.key === 'Enter') { e.preventDefault(); const b = document.getElementById('pay-btn'); if (b) b.click(); }
-            };
-          }
-
-          const tvMacInput = document.getElementById('tv-mac');
-          if (tvMacInput) tvMacInput.oninput = (e) => {
-            const formatted = formatMacInput(e.target.value);
-            e.target.value = formatted;
-            state.tvMac = formatted;
-          };
+  if (!state.phone) {
+    queryModal = { status: 'error', message: 'Enter your M-Pesa phone number before paying.' };
+    renderQueryModal();
+    return;
+  }
+  payPackage();
+};
 
 
-          const tvPlanSel = document.getElementById('tv-plan');
-          if (tvPlanSel) tvPlanSel.onchange = () => {
-            // capture whatever the user already typed before the re-render wipes the inputs
-            const macEl = document.getElementById('tv-mac');
-            const phoneEl = document.getElementById('tv-phone');
-            if (macEl) state.tvMac = macEl.value;
-            if (phoneEl) state.tvPhone = phoneEl.value;
-            state.tvSelected = state.tvPlans.find(p => String(p.id) === tvPlanSel.value) || null;
-            render();
-          };
+const tvMacInput = document.getElementById('tv-mac');
+if (tvMacInput) tvMacInput.oninput = (e) => {
+  const formatted = formatMacInput(e.target.value);
+  e.target.value = formatted;
+  state.tvMac = formatted;
+};
 
 
-          const tvPayBtn = document.getElementById('tv-pay-btn');
-          if (tvPayBtn) tvPayBtn.onclick = () => {
-            state.tvMac = document.getElementById('tv-mac').value.trim();
-            state.tvPhone = document.getElementById('tv-phone').value.trim();
-            if (!state.tvMac)       { queryModal = { status: 'error', message: 'Enter the TV/device MAC address.' }; renderQueryModal(); return; }
-            if (!isValidMac(state.tvMac)) { queryModal = { status: 'error', message: 'That doesn\\'t look like a valid MAC address. Format: AA:BB:CC:DD:EE:FF' }; renderQueryModal(); return; }
-            if (!state.tvPhone)     { queryModal = { status: 'error', message: 'Enter your M-Pesa phone number.' }; renderQueryModal(); return; }
-            if (!state.tvSelected)  { queryModal = { status: 'error', message: 'Choose a TV plan first.' }; renderQueryModal(); return; }
-            payTvPlan();
-          };
+const tvPlanSel = document.getElementById('tv-plan');
+if (tvPlanSel) tvPlanSel.onchange = () => {
+  // capture whatever the user already typed before the re-render wipes the inputs
+  const macEl = document.getElementById('tv-mac');
+  const phoneEl = document.getElementById('tv-phone');
+  if (macEl) state.tvMac = macEl.value;
+  if (phoneEl) state.tvPhone = phoneEl.value;
+  state.tvSelected = state.tvPlans.find(p => String(p.id) === tvPlanSel.value) || null;
+  render();
+};
 
 
-          // ── Recover Session (phone number) ───────────────────────────
-          const recoverInput = document.getElementById('recover-phone');
-          if (recoverInput) recoverInput.oninput = () => { state.recoverPhone = recoverInput.value; };
-          bindEnter('recover-phone', 'recover-btn');
-          const recoverBtn = document.getElementById('recover-btn');
-          if (recoverBtn) recoverBtn.onclick = () => {
-            const el = document.getElementById('recover-phone');
-            if (el) state.recoverPhone = el.value;
-            recoverSession((state.recoverPhone || '').trim());
-          };
+const tvPayBtn = document.getElementById('tv-pay-btn');
+if (tvPayBtn) tvPayBtn.onclick = () => {
+  state.tvMac = document.getElementById('tv-mac').value.trim();
+  state.tvPhone = document.getElementById('tv-phone').value.trim();
+  if (!state.tvMac)       { queryModal = { status: 'error', message: 'Enter the TV/device MAC address.' }; renderQueryModal(); return; }
+  if (!isValidMac(state.tvMac)) { queryModal = { status: 'error', message: 'That doesn\\'t look like a valid MAC address. Format: AA:BB:CC:DD:EE:FF' }; renderQueryModal(); return; }
+  if (!state.tvPhone)     { queryModal = { status: 'error', message: 'Enter your M-Pesa phone number.' }; renderQueryModal(); return; }
+  if (!state.tvSelected)  { queryModal = { status: 'error', message: 'Choose a TV plan first.' }; renderQueryModal(); return; }
+  payTvPlan();
+};
 
-          // ── Voucher ──────────────────────────────────────────────────
-          const voucherInput = document.getElementById('voucher-code');
-          if (voucherInput) voucherInput.oninput = () => { state.voucherInput = voucherInput.value; };
-          bindEnter('voucher-code', 'voucher-btn');
+
           const voucherBtn = document.getElementById('voucher-btn');
           if (voucherBtn) voucherBtn.onclick = () => {
-            const el = document.getElementById('voucher-code');
-            if (el) state.voucherInput = el.value;
-            const code = (state.voucherInput || '').trim();
-            if (!code) { setStatus('error', 'Enter your voucher code first.', 'voucher'); return; }
-            connectVoucher(code);
+            connectVoucher(document.getElementById('voucher-code').value);
           };
 
-          // ── M-Pesa transaction code ──────────────────────────────────
-          const txInput = document.getElementById('tx-code');
-          if (txInput) txInput.oninput = () => { state.txCode = txInput.value; };
-          bindEnter('tx-code', 'mpesa-btn');
           const mpesaBtn = document.getElementById('mpesa-btn');
           if (mpesaBtn) mpesaBtn.onclick = () => {
-            const el = document.getElementById('tx-code');
-            if (el) state.txCode = el.value;
-            const code = (state.txCode || '').trim();
-            if (!code) { setStatus('error', 'Enter the M-Pesa transaction code first.', 'mpesa'); return; }
-            connectReceipt(code);
+            connectReceipt(document.getElementById('tx-code').value);
           };
 
           document.querySelectorAll('[data-promo-claim]').forEach(el =>
@@ -912,93 +732,25 @@ function isValidMac(mac) {
               const promo = state.promos.find(p => String(p.id) === el.dataset.promoClaim);
               if (!promo) return;
               if (cfg.preview && String(promo.id).startsWith('mock-')) {
-                // Sample promo — just go to the main page and preview the pricing, no real package to select.
-                state.tab = 'main';
+                // Sample promo — just switch tabs and preview the pricing, no real package to select.
+                state.tab = 'packages';
                 state.payStep = 'list';
                 render();
                 return;
               }
               const pkg = state.packages.find(p => String(p.id) === String(promo.package_id));
               state.selected = pkg ? { ...pkg, price: promo.promotional_price } : { id: promo.package_id, name: promo.package_name, price: promo.promotional_price };
-              state.tab = 'main';
+              state.tab = 'packages';
               state.payStep = 'pay';
               render();
-              focusPhoneField();
+              requestAnimationFrame(() => {
+                const card = document.querySelector('.card');
+                if (card) card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              });
             });
         }
 
-        function esc(v) {
-          return String(v == null ? '' : v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-        }
-
-        // Puts the cursor in the M-Pesa phone field so the keyboard opens as
-        // soon as the payment modal appears.
-        function focusPhoneField() {
-          requestAnimationFrame(() => {
-            const phoneEl = document.getElementById('phone');
-            if (phoneEl) phoneEl.focus();
-          });
-        }
-
-        let payModalKey = null;
-
-        function closePayModal() {
-          state.payStep = 'list';
-          state.selected = null;
-          state.status = null;
-          render();
-        }
-
-        // "Complete Payment" modal — opens whenever a package (or promo) is
-        // tapped. It sits under the payment-status modal (z-index 19000 vs
-        // 20000), so if a payment fails and that modal is closed, the
-        // customer lands back here and can retry without re-selecting.
-        // It is only rebuilt when the selected package changes, so a re-render
-        // never wipes what the customer is typing.
-        function renderPayModal() {
-          let root = document.getElementById('pay-modal-root');
-          if (!root) {
-            root = document.createElement('div');
-            root.id = 'pay-modal-root';
-            document.body.appendChild(root);
-          }
-          const open = state.tab === 'main' && state.payStep === 'pay' && state.selected;
-          if (!open) {
-            root.innerHTML = '';
-            payModalKey = null;
-            document.body.style.overflow = '';
-            return;
-          }
-          document.body.style.overflow = 'hidden';
-          const key = String(state.selected.id) + '|' + state.selected.price;
-          if (payModalKey === key && root.firstChild) return;
-          payModalKey = key;
-          const p = state.selected;
-          root.innerHTML =
-            '<div class="pay-modal-backdrop" id="pay-modal-backdrop">' +
-              '<div class="pay-modal" role="dialog" aria-modal="true" aria-labelledby="pay-modal-title">' +
-                '<button class="pay-modal-close" id="pay-modal-close" aria-label="Close">✕</button>' +
-                '<h2 class="pay-modal-title" id="pay-modal-title">Complete Payment</h2>' +
-                '<div class="pay-modal-pkg">' + esc(p.name) +
-                  (p.valid ? '<div class="pay-modal-valid">' + esc(p.valid) + '</div>' : '') +
-                '</div>' +
-                '<label class="field-label" for="phone">M-PESA Phone Number</label>' +
-                '<input class="field" id="phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="07XXXXXXXX" value="' + esc(state.phone || '') + '">' +
-                '<p class="pay-modal-hint"><strong>Enter your Safaricom number (07XXXXXXXX)</strong></p>' +
-                '<div class="pay-modal-amount"><span>Amount to Pay:</span><strong>KES ' + esc(p.price) + '</strong></div>' +
-                '<button class="btn" id="pay-btn">Pay with M-PESA</button>' +
-              '</div>' +
-            '</div>';
-        }
-
-        // section = which box on the page the message belongs to
-        // ('recover' | 'voucher' | 'mpesa' | 'packages'). Defaults to 'packages'.
-        function setStatus(status, message, section) {
-          state.status = status;
-          state.message = message;
-          state.statusFor = section || 'packages';
-          render();
-        }
+        function setStatus(status, message) { state.status = status; state.message = message; render(); }
 
 
 function renderQueryModal() {
@@ -1021,15 +773,15 @@ function renderQueryModal() {
   };
 
   root.innerHTML = `
-    <div style="position:fixed;inset:0;z-index:20000;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.8);backdrop-filter:blur(6px);">
-      <div style="background:var(--surface);color:var(--text);border:1px solid color-mix(in srgb, var(--text) 25%, transparent);border-radius:20px;max-width:380px;width:90%;padding:24px;text-align:center;box-shadow:0 30px 60px rgba(0,0,0,.5);">
+    <div style="position:fixed;inset:0;z-index:20000;display:flex;align-items:center;justify-content:center;background:rgba(2,6,23,.75);backdrop-filter:blur(6px);">
+      <div style="background:var(--surface);color:var(--text);border-radius:20px;max-width:380px;width:90%;padding:24px;text-align:center;box-shadow:0 30px 60px rgba(0,0,0,.5);">
         <div style="font-size:32px;margin-bottom:10px;">${icons[queryModal.status] || 'ℹ️'}</div>
-        <h3 style="font-size:20px;font-weight:800;margin-bottom:10px;color:var(--text);">${titles[queryModal.status] || 'Status'}</h3>
-        <p style="font-size:16px;color:var(--text);margin-bottom:20px;line-height:1.5;">${queryModal.message}</p>
+        <h3 style="font-size:18px;font-weight:700;margin-bottom:10px;">${titles[queryModal.status] || 'Status'}</h3>
+        <p style="font-size:14px;color:var(--muted);margin-bottom:20px;line-height:1.5;">${queryModal.message}</p>
         ${queryModal.status === 'processing' ? `
-          <div style="margin:0 auto 16px;width:36px;height:36px;border:3px solid color-mix(in srgb, var(--text) 25%, transparent);border-top-color:var(--primary);border-radius:50%;animation:spin 0.8s linear infinite;"></div>
+          <div style="margin:0 auto 16px;width:36px;height:36px;border:3px solid color-mix(in srgb, var(--primary) 25%, transparent);border-top-color:var(--primary);border-radius:50%;animation:spin 0.8s linear infinite;"></div>
           <div style="display:flex;gap:8px;">
-            <button id="qm-stop" class="btn" style="background:color-mix(in srgb, var(--text) 18%, transparent);color:var(--text);border:1px solid color-mix(in srgb, var(--text) 40%, transparent);">Stop Checking</button>
+            <button id="qm-stop" class="btn" style="background:color-mix(in srgb, var(--text) 12%, transparent);color:var(--text);">Stop Checking</button>
             <button id="qm-check" class="btn">Check Now</button>
           </div>
         ` : `
@@ -1076,25 +828,25 @@ function renderConnectedScreen() {
     ['Expires', connectedInfo.expiration],
   ].filter(([, v]) => v);
 
-  const isTv = connectedInfo.type === 'tv';
+   const isTv = connectedInfo.type === 'tv';
   const heading  = isTv ? 'TV Connected! 📺' : 'Connected!';
   const subtitle = isTv
     ? 'Your TV is now online — enjoy streaming.'
     : "You're online — enjoy browsing.";
   const icon = isTv ? '📺' : '✅';
   const btnLabel = isTv ? 'Done →' : 'Start Browsing →';
-  root.innerHTML = `
-    <div style="position:fixed;inset:0;z-index:21000;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.92);backdrop-filter:blur(20px);">
-      <div style="background:var(--surface);color:var(--text);border:1px solid color-mix(in srgb, var(--accent) 50%, transparent);border-radius:24px;max-width:360px;width:90%;padding:32px 28px;text-align:center;box-shadow:0 0 60px rgba(52,211,153,.15);">
-        <div style="width:64px;height:64px;margin:0 auto 20px;border-radius:20px;background:color-mix(in srgb, var(--accent) 22%, transparent);border:1px solid color-mix(in srgb, var(--accent) 50%, transparent);display:flex;align-items:center;justify-content:center;font-size:28px;">${icon}</div>
-        <h2 style="font-size:24px;font-weight:800;color:var(--text);margin-bottom:4px;">${heading}</h2>
-        <p style="font-size:15px;color:var(--text);margin-bottom:22px;">${subtitle}</p>
+ root.innerHTML = `
+    <div style="position:fixed;inset:0;z-index:21000;display:flex;align-items:center;justify-content:center;background:rgba(2,6,23,.92);backdrop-filter:blur(20px);">
+      <div style="background:color-mix(in srgb, var(--surface) 90%, transparent);border:1px solid color-mix(in srgb, var(--accent) 25%, transparent);border-radius:24px;max-width:360px;width:90%;padding:32px 28px;text-align:center;box-shadow:0 0 60px rgba(52,211,153,.15);">
+        <div style="width:64px;height:64px;margin:0 auto 20px;border-radius:20px;background:color-mix(in srgb, var(--accent) 15%, transparent);border:1px solid color-mix(in srgb, var(--accent) 30%, transparent);display:flex;align-items:center;justify-content:center;font-size:28px;">${icon}</div>
+        <h2 style="font-size:22px;font-weight:800;color:var(--text);margin-bottom:4px;">${heading}</h2>
+        <p style="font-size:13px;color:var(--muted);margin-bottom:22px;">${subtitle}</p>
         ${rows.length ? `
           <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:22px;text-align:left;">
             ${rows.map(([l, v]) => `
-              <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border-radius:12px;background:color-mix(in srgb, var(--text) 10%, transparent);">
-                <span style="font-size:14px;color:var(--text);">${l}</span>
-                <span style="font-size:15px;font-weight:800;color:var(--text);">${v}</span>
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border-radius:12px;background:color-mix(in srgb, var(--text) 6%, transparent);">
+                <span style="font-size:11px;color:var(--muted);">${l}</span>
+                <span style="font-size:13px;font-weight:700;color:var(--text);">${v}</span>
               </div>
             `).join('')}
           </div>
@@ -1104,7 +856,7 @@ function renderConnectedScreen() {
     </div>
   `;
 
-  const startBtn = document.getElementById('connected-start-btn');
+const startBtn = document.getElementById('connected-start-btn');
   if (startBtn) startBtn.onclick = () => { window.location.href = '$(link-orig)'; };
 }
 
@@ -1147,36 +899,36 @@ function renderExpandedAd() {
       : '';
 
   const rewardBanner = isVideo ? \`
-    <div style="display:flex;align-items:center;gap:10px;padding:12px 16px;background:linear-gradient(90deg,color-mix(in srgb, var(--accent) 22%, var(--surface)),color-mix(in srgb, var(--secondary) 18%, var(--surface)));border-bottom:1px solid color-mix(in srgb, var(--accent) 40%, transparent);">
-      <div style="width:28px;height:28px;border-radius:50%;background:color-mix(in srgb, var(--accent) 30%, transparent);display:flex;align-items:center;justify-content:center;flex-shrink:0;">🎁</div>
+    <div style="display:flex;align-items:center;gap:10px;padding:12px 16px;background:linear-gradient(90deg,color-mix(in srgb, var(--accent) 15%, transparent),color-mix(in srgb, var(--secondary) 12%, transparent));border-bottom:1px solid color-mix(in srgb, var(--accent) 20%, transparent);">
+      <div style="width:28px;height:28px;border-radius:50%;background:color-mix(in srgb, var(--accent) 20%, transparent);display:flex;align-items:center;justify-content:center;flex-shrink:0;">🎁</div>
       <div style="flex:1;min-width:0;">
-        <p style="margin:0;font-size:15px;font-weight:700;color:var(--text);">Watch this ad to unlock free internet!</p>
-        <p style="margin:2px 0 0;font-size:14px;color:var(--text);">Reward: <strong>\${rewardLabel}</strong></p>
+        <p style="margin:0;font-size:13px;font-weight:600;color:var(--accent);">Watch this ad to unlock free internet!</p>
+        <p style="margin:2px 0 0;font-size:12px;color:var(--accent);">Reward: <strong>\${rewardLabel}</strong></p>
       </div>
     </div>\` : '';
 
   root.innerHTML = \`
     <div id="ad-expanded-backdrop" style="position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.93);backdrop-filter:blur(16px);padding:16px;">
-      <p style="position:absolute;top:16px;right:20px;font-size:14px;color:rgba(255,255,255,.95);">Press ESC or click outside to close</p>
-      <div id="ad-expanded-panel" style="position:relative;width:100%;max-width:720px;border-radius:20px;overflow:hidden;box-shadow:0 30px 60px rgba(0,0,0,.5);background:var(--surface);color:var(--text);border:1px solid color-mix(in srgb, var(--text) 25%, transparent);">
+      <p style="position:absolute;top:16px;right:20px;font-size:12px;color:rgba(255,255,255,.7);">Press ESC or click outside to close</p>
+      <div id="ad-expanded-panel" style="position:relative;width:100%;max-width:720px;border-radius:20px;overflow:hidden;box-shadow:0 30px 60px rgba(0,0,0,.5);background:color-mix(in srgb, var(--surface) 98%, transparent);border:1px solid color-mix(in srgb, var(--text) 12%, transparent);">
         \${rewardBanner}
         \${media}
         <div style="padding:14px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px;">
           <div style="display:flex;align-items:center;gap:8px;min-width:0;flex:1;">
-            <span style="font-size:13px;font-weight:800;padding:2px 8px;border-radius:6px;background:color-mix(in srgb, var(--primary) 25%, transparent);border:1px solid var(--primary);color:var(--text);">Ad</span>
-            \${ad.ad_title ? \`<span style="font-size:15px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">\${ad.ad_title}</span>\` : ''}
+            <span style="font-size:11px;font-weight:800;padding:2px 8px;border-radius:6px;background:color-mix(in srgb, var(--primary) 15%, transparent);color:var(--primary);">Ad</span>
+            \${ad.ad_title ? \`<span style="font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">\${ad.ad_title}</span>\` : ''}
           </div>
           <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
             \${isVideo && ad.can_skip ? \`
-              <button id="ad-expanded-skip" style="display:\${s.skipReady ? 'flex' : 'none'};align-items:center;gap:5px;font-size:15px;padding:8px 12px;border-radius:10px;font-weight:800;border:1px solid var(--accent);background:color-mix(in srgb, var(--accent) 28%, transparent);color:var(--text);cursor:pointer;">Skip Ad ⏭</button>
-              <span id="ad-expanded-skip-wait" style="display:\${s.skipReady ? 'none' : 'inline'};font-size:14px;padding:8px 12px;border-radius:10px;background:color-mix(in srgb, var(--text) 14%, transparent);color:var(--text);"><span id="ad-expanded-skip-countdown">\${skipCountdown}</span>s remaining</span>
+              <button id="ad-expanded-skip" style="display:\${s.skipReady ? 'flex' : 'none'};align-items:center;gap:5px;font-size:13px;padding:7px 12px;border-radius:10px;font-weight:700;border:none;background:color-mix(in srgb, var(--accent) 18%, transparent);color:var(--accent);cursor:pointer;">Skip Ad ⏭</button>
+              <span id="ad-expanded-skip-wait" style="display:\${s.skipReady ? 'none' : 'inline'};font-size:12px;padding:7px 12px;border-radius:10px;background:color-mix(in srgb, var(--text) 8%, transparent);color:var(--muted);"><span id="ad-expanded-skip-countdown">\${skipCountdown}</span>s remaining</span>
             \` : ''}
-            \${ad.ad_link ? \`<button id="ad-expanded-visit" style="display:flex;align-items:center;gap:5px;font-size:15px;padding:8px 12px;border-radius:10px;font-weight:800;border:1px solid var(--primary);background:color-mix(in srgb, var(--primary) 25%, transparent);color:var(--text);cursor:pointer;">Visit ↗</button>\` : ''}
-            \${isImage ? \`<button id="ad-expanded-dismiss" style="display:flex;align-items:center;gap:5px;font-size:15px;padding:8px 12px;border-radius:10px;font-weight:700;border:1px solid color-mix(in srgb, var(--text) 40%, transparent);background:color-mix(in srgb, var(--text) 14%, transparent);color:var(--text);cursor:pointer;">✕ Close Ad</button>\` : ''}
-            <button id="ad-expanded-collapse" style="display:flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:10px;border:1px solid color-mix(in srgb, var(--text) 40%, transparent);background:color-mix(in srgb, var(--text) 14%, transparent);color:var(--text);cursor:pointer;font-size:16px;">⤡</button>
+            \${ad.ad_link ? \`<button id="ad-expanded-visit" style="display:flex;align-items:center;gap:5px;font-size:13px;padding:7px 12px;border-radius:10px;font-weight:700;border:none;background:color-mix(in srgb, var(--primary) 15%, transparent);color:var(--primary);cursor:pointer;">Visit ↗</button>\` : ''}
+            \${isImage ? \`<button id="ad-expanded-dismiss" style="display:flex;align-items:center;gap:5px;font-size:13px;padding:7px 12px;border-radius:10px;font-weight:600;border:none;background:color-mix(in srgb, var(--text) 10%, transparent);color:var(--muted);cursor:pointer;">✕ Close Ad</button>\` : ''}
+            <button id="ad-expanded-collapse" style="display:flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:10px;border:none;background:color-mix(in srgb, var(--text) 10%, transparent);color:var(--muted);cursor:pointer;">⤡</button>
           </div>
         </div>
-        \${isVideo ? \`<div style="height:4px;background:color-mix(in srgb, var(--text) 20%, transparent);"><div id="ad-expanded-progress-bar" style="height:100%;width:\${((ad.ad_duration || 15) - s.secondsLeft) / (ad.ad_duration || 15) * 100}%;background:linear-gradient(90deg,var(--accent),var(--secondary));transition:width 1s linear;"></div></div>\` : ''}
+        \${isVideo ? \`<div style="height:3px;background:color-mix(in srgb, var(--text) 10%, transparent);"><div id="ad-expanded-progress-bar" style="height:100%;width:\${((ad.ad_duration || 15) - s.secondsLeft) / (ad.ad_duration || 15) * 100}%;background:linear-gradient(90deg,var(--accent),var(--secondary));transition:width 1s linear;"></div></div>\` : ''}
       </div>
     </div>\`;
 
@@ -1536,14 +1288,14 @@ function pollDeviceBindingStatus() {
 
 
 
-
+        
         async function loadPackages() {
           try {
             const res = await fetch(api('/api/allow_get_hotspot_packages'), { headers });
             const data = res.ok ? await res.json() : [];
             state.packages = (cfg.preview && (!data || !data.length)) ? MOCK_PACKAGES : (data || []);
           } catch (e) {
-            console.error('Failed to load packages (check CORS / walled-garden):', e);
+           console.error('Failed to load packages (check CORS / walled-garden):', e);
             document.getElementById('panel').innerHTML = '<div class="status error">DEBUG: ' + e.message + '</div>';
             state.packages = cfg.preview ? MOCK_PACKAGES : [];
           } finally {
@@ -1658,13 +1410,13 @@ async function payPackage() {
             } catch (e) { console.error(e); }
             if (elapsed >= 120000) {
               clearInterval(iv);
-              setStatus('error', 'Timed out. Please check your M-Pesa SMS and enter the code in the M-Pesa code box.', 'mpesa');
+              setStatus('error', 'Timed out. Please check your M-Pesa SMS and try the receipt tab.');
             }
           }, 5000);
         }
 
         async function connectVoucher(code) {
-          setStatus('processing', 'Connecting…', 'voucher');
+          setStatus('processing', 'Connecting…');
           try {
             const res = await fetch(api('/api/login_with_hotspot_voucher'), {
               method: 'POST', headers, body: JSON.stringify({ voucher: code, mac, ip })
@@ -1673,35 +1425,13 @@ async function payPackage() {
             if (res.ok) {
               onConnected({ username: data.username, package: data.package, expiration: data.expiration });
             } else {
-              setStatus('error', data.error || 'Invalid voucher code. Please check and try again.', 'voucher');
+              setStatus('error', data.error || 'Invalid voucher code. Please check and try again.');
             }
-          } catch (e) { console.error(e); setStatus('error', 'Network error. Check your connection and try again.', 'voucher'); }
+          } catch (e) { console.error(e); setStatus('error', 'Network error. Check your connection and try again.'); }
         }
 
-        // Reconnect with the phone number used at purchase time. The server
-        // finds that number's latest still-valid package and logs this device
-        // in with it (POST /api/recover_session).
-        async function recoverSession(phone) {
-          if (!phone) {
-            setStatus('error', 'Enter the phone number you used to purchase.', 'recover');
-            return;
-          }
-          setStatus('processing', 'Looking for your session…', 'recover');
-          try {
-            const res = await fetch(api('/api/recover_session'), {
-              method: 'POST', headers, body: JSON.stringify({ phone_number: phone, mac, ip })
-            });
-            const data = await res.json().catch(() => ({}));
-            if (res.ok) {
-              onConnected({ username: data.username, package: data.package, expiration: data.expiration });
-            } else {
-              setStatus('error', data.error || 'We could not find an active package for that number. Check the number and try again.', 'recover');
-            }
-          } catch (e) { console.error(e); setStatus('error', 'Network error. Check your connection and try again.', 'recover'); }
-        }
-
-        async function connectReceipt(code) {
-          setStatus('processing', 'Verifying your M-Pesa transaction…', 'mpesa');
+               async function connectReceipt(code) {
+          setStatus('processing', 'Verifying your M-Pesa transaction…');
           try {
             const res = await fetch(api('/api/login_with_receipt_number'), {
               method: 'POST', headers, body: JSON.stringify({ receipt_number: code, mac, ip })
@@ -1715,25 +1445,24 @@ async function payPackage() {
               // line and a separate polling round-trip.
               onConnected({ username: data.username, package: data.package, expiration: data.expiration });
             } else {
-              setStatus('error', data.error || 'Transaction not found. Check the code and try again.', 'mpesa');
+              setStatus('error', data.error || 'Transaction not found. Check the code and try again.');
             }
-          } catch (e) { console.error(e); setStatus('error', 'Network error. Check your connection and try again.', 'mpesa'); }
+          } catch (e) { console.error(e); setStatus('error', 'Network error. Check your connection and try again.'); }
         }
 
         function onConnected(details) {
-          details = details || {};
-          connectedInfo = {
-            username: details.username || username || '',
-            package: details.package || (state.selected && state.selected.name) || '',
-            expiration: details.expiration || '',
-            type: details.type || 'default',
-          };
-          if (connectedInfo.username) localStorage.setItem('hotspot_username', connectedInfo.username);
-          state.payStep = 'list';
-          renderConnectedScreen();
-          setStatus('success', 'Connected! Redirecting…', 'packages');
-          setTimeout(() => { window.location.href = '$(link-orig)'; }, 4000);
-        }
+  details = details || {};
+  connectedInfo = {
+    username: details.username || username || '',
+    package: details.package || (state.selected && state.selected.name) || '',
+    expiration: details.expiration || '',
+    type: details.type || 'default',
+  };
+  if (connectedInfo.username) localStorage.setItem('hotspot_username', connectedInfo.username);
+  renderConnectedScreen();
+  setStatus('success', 'Connected! Redirecting…');
+  setTimeout(() => { window.location.href = '$(link-orig)'; }, 4000);
+}
 
         // ── Autologin / autoreconnect ───────────────────────────────────
         // Mirrors React's voucherAutoLogin(): if the account has
@@ -1795,22 +1524,22 @@ function renderSystemAd(adId, brand) {
     const progress = Math.min(100, (elapsed / duration) * 100);
     root.innerHTML = \`
       <div style="position:fixed;inset:0;z-index:99999;background:#020617;display:flex;flex-direction:column;font-family:'Plus Jakarta Sans',sans-serif;">
-        <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 16px;background:rgba(0,0,0,.4);border-bottom:1px solid rgba(255,255,255,.2);">
-          <span style="font-size:13px;font-weight:700;color:rgba(255,255,255,.95);text-transform:uppercase;letter-spacing:.08em;">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 16px;background:rgba(0,0,0,.4);border-bottom:1px solid rgba(255,255,255,.07);">
+          <span style="font-size:11px;font-weight:700;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.08em;">
             ✨ Sponsored · \${brand.company_name || 'Your ISP'}
           </span>
           \${canSkip
-            ? '<button id="sysad-skip" style="padding:6px 12px;border-radius:8px;border:1px solid rgba(255,255,255,.5);background:rgba(255,255,255,.15);color:#ffffff;font-size:14px;font-weight:700;cursor:pointer;">Skip ✕</button>'
-            : '<span style="font-size:13px;color:rgba(255,255,255,.95);padding:6px 12px;">Skip in ' + (5 - elapsed) + 's</span>'
+            ? '<button id="sysad-skip" style="padding:5px 10px;border-radius:8px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.07);color:rgba(255,255,255,.7);font-size:12px;font-weight:600;cursor:pointer;">Skip ✕</button>'
+            : '<span style="font-size:11px;color:rgba(255,255,255,.35);padding:5px 10px;">Skip in \${5 - elapsed}s</span>'
           }
         </div>
         <div style="flex:1;overflow:hidden;">\${currentScene().html()}</div>
-        <div style="height:4px;background:rgba(255,255,255,.25);">
+        <div style="height:3px;background:rgba(255,255,255,.15);">
           <div style="height:100%;width:\${progress}%;background:linear-gradient(90deg,#38bdf8,#a78bfa);transition:width .9s linear;"></div>
         </div>
-        <div style="padding:8px 16px;background:rgba(0,0,0,.4);display:flex;justify-content:space-between;border-top:1px solid rgba(255,255,255,.2);">
-          <span style="font-size:13px;color:rgba(255,255,255,.95);">Ad ends in \${Math.max(0, duration - elapsed)}s</span>
-          \${brand.contact_info ? '<a href="tel:' + brand.contact_info + '" style="font-size:14px;font-weight:800;color:#ffffff;text-decoration:underline;">📞 ' + brand.contact_info + '</a>' : ''}
+        <div style="padding:8px 16px;background:rgba(0,0,0,.4);display:flex;justify-content:space-between;border-top:1px solid rgba(255,255,255,.07);">
+          <span style="font-size:11px;color:rgba(255,255,255,.3);">Ad ends in \${Math.max(0, duration - elapsed)}s</span>
+          \${brand.contact_info ? '<a href="tel:' + brand.contact_info + '" style="font-size:11px;font-weight:700;color:#38bdf8;text-decoration:none;">📞 ' + brand.contact_info + '</a>' : ''}
         </div>
       </div>\`;
     const skipBtn = document.getElementById('sysad-skip');
@@ -1833,11 +1562,11 @@ function renderSystemAd(adId, brand) {
 function systemAdScene0(b) {
   const c = b.primary_color || '#facc15';
   return \`<div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:28px;background:linear-gradient(160deg,#030712,#1a0f00);gap:16px;">
-    <div style="width:72px;height:72px;border-radius:50%;background:\${c}33;border:2px solid \${c};display:flex;align-items:center;justify-content:center;font-size:32px;">📢</div>
-    <p style="font-size:28px;font-weight:900;color:#fff;text-align:center;line-height:1.2;">Je, una biashara?</p>
-    <p style="font-size:17px;color:rgba(255,255,255,.95);text-align:center;">Do you own a business?</p>
-    <div style="padding:8px 20px;border-radius:999px;background:\${c}33;border:1px solid \${c};">
-      <p style="font-size:15px;font-weight:800;color:#ffffff;">Tangaza kwenye WiFi hii 📶</p>
+    <div style="width:72px;height:72px;border-radius:50%;background:\${c}22;border:2px solid \${c};display:flex;align-items:center;justify-content:center;font-size:32px;">📢</div>
+    <p style="font-size:26px;font-weight:900;color:#fff;text-align:center;line-height:1.2;">Je, una biashara?</p>
+    <p style="font-size:15px;color:rgba(255,255,255,.6);text-align:center;">Do you own a business?</p>
+    <div style="padding:8px 20px;border-radius:999px;background:\${c}22;border:1px solid \${c}44;">
+      <p style="font-size:13px;font-weight:700;color:\${c};">Tangaza kwenye WiFi hii 📶</p>
     </div>
   </div>\`;
 }
@@ -1845,12 +1574,12 @@ function systemAdScene0(b) {
 function systemAdScene1(b) {
   const c = b.primary_color || '#34d399';
   return \`<div style="flex:1;display:flex;flex-direction:column;padding:20px 24px;background:linear-gradient(160deg,#030712,#001a0f);gap:14px;">
-    <p style="font-size:19px;font-weight:800;color:#fff;">Wafikie wateja wako 🎯</p>
-    <p style="font-size:14px;color:rgba(255,255,255,.95);">Reach your customers through this hotspot</p>
+    <p style="font-size:17px;font-weight:800;color:#fff;">Wafikie wateja wako 🎯</p>
+    <p style="font-size:12px;color:rgba(255,255,255,.5);">Reach your customers through this hotspot</p>
     \${[['1,000+','Wateja kila siku','#34d399'],['100%','Ad visibility','#38bdf8'],['3×','vs print ads','#a78bfa']].map(([num,label,col]) =>
-      '<div style="display:flex;align-items:center;gap:14px;padding:12px 16px;border-radius:14px;background:' + col + '26;border:1px solid ' + col + '66;">' +
-        '<p style="font-size:22px;font-weight:900;color:' + col + ';min-width:70px;">' + num + '</p>' +
-        '<p style="font-size:14px;color:rgba(255,255,255,.95);">' + label + '</p>' +
+      '<div style="display:flex;align-items:center;gap:14px;padding:12px 16px;border-radius:14px;background:' + col + '0f;border:1px solid ' + col + '25;">' +
+        '<p style="font-size:20px;font-weight:900;color:' + col + ';min-width:60px;">' + num + '</p>' +
+        '<p style="font-size:11px;color:rgba(255,255,255,.5);">' + label + '</p>' +
       '</div>'
     ).join('')}
   </div>\`;
@@ -1858,13 +1587,13 @@ function systemAdScene1(b) {
 
 function systemAdScene2(b) {
   return \`<div style="flex:1;display:flex;flex-direction:column;padding:20px 24px;background:linear-gradient(160deg,#030712,#0a0018);gap:10px;">
-    <p style="font-size:18px;font-weight:800;color:#fff;">Inafaa kwa biashara yoyote 🏪</p>
-    <p style="font-size:14px;color:rgba(255,255,255,.95);">Works for any type of business</p>
+    <p style="font-size:16px;font-weight:800;color:#fff;">Inafaa kwa biashara yoyote 🏪</p>
+    <p style="font-size:12px;color:rgba(255,255,255,.4);">Works for any type of business</p>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
       \${[['🍽️','Mkahawa','Restaurant'],['💇','Salon','Barber'],['🏥','Duka la dawa','Pharmacy'],['🛒','Duka','Shop'],['🏫','Shule','School'],['🎉','Tukio','Event']].map(([e,sw,en]) =>
-        '<div style="padding:10px 12px;border-radius:12px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.25);display:flex;align-items:center;gap:8px;">' +
+        '<div style="padding:10px 12px;border-radius:12px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);display:flex;align-items:center;gap:8px;">' +
           '<span style="font-size:20px;">' + e + '</span>' +
-          '<div><p style="font-size:14px;font-weight:700;color:#fff;">' + sw + '</p><p style="font-size:12px;color:rgba(255,255,255,.95);">' + en + '</p></div>' +
+          '<div><p style="font-size:11px;font-weight:700;color:#fff;">' + sw + '</p><p style="font-size:10px;color:rgba(255,255,255,.4);">' + en + '</p></div>' +
         '</div>'
       ).join('')}
     </div>
@@ -1874,13 +1603,13 @@ function systemAdScene2(b) {
 function systemAdScene3(b) {
   const c = b.primary_color || '#38bdf8';
   const logo = b.logo_url || b.logo_preview;
-  return \`<div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:28px;background:linear-gradient(160deg,#030712,\${c}33);gap:16px;">
-    \${logo ? '<img src="' + logo + '" style="width:72px;height:72px;border-radius:18px;object-fit:contain;border:2px solid ' + c + '66;padding:6px;background:rgba(255,255,255,.1);">' :
+  return \`<div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:28px;background:linear-gradient(160deg,#030712,\${c}22);gap:16px;">
+    \${logo ? '<img src="' + logo + '" style="width:72px;height:72px;border-radius:18px;object-fit:contain;border:2px solid ' + c + '44;padding:6px;background:rgba(255,255,255,.06);">' :
       '<div style="width:72px;height:72px;border-radius:18px;background:linear-gradient(135deg,' + c + ',' + c + '88);display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:900;color:#fff;">' + (b.company_name||'I')[0] + '</div>'}
-    <p style="font-size:24px;font-weight:900;color:#fff;text-align:center;">\${b.company_name || 'Your ISP'}</p>
-    <p style="font-size:15px;color:#ffffff;font-weight:700;">WiFi Advertising Platform</p>
-    \${b.contact_info ? '<div style="display:flex;align-items:center;gap:8px;padding:10px 20px;border-radius:999px;background:' + c + '33;border:1px solid ' + c + ';"><span style="font-size:16px;font-weight:800;color:#fff;">📞 ' + b.contact_info + '</span></div>' : ''}
-    <p style="font-size:13px;color:rgba(255,255,255,.95);text-align:center;">Powered by \${b.company_name || 'your ISP'} · WiFi Marketing</p>
+    <p style="font-size:22px;font-weight:900;color:#fff;text-align:center;">\${b.company_name || 'Your ISP'}</p>
+    <p style="font-size:13px;color:\${c};font-weight:700;">WiFi Advertising Platform</p>
+    \${b.contact_info ? '<div style="display:flex;align-items:center;gap:8px;padding:10px 20px;border-radius:999px;background:' + c + '18;border:1px solid ' + c + '30;"><span style="font-size:14px;font-weight:800;color:#fff;">📞 ' + b.contact_info + '</span></div>' : ''}
+    <p style="font-size:11px;color:rgba(255,255,255,.35);text-align:center;">Powered by \${b.company_name || 'your ISP'} · WiFi Marketing</p>
   </div>\`;
 }
 
@@ -1907,14 +1636,14 @@ function tryQrVoucherLogin() {
   if (!voucherFromQr) return;
 
   console.info('[qr-login] voucher found in QR redirect, auto-connecting:', voucherFromQr);
-  state.voucherInput = voucherFromQr;
+  if (cfg.features.show_voucher !== false) state.tab = 'voucher';
   render();
   connectVoucher(voucherFromQr);
 }
 
 
 
-        async function tryAutoLogin() {
+       async function tryAutoLogin() {
           try {
             const custRes = await fetch(api('/api/allow_get_hotspot_customization'), { headers });
             if (!custRes.ok) { console.info('[autologin] skipped: could not load customization settings'); return; }
@@ -1960,7 +1689,7 @@ function tryQrVoucherLogin() {
         }
 
         // ── Ads ──────────────────────────────────────────────────────────
-        const AD_POSITIONS = {
+      const AD_POSITIONS = {
   'top-banner':    'position:fixed;top:0;left:0;right:0;z-index:9999;',
   'bottom-banner': 'position:fixed;bottom:0;left:0;right:0;z-index:9999;',
   'bottom-right':  'position:fixed;bottom:16px;right:16px;z-index:9999;width:320px;max-width:calc(100vw - 32px);',
@@ -2000,7 +1729,7 @@ function trackAdEvent(adId, eventType) {
           }
           if (ad.reward_type === 'specific' && ad.selected_package) {
             const pkg = state.packages.find(p => String(p.id) === String(ad.selected_package));
-            if (pkg) { state.selected = pkg; state.tab = 'main'; state.payStep = 'pay'; render(); }
+            if (pkg) { state.selected = pkg; state.tab = 'packages'; state.payStep = 'pay'; render(); }
           }
         }
 
@@ -2029,14 +1758,14 @@ function trackAdEvent(adId, eventType) {
           }).join('');
 
           const visitBtn = ad.ad_link
-            ? \`<button data-ad-visit="\${ad.id}" style="position:absolute;bottom:8px;left:8px;display:flex;align-items:center;gap:4px;padding:6px 12px;border-radius:20px;border:none;background:rgba(0,0,0,.8);color:#fff;font-size:13px;font-weight:700;cursor:pointer;">Visit ↗</button>\`
+            ? \`<button data-ad-visit="\${ad.id}" style="position:absolute;bottom:8px;left:8px;display:flex;align-items:center;gap:4px;padding:4px 10px;border-radius:20px;border:none;background:rgba(0,0,0,.5);color:#fff;font-size:11px;font-weight:600;cursor:pointer;">Visit ↗</button>\`
             : '';
-          const closeBtn = \`<button data-ad-dismiss="\${ad.id}" style="position:absolute;top:8px;right:8px;width:28px;height:28px;border-radius:50%;background:rgba(0,0,0,.8);border:none;color:#fff;cursor:pointer;font-size:14px;">✕</button>\`;
+          const closeBtn = \`<button data-ad-dismiss="\${ad.id}" style="position:absolute;top:8px;right:8px;width:24px;height:24px;border-radius:50%;background:rgba(0,0,0,.5);border:none;color:#fff;cursor:pointer;">✕</button>\`;
 
           return \`<div data-ad-track="\${ad.id}" style="position:relative;width:\${w}px;max-width:320px;height:\${h}px;background:\${bg};border-radius:10px;overflow:hidden;cursor:pointer;">\${parts}\${visitBtn}\${closeBtn}</div>\`;
         }
 
-        function adCardHtml(ad) {
+     function adCardHtml(ad) {
   const s = adState[ad.id];
   if (!s || s.completed) return '';
   const isVideo = ad.media_type === 'video';
@@ -2044,7 +1773,7 @@ function trackAdEvent(adId, eventType) {
   const isCustom = ad.media_type === 'custom_design';
   const isMock = cfg.preview && String(ad.id) === 'mock-ad';
   const isFullscreen = ad.position === 'fullscreen';
-  let media = '';
+let media = '';
   if (isImage) {
     media = isFullscreen
       ? \`<img src="\${ad.media_url}" style="width:100%;flex:1;object-fit:contain;display:block;">\`
@@ -2068,34 +1797,34 @@ function trackAdEvent(adId, eventType) {
     footer = \`
       <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 14px;">
         <div style="display:flex;align-items:center;gap:6px;min-width:0;flex:1;">
-          <span style="font-weight:800;font-size:13px;padding:2px 6px;border-radius:4px;background:color-mix(in srgb, var(--primary) 25%, transparent);border:1px solid var(--primary);color:var(--text);">Ad</span>
+          <span style="font-weight:700;font-size:11px;padding:2px 6px;border-radius:4px;background:color-mix(in srgb, var(--primary) 15%, transparent);color:var(--primary);">Ad</span>
           \${isMock ? '<span class="mock-tag">Sample</span>' : ''}
-          \${ad.ad_title ? \`<span style="font-size:14px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">\${ad.ad_title}</span>\` : ''}
+          \${ad.ad_title ? \`<span style="font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">\${ad.ad_title}</span>\` : ''}
         </div>
         <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
-          \${(isImage || isVideo) ? \`<button data-ad-expand="\${ad.id}" style="display:flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:8px;border:1px solid color-mix(in srgb, var(--text) 40%, transparent);background:color-mix(in srgb, var(--text) 14%, transparent);color:var(--text);cursor:pointer;font-size:15px;">⤢</button>\` : ''}
-          \${ad.ad_link ? \`<button data-ad-visit="\${ad.id}" style="display:flex;align-items:center;gap:4px;font-size:13px;padding:6px 10px;border-radius:8px;font-weight:800;border:1px solid var(--primary);background:color-mix(in srgb, var(--primary) 25%, transparent);color:var(--text);cursor:pointer;">Visit ↗</button>\` : ''}
-          \${isVideo && ad.can_skip && s.skipReady ? \`<button data-ad-skip="\${ad.id}" style="display:flex;align-items:center;gap:4px;font-size:13px;padding:6px 10px;border-radius:8px;font-weight:800;border:1px solid var(--accent);background:color-mix(in srgb, var(--accent) 28%, transparent);color:var(--text);cursor:pointer;">Skip ⏭</button>\` : ''}
-          \${isVideo && ad.can_skip && !s.skipReady ? \`<span style="font-size:13px;padding:6px 10px;border-radius:8px;background:color-mix(in srgb, var(--text) 14%, transparent);color:var(--text);">Skip in \${skipCountdown}s</span>\` : ''}
-          \${isImage ? \`<button data-ad-dismiss="\${ad.id}" style="width:32px;height:32px;border-radius:50%;border:1px solid color-mix(in srgb, var(--text) 40%, transparent);background:color-mix(in srgb, var(--text) 14%, transparent);color:var(--text);cursor:pointer;font-size:14px;">✕</button>\` : ''}
+          \${(isImage || isVideo) ? \`<button data-ad-expand="\${ad.id}" style="display:flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:8px;border:none;background:color-mix(in srgb, var(--text) 10%, transparent);color:var(--muted);cursor:pointer;font-size:13px;">⤢</button>\` : ''}
+          \${ad.ad_link ? \`<button data-ad-visit="\${ad.id}" style="display:flex;align-items:center;gap:4px;font-size:11px;padding:5px 10px;border-radius:8px;font-weight:700;border:none;background:color-mix(in srgb, var(--primary) 15%, transparent);color:var(--primary);cursor:pointer;">Visit ↗</button>\` : ''}
+          \${isVideo && ad.can_skip && s.skipReady ? \`<button data-ad-skip="\${ad.id}" style="display:flex;align-items:center;gap:4px;font-size:11px;padding:5px 10px;border-radius:8px;font-weight:700;border:none;background:color-mix(in srgb, var(--accent) 15%, transparent);color:var(--accent);cursor:pointer;">Skip ⏭</button>\` : ''}
+          \${isVideo && ad.can_skip && !s.skipReady ? \`<span style="font-size:11px;padding:5px 10px;border-radius:8px;background:color-mix(in srgb, var(--text) 8%, transparent);color:var(--muted);">Skip in \${skipCountdown}s</span>\` : ''}
+          \${isImage ? \`<button data-ad-dismiss="\${ad.id}" style="width:26px;height:26px;border-radius:50%;border:none;background:color-mix(in srgb, var(--text) 12%, transparent);color:var(--muted);cursor:pointer;">✕</button>\` : ''}
         </div>
       </div>\`;
   }
 
   const banner = isVideo ? \`
-    <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:linear-gradient(90deg,color-mix(in srgb, var(--accent) 22%, var(--surface)),color-mix(in srgb, var(--secondary) 18%, var(--surface)));border-bottom:1px solid color-mix(in srgb, var(--accent) 40%, transparent);">
-      <div style="width:28px;height:28px;border-radius:50%;background:color-mix(in srgb, var(--accent) 30%, transparent);display:flex;align-items:center;justify-content:center;flex-shrink:0;">🎁</div>
+    <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:linear-gradient(90deg,color-mix(in srgb, var(--accent) 15%, transparent),color-mix(in srgb, var(--secondary) 12%, transparent));border-bottom:1px solid color-mix(in srgb, var(--accent) 20%, transparent);">
+      <div style="width:26px;height:26px;border-radius:50%;background:color-mix(in srgb, var(--accent) 20%, transparent);display:flex;align-items:center;justify-content:center;flex-shrink:0;">🎁</div>
       <div style="flex:1;min-width:0;">
-        <p style="margin:0;font-size:14px;font-weight:700;color:var(--text);">Watch this ad to unlock free internet!</p>
-        <p style="margin:2px 0 0;font-size:13px;color:var(--text);">Reward: <strong>\${rewardLabelFor(ad)}</strong></p>
+        <p style="margin:0;font-size:12px;font-weight:600;color:var(--accent);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Watch this ad to unlock free internet!</p>
+        <p style="margin:2px 0 0;font-size:11px;color:var(--accent);">Reward: <strong>\${rewardLabelFor(ad)}</strong></p>
       </div>
-      <div style="flex-shrink:0;display:flex;align-items:center;gap:4px;padding:4px 10px;border-radius:20px;background:rgba(0,0,0,.85);">
-        <span style="font-size:14px;font-weight:800;color:#ffffff;">\${s.secondsLeft}s</span>
+      <div style="flex-shrink:0;display:flex;align-items:center;gap:4px;padding:3px 8px;border-radius:20px;background:rgba(0,0,0,.4);">
+        <span style="font-size:11px;font-weight:700;color:#fcd34d;">\${s.secondsLeft}s</span>
       </div>
     </div>\` : '';
 
   const progress = isVideo
-    ? \`<div style="height:3px;background:color-mix(in srgb, var(--text) 20%, transparent);"><div style="height:100%;background:linear-gradient(90deg,var(--accent),var(--secondary));width:\${((ad.ad_duration || 15) - s.secondsLeft) / (ad.ad_duration || 15) * 100}%;transition:width 1s linear;"></div></div>\`
+    ? \`<div style="height:2px;background:color-mix(in srgb, var(--text) 10%, transparent);"><div style="height:100%;background:linear-gradient(90deg,var(--accent),var(--secondary));width:\${((ad.ad_duration || 15) - s.secondsLeft) / (ad.ad_duration || 15) * 100}%;transition:width 1s linear;"></div></div>\`
     : '';
 
   const isFull = ad.position === 'fullscreen';
@@ -2124,7 +1853,7 @@ function renderAds() {
   bindAdEvents();
 }
 
-        function bindAdEvents() {
+      function bindAdEvents() {
   document.querySelectorAll('[data-ad-visit]').forEach(el => {
     el.onclick = (e) => {
       e.stopPropagation();
@@ -2158,22 +1887,22 @@ function renderAds() {
       };
     }
   });
+  
 
-
-  document.querySelectorAll('[data-ad-expand]').forEach(el => {
-    el.onclick = (e) => {
-      e.stopPropagation();
-      const id = el.dataset.adExpand;
-      const s = adState[id];
-      if (!s || s.completed) return;
-      trackAdEvent(id, 'engaged_view');   // deliberate action — counts as engagement
-      expandedAdId = id;
-      renderExpandedAd();
-      // Real watch-timer starts here — the first time they actually open
-      // the video, not when the ad merely appeared on the page.
-      if (s.ad.media_type === 'video') startAdTimers(s.ad);
-    };
-  });
+document.querySelectorAll('[data-ad-expand]').forEach(el => {
+  el.onclick = (e) => {
+    e.stopPropagation();
+    const id = el.dataset.adExpand;
+    const s = adState[id];
+    if (!s || s.completed) return;
+    trackAdEvent(id, 'engaged_view');   // deliberate action — counts as engagement
+    expandedAdId = id;
+    renderExpandedAd();
+    // Real watch-timer starts here — the first time they actually open
+    // the video, not when the ad merely appeared on the page.
+    if (s.ad.media_type === 'video') startAdTimers(s.ad);
+  };
+});
 
 
 
@@ -2181,7 +1910,7 @@ function renderAds() {
 
       }
 
-        function completeAd(adId, reason) {
+       function completeAd(adId, reason) {
   const s = adState[adId];
   if (!s || s.completed) return;
   clearInterval(adTimers[adId]);
@@ -2192,7 +1921,7 @@ function renderAds() {
   if (isVideo) trackAdEvent(adId, reason === 'skipped' ? 'video_skipped' : 'video_completed');
   else if (s.ad.media_type === 'image') trackAdEvent(adId, 'dismissed');
 
-  if (isVideo && s.started) grantAdReward(s.ad);
+if (isVideo && s.started) grantAdReward(s.ad);
 
 
   if (expandedAdId === adId) {
@@ -2275,14 +2004,14 @@ function startAdTimers(ad) {
 
             renderAds();
 
-            Object.values(adState).forEach(s => {
-              if (!s.viewTracked) { trackAdEvent(s.ad.id, 'Ad View'); s.viewTracked = true; }
-              // Image ads have no timer to worry about. Video ads: don't start the
-              // countdown just because the ad loaded on the page — that lets anyone
-              // earn the reward without ever actually watching. The timer only starts
-              // once the viewer taps to expand and actually opens the video.
-              if (s.ad.media_type !== 'video') startAdTimers(s.ad);
-            });
+Object.values(adState).forEach(s => {
+  if (!s.viewTracked) { trackAdEvent(s.ad.id, 'Ad View'); s.viewTracked = true; }
+  // Image ads have no timer to worry about. Video ads: don't start the
+  // countdown just because the ad loaded on the page — that lets anyone
+  // earn the reward without ever actually watching. The timer only starts
+  // once the viewer taps to expand and actually opens the video.
+  if (s.ad.media_type !== 'video') startAdTimers(s.ad);
+});
 
 
           } catch (e) {
@@ -2293,11 +2022,7 @@ function startAdTimers(ad) {
             }
           }
         }
-document.addEventListener('keydown', (e) => {
-  if (e.key !== 'Escape') return;
-  if (expandedAdId) { collapseExpandedAd(); return; }
-  if (state.payStep === 'pay' && !queryModal.status) closePayModal();
-});
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && expandedAdId) collapseExpandedAd(); });
         if (cfg.features.show_ads !== false) loadAds();
         loadPromotions();
         loadPackages();
