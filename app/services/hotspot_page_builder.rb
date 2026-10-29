@@ -2236,15 +2236,18 @@ function startAdTimers(ad) {
 }
 
 
-        async function loadAds() {
+               async function loadAds() {
           try {
+            console.log('[ads] loadAds start, show_ads =', cfg.features.show_ads);
             const res = await fetch(api('/api/allow_get_ads'), { headers });
+            console.log('[ads] fetch status', res.status);
             let list = [];
             if (res.ok) {
               const raw = await res.json();
               list = Array.isArray(raw) ? raw : [raw];
             }
             let eligible = list.filter(ad => ad.ad_enabled && (ad.ad_link || ad.media_url || ad.media_type === 'custom_design'));
+            console.log('[ads] list', list.length, 'eligible', eligible.length);
 
             if (!eligible.length && cfg.preview) eligible = [MOCK_AD];
             if (!eligible.length) return;
@@ -2272,6 +2275,25 @@ function startAdTimers(ad) {
                 viewTracked: false,
               };
             });
+
+            console.log('[ads] rendering', Object.keys(adState));
+            renderAds();
+            console.log('[ads] ad-root length', document.getElementById('ad-root').innerHTML.length);
+
+            Object.values(adState).forEach(s => {
+              if (!s.viewTracked) { trackAdEvent(s.ad.id, 'Ad View'); s.viewTracked = true; }
+              if (s.ad.media_type !== 'video') startAdTimers(s.ad);
+            });
+          } catch (e) {
+            console.error('[ads] loadAds failed:', e);
+            if (cfg.preview) {
+              try {
+                adState[MOCK_AD.id] = { ad: MOCK_AD, secondsLeft: 0, skipReady: false, completed: false, viewTracked: true };
+                renderAds();
+              } catch (e2) { console.error('[ads] mock render failed:', e2); }
+            }
+          }
+        }
 
             renderAds();
 
