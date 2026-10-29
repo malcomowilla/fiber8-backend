@@ -737,8 +737,6 @@ broadcast_hotspot_payment(
   head :ok
   return
 end
-
-mark_hotspot_revenue_completed(session, voucher_code, data)  
  hotspot_package = HotspotPackage.find_by(
       name:       session&.hotspot_package,
       account_id: session&.account_id,
@@ -767,6 +765,7 @@ account_id: session.account_id,
 )
  session.update(hotspot_voucher_id: voucher.id)
 
+mark_hotspot_revenue_completed(session, data, voucher)
 
 
 
@@ -3902,13 +3901,12 @@ end
 
 
 
-def mark_hotspot_revenue_completed(session, voucher_code, data)
+def mark_hotspot_revenue_completed(session, data, voucher)
   account = Account.find_by(id: session.account_id)
   return unless account
 
   ActsAsTenant.with_tenant(account) do
     revenue = nil
-     voucher = HotspotVoucher.find_by(voucher: voucher_code)
     if session.checkout_request_id.present?
       revenue = HotspotMpesaRevenue.find_by(checkout_request_id: session.checkout_request_id)
     end
@@ -3921,11 +3919,11 @@ def mark_hotspot_revenue_completed(session, voucher_code, data)
 
     revenue.update(
       status: "Completed",
-      voucher: voucher_code,
+      voucher: voucher.voucher,
       amount: data["TransAmount"],
       reference: data["TransID"],
       time_paid: data["TransTime"],
-      account_id: voucher.account_id,
+      account_id: session.account_id,
       name: data["FirstName"],
       payment_method: "Mpesa",
       hotspot_voucher_id: voucher.id
