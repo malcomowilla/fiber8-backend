@@ -4,7 +4,7 @@ class IpPool < ApplicationRecord
   acts_as_tenant(:account)
 
   belongs_to :nas_router
-  belongs_to :account
+  # belongs_to :account
 
   validates :name, presence: true, uniqueness: { scope: :account_id }
   validates :ip_range_start, :ip_range_end, presence: true

@@ -42,6 +42,16 @@ class Account < ApplicationRecord
     has_one :nas_setting, dependent: :destroy
     has_one :access_point_setting, dependent: :destroy
     has_many :ip_bindings, dependent: :destroy
+    has_many :equipments, dependent: :destroy
+    has_many :hotspot_packages, dependent: :destroy
+    has_many :hotspot_vouchers, dependent: :destroy
+    has_many :wireguard_peers, dependent: :destroy
+    has_many :access_points, dependent: :destroy
+    has_many :incidents, dependent: :destroy
+    has_many :hotspot_loyalty_settings, dependent: :destroy
+    has_many :hotspot_loyalty_points, dependent: :destroy
+    has_one :hotspot_and_dial_plan, dependent: :destroy
+    has_one :license_setting, dependent: :destroy
     
 
 
