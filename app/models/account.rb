@@ -52,7 +52,11 @@ class Account < ApplicationRecord
     has_many :hotspot_loyalty_points, dependent: :destroy
     has_one :hotspot_and_dial_plan, dependent: :destroy
     has_one :license_setting, dependent: :destroy
-    
+    has_one :tuma_setting, dependent: :destroy
+    has_one :payment_gateway_setting, dependent: :destroy
+    has_many :activty_logs, dependent: :destroy
+    has_many :tv_plans, dependent: :destroy
+    has_many :hotspot_mpesa_revenues, dependent: :destroy
 
 
 

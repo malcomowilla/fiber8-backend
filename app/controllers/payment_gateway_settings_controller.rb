@@ -35,7 +35,6 @@ class PaymentGatewaySettingsController < ApplicationController
         setting.save!
       end
     end
-
     render json: { hotspot: gateway }, status: :ok
   rescue => e
     render json: { error: e.message }, status: :unprocessable_entity

@@ -12,3 +12,4 @@ class PaymentGatewaySetting < ApplicationRecord
     find_by(account_id: account_id, use_case: use_case)&.gateway || 'mpesa'
   end
 end
+

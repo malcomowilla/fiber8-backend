@@ -27,13 +27,16 @@ class SetTenantHotspot
 'get_active_hotspot_users',
 'create_package',
       'update_hotspot_package',
+      'hotspot_traffic',
        'update_package',
       'package',
       'import',
       'subscriber',
 'delete_subscriber',
  'update_subscriber',
- 'access_points'
+ 'access_points',
+ 'hotspot_mpesa_revenues'
+
 
       
 # 'create_ticket',
