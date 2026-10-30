@@ -1,12 +1,18 @@
 class NasRoutersController < ApplicationController
   rescue_from ActiveRecord::RecordNotFound, with: :router_not_found_response
-  load_and_authorize_resource
+  rescue_from RouterosApiClient::ApiError do |e|
+    render json: { error: e.message }, status: :bad_gateway
+  end
+
+  # The two router-command actions are authorized as :update inside the action
+  load_and_authorize_resource except: %i[change_router_password reboot]
 
   set_current_tenant_through_filter
   before_action :set_tenant
   before_action :update_last_activity, except: [:router_ping_response]
   before_action :set_time_zone
-  before_action :find_nas_router, only: [:update, :delete, :remote_winbox_session, :stop_winbox_session, :reachability_stats]
+  before_action :find_nas_router, only: %i[update delete remote_winbox_session stop_winbox_session
+                                           reachability_stats change_router_password reboot]
 
   def set_time_zone
     Time.zone = GeneralSetting.first&.timezone || Rails.application.config.time_zone
@@ -38,19 +44,15 @@ class NasRoutersController < ApplicationController
 
   def update
     @nas_router.update(nas_router_params)
-    ActivtyLog.create(action: 'update', ip: request.remote_ip,
-      description: "Updated nas router #{@nas_router.name}",
-      user_agent: request.user_agent, user: current_user.username || current_user.email,
-      date: Time.current)
+    log_activity('update', "Updated nas router #{@nas_router.name}")
 
-    render json: @nas_router
+    render json: safe_router_json(@nas_router)
   end
 
   # GET /nas_routers or /nas_routers.json
   def index
-    # Tenant checking is disabled for all code in this block
     @nas_routers = NasRouter.all
-    render json: @nas_routers
+    render json: @nas_routers.map { |r| safe_router_json(r) }
   end
 
   def delete
@@ -61,10 +63,7 @@ class NasRoutersController < ApplicationController
     @nas_router.destroy
     RouterStatus.where(account_id: @nas_router.account_id).delete_all
 
-    ActivtyLog.create(action: 'delete', ip: request.remote_ip,
-      description: "Deleted nas router #{@nas_router.name}",
-      user_agent: request.user_agent, user: current_user.username || current_user.email,
-      date: Time.current)
+    log_activity('delete', "Deleted nas router #{@nas_router.name}")
     head :no_content
   end
 
@@ -73,11 +72,8 @@ class NasRoutersController < ApplicationController
     @nas_router = NasRouter.create(nas_router_params)
 
     if @nas_router
-      ActivtyLog.create(action: 'create', ip: request.remote_ip,
-        description: "Created nas router #{@nas_router.name}",
-        user_agent: request.user_agent, user: current_user.username || current_user.email,
-        date: Time.current)
-      render json: @nas_router, status: :created
+      log_activity('create', "Created nas router #{@nas_router.name}")
+      render json: safe_router_json(@nas_router), status: :created
     else
       render json: { error: 'Error Processing the request' }, status: :unprocessable_entity
     end
@@ -100,6 +96,70 @@ class NasRoutersController < ApplicationController
       WinboxRelayService.close(@nas_router, @nas_router.winbox_relay_port)
     end
     head :no_content
+  end
+
+  # POST /api/nas_routers/:id/change_router_password
+  # params: username, password, password_confirmation
+  # Sets the password for a user ON the router. If that user is the login the
+  # platform itself uses for this router, the saved credentials are updated too.
+  def change_router_password
+    authorize! :update, @nas_router
+
+    username     = params[:username].to_s.strip
+    password     = params[:password].to_s
+    confirmation = params[:password_confirmation].to_s
+
+    return render_unprocessable('Username is required') if username.blank?
+    return render_unprocessable('Password must be at least 8 characters') if password.length < 8
+    return render_unprocessable('Passwords do not match') unless password == confirmation
+
+    platform_login = username == @nas_router.username
+    old_password   = @nas_router.password
+    user_found     = true
+
+    RouterosApiClient.open(@nas_router.ip_address, @nas_router.username, old_password) do |api|
+      user = api.print('/user', ["?name=#{username}"]).first
+      if user
+        api.talk(['/user/set', "=.id=#{user['.id']}", "=password=#{password}"])
+      else
+        user_found = false
+      end
+    end
+
+    unless user_found
+      return render json: { error: "User '#{username}' does not exist on this router" }, status: :not_found
+    end
+
+    if platform_login && !@nas_router.update(password: password)
+      revert_router_password(username, password, old_password)
+      return render json: { error: 'Could not save the new password, the router was left unchanged' },
+                    status: :unprocessable_entity
+    end
+
+    log_activity('update', "Changed router login password for '#{username}' on nas router #{@nas_router.name}")
+    render json: {
+      message: "Password for '#{username}' updated on the router",
+      platform_login_updated: platform_login
+    }
+  end
+
+  # POST /api/nas_routers/:id/reboot
+  def reboot
+    authorize! :update, @nas_router
+
+    begin
+      RouterosApiClient.open(@nas_router.ip_address, @nas_router.username, @nas_router.password) do |api|
+        api.talk(['/system/reboot'])
+      end
+    rescue RouterosApiClient::ApiError => e
+      # The router drops the connection as it reboots; that is success.
+      raise unless e.message.include?('Connection closed')
+    rescue Errno::ECONNRESET, Errno::EPIPE
+      nil
+    end
+
+    log_activity('update', "Rebooted nas router #{@nas_router.name}")
+    render json: { message: 'Router is rebooting' }
   end
 
   # GET /api/nas_routers/:id/reachability_stats?days=30
@@ -143,11 +203,9 @@ class NasRoutersController < ApplicationController
     end
 
     # Source of truth for "is it down right now" is the live poll
-    # (RouterStatus — the same row the routers table's Reachable/Not
-    # Reachable badge reads), not the log. The log can lag or, for a
-    # router that was already down when this feature shipped, have no
-    # matching "went offline" entry at all — don't let that make the
-    # badge lie and say Online while the table says Not Reachable.
+    # (RouterStatus), not the log. The log can lag or, for a router that
+    # was already down when this feature shipped, have no matching
+    # "went offline" entry at all.
     live_status = RouterStatus.find_by(tenant_id: @tenant.id, ip: @nas_router.ip_address)
     currently_offline = live_status ? !live_status.reachable : false
 
@@ -182,6 +240,32 @@ class NasRoutersController < ApplicationController
 
   private
 
+  def log_activity(action, description)
+    ActivtyLog.create(action: action, ip: request.remote_ip, description: description,
+                      user_agent: request.user_agent,
+                      user: current_user.username || current_user.email,
+                      date: Time.current)
+  end
+
+  # Never send router login passwords to the browser.
+  def safe_router_json(router)
+    router.as_json(except: [:password])
+  end
+
+  def render_unprocessable(message)
+    render json: { error: message }, status: :unprocessable_entity
+  end
+
+  # Best effort: put the old password back on the router if saving the new one failed.
+  def revert_router_password(username, new_password, old_password)
+    RouterosApiClient.open(@nas_router.ip_address, username, new_password) do |api|
+      user = api.print('/user', ["?name=#{username}"]).first
+      api.talk(['/user/set', "=.id=#{user['.id']}", "=password=#{old_password}"]) if user
+    end
+  rescue StandardError => e
+    Rails.logger.error "Failed to revert router password for #{@nas_router.id}: #{e.message}"
+  end
+
   def winbox_relay_host
     full_domain = request.headers['X-Domain']
     raise 'Missing X-Domain header for WinBox relay host resolution' if full_domain.blank?
@@ -199,6 +283,6 @@ class NasRoutersController < ApplicationController
   end
 
   def router_not_found_response
-    render json: { error: "Router Not Found" }, status: :not_found
+    render json: { error: 'Router Not Found' }, status: :not_found
   end
 end

@@ -319,7 +319,8 @@ resource :tuma_settings, only: [:show, :update]
 resources :hotspot_sms_templates, only: [:index, :update]
 
 
-
+post '/api/nas_routers/:id/change_router_password', to: 'nas_routers#change_router_password'
+post '/api/nas_routers/:id/reboot',                 to: 'nas_routers#reboot'
 post '/api/make_limit_payment',              to: 'limit_payments#create'
 get  '/api/limit_payment_status/:reference', to: 'limit_payments#status'
 post '/limit_payment_callback',          to: 'limit_payments#callback'
