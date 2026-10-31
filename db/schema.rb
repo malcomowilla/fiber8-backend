@@ -10,9 +10,32 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_10_25_192604) do
+ActiveRecord::Schema[7.2].define(version: 2026_10_31_071548) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
+
+  create_table "access_applications", force: :cascade do |t|
+    t.string "name", null: false
+    t.string "company_name", null: false
+    t.string "subdomain", null: false
+    t.string "email", null: false
+    t.datetime "email_verified_at"
+    t.string "country"
+    t.string "phone_number", null: false
+    t.string "support_whatsapp"
+    t.string "referral_code"
+    t.string "status", default: "pending", null: false
+    t.string "rejection_reason"
+    t.datetime "terms_accepted_at"
+    t.datetime "reviewed_at"
+    t.bigint "account_id"
+    t.string "signup_ip"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["email"], name: "index_access_applications_on_email"
+    t.index ["status"], name: "index_access_applications_on_status"
+    t.index ["subdomain"], name: "index_access_applications_on_subdomain"
+  end
 
   create_table "access_point_settings", force: :cascade do |t|
     t.boolean "notification_when_unreachable"

@@ -319,6 +319,18 @@ resource :tuma_settings, only: [:show, :update]
 resources :hotspot_sms_templates, only: [:index, :update]
 
 
+
+
+# ISP self-onboarding
+post "/api/access_applications/send_email_code", to: "access_applications#send_email_code"
+post "/api/access_applications/verify_email",    to: "access_applications#verify_email"
+get  "/api/access_applications/check_subdomain", to: "access_applications#check_subdomain"
+post "/api/access_applications",                 to: "access_applications#create"
+get  "/api/access_applications",                 to: "access_applications#index"
+post "/api/access_applications/:id/approve",     to: "access_applications#approve"
+post "/api/access_applications/:id/reject",      to: "access_applications#reject"
+
+
 post '/api/nas_routers/:id/change_router_password', to: 'nas_routers#change_router_password'
 post '/api/nas_routers/:id/reboot',                 to: 'nas_routers#reboot'
 post '/api/make_limit_payment',              to: 'limit_payments#create'
