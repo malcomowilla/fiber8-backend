@@ -192,39 +192,21 @@ def upload_hotspot_file
       <body></body>
     </html>
   HTML
+uploaded_to = MikrotikFtpPublisher.new(
+  ip:             router_ip,
+  username:       username,
+  password:       password,
+  html_directory: params[:html_directory]
+).upload_login(login_html)
 
-  temp_file = Tempfile.new(["login", ".html"])
-  temp_file.write(login_html)
-  temp_file.close
-
-  ftp = Net::FTP.new
-  ftp.passive = true
-  ftp.connect(router_ip, 21)
-  ftp.login(username, password)
-
-  begin
-    ftp.chdir("hotspot")
-  rescue Net::FTPPermError
-    ftp.mkdir("hotspot")
-    ftp.chdir("hotspot")
-  end
-
-  ftp.putbinaryfile(temp_file.path, "login.html")
-
-  ftp.close
-  temp_file.unlink
-
-  render json: {
-    status: "ok",
-    message: "login.html uploaded successfully"
-  }
+render json: {
+  status: "ok",
+  message: "login.html uploaded successfully",
+  path: uploaded_to
+}
 
 rescue => e
-  temp_file.unlink if temp_file
-  render json: {
-    status: "error",
-    message: e.message
-  }, status: :unprocessable_entity
+  render json: { status: "error", message: e.message }, status: :unprocessable_entity
 end
 
 
@@ -477,9 +459,17 @@ end
 # design blob, not a form; the deep `permit` approach doesn't scale here.
 # ALLOWED_DESIGN_KEYS = %w[theme typography layout header footer features ads].freeze
 ALLOWED_DESIGN_KEYS = %w[color_scheme theme typography layout header footer features].freeze
+ALLOWED_SECTIONS = %w[packages recover voucher mpesa].freeze
 
 def sanitize_page_design(hash)
-  hash.slice(*ALLOWED_DESIGN_KEYS)
+  out = hash.slice(*ALLOWED_DESIGN_KEYS)
+
+  if out["layout"].is_a?(Hash) && out["layout"].key?("section_order")
+    out["layout"]["section_order"] =
+      Array(out["layout"]["section_order"]).map(&:to_s).uniq & ALLOWED_SECTIONS
+  end
+
+  out
 end
 
 def page_design_params

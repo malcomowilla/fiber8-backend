@@ -39,6 +39,15 @@ class HotspotPageBuilder
   def footer_cfg = @design["footer"] || {}
   def features = @design["features"] || {}
 
+
+    DEFAULT_SECTION_ORDER = %w[packages recover voucher mpesa].freeze
+
+# Saved order first; anything missing is appended so no section can vanish.
+def section_order
+  saved = Array(layout["section_order"]).map(&:to_s).uniq & DEFAULT_SECTION_ORDER
+  saved + (DEFAULT_SECTION_ORDER - saved)
+end
+
   # ── Contrast guarantees ───────────────────────────────────────────────
   # Customers may have poor eyesight or be outdoors in sunlight, so text
   # contrast is enforced here instead of trusting every theme color to be
@@ -132,6 +141,7 @@ class HotspotPageBuilder
       hotspot_phone: @settings&.phone_number,
       hotspot_email: @settings&.email,
       features: features,
+      section_order: section_order,
       header: header,
       footer: footer_cfg,
       preview: !!@preview,
@@ -222,7 +232,7 @@ class HotspotPageBuilder
       .section-card .status { margin-bottom: 12px; }
       .section-card .btn { margin-top: 2px; }
       .section-divider { height: 1px; margin: 4px 0 18px; background: color-mix(in srgb, var(--text) 18%, transparent); }
-
+      .packages-block { margin-bottom: 16px; }
       .pkg-freetrial { display: flex; align-items: flex-start; gap: 10px; padding: 14px;
         border-radius: 14px; margin-bottom: 12px;
         background: color-mix(in srgb, #facc15 14%, var(--surface));
@@ -699,8 +709,8 @@ function isValidMac(mac) {
 
         function mpesaSectionHtml() {
           if (!cfg.features.show_mpesa_code) return '';
-          return '<div class="section-divider"></div>' +
-            '<div class="section-card">' +
+          return '<div class="section-card">' +
+
             '<div class="section-heading">Paid with M-Pesa but not connected?</div>' +
             '<div class="section-sub">Enter the M-Pesa transaction code from your payment message (for example QHJ1234ABC).</div>' +
             statusHtml('mpesa') +
@@ -786,14 +796,23 @@ function isValidMac(mac) {
         }
 
         function panelHtml() {
-          if (state.tab === 'tv') return tvPanelHtml();
+  if (state.tab === 'tv') return tvPanelHtml();
 
-          // Everything on one page, top to bottom, no tabs.
-          return recoverSectionHtml() +
-                 voucherSectionHtml() +
-                 packagesSectionHtml() +
-                 mpesaSectionHtml();
-        }
+  const sections = {
+    packages: function () {
+      const html = packagesSectionHtml();
+      return html ? '<div class="packages-block">' + html + '</div>' : '';
+    },
+    recover: recoverSectionHtml,
+    voucher: voucherSectionHtml,
+    mpesa:   mpesaSectionHtml
+  };
+  const order = (Array.isArray(cfg.section_order) && cfg.section_order.length)
+    ? cfg.section_order
+    : ['packages', 'recover', 'voucher', 'mpesa'];
+
+  return order.map(function (id) { return sections[id] ? sections[id]() : ''; }).join('');
+}
 
 
 
