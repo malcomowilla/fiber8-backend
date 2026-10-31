@@ -9,8 +9,6 @@ class AccessApplicationsController < ApplicationController
   rate_limit to: 5,  within: 1.hour, only: :create,
              with: -> { render json: { error: 'Too many applications from this network' }, status: :too_many_requests }
 
-  CODE_TTL = 10.minutes
-
   # POST /api/access_applications/send_email_code
   def send_email_code
     email = params[:email].to_s.strip.downcase
@@ -24,7 +22,7 @@ class AccessApplicationsController < ApplicationController
     end
 
     code = format('%06d', SecureRandom.random_number(1_000_000))
-    Rails.cache.write(code_key(email), { digest: digest(email, code), attempts: 0 }, expires_in: CODE_TTL)
+    EmailVerificationCode.issue!(email, code)
     AccessApplicationMailer.verification_code(email, code).deliver_now
     render json: { message: 'Code sent' }
   rescue StandardError => e
@@ -34,21 +32,26 @@ class AccessApplicationsController < ApplicationController
 
   # POST /api/access_applications/verify_email
   def verify_email
-    email = params[:email].to_s.strip.downcase
-    entry = Rails.cache.read(code_key(email))
-    return render json: { error: 'Code expired, request a new one' }, status: :unprocessable_entity unless entry
+    email  = params[:email].to_s.strip.downcase
+    record = EmailVerificationCode.latest_for(email)
 
-    if entry[:attempts] >= 5
-      Rails.cache.delete(code_key(email))
+    if record.nil? || record.expired?
+      record&.destroy
+      return render json: { error: 'Code expired, request a new one' }, status: :unprocessable_entity
+    end
+
+    if record.attempts >= EmailVerificationCode::MAX_ATTEMPTS
+      record.destroy
       return render json: { error: 'Too many wrong attempts, request a new code' }, status: :unprocessable_entity
     end
 
-    if ActiveSupport::SecurityUtils.secure_compare(entry[:digest], digest(email, params[:code].to_s.strip))
-      Rails.cache.delete(code_key(email))
+    submitted = EmailVerificationCode.digest(email, params[:code].to_s.strip)
+    if ActiveSupport::SecurityUtils.secure_compare(record.code_digest, submitted)
+      record.destroy
       token = verifier.generate(email, purpose: :access_application, expires_in: 30.minutes)
       render json: { verified: true, email_token: token }
     else
-      Rails.cache.write(code_key(email), entry.merge(attempts: entry[:attempts] + 1), expires_in: CODE_TTL)
+      record.increment!(:attempts)
       render json: { error: 'Incorrect code' }, status: :unprocessable_entity
     end
   end
@@ -178,8 +181,6 @@ class AccessApplicationsController < ApplicationController
   end
 
   def verifier     = Rails.application.message_verifier(:access_application)
-  def code_key(e)  = "access_email_code:#{e}"
-  def digest(e, c) = Digest::SHA256.hexdigest("#{e}:#{c}")
   def root_domain  = ENV.fetch('PLATFORM_ROOT_DOMAIN', 'owitech.co.ke')
 
   def generate_password

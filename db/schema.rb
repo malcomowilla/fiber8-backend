@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_10_31_071548) do
+ActiveRecord::Schema[7.2].define(version: 2026_10_31_082840) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -540,6 +540,16 @@ ActiveRecord::Schema[7.2].define(version: 2026_10_31_071548) do
     t.datetime "updated_at", null: false
     t.integer "account_id"
     t.string "smtp_port"
+  end
+
+  create_table "email_verification_codes", force: :cascade do |t|
+    t.string "email", null: false
+    t.string "code_digest", null: false
+    t.integer "attempts", default: 0, null: false
+    t.datetime "expires_at", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["email"], name: "index_email_verification_codes_on_email"
   end
 
   create_table "equipment", force: :cascade do |t|
