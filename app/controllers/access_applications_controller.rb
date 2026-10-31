@@ -28,7 +28,7 @@ class AccessApplicationsController < ApplicationController
     AccessApplicationMailer.verification_code(email, code).deliver_now
     render json: { message: 'Code sent' }
   rescue StandardError => e
-    Rails.logger.error "send_email_code failed: #{e.message}"
+    Rails.logger.error "send_email_code failed: #{e.class}: #{e.message}"
     render json: { error: 'Could not send the code, please try again' }, status: :internal_server_error
   end
 

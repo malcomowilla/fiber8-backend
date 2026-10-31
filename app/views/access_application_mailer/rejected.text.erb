@@ -1,0 +1,7 @@
+Hi <%= @application.name %>,
+
+We couldn't approve your application for <%= @application.company_name %> at this time.
+<% if @application.rejection_reason.present? %>
+Reason: <%= @application.rejection_reason %>
+<% end %>
+Reply to this email if you'd like to discuss it.
