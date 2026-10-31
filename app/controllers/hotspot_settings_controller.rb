@@ -405,61 +405,46 @@ end
 
 
 def publish_hotspot_page
-  require "tempfile"
-  require "net/ftp"
-
   @account = ActsAsTenant.current_tenant
 
   router = NasRouter.find_by(id: params[:router_id])
   return render json: { status: "error", message: "Router not found" }, status: :not_found unless router
 
-  return render json: {
-    status: "error",
-    message: "Router missing FTP credentials"
-  }, status: :unprocessable_entity if router.username.blank?
+  if router.username.blank?
+    return render json: {
+      status: "error",
+      message: "Router missing FTP credentials"
+    }, status: :unprocessable_entity
+  end
 
-  # FIX: resolve from the admin dashboard's request domain — same source
-  # of truth as preview, so what gets published matches what was previewed.
+  # Same source of truth as preview, so what's published matches what was previewed.
   platform_domain = PlatformDomainResolvable.resolve(request.headers["X-Domain"])
 
   html = HotspotPageBuilder.new(@account, platform_domain: platform_domain).compile
 
-  temp_file = Tempfile.new(["login", ".html"])
-  temp_file.write(html)
-  temp_file.close
+  uploaded_to = MikrotikFtpPublisher.new(
+    ip:             router.ip_address,
+    username:       router.username,
+    password:       router.password,
+    html_directory: router.html_directory
+  ).upload_login(html)
 
-  ftp = Net::FTP.new
-  ftp.passive = true
-  ftp.connect(router.ip_address, 21)
-  ftp.login(router.username, router.password)
-
-  begin
-    ftp.chdir("hotspot")
-  rescue Net::FTPPermError
-    ftp.mkdir("hotspot")
-    ftp.chdir("hotspot")
-  end
-
-  ftp.putbinaryfile(temp_file.path, "login.html")
-
-  ftp.close
-  temp_file.unlink
+  Rails.logger.info("Published hotspot page to #{router.name}: #{uploaded_to}")
 
   @account.hotspot_setting.update(page_design_published_at: Time.current)
 
   render json: {
     status: "ok",
-    message: "Published to #{router.name}"
+    message: "Published to #{router.name}",
+    path: uploaded_to
   }
-
+rescue Net::FTPError, SocketError, SystemCallError, Timeout::Error => e
+  Rails.logger.error("Hotspot publish failed: #{e.class} #{e.message}")
+  render json: { status: "error", message: "FTP error: #{e.message}" }, status: :unprocessable_entity
 rescue => e
-  temp_file.unlink if temp_file
-  render json: {
-    status: "error",
-    message: e.message
-  }, status: :unprocessable_entity
+  Rails.logger.error("Hotspot publish failed: #{e.class} #{e.message}")
+  render json: { status: "error", message: e.message }, status: :unprocessable_entity
 end
-
 
 
 
