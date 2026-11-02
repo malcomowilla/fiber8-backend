@@ -29,10 +29,9 @@ class SystemAdminsController < ApplicationController
   
     relying_party = WebAuthn::RelyingParty.new(
       
-       origin: "https://owitech.co.ke",
-      name: "owitech.co.ke",
-      id: "owitech.co.ke" 
-
+       origin: "https://sysadmin.owitech.co.ke",
+      name: "sysadmin.owitech.co.ke",
+      id: "sysadmin.owitech.co.ke" 
 
 
 
@@ -272,9 +271,9 @@ end
       # origin: "https://#{request.headers['X-Subdomain']}.aitechs.co.ke",
       # name: "#{request.headers['X-Subdomain']}.aitechs.co.ke",
       # id: "#{request.headers['X-Subdomain']}.aitechs.co.ke" 
-       origin: "https://aitechs.co.ke",
-      name: "aitechs.co.ke",
-      id: "aitechs.co.ke" 
+       origin: "https://sysadmin.owitech.co.ke",
+      name: "sysadmin.owitech.co.ke",
+      id: "sysadmin.owitech.co.ke" 
 
       
       )
@@ -397,9 +396,9 @@ def register_webauthn_system_admin
       # id: "#{request.headers['X-Subdomain']}.aitechs.co.ke" 
 
 
-       origin: "https://aitechs.co.ke",
-      name: "aitechs.co.ke",
-      id: "aitechs.co.ke" 
+       origin: "https://sysadmin.owitech.co.ke",
+      name: "sysadmin.owitech.co.ke",
+      id: "sysadmin.owitech.co.ke" 
 
 
 
@@ -466,9 +465,9 @@ def create_webauthn_system_admin
       # origin: "https://#{request.headers['X-Subdomain']}.aitechs.co.ke",
       # name: "#{request.headers['X-Subdomain']}.aitechs.co.ke",
       # id: "#{request.headers['X-Subdomain']}.aitechs.co.ke" 
-       origin: "https://aitechs.co.ke",
-      name: "aitechs.co.ke",
-      id: "aitechs.co.ke" 
+       origin: "https://sysadmin.owitech.co.ke",
+      name: "sysadmin.owitech.co.ke",
+      id: "sysadmin.owitech.co.ke" 
 
     )
 
