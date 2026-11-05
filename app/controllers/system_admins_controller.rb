@@ -825,7 +825,7 @@ render json: { error: 'System Admin not found' }, status: :unauthorized
 
         if  @user.system_admin_setting&.login_with_passkey  == true || @user.system_admin_setting&.login_with_passkey == 'true'
 
-          render json:@user,   status: :accepted
+          render json:@user,  status: :accepted
         else
 
           token = generate_token(system_admin_id:  @user.id)

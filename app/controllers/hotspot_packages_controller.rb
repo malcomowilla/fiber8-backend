@@ -1238,7 +1238,7 @@ class HotspotPackagesController < ApplicationController
       return
     end
 
-    unless free_trial
+        unless free_trial
       if (err = time_limit_error)
         return render json: { error: err }, status: :unprocessable_entity
       end
@@ -1246,7 +1246,15 @@ class HotspotPackagesController < ApplicationController
       bytes, err = parse_data_limit
       return render json: { error: err }, status: :unprocessable_entity if err
       attrs = attrs.merge(data_limit_bytes: bytes)
+
+      idle_attrs, err = idle_timeout_attrs
+      return render json: { error: err }, status: :unprocessable_entity if err
+      attrs = attrs.merge(idle_attrs)
+    else
+      attrs = attrs.merge(idle_timeout_value: nil, idle_timeout_unit: nil, idle_timeout_seconds: nil)
     end
+    
+
 
     @hotspot_package = HotspotPackage.new(attrs)
     use_radius = router_uses_radius?
@@ -1259,7 +1267,8 @@ class HotspotPackagesController < ApplicationController
       else
         update_freeradius_policies(params[:name],
           params[:shared_users], params[:upload_limit], params[:download_limit],
-          params[:weekdays], @hotspot_package.account_id, @hotspot_package.data_limit_bytes)
+          params[:weekdays], @hotspot_package.account_id, 
+          @hotspot_package.data_limit_bytes, @hotspot_package.idle_timeout_seconds)
       end
     end
 
@@ -1310,7 +1319,18 @@ class HotspotPackagesController < ApplicationController
       end
     end
 
+
+      if params.key?(:idle_timeout_value)
+        idle_attrs, err = idle_timeout_attrs
+        return render json: { error: err }, status: :unprocessable_entity if err
+        attrs = attrs.merge(idle_attrs)
+      end
+
+
+    
     effective_bytes = attrs.key?(:data_limit_bytes) ? attrs[:data_limit_bytes] : @hotspot_package.data_limit_bytes
+    effective_idle = attrs.key?(:idle_timeout_seconds) ? attrs[:idle_timeout_seconds] : @hotspot_package.idle_timeout_seconds
+
     use_radius = router_uses_radius?
 
     if use_radius
@@ -1321,7 +1341,7 @@ class HotspotPackagesController < ApplicationController
       else
         update_freeradius_policies(params[:name],
           params[:shared_users], params[:upload_limit], params[:download_limit],
-          params[:weekdays], @hotspot_package.account_id, effective_bytes)
+          params[:weekdays], @hotspot_package.account_id, effective_bytes, effective_idle)
       end
     end
 
@@ -1465,6 +1485,8 @@ class HotspotPackagesController < ApplicationController
 
 
   DATA_UNIT_BYTES = { 'MB' => 1024**2, 'GB' => 1024**3 }.freeze
+  IDLE_UNIT_SECONDS = { 'minutes' => 60, 'hours' => 3600 }.freeze
+
   VALID_TIME_UNITS = %w[minutes hours days].freeze
   RADIUS_WORD = 4_294_967_296 # 2**32, Mikrotik-Total-Limit is 32-bit
 
@@ -1676,6 +1698,8 @@ class HotspotPackagesController < ApplicationController
       # Data cap: writes Mikrotik-Total-Limit(+Gigawords) when bytes is set,
       # removes them when it's nil (unlimited).
       upsert_data_limit_replies(group_name, data_limit_bytes)
+      upsert_idle_timeout_reply(group_name, idle_timeout_seconds)
+
 
       rad_days = RadGroupCheck.find_or_initialize_by(
         groupname: group_name,
@@ -1734,12 +1758,16 @@ class HotspotPackagesController < ApplicationController
     existing = client.talk(['/ip/hotspot/user/profile/print', "?name=#{pkg.name}"])
     existing_sentence = existing.find { |s| s.first == '!re' }
     existing_id = existing_sentence&.find { |w| w.start_with?('=.id=') }&.sub('=.id=', '')
+    idle = pkg.idle_timeout_seconds.present? ? "#{pkg.idle_timeout_seconds}s" : 'none'
+
 
     attrs = [
       "=name=#{pkg.name}",
       "=rate-limit=#{rate_limit}",
       "=session-timeout=#{session_timeout}",
+       "=idle-timeout=#{idle}",
       "=shared-users=#{pkg.shared_users}"
+
     ]
 
     reply =
@@ -1849,6 +1877,36 @@ class HotspotPackagesController < ApplicationController
 
 
 
+def idle_timeout_attrs
+  raw = params[:idle_timeout_value].to_s.strip
+  cleared = { idle_timeout_value: nil, idle_timeout_unit: nil, idle_timeout_seconds: nil }
+  return [cleared, nil] if raw.blank?
+
+  unless raw.match?(/\A\d+\z/) && raw.to_i > 0
+    return [cleared, 'Idle timeout must be a whole number greater than 0']
+  end
+
+  unit = params[:idle_timeout_unit].to_s.downcase.presence || 'minutes'
+  mult = IDLE_UNIT_SECONDS[unit]
+  return [cleared, 'Idle timeout unit must be minutes or hours'] unless mult
+
+  [{ idle_timeout_value: raw.to_i, idle_timeout_unit: unit,
+     idle_timeout_seconds: raw.to_i * mult }, nil]
+end
+
+def upsert_idle_timeout_reply(group_name, seconds)
+  if seconds.present?
+    RadGroupReply.find_or_initialize_by(groupname: group_name, radiusattribute: 'Idle-Timeout')
+                 .update!(op: ':=', value: seconds.to_s)
+  else
+    RadGroupReply.where(groupname: group_name, radiusattribute: 'Idle-Timeout').destroy_all
+  end
+end
+
+
+
+
+
 
   # Use callbacks to share common setup or constraints between actions.
   def set_hotspot_package
@@ -1890,9 +1948,13 @@ class HotspotPackagesController < ApplicationController
       :intended_device_type,
       :device_icon,
       :enabled,
+      :idle_timeout_value,
+      :idle_timeout_unit,
 
       weekdays: [],
     )
   end
+
+
 
 end
