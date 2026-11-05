@@ -60,7 +60,7 @@ Rails.application.routes.draw do
   resources :support_tickets
   resources :sms_settings
   resources :subscriptions
-
+resources :hotspot_blocked_numbers, only: %i[index create destroy]
   # resources :sms
   resources :system_admin_web_authn_credentials
   resources :email_settings
@@ -86,7 +86,7 @@ mount Sidekiq::Web => "/sidekiq"
 
 scope '/api' do
       resources :ip_bindings
-
+resources :hotspot_blocked_numbers, only: %i[index create destroy]
     resources :access_point_settings
     resources :partners
 

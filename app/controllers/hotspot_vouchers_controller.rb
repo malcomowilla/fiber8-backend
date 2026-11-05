@@ -408,6 +408,11 @@ def login_with_receipt_number
     return render json: { error: 'Transaction does not exist, please wait we are checking your payment....... ' }, status: :not_found
   end
 
+
+   if HotspotBlockedNumber.blocked?(ActsAsTenant.current_tenant.id, phone: mpesa_revenue.phone_number, mac: mac)
+    return render json: { error: 'This number cannot use hotspot access on this network. Please contact support.' },
+                  status: :forbidden
+  end
   hotspot_voucher = mpesa_revenue.hotspot_voucher
 
   # Safely check expiration through the association
@@ -1577,6 +1582,12 @@ def make_payment
     return render json: { error: 'Phone number is required to make a payment' }, status: :unprocessable_entity
   end
 
+
+ if HotspotBlockedNumber.blocked?(ActsAsTenant.current_tenant.id, phone: phone_number, mac: params[:mac])
+    return render json: { error: 'This number cannot buy hotspot access on this network. Please contact support.' },
+                  status: :forbidden
+  end
+
   amount = params[:amount]
   shortcode = ActsAsTenant.current_tenant&.hotspot_mpesa_setting&.short_code.presence || ENV['B2C_SHORTCODE']
   passkey = ActsAsTenant.current_tenant&.hotspot_mpesa_setting&.passkey.presence || ENV['PASSKEY']
@@ -2219,6 +2230,12 @@ def recover_session
   digits = params[:phone_number].to_s.gsub(/\D/, '')
   if digits.length < 9
     return render json: { error: 'Enter the phone number you used to purchase.' }, status: :bad_request
+  end
+
+
+    if HotspotBlockedNumber.blocked?(ActsAsTenant.current_tenant.id, phone: params[:phone_number], mac: params[:mac])
+    return render json: { error: 'This number cannot use hotspot access on this network. Please contact support.' },
+                  status: :forbidden
   end
 
   last9 = digits[-9..]

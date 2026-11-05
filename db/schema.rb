@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_11_05_155622) do
+ActiveRecord::Schema[7.2].define(version: 2026_11_05_201304) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -612,6 +612,17 @@ ActiveRecord::Schema[7.2].define(version: 2026_11_05_155622) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.integer "account_id"
+  end
+
+  create_table "hotspot_blocked_numbers", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.string "phone_number", null: false
+    t.string "reason"
+    t.string "blocked_by"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id", "phone_number"], name: "index_hotspot_blocked_numbers_on_account_id_and_phone_number", unique: true
+    t.index ["account_id"], name: "index_hotspot_blocked_numbers_on_account_id"
   end
 
   create_table "hotspot_bypass_settings", force: :cascade do |t|
@@ -2250,6 +2261,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_11_05_155622) do
   add_foreign_key "collector_transactions", "collector_customers"
   add_foreign_key "default_system_ad_settings", "accounts"
   add_foreign_key "grace_period_settings", "accounts"
+  add_foreign_key "hotspot_blocked_numbers", "accounts"
   add_foreign_key "hotspot_loyalty_activities", "accounts"
   add_foreign_key "hotspot_loyalty_activities", "hotspot_loyalty_points"
   add_foreign_key "hotspot_loyalty_points", "accounts"

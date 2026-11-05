@@ -662,6 +662,6 @@ to ensure uninterrupted access to your network management platform."
 
   
   def generate_invoice_number
-    "INV#{rand(100..999)}"
+    "NV#{rand(100..999)}"
   end
 end
