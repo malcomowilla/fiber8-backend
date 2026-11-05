@@ -23,7 +23,18 @@ class HotspotPackageSerializer < ActiveModel::Serializer
              :data_limit_bytes,
              :data_limit_value,
              :data_limit_unit,
-             :data_limit_label
+             :data_limit_label,
+             :idle_timeout_value,
+             :idle_timeout_unit,
+             :idle_timeout_seconds,
+             :idle_timeout_label
+
+
+
+          def idle_timeout_label
+    return 'None' if object.idle_timeout_value.blank?
+    "#{object.idle_timeout_value} #{object.idle_timeout_unit}"
+  end   
 
   def name
     object.download_limit == '' ? "Unlimited #{object.name}" : object.name
