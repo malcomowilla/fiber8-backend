@@ -1208,11 +1208,15 @@ class HotspotPackagesController < ApplicationController
   # everything else (index, edit form) still needs to see disabled
   # packages so the admin can flip them back on.
   def allow_get_hotspot_packages
-    # Rails.logger.info "Router IP: #{params.inspect}"
+  scope = HotspotPackage.where(enabled: true)
 
-    @hotspot_packages = HotspotPackage.where(enabled: true)
-    render json: @hotspot_packages
-  end
+  router = params[:router].to_s.strip
+  # Router A's page only gets packages assigned to router A.
+  # Old packages with no router assigned still show everywhere.
+  scope = scope.where(nas_router: [router, nil, '']) if router.present?
+
+  render json: scope
+end
 
 
 

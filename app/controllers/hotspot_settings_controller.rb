@@ -402,7 +402,13 @@ def publish_hotspot_page
   # Same source of truth as preview, so what's published matches what was previewed.
   platform_domain = PlatformDomainResolvable.resolve(request.headers["X-Domain"])
 
-  html = HotspotPageBuilder.new(@account, platform_domain: platform_domain).compile
+  # router_name is baked into this router's page, so its package list is
+  # filtered to only the packages assigned to this router.
+  html = HotspotPageBuilder.new(
+    @account,
+    platform_domain: platform_domain,
+    router_name: router.name
+  ).compile
 
   uploaded_to = MikrotikFtpPublisher.new(
     ip:             router.ip_address,
@@ -427,7 +433,6 @@ rescue => e
   Rails.logger.error("Hotspot publish failed: #{e.class} #{e.message}")
   render json: { status: "error", message: e.message }, status: :unprocessable_entity
 end
-
 
 
 

@@ -1,11 +1,12 @@
 class HotspotPageBuilder
-  def initialize(account, design_override: nil, platform_domain: nil)
-    @account = account
-    @settings = account.hotspot_setting
-    @design = design_override || @settings&.page_design || {}
-    @subdomain = account.subdomain
-    @platform_domain = platform_domain || PlatformDomainResolvable::DEFAULT_PLATFORM_DOMAIN
-  end
+  def initialize(account, design_override: nil, platform_domain: nil, router_name: nil)
+  @account = account
+  @settings = account.hotspot_setting
+  @design = design_override || @settings&.page_design || {}
+  @subdomain = account.subdomain
+  @platform_domain = platform_domain || PlatformDomainResolvable::DEFAULT_PLATFORM_DOMAIN
+  @router_name = router_name
+end
 
   def compile(preview: false)
     @preview = preview
@@ -136,6 +137,7 @@ end
   def config_json
     {
       subdomain: @subdomain,
+      router_name: @router_name,
       api_base: api_base_url,
       hotspot_name: @settings&.hotspot_name,
       hotspot_phone: @settings&.phone_number,
@@ -1575,7 +1577,8 @@ function pollDeviceBindingStatus() {
 
         async function loadPackages() {
           try {
-            const res = await fetch(api('/api/allow_get_hotspot_packages'), { headers });
+          const routerQs = cfg.router_name ? '?router=' + encodeURIComponent(cfg.router_name) : '';
+const res = await fetch(api('/api/allow_get_hotspot_packages' + routerQs), { headers });
             const data = res.ok ? await res.json() : [];
             state.packages = (cfg.preview && (!data || !data.length)) ? MOCK_PACKAGES : (data || []);
           } catch (e) {
