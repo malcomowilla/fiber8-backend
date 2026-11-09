@@ -1210,7 +1210,7 @@ class HotspotPackagesController < ApplicationController
   def allow_get_hotspot_packages
   scope = HotspotPackage.where(enabled: true)
 
-  router = params[:router].to_s.strip
+  router = params[:nas_router].to_s.strip
   # Router A's page only gets packages assigned to router A.
   # Old packages with no router assigned still show everywhere.
   scope = scope.where(nas_router: [router, nil, '']) if router.present?
