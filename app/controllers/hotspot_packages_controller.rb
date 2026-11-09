@@ -1210,11 +1210,18 @@ class HotspotPackagesController < ApplicationController
   def allow_get_hotspot_packages
   scope = HotspotPackage.where(enabled: true)
 
-  router = params[:nas_router].to_s.strip
-  # Router A's page only gets packages assigned to router A.
-  # Old packages with no router assigned still show everywhere.
-  scope = scope.where(nas_router: [router, nil, '']) if router.present?
+  router = (params[:router].presence || params[:nas_router]).to_s.strip
 
+  if router.present?
+    # Case/space-insensitive match on this router's name.
+    # Packages with no router assigned still show everywhere.
+    scope = scope.where(
+      "LOWER(TRIM(nas_router)) = ? OR nas_router IS NULL OR TRIM(nas_router) = ''",
+      router.downcase
+    )
+  end
+
+  Rails.logger.info "allow_get_hotspot_packages router=#{router.inspect} count=#{scope.count}"
   render json: scope
 end
 
