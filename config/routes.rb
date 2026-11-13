@@ -754,12 +754,10 @@ get "/yesterdays_revenue", to: "hotspot_mpesa_revenues#yesterdays_revenue"
 
 
 post '/api/send_voucher', to: 'hotspot_vouchers#send_voucher_to_phone_number'
-# post 'hotspot_payment_url', to: 'confirm_payment#confirmation_url'
 #  post 'hotspot_payment_url', to: 'confirm_payment#check_payment_status'
 
 
 post 'validation_url', to: 'confirm_payment#validation_url'
-#post 'confirmation_url', to: 'confirm_payment#confirmation_url'
 post 'confirmation_url', to: 'hotspot_vouchers#check_payment_status'
 post "sasapay_payments", to: 'hotspot_vouchers#check_payment_status'
 
