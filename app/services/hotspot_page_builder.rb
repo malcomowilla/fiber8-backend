@@ -1416,10 +1416,10 @@ function startQueryStatus() {
 }
 
 
-
 async function loadTvPlans() {
   try {
-    const res = await fetch(api('/api/allow_get_tv_plans'), { headers });
+    const routerQs = cfg.router_name ? '?router=' + encodeURIComponent(cfg.router_name) : '';
+    const res = await fetch(api('/api/allow_get_tv_plans' + routerQs), { headers });
     state.tvPlans = res.ok ? (await res.json() || []) : [];
   } catch (e) {
     console.error('Failed to load TV plans:', e);
@@ -1429,6 +1429,8 @@ async function loadTvPlans() {
     render();
   }
 }
+
+
 
 async function payTvPlan() {
   queryModal = { status: 'processing', message: 'Sending payment request to your phone…' };

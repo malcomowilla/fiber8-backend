@@ -11,36 +11,45 @@ class TvPlansController < ApplicationController
     render json: { error: 'Invalid tenant' }, status: :not_found
   end
 
-  # ═══════════════════════════════════════════════════════════════
   # ADMIN: List all TV plans (with router info)
-  # ═══════════════════════════════════════════════════════════════
   def index
     tv_plans = TvPlan.includes(:nas_router).order(:position, :id)
     render json: tv_plans.map { |plan| plan_with_router(plan) }
   end
 
-  # ═══════════════════════════════════════════════════════════════
-  # PUBLIC: TV plans for hotspot page (only active, with optional display flag)
-  # ═══════════════════════════════════════════════════════════════
+  # PUBLIC: TV plans for the hotspot page, filtered per router.
+  # The page sends ?router=<router name>. Plans assigned to another router
+  # are hidden; plans with no router assigned still show everywhere.
   def allow_get_tv_plans
-  tv_plans = TvPlan.where(active: true, account_id: ActsAsTenant.current_tenant&.id)
-                    .includes(:nas_router)
-                    .order(:position, :id)
-  render json: tv_plans.map { |plan| plan_with_router(plan) }
-end
+    account_id = ActsAsTenant.current_tenant&.id
+    scope = TvPlan.where(active: true, account_id: account_id)
 
-  # ═══════════════════════════════════════════════════════════════
-  # CREATE: New TV plan with router assignment
-  # ═══════════════════════════════════════════════════════════════
+    router_name = (params[:router].presence || params[:nas_router]).to_s.strip
+
+    if router_name.present?
+      router = NasRouter.where(account_id: account_id)
+                        .where('LOWER(TRIM(name)) = ?', router_name.downcase)
+                        .first
+
+      scope = if router
+                scope.where(nas_router_id: [router.id, nil])
+              else
+                scope.where(nas_router_id: nil)
+              end
+    end
+
+    Rails.logger.info "allow_get_tv_plans router=#{router_name.inspect} count=#{scope.count}"
+
+    render json: scope.includes(:nas_router).order(:position, :id).map { |plan| plan_with_router(plan) }
+  end
+
+  # CREATE
   def create
     @tv_plan = TvPlan.new(tv_plan_params)
 
-    # Validate router exists
     if tv_plan_params[:nas_router_id].present?
       router = NasRouter.find_by(id: tv_plan_params[:nas_router_id])
-      unless router
-        return render json: { error: 'Router not found' }, status: :not_found
-      end
+      return render json: { error: 'Router not found' }, status: :not_found unless router
     end
 
     if @tv_plan.save
@@ -50,19 +59,14 @@ end
     end
   end
 
-  # ═══════════════════════════════════════════════════════════════
-  # UPDATE: TV plan (including router change)
-  # ═══════════════════════════════════════════════════════════════
+  # UPDATE
   def update
     @tv_plan = TvPlan.find_by(id: params[:id])
     return render json: { error: 'Not found' }, status: :not_found unless @tv_plan
 
-    # Validate router if changing
-    if tv_plan_params[:nas_router_id].present? && tv_plan_params[:nas_router_id] != @tv_plan.nas_router_id.to_s
+    if tv_plan_params[:nas_router_id].present? && tv_plan_params[:nas_router_id].to_s != @tv_plan.nas_router_id.to_s
       router = NasRouter.find_by(id: tv_plan_params[:nas_router_id])
-      unless router
-        return render json: { error: 'Router not found' }, status: :not_found
-      end
+      return render json: { error: 'Router not found' }, status: :not_found unless router
     end
 
     if @tv_plan.update(tv_plan_params)
@@ -72,38 +76,31 @@ end
     end
   end
 
-  # ═══════════════════════════════════════════════════════════════
-  # DELETE: TV plan
-  # ═══════════════════════════════════════════════════════════════
+  # DELETE
   def destroy
     @tv_plan = TvPlan.find_by(id: params[:id])
     return render json: { error: 'Not found' }, status: :not_found unless @tv_plan
-    
+
     @tv_plan.destroy!
     render json: { message: 'TV plan deleted' }
   end
-
-  # ═══════════════════════════════════════════════════════════════
-  # PRIVATE METHODS
-  # ═══════════════════════════════════════════════════════════════
 
   private
 
   def tv_plan_params
     params.permit(
-      :name, 
-      :price, 
-      :validity, 
+      :name,
+      :price,
+      :validity,
       :validity_period_units,
-      :download_limit, 
-      :upload_limit, 
-      :active, 
+      :download_limit,
+      :upload_limit,
+      :active,
       :position,
-      :nas_router_id  # ✅ NEW: Router assignment
+      :nas_router_id
     )
   end
 
-  # Helper: Format plan with router details
   def plan_with_router(plan)
     {
       id: plan.id,
@@ -116,7 +113,7 @@ end
       active: plan.active,
       position: plan.position,
       nas_router_id: plan.nas_router_id,
-      router_name: plan.nas_router&.name,  # ✅ Include router name
+      router_name: plan.nas_router&.name,
       router_ip: plan.nas_router&.ip_address,
       created_at: plan.created_at,
       updated_at: plan.updated_at
