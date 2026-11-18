@@ -321,6 +321,17 @@ resources :hotspot_sms_templates, only: [:index, :update]
 
 
 
+get  '/api/hotspot_broadcast',           to: 'hotspot_settings#get_broadcast'
+post '/api/hotspot_broadcast',           to: 'hotspot_settings#save_broadcast'
+get  'hotspot_broadcast',                to: 'hotspot_settings#get_broadcast'
+post 'hotspot_broadcast',                to: 'hotspot_settings#save_broadcast'
+
+get  '/api/allow_get_hotspot_broadcast', to: 'hotspot_settings#allow_get_hotspot_broadcast'
+get  '/allow_get_hotspot_broadcast',     to: 'hotspot_settings#allow_get_hotspot_broadcast'
+
+get  '/api/published_hotspot_designs',   to: 'hotspot_settings#published_designs'
+get  'published_hotspot_designs',        to: 'hotspot_settings#published_designs'
+
 # ISP self-onboarding
 post "/api/access_applications/send_email_code", to: "access_applications#send_email_code"
 post "/api/access_applications/verify_email",    to: "access_applications#verify_email"

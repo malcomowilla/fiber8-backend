@@ -1,12 +1,13 @@
 class HotspotPageBuilder
-  def initialize(account, design_override: nil, platform_domain: nil, router_name: nil)
-  @account = account
-  @settings = account.hotspot_setting
-  @design = design_override || @settings&.page_design || {}
-  @subdomain = account.subdomain
-  @platform_domain = platform_domain || PlatformDomainResolvable::DEFAULT_PLATFORM_DOMAIN
-  @router_name = router_name
-end
+   def initialize(account, design_override: nil, platform_domain: nil, router_name: nil, broadcast_override: nil)
+    @account = account
+    @settings = account.hotspot_setting
+    @design = design_override || @settings&.page_design || {}
+    @subdomain = account.subdomain
+    @platform_domain = platform_domain || PlatformDomainResolvable::DEFAULT_PLATFORM_DOMAIN
+    @router_name = router_name
+    @broadcast_override = broadcast_override
+  end
 
   def compile(preview: false)
     @preview = preview
@@ -147,9 +148,11 @@ end
       header: header,
       footer: footer_cfg,
       preview: !!@preview,
+      broadcast_override: @broadcast_override,
       mikrotik_mac: "$(mac)",
       mikrotik_ip: "$(ip)",
       mikrotik_link_orig: "$(link-orig)",
+      
     }.to_json
   end
 
@@ -369,6 +372,17 @@ end
                           font-size: 16px; font-weight: 700; color: var(--text); margin-bottom: 16px;
                           border: 2px solid var(--primary); background: color-mix(in srgb, var(--primary) 10%, transparent); }
       .pay-modal-amount strong { font-size: 24px; font-weight: 800; }
+
+      /* ── Broadcast banner (admin notice, e.g. "internet is slow") ── */
+      .broadcast { display: flex; gap: 10px; align-items: flex-start; margin: 12px 16px 0; padding: 12px 14px;
+                   border-radius: 14px; color: var(--text); font-size: 15px; font-weight: 700; line-height: 1.45;
+                   border: 2px solid transparent; }
+      .broadcast-icon { flex-shrink: 0; font-size: 18px; line-height: 1.3; }
+      .broadcast-text { min-width: 0; white-space: pre-line; overflow-wrap: anywhere; }
+      .broadcast.info     { background: color-mix(in srgb, #0ea5e9 20%, var(--surface)); border-color: #0ea5e9; }
+      .broadcast.warning  { background: color-mix(in srgb, #f59e0b 22%, var(--surface)); border-color: #f59e0b; }
+      .broadcast.critical { background: color-mix(in srgb, #ef4444 22%, var(--surface)); border-color: #ef4444; }
+
     CSS
   end
 
@@ -387,7 +401,8 @@ end
           <h1>#{title}</h1>
           <p>#{header["tagline"] || "Connect to the internet"}</p>
         </div>
-        <div id="support-top"></div>
+         <div id="support-top"></div>
+        <div id="broadcast-root"></div>
         <div id="promo-root" class="panel"></div>
         <div id="tv-promo-root" class="panel"></div>
         <div class="tabs" id="tabs"></div>
@@ -512,6 +527,41 @@ let promoTimerInterval = null;
 let expandedAdId = null;
 let expandedAdRenderedFor = null;
 let freeTrialState = {};
+let broadcast = null;
+
+        // Admin broadcast notice. Fetched live (not baked into the router's
+        // HTML) so setting/removing it takes effect without republishing.
+        function renderBroadcast() {
+          const root = document.getElementById('broadcast-root');
+          if (!root) return;
+          const b = broadcast;
+          if (!b || !b.enabled || !String(b.message || '').trim()) {
+            root.innerHTML = '';
+            root.className = '';
+            return;
+          }
+          const level = ['info', 'warning', 'critical'].indexOf(b.level) >= 0 ? b.level : 'warning';
+          const icons = { info: 'ℹ️', warning: '⚠️', critical: '🚨' };
+          root.className = 'broadcast ' + level;
+          root.setAttribute('role', 'status');
+          root.innerHTML = '<span class="broadcast-icon">' + icons[level] + '</span><div class="broadcast-text">' + esc(b.message) + '</div>';
+        }
+
+        async function loadBroadcast() {
+          if (cfg.broadcast_override) {
+            broadcast = cfg.broadcast_override;
+            renderBroadcast();
+            return;
+          }
+          try {
+            const res = await fetch(api('/api/allow_get_hotspot_broadcast'), { headers, cache: 'no-store' });
+            broadcast = res.ok ? await res.json() : null;
+          } catch (e) {
+            broadcast = null;
+          }
+          renderBroadcast();
+        }
+
 
         function supportHtml() {
           const label = (cfg.footer && cfg.footer.support_label) || 'Need help?';
@@ -2382,6 +2432,8 @@ function startAdTimers(ad) {
         });
 
         if (cfg.features.show_ads !== false) loadAds();
+                loadBroadcast();
+        if (!cfg.broadcast_override) setInterval(loadBroadcast, 60000);
         loadPromotions();
         loadPackages();
         if (cfg.features.show_tv_plans === true) loadTvPlans();

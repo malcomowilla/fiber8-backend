@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_11_05_201304) do
+ActiveRecord::Schema[7.2].define(version: 2026_11_18_192149) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -829,6 +829,10 @@ ActiveRecord::Schema[7.2].define(version: 2026_11_05_201304) do
     t.string "voucher_prefix"
     t.jsonb "page_design", default: {}, null: false
     t.datetime "page_design_published_at"
+    t.text "broadcast_message"
+    t.boolean "broadcast_enabled", default: false, null: false
+    t.string "broadcast_level", default: "warning", null: false
+    t.datetime "broadcast_updated_at"
     t.index ["account_id"], name: "index_hotspot_settings_on_account_id"
     t.index ["page_design"], name: "index_hotspot_settings_on_page_design", using: :gin
   end
@@ -1114,6 +1118,8 @@ ActiveRecord::Schema[7.2].define(version: 2026_11_05_201304) do
     t.integer "winbox_relay_port"
     t.datetime "winbox_relay_expires_at"
     t.string "html_directory"
+    t.jsonb "published_page_design"
+    t.datetime "page_published_at"
     t.index ["account_id", "last_status"], name: "index_nas_routers_on_account_id_and_last_status"
     t.index ["account_id"], name: "index_nas_routers_on_account_id"
     t.index ["last_notification_sent_at"], name: "index_nas_routers_on_last_notification_sent_at"
