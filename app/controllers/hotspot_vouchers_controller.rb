@@ -2459,76 +2459,46 @@ def login_with_hotspot_voucher
     }, status: :forbidden
   end
 
-  # ✅ find_by returns single record
   router = NasRouter.find_by(name: package.nas_router)
   return render json: { error: 'No router configured for this package' }, status: :unprocessable_entity unless router
 
-  client = nil
-  begin
-    client = RouterosApiClient.new(router.ip_address, router.username.to_s, router.password.to_s, timeout: 5)
-    client.connect
+  result = hotspot_active_login(
+    router,
+    ip: params[:ip],
+    mac: params[:mac],
+    user: params[:voucher]
+  )
 
-    reply = client.talk([
-      '/ip/hotspot/active/login',
-      "=ip=#{params[:ip]}",
-      "=user=#{params[:voucher]}",
-      "=password=#{params[:voucher]}"
-    ])
+  unless result[:success]
+    return render json: { error: result[:error] }, status: :unprocessable_entity
+  end
 
-    if reply.last.first == '!trap'
-      error_message = reply.last.find { |w| w.start_with?('=message=') }&.sub('=message=', '') || 'Unknown MikroTik error'
-      Rails.logger.info "MikroTik API error (#{router.ip_address}): #{error_message}"
-      return render json: { error: error_message }, status: :unprocessable_entity
-    end
+  @hotspot_voucher.update!(
+    status: 'used', last_logged_in: Time.now,
+    ip: result[:ip], mac: params[:mac], used_voucher: true,
+    login_by: 'Voucher Code'
+  )
 
-    # Success
-    @hotspot_voucher.update!(status: 'used', last_logged_in: Time.now,
-      ip: params[:ip], mac: params[:mac], used_voucher: true,
-      login_by: 'Voucher Code'
-    )
-
-    if @hotspot_voucher.expiration.nil?
-      if enable_compensation
-        calculate_expiration_login_with_voucher_compensation(package, @hotspot_voucher,
-          @hotspot_voucher.account_id)
-      end
-    end
-
-    if @hotspot_voucher.expiration.nil?
-      calculate_expiration_login_with_voucher(package, @hotspot_voucher,
+  if @hotspot_voucher.expiration.nil?
+    if enable_compensation
+      calculate_expiration_login_with_voucher_compensation(package, @hotspot_voucher,
         @hotspot_voucher.account_id)
     end
-
-    return render json: {
-      message: 'Connected successfully',
-      device_ip: params[:ip],
-      username: @hotspot_voucher.voucher,
-      expiration: @hotspot_voucher.expiration&.strftime("%B %d, %Y at %I:%M %p"),
-      package: @hotspot_voucher.package
-    }, status: :ok
-
-  rescue RouterosApiClient::ApiError => e
-    Rails.logger.info "RouterOS API error (#{router.ip_address}): #{e.message}"
-    render json: { error: e.message }, status: :unprocessable_entity
-
-  rescue Errno::ETIMEDOUT, IO::TimeoutError
-    Rails.logger.info "Router #{router.ip_address} timed out during login"
-    render json: { error: 'Router timed out, please try again' }, status: :unprocessable_entity
-
-  rescue Errno::ECONNREFUSED, Errno::EHOSTUNREACH, SocketError => e
-    Rails.logger.info "Router #{router.ip_address} unreachable: #{e.message}"
-    render json: { error: 'Router unreachable, please try again' }, status: :unprocessable_entity
-
-  rescue StandardError => e
-    Rails.logger.info "RouterOS API login error: #{e.message}"
-    render json: { error: 'Failed to connect please try again' }, status: :unprocessable_entity
-
-  ensure
-    client&.close
   end
+
+  if @hotspot_voucher.expiration.nil?
+    calculate_expiration_login_with_voucher(package, @hotspot_voucher,
+      @hotspot_voucher.account_id)
+  end
+
+  render json: {
+    message: 'Connected successfully',
+    device_ip: result[:ip],
+    username: @hotspot_voucher.voucher,
+    expiration: @hotspot_voucher.expiration&.strftime("%B %d, %Y at %I:%M %p"),
+    package: @hotspot_voucher.package
+  }, status: :ok
 end
-
-
 
 
 
@@ -3951,5 +3921,124 @@ rescue => e
   Rails.logger.error "mark_hotspot_revenue_completed failed: #{e.class} - #{e.message}"
   Rails.logger.error e.backtrace.first(5).join("\n")
 end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# Finds the client's current ip in this router's /ip/hotspot/host table by MAC.
+# Only called when a direct login failed with "unknown host", so it costs
+# nothing on the normal path. Returns nil if the router doesn't know the client.
+def resolve_hotspot_host_ip(client, ip, mac)
+  mac = mac.to_s.upcase.strip
+  return nil if mac.blank? || mac.include?('$(')
+
+  reply = client.talk(['/ip/hotspot/host/print', "?mac-address=#{mac}"])
+  rows  = reply.select { |s| s.first == '!re' }.map { |s| sentence_to_hash(s) }
+  return nil if rows.empty?
+
+  exact = rows.find { |r| r['address'].to_s == ip.to_s }
+  (exact || rows.last)['address'].presence
+end
+
+# Sends one /ip/hotspot/active/login. Returns [true, nil] or [false, error_message].
+def hotspot_login_once(client, ip, user)
+  reply = client.talk([
+    '/ip/hotspot/active/login',
+    "=ip=#{ip}",
+    "=user=#{user}",
+    "=password=#{user}"
+  ])
+
+  if reply.last.first == '!trap'
+    [false, reply.last.find { |w| w.start_with?('=message=') }&.sub('=message=', '') || 'Unknown MikroTik error']
+  else
+    [true, nil]
+  end
+end
+
+# Logs a client into the hotspot with the fewest router calls possible:
+#   1. preferred router, login with the ip we were given (1 call, usual case)
+#   2. only if "unknown host": look up the real ip by MAC on that router, retry once
+#   3. only if the router doesn't know the client at all: try the account's other routers
+# Returns { success: true, ip:, router: } or { success: false, error: }.
+def hotspot_active_login(preferred_router, ip:, mac:, user:)
+  others  = NasRouter.where(account_id: ActsAsTenant.current_tenant.id)
+                     .where.not(id: preferred_router.id).to_a
+  routers = [preferred_router] + others
+
+  last_error = nil
+  seen_on_a_router = false
+
+  routers.each do |router|
+    client = nil
+    begin
+      client = RouterosApiClient.new(router.ip_address, router.username.to_s, router.password.to_s, timeout: 5)
+      client.connect
+
+      tried_ip = nil
+
+      # Step 1: optimistic login, preferred router only
+      if router.id == preferred_router.id && ip.present?
+        tried_ip = ip.to_s
+        ok, err = hotspot_login_once(client, tried_ip, user)
+        return { success: true, ip: tried_ip, router: router } if ok
+
+        last_error = err
+        Rails.logger.info "hotspot_active_login (#{router.ip_address}) ip=#{tried_ip}: #{err}"
+
+        # Any error other than unknown host (bad voucher, already active...) won't
+        # be fixed by a lookup or another router, so stop here.
+        unless err.to_s =~ /unknown host/i
+          seen_on_a_router = true
+          break
+        end
+      end
+
+      # Step 2: lookup by MAC, only reached after "unknown host" or on other routers
+      real_ip = resolve_hotspot_host_ip(client, ip, mac)
+      next unless real_ip                    # not on this router, try the next one
+      next if real_ip == tried_ip            # same ip we already tried
+
+      seen_on_a_router = true
+      ok, err = hotspot_login_once(client, real_ip, user)
+      return { success: true, ip: real_ip, router: router } if ok
+
+      last_error = err
+      Rails.logger.info "hotspot_active_login (#{router.ip_address}) ip=#{real_ip}: #{err}"
+      break unless err.to_s =~ /unknown host/i
+
+    rescue StandardError => e
+      last_error = e.message
+      Rails.logger.info "hotspot_active_login router #{router.ip_address}: #{e.class} #{e.message}"
+      next
+    ensure
+      client&.close
+    end
+  end
+
+  message =
+    if !seen_on_a_router
+      "We can't see your device on the network. Please reconnect to the WiFi, wait for this page to reload, then try again."
+    elsif last_error.to_s =~ /invalid (user|password)/i
+      'Invalid voucher or username'
+    elsif last_error.to_s =~ /already/i
+      'This voucher is already active on this device'
+    else
+      'Failed to connect, please try again'
+    end
+
+  { success: false, error: message }
+end
+
 
 end

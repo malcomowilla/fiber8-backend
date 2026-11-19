@@ -2005,7 +2005,7 @@ function tryQrVoucherLogin() {
 
 
 
-        async function tryAutoLogin() {
+                async function tryAutoLogin() {
           try {
             const custRes = await fetch(api('/api/allow_get_hotspot_customization'), { headers });
             if (!custRes.ok) { console.info('[autologin] skipped: could not load customization settings'); return; }
@@ -2025,13 +2025,16 @@ function tryQrVoucherLogin() {
               return;
             }
 
+            // Always use the CURRENT router-provided ip. sessionData.ip is the ip
+            // from the customer's previous session and is often no longer in the
+            // router's host table ("unknown host or ip").
             const loginRes = await fetch(api('/api/login_with_hotspot_voucher'), {
               method: 'POST', headers,
               body: JSON.stringify({
                 voucher: sessionData.username,
                 stored_mac: localStorage.getItem('hotspot_mac'),
                 stored_ip: localStorage.getItem('hotspot_ip'),
-                mac, ip: sessionData.ip || ip,
+                mac, ip,
               }),
             });
             const loginData = await loginRes.json();

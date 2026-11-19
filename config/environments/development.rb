@@ -68,7 +68,7 @@ config.active_record.async_query_executor = :global_thread_pool
   # Eager load code on boot. This eager loads most of Rails and
   # your application in memory, allowing both threaded web servers
   # and those relying on copy on write to perform better.
-  config.eager_load = true
+  config.eager_load = false
 
   # Show full error reports.
   config.consider_all_requests_local = true
@@ -77,7 +77,7 @@ config.active_record.async_query_executor = :global_thread_pool
   config.server_timing = true
   # Rails.application.config.action_mailer.delivery_method = :mailtrap
   # Rails.application.config.action_mailer.mailtrap_settings = {
-  #   api_key: 'd848f326f33a7aa8db359e399fd7c510'
+  #   api_key: ''
   # }
   # Enable/disable caching. By default caching is disabled.
   # Run rails dev:cache to toggle caching.
