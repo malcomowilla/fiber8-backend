@@ -46,6 +46,12 @@ end
 
   
 
+def yesterdays_revenue
+  render json: PpPoeMpesaRevenue.where(created_at: Time.zone.yesterday.all_day).sum(:amount)
+end
+
+
+
 
   def pending_pppoe_balance
     pending = PpPoeMpesaRevenue

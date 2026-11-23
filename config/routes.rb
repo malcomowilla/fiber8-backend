@@ -320,7 +320,7 @@ resources :hotspot_sms_templates, only: [:index, :update]
 
 
 
-
+get '/api/pppoe_revenue_yesterday', to: 'pp_poe_mpesa_revenues#yesterdays_revenue'
 get  '/api/hotspot_broadcast',           to: 'hotspot_settings#get_broadcast'
 post '/api/hotspot_broadcast',           to: 'hotspot_settings#save_broadcast'
 get  'hotspot_broadcast',                to: 'hotspot_settings#get_broadcast'
