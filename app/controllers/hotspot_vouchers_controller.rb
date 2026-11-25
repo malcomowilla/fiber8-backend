@@ -2257,10 +2257,10 @@ def recover_session
     }, status: :not_found
   end
 
-  package = HotspotPackage.find_by(name: voucher.package, account_id: voucher.account_id)
+  package = HotspotPackage.find_by(name: voucher.package)
   return render json: { error: 'Package not found' }, status: :not_found unless package
 
-  router = NasRouter.find_by(name: package.nas_router, account_id: voucher.account_id)
+  router = NasRouter.find_by(name: package.nas_router)
   return render json: { error: 'No router configured for this package' }, status: :unprocessable_entity unless router
 
   success_payload = lambda do
