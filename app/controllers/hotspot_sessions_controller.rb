@@ -76,71 +76,69 @@ end
 
 
 def logout_user
-  host    = request.headers['X-Subdomain']
-  @account = Account.find_by!(subdomain: host)
-
-  # Support both voucher-based and MAC-based logout
   mac     = params[:mac]
   voucher = params[:voucher]
 
-  if mac.present?
-    username    = mac.upcase
-    nas_routers = NasRouter.where(account_id: @account.id)
-  elsif voucher.present?
-    hotspot_voucher = HotspotVoucher.find_by(voucher: voucher)
-    return render json: { error: 'Voucher not found' }, status: :not_found unless hotspot_voucher
-    username    = hotspot_voucher.voucher
-    nas_routers = NasRouter.where(account_id: hotspot_voucher.account_id)
-  else
+  if mac.blank? && voucher.blank?
     return render json: { error: 'mac or voucher param required' }, status: :unprocessable_entity
   end
 
-  nas_routers.each do |nas|
-    begin
-      active_users = RestClient::Request.execute(
-        method:   :get,
-        url:      "http://#{nas.ip_address}/rest/ip/hotspot/active",
-        user:     nas.username,
-        password: nas.password
-      )
+  # Voucher is needed in both cases to resolve the router via its package
+  hotspot_voucher = HotspotVoucher.find_by(voucher: voucher) if voucher.present?
+  return render json: { error: 'Voucher not found' }, status: :not_found unless hotspot_voucher
 
-      users  = JSON.parse(active_users.body)
-      active = users.find { |u| u['user'] == username }
-      next unless active
+  username = mac.present? ? mac.upcase : hotspot_voucher.voucher
 
-      RestClient::Request.execute(
-        method:   :post,
-        url:      "http://#{nas.ip_address}/rest/ip/hotspot/active/remove",
-        user:     nas.username,
-        password: nas.password,
-        payload:  { '.id': active['.id'] }.to_json,
-        headers:  { content_type: :json }
-      )
+  package = HotspotPackage.find_by(
+    name:       hotspot_voucher.package,
+    account_id: hotspot_voucher.account_id
+  )
+  return render json: { error: 'Package not found' }, status: :not_found unless package
 
-      if hotspot_voucher
-        HotspotVoucherChannel.broadcast_to(@account, {
-          type:      'voucher_online',
-          is_online: false,
-          voucher:   hotspot_voucher,
-          id:        hotspot_voucher.id
-        })
-      end
+  nas = NasRouter.find_by(
+    name:       package.nas_router,
+    account_id: hotspot_voucher.account_id
+  )
+  return render json: { error: 'Router not found for package' }, status: :not_found unless nas
 
-      return render json: { message: 'Successfully logged out user' }, status: :ok
+  begin
+    active_users = RestClient::Request.execute(
+      method:   :get,
+      url:      "http://#{nas.ip_address}/rest/ip/hotspot/active",
+      user:     nas.username,
+      password: nas.password
+    )
 
-    rescue RestClient::Unauthorized
-      Rails.logger.info "REST auth failed for router #{nas.ip_address}"
-      next
-    rescue RestClient::ExceptionWithResponse => e
-      Rails.logger.info "MikroTik REST error on #{nas.ip_address}: #{e.response}"
-      next
-    rescue StandardError => e
-      Rails.logger.info "REST error logging out device #{nas.ip_address}: #{e.message}"
-      next
-    end
+    active = JSON.parse(active_users.body).find { |u| u['user'] == username }
+    return render json: { error: 'User not active on router' }, status: :not_found unless active
+
+    RestClient::Request.execute(
+      method:   :post,
+      url:      "http://#{nas.ip_address}/rest/ip/hotspot/active/remove",
+      user:     nas.username,
+      password: nas.password,
+      payload:  { '.id': active['.id'] }.to_json,
+      headers:  { content_type: :json }
+    )
+
+    HotspotVoucherChannel.broadcast_to(@account, {
+      type:      'voucher_online',
+      is_online: false,
+      voucher:   hotspot_voucher,
+      id:        hotspot_voucher.id
+    })
+
+    render json: { message: 'Successfully logged out user' }, status: :ok
+  rescue RestClient::Unauthorized
+    Rails.logger.info "REST auth failed for router #{nas.ip_address}"
+    render json: { error: 'Router authentication failed' }, status: :bad_gateway
+  rescue RestClient::ExceptionWithResponse => e
+    Rails.logger.info "MikroTik REST error on #{nas.ip_address}: #{e.response}"
+    render json: { error: 'Router returned an error' }, status: :bad_gateway
+  rescue StandardError => e
+    Rails.logger.info "REST error logging out device #{nas.ip_address}: #{e.message}"
+    render json: { error: 'Failed to log out user' }, status: :internal_server_error
   end
-
-  render json: { error: 'User not found on any router' }, status: :not_found
 end
 
 
