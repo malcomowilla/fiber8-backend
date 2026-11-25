@@ -1779,7 +1779,8 @@ async function payPackage() {
           }
           setStatus('processing', 'Looking for your session…', 'recover');
           try {
-            const res = await fetch(api('/api/recover_session'), {
+            const routerQs = cfg.router_name ? '?router=' + encodeURIComponent(cfg.router_name) : '';
+            const res = await fetch(api('/api/recover_session' + routerQs), {
               method: 'POST', headers, body: JSON.stringify({ phone_number: phone, mac, ip })
             });
             const data = await res.json().catch(() => ({}));
@@ -1794,7 +1795,8 @@ async function payPackage() {
         async function connectReceipt(code) {
           setStatus('processing', 'Verifying your M-Pesa transaction…', 'mpesa');
           try {
-            const res = await fetch(api('/api/login_with_receipt_number'), {
+            const routerQs = cfg.router_name ? '?router=' + encodeURIComponent(cfg.router_name) : '';
+            const res = await fetch(api('/api/login_with_receipt_number' +  routerQs), {
               method: 'POST', headers, body: JSON.stringify({ receipt_number: code, mac, ip })
             });
             const data = await res.json().catch(() => ({}));
@@ -2028,7 +2030,11 @@ function tryQrVoucherLogin() {
             // Always use the CURRENT router-provided ip. sessionData.ip is the ip
             // from the customer's previous session and is often no longer in the
             // router's host table ("unknown host or ip").
-            const loginRes = await fetch(api('/api/login_with_hotspot_voucher'), {
+
+
+
+            const routerQs = cfg.router_name ? '?router=' + encodeURIComponent(cfg.router_name) : '';
+            const loginRes = await fetch(api('/api/login_with_hotspot_voucher' + routerQs), {
               method: 'POST', headers,
               body: JSON.stringify({
                 voucher: sessionData.username,

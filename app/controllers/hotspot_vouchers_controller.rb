@@ -422,7 +422,7 @@ def login_with_receipt_number
 
   voucher_code = hotspot_voucher.voucher
 voucher_object_going_to_sync_natively = HotspotVoucher.find_by(voucher: voucher_code)
-found_router = HotspotPackage.find_by(name: hotspot_voucher.package)&.nas_router
+# found_router = HotspotPackage.find_by(name: hotspot_voucher.package)&.nas_router
   use_radius = router_uses_radius?
 
   if use_radius
@@ -445,7 +445,9 @@ found_router = HotspotPackage.find_by(name: hotspot_voucher.package)&.nas_router
   end
 
 
-  nas_router = NasRouter.find_by(name: found_router)
+  # nas_router = NasRouter.find_by(name: found_router)
+     nas_router = NasRouter.find_by(name: params[:router])
+
   return render json: { error: 'Router not found' }, status: :unprocessable_entity unless nas_router
 
   client = nil
@@ -2257,10 +2259,13 @@ def recover_session
     }, status: :not_found
   end
 
-  package = HotspotPackage.find_by(name: voucher.package)
-  return render json: { error: 'Package not found' }, status: :not_found unless package
+  # package = HotspotPackage.find_by(name: voucher.package)
+  # return render json: { error: 'Package not found' }, status: :not_found unless package
 
-  router = NasRouter.find_by(name: package.nas_router)
+
+  # router = NasRouter.find_by(name: package.nas_router)
+   router = NasRouter.find_by(name: params[:router])
+
   return render json: { error: 'No router configured for this package' }, status: :unprocessable_entity unless router
 
   success_payload = lambda do
@@ -2459,7 +2464,10 @@ def login_with_hotspot_voucher
     }, status: :forbidden
   end
 
-  router = NasRouter.find_by(name: package.nas_router)
+  # router = NasRouter.find_by(name: package.nas_router)
+  
+     router = NasRouter.find_by(name: params[:router])
+
   return render json: { error: 'No router configured for this package' }, status: :unprocessable_entity unless router
 
   result = hotspot_active_login(
